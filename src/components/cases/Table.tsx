@@ -29,8 +29,15 @@ import {
   Selection,
   ChipProps,
   SortDescriptor,
+  DateRangePicker
 } from "@heroui/react";
-import { ClockIcon, EyeIcon, PencilIcon } from "@heroicons/react/24/outline";
+import {
+  ClockIcon,
+  EyeIcon,
+  PencilIcon,
+  ChevronDownIcon,
+  MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline";
 import {
   CheckBadgeIcon,
   TagIcon,
@@ -44,6 +51,7 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { parseDateToLocal } from "@/utils/date";
 import { capitalize } from "@/utils/capitalize";
+import { I18nProvider } from "@react-aria/i18n";
 
 export type IconSvgProps = SVGProps<SVGSVGElement> & {
   size?: number;
@@ -135,36 +143,10 @@ export const SearchIcon = (props: IconSvgProps) => {
   );
 };
 
-export const ChevronDownIcon = ({
-  strokeWidth = 1.5,
-  ...otherProps
-}: IconSvgProps) => {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      focusable="false"
-      height="1em"
-      role="presentation"
-      viewBox="0 0 24 24"
-      width="1em"
-      {...otherProps}
-    >
-      <path
-        d="m19.92 8.95-6.52 6.52c-.77.77-2.03.77-2.8 0L4.08 8.95"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeMiterlimit={10}
-        strokeWidth={strokeWidth}
-      />
-    </svg>
-  );
-};
 
 const columns = [
-  { name: "Creado en", uid: "created"},
-  { name: "Actualizado en", uid: "update"},
+  { name: "Creado en", uid: "created" },
+  { name: "Actualizado en", uid: "update" },
   { name: "Tipo de proceso", uid: "proccess_type", sortable: true },
   { name: "Estado", uid: "status", sortable: true },
   { name: "Cliente", uid: "name" },
@@ -180,14 +162,22 @@ const statusOptions = [
   { name: "Acción Necesaria", uid: "action_required" },
 ];
 
-
 const statusColorMap: Record<string, ChipProps["color"]> = {
   active: "success",
   paused: "danger",
   vacation: "warning",
 };
 
-const INITIAL_VISIBLE_COLUMNS = ["created", "update", "proccess_type", "status", "name", "response_time", "assigned", "actions"];
+const INITIAL_VISIBLE_COLUMNS = [
+  "created",
+  "update",
+  "proccess_type",
+  "status",
+  "name",
+  "response_time",
+  "assigned",
+  "actions",
+];
 
 export default function App() {
   const [filterValue, setFilterValue] = useState("");
@@ -261,7 +251,9 @@ export default function App() {
   const sortedItems = useMemo(() => {
     return [...items].sort((a: User, b: User) => {
       const first = a[sortDescriptor.column as keyof User] as unknown as number;
-      const second = b[sortDescriptor.column as keyof User] as unknown as number;
+      const second = b[
+        sortDescriptor.column as keyof User
+      ] as unknown as number;
       const cmp = first < second ? -1 : first > second ? 1 : 0;
 
       return sortDescriptor.direction === "descending" ? -cmp : cmp;
@@ -400,13 +392,13 @@ export default function App() {
 
   const topContent = useMemo(() => {
     return (
-      <div className="flex flex-col gap-4">
-        <div className="flex justify-between gap-3 items-end">
+      <div className="flex flex-col">
+        <div className="flex gap-3 items-center pb-6 border-b">
           <Input
             isClearable
-            className="w-full sm:max-w-[44%]"
-            placeholder="Search by name..."
-            startContent={<SearchIcon />}
+            className="w-full sm:max-w-[25%]"
+            placeholder="Buscar por nombre..."
+            startContent={<MagnifyingGlassIcon className="w-6" />}
             value={filterValue}
             onClear={() => onClear()}
             onValueChange={onSearchChange}
@@ -415,10 +407,10 @@ export default function App() {
             <Dropdown>
               <DropdownTrigger className="hidden sm:flex">
                 <Button
-                  endContent={<ChevronDownIcon className="text-small" />}
-                  variant="flat"
+                  endContent={<ChevronDownIcon className="text-small w-4" />}
+                  variant="bordered"
                 >
-                  Status
+                  Estado
                 </Button>
               </DropdownTrigger>
               <DropdownMenu
@@ -436,43 +428,30 @@ export default function App() {
                 ))}
               </DropdownMenu>
             </Dropdown>
-            <Dropdown>
-              <DropdownTrigger className="hidden sm:flex">
-                <Button
-                  endContent={<ChevronDownIcon className="text-small" />}
-                  variant="flat"
-                >
-                  Columns
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu
-                disallowEmptySelection
-                aria-label="Table Columns"
-                closeOnSelect={false}
-                selectedKeys={visibleColumns}
-                selectionMode="multiple"
-                onSelectionChange={setVisibleColumns}
-              >
-                {columns.map((column) => (
-                  <DropdownItem key={column.uid} className="capitalize">
-                    {capitalize(column.name)}
-                  </DropdownItem>
-                ))}
-              </DropdownMenu>
-            </Dropdown>
-            <Button color="primary" endContent={<PlusIcon />}>
-              Add New
+          </div>
+          <I18nProvider locale="es-ES">
+            <DateRangePicker
+              variant="bordered"
+        
+              label="Buscar por fecha"
+              className="max-w-xs"
+   
+            />
+          </I18nProvider>
+          <div>
+            <Button color="primary">
+              Mostrar todos
             </Button>
           </div>
         </div>
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center mt-6">
           <span className="text-default-400 text-small">
-            Total {cases.length} users
+            Total {cases.length} casos
           </span>
           <label className="flex items-center text-default-400 text-small">
-            Rows per page:
+            Fila por pagina:
             <select
-              className="bg-transparent outline-none text-default-400 text-small"
+              className="text-small rounded-sm"
               onChange={onRowsPerPageChange}
             >
               <option value="5">5</option>
