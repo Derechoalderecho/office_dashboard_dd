@@ -1,6 +1,6 @@
 "use client";
 
-import React, { SVGProps } from "react";
+import React, { SVGProps, Key, ChangeEvent } from "react";
 import {
   Table,
   TableHeader,
@@ -29,7 +29,7 @@ import {
   Selection,
   ChipProps,
   SortDescriptor,
-  DateRangePicker
+  DateRangePicker,
 } from "@heroui/react";
 import {
   ClockIcon,
@@ -53,96 +53,16 @@ import { parseDateToLocal } from "@/utils/date";
 import { capitalize } from "@/utils/capitalize";
 import { I18nProvider } from "@react-aria/i18n";
 
-export type IconSvgProps = SVGProps<SVGSVGElement> & {
-  size?: number;
+type Column = {
+  name: string;
+  uid: string;
+  sortable?: boolean;
 };
 
-export const PlusIcon = ({
-  size = 24,
-  width,
-  height,
-  ...props
-}: IconSvgProps) => {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      focusable="false"
-      height={size || height}
-      role="presentation"
-      viewBox="0 0 24 24"
-      width={size || width}
-      {...props}
-    >
-      <g
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={1.5}
-      >
-        <path d="M6 12h12" />
-        <path d="M12 18V6" />
-      </g>
-    </svg>
-  );
+type StatusOption = {
+  name: string;
+  uid: string;
 };
-
-export const VerticalDotsIcon = ({
-  size = 24,
-  width,
-  height,
-  ...props
-}: IconSvgProps) => {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      focusable="false"
-      height={size || height}
-      role="presentation"
-      viewBox="0 0 24 24"
-      width={size || width}
-      {...props}
-    >
-      <path
-        d="M12 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 12c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-};
-
-export const SearchIcon = (props: IconSvgProps) => {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      focusable="false"
-      height="1em"
-      role="presentation"
-      viewBox="0 0 24 24"
-      width="1em"
-      {...props}
-    >
-      <path
-        d="M11.5 21C16.7467 21 21 16.7467 21 11.5C21 6.25329 16.7467 2 11.5 2C6.25329 2 2 6.25329 2 11.5C2 16.7467 6.25329 21 11.5 21Z"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      />
-      <path
-        d="M22 22L20 20"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      />
-    </svg>
-  );
-};
-
 
 const columns = [
   { name: "Creado en", uid: "created" },
@@ -161,12 +81,6 @@ const statusOptions = [
   { name: "No Aprobado", uid: "not_approved" },
   { name: "Acción Necesaria", uid: "action_required" },
 ];
-
-const statusColorMap: Record<string, ChipProps["color"]> = {
-  active: "success",
-  paused: "danger",
-  vacation: "warning",
-};
 
 const INITIAL_VISIBLE_COLUMNS = [
   "created",
@@ -192,18 +106,19 @@ export default function App() {
     direction: "ascending",
   });
   const [page, setPage] = useState(1);
+  const [showAll, setShowAll] = useState(false);
   const [cases, setCases] = useState<Cases[]>([]);
 
-  type User = (typeof cases)[0];
+  type User = Cases;
 
   useEffect(() => {
     (async () => {
       const casesCollection = collection(db, "cases");
-      const productsSnapshot = await getDocs(casesCollection);
+      const casesSnapshot = await getDocs(casesCollection);
       const casesList: Cases[] = [];
-      productsSnapshot.forEach((product) => {
-        const data = product.data() as Cases;
-        casesList.push({ key: product.id, ...data });
+      casesSnapshot.forEach((doc) => {
+        const data = doc.data() as Cases;
+        casesList.push({ key: doc.id, ...data });
       });
       setCases(casesList);
     })();
@@ -212,12 +127,12 @@ export default function App() {
   const hasSearchFilter = Boolean(filterValue);
 
   const headerColumns = useMemo(() => {
-    if (visibleColumns === "all") return columns;
-
-    return columns.filter((column) =>
-      Array.from(visibleColumns).includes(column.uid)
-    );
-  }, [visibleColumns]);
+      if (visibleColumns === "all") return columns;
+  
+      return columns.filter((column) =>
+        Array.from(visibleColumns).includes(column.uid)
+      );
+    }, [visibleColumns]);
 
   const filteredItems = useMemo(() => {
     let filteredUsers = [...cases];
@@ -227,12 +142,14 @@ export default function App() {
         user.name.toLowerCase().includes(filterValue.toLowerCase())
       );
     }
-    if (
-      statusFilter !== "all" &&
-      Array.from(statusFilter).length !== statusOptions.length
-    ) {
+    if (statusFilter !== "all") {
+      const selectedStatuses = Array.from(statusFilter).map((key) => {
+        const statusOption = statusOptions.find((option) => option.uid === key);
+        return statusOption ? statusOption.name : null;
+      });
+
       filteredUsers = filteredUsers.filter((user) =>
-        Array.from(statusFilter).includes(user.status)
+        selectedStatuses.includes(user.status)
       );
     }
 
@@ -260,8 +177,8 @@ export default function App() {
     });
   }, [sortDescriptor, items]);
 
-  const renderCell = useCallback((user: User, columnKey: Key) => {
-    const cellValue = user[columnKey as keyof User];
+  const renderCell = useCallback((user: User, columnKey: keyof User) => {
+    const cellValue = user[columnKey];
 
     switch (columnKey) {
       case "created":
@@ -289,7 +206,7 @@ export default function App() {
       case "status":
         return (
           <Chip
-            className={`Capitalize ${
+            className={`capitalize ${
               cellValue === "Aprobado"
                 ? "bg-success text-[#12A150]"
                 : cellValue === "Seguimiento"
@@ -310,8 +227,8 @@ export default function App() {
         return (
           <div className="flex flex-col">
             <p className="text-sm font-semibold">{String(cellValue)}</p>
-            <p className="text-sm">{user.email}</p>
-            <p className="text-sm">{user.phone}</p>
+            {user.email && <p className="text-sm">{user.email}</p>}
+            {user.phone && <p className="text-sm">{user.phone}</p>}
           </div>
         );
       case "response_time":
@@ -432,14 +349,12 @@ export default function App() {
           <I18nProvider locale="es-ES">
             <DateRangePicker
               variant="bordered"
-        
               label="Buscar por fecha"
               className="max-w-xs"
-   
             />
           </I18nProvider>
           <div>
-            <Button color="primary">
+            <Button color="primary" onPress={() => setShowAll(!showAll)}>
               Mostrar todos
             </Button>
           </div>
@@ -489,36 +404,19 @@ export default function App() {
           total={pages}
           onChange={setPage}
         />
-        <div className="hidden sm:flex w-[30%] justify-end gap-2">
-          <Button
-            isDisabled={pages === 1}
-            size="sm"
-            variant="flat"
-            onPress={onPreviousPage}
-          >
-            Previous
-          </Button>
-          <Button
-            isDisabled={pages === 1}
-            size="sm"
-            variant="flat"
-            onPress={onNextPage}
-          >
-            Next
-          </Button>
-        </div>
       </div>
     );
   }, [selectedKeys, items.length, page, pages, hasSearchFilter]);
 
   return (
     <Table
+      suppressHydrationWarning
       isHeaderSticky
-      aria-label="Example table with custom cells, pagination and sorting"
+      aria-label="Tabla de casos"
       bottomContent={bottomContent}
       bottomContentPlacement="outside"
       classNames={{
-        wrapper: "max-h-[382px]",
+        wrapper: "max-w-[100%]",
       }}
       selectedKeys={selectedKeys}
       selectionMode="multiple"
@@ -534,12 +432,13 @@ export default function App() {
             key={column.uid}
             align={column.uid === "actions" ? "center" : "start"}
             allowsSorting={column.sortable}
+            className="text-base"
           >
             {column.name}
           </TableColumn>
         )}
       </TableHeader>
-      <TableBody emptyContent={"No users found"} items={sortedItems}>
+      <TableBody emptyContent={"Casos no encontrados"} items={sortedItems}>
         {(item) => (
           <TableRow key={item.id}>
             {(columnKey) => (
