@@ -44,7 +44,6 @@ import {
   UserCircleIcon,
   TrashIcon,
 } from "@heroicons/react/24/solid";
-import { useFetchCollection } from "@/hooks/useFetchCollection";
 import { Cases } from "@/types/cases";
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { collection, getDocs } from "firebase/firestore";
@@ -52,7 +51,7 @@ import { db } from "@/lib/firebase";
 import { parseDateToLocal } from "@/utils/date";
 import { capitalize } from "@/utils/capitalize";
 import { I18nProvider } from "@react-aria/i18n";
-import { Key } from "@react-types/shared";
+import { CalendarDate } from "@internationalized/date";
 
 type Column = {
   name: string;
@@ -63,6 +62,22 @@ type Column = {
 type StatusOption = {
   name: string;
   uid: string;
+};
+
+type RangeValue<T> = { start: T; end: T };
+
+type DateRange = {
+  start: { year: number; month: number; day: number };
+  end: { year: number; month: number; day: number };
+};
+
+const convertToDateValue = (dateRange: DateRange | null): RangeValue<CalendarDate> | null => {
+  if (!dateRange) return null;
+
+  return {
+    start: new CalendarDate(dateRange.start.year, dateRange.start.month, dateRange.start.day),
+    end: new CalendarDate(dateRange.end.year, dateRange.end.month, dateRange.end.day),
+  };
 };
 
 const columns = [
@@ -108,8 +123,31 @@ export default function App() {
   });
   const [page, setPage] = useState(1);
   const [showAll, setShowAll] = useState(false);
+  const [dateRange, setDateRange] = useState<DateRange | null>(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [cases, setCases] = useState<Cases[]>([]);
+
+  const handleDateRangeChange = (newValue: RangeValue<CalendarDate> | null) => {
+    if (!newValue) {
+      setDateRange(null);
+      return;
+    }
+
+    const newDateRange: DateRange = {
+      start: {
+        year: newValue.start.year,
+        month: newValue.start.month,
+        day: newValue.start.day,
+      },
+      end: {
+        year: newValue.end.year,
+        month: newValue.end.month,
+        day: newValue.end.day,
+      },
+    };
+
+    setDateRange(newDateRange);
+  };
 
   type User = Cases;
 
@@ -132,37 +170,80 @@ export default function App() {
     setSelectedKeys(keys);
   };
 
+  // Convert your dateRange to RangeValue<CalendarDate>
+  const convertToDateValue = (
+    dateRange: DateRange | null
+  ): RangeValue<CalendarDate> | null => {
+    if (!dateRange) return null;
+
+    return {
+      start: new CalendarDate(
+        dateRange.start.year,
+        dateRange.start.month,
+        dateRange.start.day
+      ),
+      end: new CalendarDate(
+        dateRange.end.year,
+        dateRange.end.month,
+        dateRange.end.day
+      ),
+    };
+  };
+
+  // Usage
+  const dateRangeValue = convertToDateValue(dateRange);
+
   const hasSearchFilter = Boolean(filterValue);
 
   const headerColumns = useMemo(() => {
     if (visibleColumns === "all") return columns;
-
     return columns.filter((column) =>
       Array.from(visibleColumns).includes(column.uid)
     );
   }, [visibleColumns]);
 
+  //All filters table
   const filteredItems = useMemo(() => {
     let filteredUsers = [...cases];
-
+  
+    // Search filter
     if (hasSearchFilter) {
       filteredUsers = filteredUsers.filter((user) =>
         user.name.toLowerCase().includes(filterValue.toLowerCase())
       );
     }
+  
+    // Status filter
     if (statusFilter !== "all") {
       const selectedStatuses = Array.from(statusFilter).map((key) => {
         const statusOption = statusOptions.find((option) => option.uid === key);
         return statusOption ? statusOption.name : null;
       });
-
+  
       filteredUsers = filteredUsers.filter((user) =>
         selectedStatuses.includes(user.status)
       );
     }
-
+  
+    // Date range filter
+    if (dateRange && dateRange.start && dateRange.end) {
+      const { start, end } = dateRange;
+      const startDate = new Date(start.year, start.month - 1, start.day);
+      const endDate = new Date(end.year, end.month - 1, end.day);
+  
+      filteredUsers = filteredUsers.filter((user) => {
+        const userDate = new Date(user.created);
+        if (isNaN(userDate.getTime())) {
+          console.error(`Invalid date for user: ${user.id}`, user.created);
+          return false;
+        }
+  
+        return userDate >= startDate && userDate <= endDate;
+      });
+    }
+  
     return filteredUsers;
-  }, [cases, filterValue, statusFilter]);
+  }, [cases, filterValue, statusFilter, dateRange]); 
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
@@ -359,6 +440,8 @@ export default function App() {
               variant="bordered"
               label="Buscar por fecha"
               className="max-w-xs"
+              value={convertToDateValue(dateRange)}
+              onChange={handleDateRangeChange}
             />
           </I18nProvider>
           <div>
@@ -389,6 +472,7 @@ export default function App() {
     filterValue,
     statusFilter,
     visibleColumns,
+    dateRange,
     onSearchChange,
     onRowsPerPageChange,
     cases.length,
@@ -441,37 +525,25 @@ export default function App() {
                   </DropdownTrigger>
                   <DropdownMenu aria-label="Profile Actions" variant="flat">
                     <DropdownSection title="Estado">
-                      <DropdownItem
-                        key="approved"
-                
-                      >
+                      <DropdownItem key="approved">
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 bg-[#12A150] rounded-full"></div>
                           Aprobado
                         </div>
                       </DropdownItem>
-                      <DropdownItem
-                        key="action_required"
-                      
-                      >
+                      <DropdownItem key="action_required">
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 bg-[#C4841D] rounded-full"></div>
                           Acción necesaria
                         </div>
                       </DropdownItem>
-                      <DropdownItem
-                        key="followed"
-               
-                      >
+                      <DropdownItem key="followed">
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 bg-[#006FEE] rounded-full"></div>
                           Seguimiento
                         </div>
                       </DropdownItem>
-                      <DropdownItem
-                        key="no_approved"
- 
-                      >
+                      <DropdownItem key="no_approved">
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 bg-[#F31260] rounded-full"></div>
                           No aprobado
@@ -491,12 +563,8 @@ export default function App() {
                     </DropdownTrigger>
                     <DropdownMenu aria-label="Profile Actions" variant="flat">
                       <DropdownSection title="Asignado">
-                        <DropdownItem
-                          key="user1"
-                         
-                        >
+                        <DropdownItem key="user1">
                           <User
-                            
                             avatarProps={{
                               radius: "sm",
                               src: "https://i.pravatar.cc/150?u=a04258114e29026702d",
@@ -504,11 +572,7 @@ export default function App() {
                             name={"Victor Hugo"}
                           />
                         </DropdownItem>
-                        <DropdownItem
-                          key="aproved"
-                          
-                          
-                        >
+                        <DropdownItem key="aproved">
                           <User
                             avatarProps={{
                               radius: "sm",
