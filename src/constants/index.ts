@@ -1,4 +1,4 @@
-import {
+/*import {
   ChartPieIcon,
   ClipboardDocumentListIcon,
   EnvelopeIcon,
@@ -20,4 +20,23 @@ export const NAV_LINKS = [
     { href: "/accounts", key: "accounts", label: "Cuentas", icon: <UserIcon className="size-6" /> },
     { href: "/crm", key: "crm", label: "CRM", icon: <Squares2X2Icon className="size-6" /> },
     { href: "/config", key: "config", label: "Configuración", icon: <Cog6ToothIcon className="size-6" /> },
+];
+ */
+
+export const COLUMNS = [
+  { name: "Creado en", uid: "created" },
+  { name: "Actualizado en", uid: "update" },
+  { name: "Tipo de proceso", uid: "proccess_type", sortable: true },
+  { name: "Estado", uid: "status", sortable: true },
+  { name: "Cliente", uid: "name" },
+  { name: "Tiempo Respuesta", uid: "response_time", sortable: true },
+  { name: "Asignado", uid: "assigned", sortable: true },
+  { name: "Acciones", uid: "actions" },
+];
+
+export const STATUS_OPTIONS = [
+  { name: "Seguimiento", uid: "follow_up" },
+  { name: "Aprobado", uid: "aproved" },
+  { name: "No Aprobado", uid: "not_approved" },
+  { name: "Acción Necesaria", uid: "action_required" },
 ];

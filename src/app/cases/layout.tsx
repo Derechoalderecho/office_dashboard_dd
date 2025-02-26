@@ -1,10 +1,14 @@
 import { SideBar } from "@/components/shared/SideBar";
+import Header from "@/components/shared/Header";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <main className="flex">
       <SideBar />
-      {children}
+      <section className="flex flex-col w-full h-full px-6 mx-auto ml-16 pb-10">
+        <Header />
+        {children}
+      </section>
     </main>
   );
 }
