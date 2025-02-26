@@ -1,99 +1,113 @@
 import {
-    ChartPieIcon,
-    ClipboardDocumentListIcon,
-    EnvelopeIcon,
-    UserGroupIcon,
-    UsersIcon,
-    MagnifyingGlassCircleIcon,
-    UserIcon,
-    Squares2X2Icon,
-    Cog6ToothIcon
-  } from "@heroicons/react/24/outline";
-  import { usePathname } from "next/navigation";
-  import Link from "next/link";
-  import { useState } from "react";
-  
-  export const NAV_LINKS = [
-    { href: "/", key: "dashboard", label: "Dashboard", icon: ChartPieIcon},
-    { href: "/cases", key: "cases", label: "Casos", icon: ClipboardDocumentListIcon },
-    { href: "/mails", key: "mails", label: "Correos", icon: EnvelopeIcon},
-    { href: "/citizens", key: "citizens", label: "Ciudadanos", icon: UsersIcon},
-    { href: "/users", key: "users", label: "Usuarios", icon: UserGroupIcon },
-    { href: "/reviewers", key: "reviewers", label: "Revisores", icon: MagnifyingGlassCircleIcon  },
-    { href: "/accounts", key: "accounts", label: "Cuentas", icon: UserIcon},
-    { href: "/crm", key: "crm", label: "CRM", icon: Squares2X2Icon  },
-    { href: "/config", key: "config", label: "Configuración", icon: Cog6ToothIcon },
-  ];
-  
-  interface NavLinksProps {
-    handleMouseEnter: React.MouseEventHandler<HTMLAnchorElement>;
-    handleMouseLeave: React.MouseEventHandler<HTMLAnchorElement>;
-    setIsHovered: React.Dispatch<React.SetStateAction<boolean>>;
-  }
-  
-  export function NavLinks({ handleMouseEnter, handleMouseLeave, setIsHovered }: NavLinksProps) {
-    const pathname = usePathname();
-    return (
-      <>
-        {NAV_LINKS.slice(0, 6).map((menu) => {
-          const Icon = menu.icon;
-          return (
-            <Link
-              key={menu.key}
-              href={menu.href}
-              className={`flex font-medium gap-4 items-center px-3 py-3 rounded-xl transition-all ${
-                pathname === menu.href
-                  ? "text-primary bg-bgNav"
-                  : "text-secondary hover:bg-[#D4EAFF]"
-              }`}
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
-            >
-              <div><Icon className="size-6" /></div>
-              <span
-                className={`overflow-hidden text-ellipsis ${
-                  setIsHovered ? "block text-nowrap" : "hidden"
-                }`}
-              >
-                {menu.label}
-              </span>
-            </Link>
-          );
-        })}
-      </>
-    );
-  }
+  ChartPieIcon,
+  ClipboardDocumentListIcon,
+  EnvelopeIcon,
+  UserGroupIcon,
+  UsersIcon,
+  MagnifyingGlassCircleIcon,
+  UserIcon,
+  Squares2X2Icon,
+  Cog6ToothIcon,
+} from "@heroicons/react/24/outline";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 
+export const NAV_LINKS = [
+  { href: "/", key: "dashboard", label: "Dashboard", icon: ChartPieIcon },
+  {
+    href: "/cases",
+    key: "cases",
+    label: "Casos",
+    icon: ClipboardDocumentListIcon,
+  },
+  { href: "/mails", key: "mails", label: "Correos", icon: EnvelopeIcon },
+  { href: "/citizens", key: "citizens", label: "Ciudadanos", icon: UsersIcon },
+  { href: "/users", key: "users", label: "Usuarios", icon: UserGroupIcon },
+  {
+    href: "/reviewers",
+    key: "reviewers",
+    label: "Revisores",
+    icon: MagnifyingGlassCircleIcon,
+  },
+  { href: "/accounts", key: "accounts", label: "Cuentas", icon: UserIcon },
+  { href: "/crm", key: "crm", label: "CRM", icon: Squares2X2Icon },
+  {
+    href: "/config",
+    key: "config",
+    label: "Configuración",
+    icon: Cog6ToothIcon,
+  },
+];
 
-  export function NavLinks2({ handleMouseEnter, handleMouseLeave, setIsHovered }: NavLinksProps) {
-    const pathname = usePathname();
-    return (
-      <>
-        {NAV_LINKS.slice(6, 9).map((menu) => {
-          const Icon = menu.icon;
-          return (
-            <Link
-              key={menu.key}
-              href={menu.href}
-              className={`flex font-medium gap-4 items-center px-3 py-3 rounded-xl transition-all ${
-                pathname === menu.href
-                  ? "text-primary bg-bgNav"
-                  : "text-secondary hover:bg-[#D4EAFF]"
+interface NavLinksProps {
+  handleMouseEnter: React.MouseEventHandler<HTMLAnchorElement>;
+  isHovered: boolean;
+}
+
+export function NavLinks({ handleMouseEnter, isHovered }: NavLinksProps) {
+  const pathname = usePathname();
+  return (
+    <>
+      {NAV_LINKS.slice(0, 6).map((menu) => {
+        const Icon = menu.icon;
+        return (
+          <Link
+            key={menu.key}
+            href={menu.href}
+            className={`flex font-medium gap-4 items-center px-3 py-3 rounded-xl transition-all ${
+              pathname === menu.href
+                ? "text-primary bg-bgNav"
+                : "text-secondary hover:bg-[#D4EAFF]"
+            }`}
+            onMouseEnter={handleMouseEnter}
+          >
+            <div>
+              <Icon className="size-6" />
+            </div>
+            <span
+              className={`overflow-hidden text-ellipsis ${
+                isHovered ? "block text-nowrap" : "hidden"
               }`}
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
             >
-              <div><Icon className="size-6" /></div>
-              <span
-                className={`overflow-hidden text-ellipsis ${
-                  setIsHovered ? "block text-nowrap" : "hidden"
-                }`}
-              >
-                {menu.label}
-              </span>
-            </Link>
-          );
-        })}
-      </>
-    );
-  }
+              {menu.label}
+            </span>
+          </Link>
+        );
+      })}
+    </>
+  );
+}
+
+export function NavLinks2({ handleMouseEnter, isHovered }: NavLinksProps) {
+  const pathname = usePathname();
+  return (
+    <>
+      {NAV_LINKS.slice(6, 9).map((menu) => {
+        const Icon = menu.icon;
+        return (
+          <Link
+            key={menu.key}
+            href={menu.href}
+            className={`flex font-medium gap-4 items-center px-3 py-3 rounded-xl transition-all ${
+              pathname === menu.href
+                ? "text-primary bg-bgNav"
+                : "text-secondary hover:bg-[#D4EAFF]"
+            }`}
+            onMouseEnter={handleMouseEnter}
+          >
+            <div>
+              <Icon className="size-6" />
+            </div>
+            <span
+              className={`overflow-hidden text-ellipsis ${
+                isHovered ? "block text-nowrap" : "hidden"
+              }`}
+            >
+              {menu.label}
+            </span>
+          </Link>
+        );
+      })}
+    </>
+  );
+}
