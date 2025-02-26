@@ -23,19 +23,15 @@ import {
   ModalFooter,
   Card,
   CardBody,
-  Input,
   Pagination,
   Selection,
   ChipProps,
   SortDescriptor,
-  DateRangePicker,
 } from "@heroui/react";
 import {
   ClockIcon,
   EyeIcon,
   PencilIcon,
-  ChevronDownIcon,
-  MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import {
   CheckBadgeIcon,
@@ -47,12 +43,11 @@ import { useState, useCallback, useMemo, useEffect, ChangeEvent } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { parseDateToLocal } from "@/utils/date";
-import { capitalize } from "@/utils/capitalize";
-import { I18nProvider } from "@react-aria/i18n";
 import { CalendarDate } from "@internationalized/date";
 import { Cases, RangeValue, DateRange } from "@/types/cases";
 import { columns, statusOptions } from "@/constants";
 import TopContent from "./TopContent";
+import BottomContent from "./BottomContent";
 
 type CaseWithKey = Cases & { key: string };
 
@@ -347,22 +342,14 @@ export default function App() {
 
   const bottomContent = useMemo(() => {
     return (
-      <div className="py-2 px-2 flex justify-between items-center">
-        <span className="w-[30%] text-small text-default-400">
-          {selectedKeys === "all"
-            ? "All items selected"
-            : `${selectedKeys.size} of ${filteredItems.length} selected`}
-        </span>
-        <Pagination
-          isCompact
-          showControls
-          showShadow
-          color="primary"
-          page={page}
-          total={pages}
-          onChange={setPage}
-        />
-      </div>
+      <BottomContent
+        selectedKeys={selectedKeys as string}
+        selectedKeysSize={selectedKeys === "all" ? filteredItems.length : selectedKeys.size}
+        filteredItemsLenght={filteredItems.length}
+        page={page}
+        pages={pages}
+        setPage={setPage}
+      />
     );
   }, [selectedKeys, items.length, page, pages, hasSearchFilter]);
 
