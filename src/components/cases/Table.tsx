@@ -1,6 +1,5 @@
 "use client";
 
-import React, { SVGProps, Key, ChangeEvent } from "react";
 import {
   Table,
   TableHeader,
@@ -44,15 +43,16 @@ import {
   UserCircleIcon,
   TrashIcon,
 } from "@heroicons/react/24/solid";
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, ChangeEvent } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { parseDateToLocal } from "@/utils/date";
 import { capitalize } from "@/utils/capitalize";
 import { I18nProvider } from "@react-aria/i18n";
 import { CalendarDate } from "@internationalized/date";
-import { Column, Cases, RangeValue, DateRange, StatusOption } from "@/types/cases";
+import { Cases, RangeValue, DateRange } from "@/types/cases";
 import { columns, statusOptions } from "@/constants";
+import TopContent from "./TopContent";
 
 type CaseWithKey = Cases & { key: string };
 
@@ -85,6 +85,21 @@ export default function App() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [cases, setCases] = useState<CaseWithKey[]>([]);
 
+  type User = Cases;
+
+  useEffect(() => {
+    (async () => {
+      const casesCollection = collection(db, "cases");
+      const casesSnapshot = await getDocs(casesCollection);
+      const casesList: CaseWithKey[] = [];
+      casesSnapshot.forEach((doc) => {
+        const data = doc.data() as Cases;
+        casesList.push({ key: doc.id, ...data });
+      });
+      setCases(casesList);
+    })();
+  }, []);
+
   const handleDateRangeChange = (newValue: RangeValue<CalendarDate> | null) => {
     if (!newValue) {
       setDateRange(null);
@@ -107,47 +122,9 @@ export default function App() {
     setDateRange(newDateRange);
   };
 
-  type User = Cases;
-
-  useEffect(() => {
-    (async () => {
-      const casesCollection = collection(db, "cases");
-      const casesSnapshot = await getDocs(casesCollection);
-      const casesList: CaseWithKey[] = [];
-      casesSnapshot.forEach((doc) => {
-        const data = doc.data() as Cases;
-        casesList.push({ key: doc.id, ...data });
-      });
-      setCases(casesList);
-    })();
-  }, []);
-
   const onSelectionChangeMasiveMenu = (keys: Selection) => {
     setSelectedKeys(keys);
   };
-
-  // Convert your dateRange to RangeValue<CalendarDate>
-  const convertToDateValue = (
-    dateRange: DateRange | null
-  ): RangeValue<CalendarDate> | null => {
-    if (!dateRange) return null;
-
-    return {
-      start: new CalendarDate(
-        dateRange.start.year,
-        dateRange.start.month,
-        dateRange.start.day
-      ),
-      end: new CalendarDate(
-        dateRange.end.year,
-        dateRange.end.month,
-        dateRange.end.day
-      ),
-    };
-  };
-
-  // Usage
-  const dateRangeValue = convertToDateValue(dateRange);
 
   const hasSearchFilter = Boolean(filterValue);
 
@@ -161,45 +138,43 @@ export default function App() {
   //All filters table
   const filteredItems = useMemo(() => {
     let filteredUsers = [...cases];
-  
     // Search filter
     if (hasSearchFilter) {
       filteredUsers = filteredUsers.filter((user) =>
         user.name.toLowerCase().includes(filterValue.toLowerCase())
       );
     }
-  
     // Status filter
     if (statusFilter !== "all") {
       const selectedStatuses = Array.from(statusFilter).map((key) => {
         const statusOption = statusOptions.find((option) => option.uid === key);
         return statusOption ? statusOption.name : null;
       });
-  
+
       filteredUsers = filteredUsers.filter((user) =>
         selectedStatuses.includes(user.status)
       );
     }
-  
+
     // Date range filter
     if (dateRange && dateRange.start && dateRange.end) {
       const { start, end } = dateRange;
       const startDate = new Date(start.year, start.month - 1, start.day);
       const endDate = new Date(end.year, end.month - 1, end.day);
-  
+
       filteredUsers = filteredUsers.filter((user) => {
         const userDate = new Date(user.created);
         if (isNaN(userDate.getTime())) {
           console.error(`Invalid date for user: ${user.id}`, user.created);
           return false;
         }
-  
+
         return userDate >= startDate && userDate <= endDate;
       });
     }
-  
+
     return filteredUsers;
-  }, [cases, filterValue, statusFilter, dateRange]); 
+  }, [cases, filterValue, statusFilter, dateRange]);
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
@@ -222,113 +197,104 @@ export default function App() {
     });
   }, [sortDescriptor, items]);
 
-  const renderCell = useCallback((user: CaseWithKey, columnKey: keyof CaseWithKey) => {
-    const cellValue = user[columnKey];
+  const renderCell = useCallback(
+    (user: CaseWithKey, columnKey: keyof CaseWithKey) => {
+      const cellValue = user[columnKey];
 
-    switch (columnKey) {
-      case "created":
-        return (
-          <div className="flex flex-col">
-            <p className="font-medium text-sm">
-              {parseDateToLocal(cellValue as string | number | Date)}
-            </p>
-          </div>
-        );
-      case "update":
-        return (
-          <div className="flex flex-col">
-            <p className="text-sm font-medium">
-              {parseDateToLocal(cellValue as string | number | Date)}
-            </p>
-          </div>
-        );
-      case "proccess_type":
-        return (
-          <div className="flex flex-col">
-            <p className="text-sm">{String(cellValue)}</p>
-          </div>
-        );
-      case "status":
-        return (
-          <Chip
-            className={`capitalize ${
-              cellValue === "Aprobado"
-                ? "bg-success text-[#12A150]"
-                : cellValue === "Seguimiento"
-                ? "bg-followed text-[#006FEE]"
-                : cellValue === "Acción Necesaria"
-                ? "bg-warning text-[#C4841D]"
-                : cellValue === "No Aprobado"
-                ? "bg-error text-[#F31260]"
-                : ""
-            }`}
-            size="sm"
-            variant="flat"
-          >
-            {String(cellValue)}
-          </Chip>
-        );
-      case "name":
-        return (
-          <div className="flex flex-col">
-            <p className="text-sm font-semibold">{String(cellValue)}</p>
-            {user.email && <p className="text-sm">{user.email}</p>}
-            {user.phone && <p className="text-sm">{user.phone}</p>}
-          </div>
-        );
-      case "response_time":
-        return (
-          <div className="flex gap-2 items-center">
-            <ClockIcon className="w-6 text-[#12A150]" />
-            <p className="text-sm font-semibold text-[#12A150]">
-              {String(cellValue)} Horas
-            </p>
-          </div>
-        );
-      case "assigned":
-        return (
-          <User
-            avatarProps={{ radius: "lg", src: (user.assigned).avatar }}
-            name={(user.assigned).name}
-          />
-        );
-      case "actions":
-        return (
-          <div className="relative flex items-center gap-2">
-            <Tooltip content="Vista previa">
-              <Button
-                isIconOnly
-                className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
-              >
-                <EyeIcon className="w-6" />
-              </Button>
-            </Tooltip>
-            <Tooltip content="Editar cliente">
-              <Button
-                isIconOnly
-                className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
-              >
-                <PencilIcon className="w-6" />
-              </Button>
-            </Tooltip>
-          </div>
-        );
-      default:
-        return cellValue;
-    }
-  }, []);
-
-  const onNextPage = useCallback(() => {
-    if (page < pages) {
-      setPage(page + 1);
-    }
-  }, [page, pages]);
-
-  const onPreviousPage = useCallback(() => {
-    if (page > 1) {
-      setPage(page - 1);
-    }
-  }, [page]);
+      switch (columnKey) {
+        case "created":
+          return (
+            <div className="flex flex-col">
+              <p className="font-medium text-sm">
+                {parseDateToLocal(cellValue as string | number | Date)}
+              </p>
+            </div>
+          );
+        case "update":
+          return (
+            <div className="flex flex-col">
+              <p className="text-sm font-medium">
+                {parseDateToLocal(cellValue as string | number | Date)}
+              </p>
+            </div>
+          );
+        case "proccess_type":
+          return (
+            <div className="flex flex-col">
+              <p className="text-sm">{String(cellValue)}</p>
+            </div>
+          );
+        case "status":
+          return (
+            <Chip
+              className={`capitalize ${
+                cellValue === "Aprobado"
+                  ? "bg-success text-[#12A150]"
+                  : cellValue === "Seguimiento"
+                  ? "bg-followed text-[#006FEE]"
+                  : cellValue === "Acción Necesaria"
+                  ? "bg-warning text-[#C4841D]"
+                  : cellValue === "No Aprobado"
+                  ? "bg-error text-[#F31260]"
+                  : ""
+              }`}
+              size="sm"
+              variant="flat"
+            >
+              {String(cellValue)}
+            </Chip>
+          );
+        case "name":
+          return (
+            <div className="flex flex-col">
+              <p className="text-sm font-semibold">{String(cellValue)}</p>
+              {user.email && <p className="text-sm">{user.email}</p>}
+              {user.phone && <p className="text-sm">{user.phone}</p>}
+            </div>
+          );
+        case "response_time":
+          return (
+            <div className="flex gap-2 items-center">
+              <ClockIcon className="w-6 text-[#12A150]" />
+              <p className="text-sm font-semibold text-[#12A150]">
+                {String(cellValue)} Horas
+              </p>
+            </div>
+          );
+        case "assigned":
+          return (
+            <User
+              avatarProps={{ radius: "lg", src: user.assigned.avatar }}
+              name={user.assigned.name}
+            />
+          );
+        case "actions":
+          return (
+            <div className="relative flex items-center gap-2">
+              <Tooltip content="Vista previa">
+                <Button
+                  isIconOnly
+                  className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
+                >
+                  <EyeIcon className="w-6" />
+                </Button>
+              </Tooltip>
+              <Tooltip content="Editar cliente">
+                <Button
+                  isIconOnly
+                  className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
+                >
+                  <PencilIcon className="w-6" />
+                </Button>
+              </Tooltip>
+            </div>
+          );
+        default:
+          return cellValue;
+      }
+    },
+    []
+  );
 
   const onRowsPerPageChange = useCallback(
     (e: ChangeEvent<HTMLSelectElement>) => {
@@ -354,75 +320,19 @@ export default function App() {
 
   const topContent = useMemo(() => {
     return (
-      <div className="flex flex-col">
-        <div className="flex gap-3 items-center pb-6 border-b">
-          <Input
-            isClearable
-            className="w-full sm:max-w-[25%]"
-            placeholder="Buscar por nombre..."
-            startContent={<MagnifyingGlassIcon className="w-6" />}
-            value={filterValue}
-            onClear={() => onClear()}
-            onValueChange={onSearchChange}
-          />
-          <div className="flex gap-3">
-            <Dropdown>
-              <DropdownTrigger className="hidden sm:flex">
-                <Button
-                  endContent={<ChevronDownIcon className="text-small w-4" />}
-                  variant="bordered"
-                >
-                  Estado
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu
-                disallowEmptySelection
-                aria-label="Table Columns"
-                closeOnSelect={false}
-                selectedKeys={statusFilter}
-                selectionMode="multiple"
-                onSelectionChange={setStatusFilter}
-              >
-                {statusOptions.map((status) => (
-                  <DropdownItem key={status.uid} className="capitalize">
-                    {capitalize(status.name)}
-                  </DropdownItem>
-                ))}
-              </DropdownMenu>
-            </Dropdown>
-          </div>
-          <I18nProvider locale="es-ES">
-            <DateRangePicker
-              variant="bordered"
-              label="Buscar por fecha"
-              className="max-w-xs"
-              value={convertToDateValue(dateRange)}
-              onChange={handleDateRangeChange}
-            />
-          </I18nProvider>
-          <div>
-            <Button color="primary" onPress={() => setShowAll(!showAll)}>
-              Mostrar todos
-            </Button>
-          </div>
-        </div>
-        <div className="flex justify-between items-center mt-6">
-          <span className="text-default-400 text-small">
-            Total {cases.length} casos
-          </span>
-          <label className="flex items-center text-default-400 text-small">
-            Fila por pagina:
-            <select
-              className="text-small rounded-sm"
-              onChange={onRowsPerPageChange}
-            >
-              <option value="5">5</option>
-              <option value="10">10</option>
-              <option value="15">15</option>
-            </select>
-          </label>
-        </div>
-      </div>
+      <TopContent
+        usersLength={cases.length}
+        onRowsPerPageChange={onRowsPerPageChange}
+        handleDateRangeChange={handleDateRangeChange}
+        setShowAll={setShowAll}
+        setStatusFilter={setStatusFilter}
+        onClear={onClear}
+        filterValue={filterValue}
+        statusFilter={statusFilter as Set<string>}
+        showAll={showAll}
+        dateRange={dateRange as DateRange}
+        onSearchChange={onSearchChange}
+      />
     );
   }, [
     filterValue,
