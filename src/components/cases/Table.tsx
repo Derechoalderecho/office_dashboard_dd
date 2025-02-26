@@ -44,7 +44,6 @@ import {
   UserCircleIcon,
   TrashIcon,
 } from "@heroicons/react/24/solid";
-import { Cases } from "@/types/cases";
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -52,51 +51,8 @@ import { parseDateToLocal } from "@/utils/date";
 import { capitalize } from "@/utils/capitalize";
 import { I18nProvider } from "@react-aria/i18n";
 import { CalendarDate } from "@internationalized/date";
-
-type Column = {
-  name: string;
-  uid: string;
-  sortable?: boolean;
-};
-
-type StatusOption = {
-  name: string;
-  uid: string;
-};
-
-type RangeValue<T> = { start: T; end: T };
-
-type DateRange = {
-  start: { year: number; month: number; day: number };
-  end: { year: number; month: number; day: number };
-};
-
-const convertToDateValue = (dateRange: DateRange | null): RangeValue<CalendarDate> | null => {
-  if (!dateRange) return null;
-
-  return {
-    start: new CalendarDate(dateRange.start.year, dateRange.start.month, dateRange.start.day),
-    end: new CalendarDate(dateRange.end.year, dateRange.end.month, dateRange.end.day),
-  };
-};
-
-const columns = [
-  { name: "Creado en", uid: "created" },
-  { name: "Actualizado en", uid: "update" },
-  { name: "Tipo de proceso", uid: "proccess_type", sortable: true },
-  { name: "Estado", uid: "status", sortable: true },
-  { name: "Cliente", uid: "name" },
-  { name: "Tiempo Respuesta", uid: "response_time", sortable: true },
-  { name: "Asignado", uid: "assigned", sortable: true },
-  { name: "Acciones", uid: "actions" },
-];
-
-const statusOptions = [
-  { name: "Seguimiento", uid: "follow_up" },
-  { name: "Aprobado", uid: "aproved" },
-  { name: "No Aprobado", uid: "not_approved" },
-  { name: "Acción Necesaria", uid: "action_required" },
-];
+import { Column, Cases, RangeValue, DateRange, StatusOption } from "@/types/cases";
+import { columns, statusOptions } from "@/constants";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "created",
