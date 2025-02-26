@@ -24,6 +24,7 @@ export interface Cases {
   registration_history: RegistrationHistory[];
   history_comments: any[];
   actions?: string;
+  key?: string;
 }
 
 export type Column = {

@@ -54,6 +54,8 @@ import { CalendarDate } from "@internationalized/date";
 import { Column, Cases, RangeValue, DateRange, StatusOption } from "@/types/cases";
 import { columns, statusOptions } from "@/constants";
 
+type CaseWithKey = Cases & { key: string };
+
 const INITIAL_VISIBLE_COLUMNS = [
   "created",
   "update",
@@ -81,7 +83,7 @@ export default function App() {
   const [showAll, setShowAll] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [cases, setCases] = useState<Cases[]>([]);
+  const [cases, setCases] = useState<CaseWithKey[]>([]);
 
   const handleDateRangeChange = (newValue: RangeValue<CalendarDate> | null) => {
     if (!newValue) {
@@ -111,7 +113,7 @@ export default function App() {
     (async () => {
       const casesCollection = collection(db, "cases");
       const casesSnapshot = await getDocs(casesCollection);
-      const casesList: Cases[] = [];
+      const casesList: CaseWithKey[] = [];
       casesSnapshot.forEach((doc) => {
         const data = doc.data() as Cases;
         casesList.push({ key: doc.id, ...data });
@@ -120,9 +122,7 @@ export default function App() {
     })();
   }, []);
 
-  const onSelectionChangeMasiveMenu = (
-    keys: string | Set<Key> | ((prevState: Selection) => Selection)
-  ) => {
+  const onSelectionChangeMasiveMenu = (keys: Selection) => {
     setSelectedKeys(keys);
   };
 
@@ -222,7 +222,7 @@ export default function App() {
     });
   }, [sortDescriptor, items]);
 
-  const renderCell = useCallback((user: User, columnKey: keyof User) => {
+  const renderCell = useCallback((user: CaseWithKey, columnKey: keyof CaseWithKey) => {
     const cellValue = user[columnKey];
 
     switch (columnKey) {
@@ -288,8 +288,8 @@ export default function App() {
       case "assigned":
         return (
           <User
-            avatarProps={{ radius: "lg", src: user.assigned.avatar }}
-            name={cellValue.name}
+            avatarProps={{ radius: "lg", src: (user.assigned).avatar }}
+            name={(user.assigned).name}
           />
         );
       case "actions":
