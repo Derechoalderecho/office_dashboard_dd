@@ -33,7 +33,7 @@ import { TableCellRenderer } from "./TableCellRenderer";
 import { BulkActionsBar } from "./BulkActionsBar";
 import { fetchAllCases } from "@/services/caseService";
 import SkeletonTables from "@/ui/SkeletonTables";
-import { Suspense } from "react";
+import { Spinner } from "@heroui/react";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "created",
@@ -63,12 +63,14 @@ export default function TableCases() {
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [cases, setCases] = useState<CaseWithKey[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Fetch cases from Firestore
   useEffect(() => {
     const fetchCases = async () => {
       const casesList = await fetchAllCases();
       setCases(casesList as CaseWithKey[]);
+      setIsLoading(false);
     };
     fetchCases();
   }, []);
@@ -201,49 +203,53 @@ export default function TableCases() {
           filteredItemsLength={filteredItems.length}
         />
       )}
-      <Suspense fallback={<SkeletonTables />}>
-        <Table
-          suppressHydrationWarning
-          isHeaderSticky
-          aria-label="Tabla de casos"
-          bottomContent={bottomContent}
-          bottomContentPlacement="outside"
-          classNames={{
-            wrapper: "max-w-[100%]",
-          }}
-          selectedKeys={selectedKeys}
-          selectionMode="multiple"
-          sortDescriptor={sortDescriptor}
-          topContent={topContent}
-          topContentPlacement="outside"
-          onSelectionChange={onSelectionChangeMasiveMenu}
-          onSortChange={setSortDescriptor}
+
+      <Table
+        suppressHydrationWarning
+        isHeaderSticky
+        aria-label="Tabla de casos"
+        bottomContent={bottomContent}
+        bottomContentPlacement="outside"
+        classNames={{
+          wrapper: "max-w-[100%]",
+        }}
+        selectedKeys={selectedKeys}
+        selectionMode="multiple"
+        sortDescriptor={sortDescriptor}
+        topContent={topContent}
+        topContentPlacement="outside"
+        onSelectionChange={onSelectionChangeMasiveMenu}
+        onSortChange={setSortDescriptor}
+      >
+        <TableHeader columns={headerColumns}>
+          {(column) => (
+            <TableColumn
+              key={column.uid}
+              align={column.uid === "actions" ? "center" : "start"}
+              allowsSorting={column.sortable}
+              className="text-base"
+            >
+              {column.name}
+            </TableColumn>
+          )}
+        </TableHeader>
+        <TableBody
+          emptyContent={"Casos no encontrados"}
+          items={sortedItems}
+          isLoading={isLoading}
+          loadingContent={<Spinner label="Cargando..." />}
         >
-          <TableHeader columns={headerColumns}>
-            {(column) => (
-              <TableColumn
-                key={column.uid}
-                align={column.uid === "actions" ? "center" : "start"}
-                allowsSorting={column.sortable}
-                className="text-base"
-              >
-                {column.name}
-              </TableColumn>
-            )}
-          </TableHeader>
-          <TableBody emptyContent={"Casos no encontrados"} items={sortedItems}>
-            {(item) => (
-              <TableRow key={item.id}>
-                {(columnKey) => (
-                  <TableCell>
-                    <TableCellRenderer user={item} columnKey={columnKey} />
-                  </TableCell>
-                )}
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </Suspense>
+          {(item) => (
+            <TableRow key={item.id}>
+              {(columnKey) => (
+                <TableCell>
+                  <TableCellRenderer user={item} columnKey={columnKey} />
+                </TableCell>
+              )}
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
     </>
   );
 }

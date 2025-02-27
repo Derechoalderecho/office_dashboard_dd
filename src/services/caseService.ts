@@ -11,6 +11,7 @@ export const fetchCaseDetails = async (id: string): Promise<Cases | null> => {
 };
 
 export const fetchAllCases = async (): Promise<Cases[]> => {
+  await new Promise((resolve) => setTimeout(resolve, 3000));
   const casesCollection = collection(db, "cases");
   const casesSnapshot = await getDocs(casesCollection);
   const casesList: CaseWithKey[] = [];
