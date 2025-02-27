@@ -1,15 +1,17 @@
-// src/app/cases/[id]/page.tsx
+"use client";
+
 import { db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { Cases } from "@/types/cases";
 
 interface CasePageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-export default async function CasePage({ params }: CasePageProps) {
+export default async function CasePage(props: CasePageProps) {
+  const params = await props.params;
   const { id } = await params;
 
   console.log(params);
