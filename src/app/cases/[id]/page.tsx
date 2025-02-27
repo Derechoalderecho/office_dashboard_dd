@@ -21,6 +21,8 @@ interface CasePageProps {
 export default async function CasePage({ params }: CasePageProps) {
   const { id } = await params;
 
+  console.log('Case ID:', id);
+
   const caseData = await fetchCaseDetails(id);
 
   if (!caseData) {

@@ -31,6 +31,7 @@ import { paginateItems } from "@/utils/paginateItems";
 import { CaseWithKey } from "@/types/cases";
 import { TableCellRenderer } from "./TableCellRenderer";
 import { BulkActionsBar } from "./BulkActionsBar";
+import { fetchAllCases } from "@/services/caseService";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "created",
@@ -63,16 +64,11 @@ export default function App() {
 
   // Fetch cases from Firestore
   useEffect(() => {
-    (async () => {
-      const casesCollection = collection(db, "cases");
-      const casesSnapshot = await getDocs(casesCollection);
-      const casesList: CaseWithKey[] = [];
-      casesSnapshot.forEach((doc) => {
-        const data = doc.data() as Cases;
-        casesList.push({ key: doc.id, ...data });
-      });
-      setCases(casesList);
-    })();
+    const fetchCases = async () => {
+      const casesList = await fetchAllCases();
+      setCases(casesList as CaseWithKey[]);
+    };
+    fetchCases();
   }, []);
 
   // Handle date range change

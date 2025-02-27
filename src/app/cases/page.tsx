@@ -1,7 +1,5 @@
 "use client";
 
-import { Link } from "@heroui/react";
-import { Breadcrumbs, BreadcrumbItem } from "@heroui/react";
 import dynamic from "next/dynamic";
 
 const TableCases = dynamic(() => import("@/components/cases/Table"), {
