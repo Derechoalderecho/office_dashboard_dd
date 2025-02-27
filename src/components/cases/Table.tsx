@@ -7,15 +7,6 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Button,
-  DropdownTrigger,
-  Dropdown,
-  DropdownMenu,
-  DropdownItem,
-  DropdownSection,
-  Chip,
-  User,
-  Tooltip,
   Modal,
   ModalContent,
   ModalHeader,
@@ -23,33 +14,23 @@ import {
   ModalFooter,
   Card,
   CardBody,
-  Pagination,
   Selection,
-  ChipProps,
   SortDescriptor,
 } from "@heroui/react";
-import {
-  ClockIcon,
-  EyeIcon,
-  PencilIcon,
-} from "@heroicons/react/24/outline";
-import {
-  CheckBadgeIcon,
-  TagIcon,
-  UserCircleIcon,
-  TrashIcon,
-} from "@heroicons/react/24/solid";
 import { useState, useCallback, useMemo, useEffect, ChangeEvent } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { parseDateToLocal } from "@/utils/date";
 import { CalendarDate } from "@internationalized/date";
 import { Cases, RangeValue, DateRange } from "@/types/cases";
-import { columns, statusOptions } from "@/constants";
+import { columns } from "@/constants";
 import TopContent from "./TopContent";
 import BottomContent from "./BottomContent";
-
-type CaseWithKey = Cases & { key: string };
+import { useFilteredItems } from "@/hooks/useFilteredCases";
+import { sortItems } from "@/utils/sortItems";
+import { paginateItems } from "@/utils/paginateItems";
+import { CaseWithKey } from "@/types/cases";
+import { TableCellRenderer } from "./TableCellRenderer";
+import { BulkActionsBar } from "./BulkActionsBar";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "created",
@@ -80,8 +61,7 @@ export default function App() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [cases, setCases] = useState<CaseWithKey[]>([]);
 
-  type User = Cases;
-
+  // Fetch cases from Firestore
   useEffect(() => {
     (async () => {
       const casesCollection = collection(db, "cases");
@@ -95,6 +75,7 @@ export default function App() {
     })();
   }, []);
 
+  // Handle date range change
   const handleDateRangeChange = (newValue: RangeValue<CalendarDate> | null) => {
     if (!newValue) {
       setDateRange(null);
@@ -117,11 +98,10 @@ export default function App() {
     setDateRange(newDateRange);
   };
 
+  // Handle Bulk Actions Bar selection change
   const onSelectionChangeMasiveMenu = (keys: Selection) => {
     setSelectedKeys(keys);
   };
-
-  const hasSearchFilter = Boolean(filterValue);
 
   const headerColumns = useMemo(() => {
     if (visibleColumns === "all") return columns;
@@ -130,166 +110,25 @@ export default function App() {
     );
   }, [visibleColumns]);
 
-  //All filters table
-  const filteredItems = useMemo(() => {
-    let filteredUsers = [...cases];
-    // Search filter
-    if (hasSearchFilter) {
-      filteredUsers = filteredUsers.filter((user) =>
-        user.name.toLowerCase().includes(filterValue.toLowerCase())
-      );
-    }
-    // Status filter
-    if (statusFilter !== "all") {
-      const selectedStatuses = Array.from(statusFilter).map((key) => {
-        const statusOption = statusOptions.find((option) => option.uid === key);
-        return statusOption ? statusOption.name : null;
-      });
-
-      filteredUsers = filteredUsers.filter((user) =>
-        selectedStatuses.includes(user.status)
-      );
-    }
-
-    // Date range filter
-    if (dateRange && dateRange.start && dateRange.end) {
-      const { start, end } = dateRange;
-      const startDate = new Date(start.year, start.month - 1, start.day);
-      const endDate = new Date(end.year, end.month - 1, end.day);
-
-      filteredUsers = filteredUsers.filter((user) => {
-        const userDate = new Date(user.created);
-        if (isNaN(userDate.getTime())) {
-          console.error(`Invalid date for user: ${user.id}`, user.created);
-          return false;
-        }
-
-        return userDate >= startDate && userDate <= endDate;
-      });
-    }
-
-    return filteredUsers;
-  }, [cases, filterValue, statusFilter, dateRange]);
+  // Filters
+  const { filteredItems, hasSearchFilter } = useFilteredItems({
+    cases,
+    filterValue,
+    statusFilter: statusFilter as string | Set<string>,
+    dateRange,
+  });
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
+  // Paginate
   const items = useMemo(() => {
-    const start = (page - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-
-    return filteredItems.slice(start, end);
+    return paginateItems(filteredItems, page, rowsPerPage);
   }, [page, filteredItems, rowsPerPage]);
 
+  //Sort items
   const sortedItems = useMemo(() => {
-    return [...items].sort((a: User, b: User) => {
-      const first = a[sortDescriptor.column as keyof User] as unknown as number;
-      const second = b[
-        sortDescriptor.column as keyof User
-      ] as unknown as number;
-      const cmp = first < second ? -1 : first > second ? 1 : 0;
-
-      return sortDescriptor.direction === "descending" ? -cmp : cmp;
-    });
+    return sortItems(items, sortDescriptor);
   }, [sortDescriptor, items]);
-
-  const renderCell = useCallback(
-    (user: CaseWithKey, columnKey: keyof CaseWithKey) => {
-      const cellValue = user[columnKey];
-
-      switch (columnKey) {
-        case "created":
-          return (
-            <div className="flex flex-col">
-              <p className="font-medium text-sm">
-                {parseDateToLocal(cellValue as string | number | Date)}
-              </p>
-            </div>
-          );
-        case "update":
-          return (
-            <div className="flex flex-col">
-              <p className="text-sm font-medium">
-                {parseDateToLocal(cellValue as string | number | Date)}
-              </p>
-            </div>
-          );
-        case "proccess_type":
-          return (
-            <div className="flex flex-col">
-              <p className="text-sm">{String(cellValue)}</p>
-            </div>
-          );
-        case "status":
-          return (
-            <Chip
-              className={`capitalize ${
-                cellValue === "Aprobado"
-                  ? "bg-success text-[#12A150]"
-                  : cellValue === "Seguimiento"
-                  ? "bg-followed text-[#006FEE]"
-                  : cellValue === "Acción Necesaria"
-                  ? "bg-warning text-[#C4841D]"
-                  : cellValue === "No Aprobado"
-                  ? "bg-error text-[#F31260]"
-                  : ""
-              }`}
-              size="sm"
-              variant="flat"
-            >
-              {String(cellValue)}
-            </Chip>
-          );
-        case "name":
-          return (
-            <div className="flex flex-col">
-              <p className="text-sm font-semibold">{String(cellValue)}</p>
-              {user.email && <p className="text-sm">{user.email}</p>}
-              {user.phone && <p className="text-sm">{user.phone}</p>}
-            </div>
-          );
-        case "response_time":
-          return (
-            <div className="flex gap-2 items-center">
-              <ClockIcon className="w-6 text-[#12A150]" />
-              <p className="text-sm font-semibold text-[#12A150]">
-                {String(cellValue)} Horas
-              </p>
-            </div>
-          );
-        case "assigned":
-          return (
-            <User
-              avatarProps={{ radius: "lg", src: user.assigned.avatar }}
-              name={user.assigned.name}
-            />
-          );
-        case "actions":
-          return (
-            <div className="relative flex items-center gap-2">
-              <Tooltip content="Vista previa">
-                <Button
-                  isIconOnly
-                  className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
-                >
-                  <EyeIcon className="w-6" />
-                </Button>
-              </Tooltip>
-              <Tooltip content="Editar cliente">
-                <Button
-                  isIconOnly
-                  className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
-                >
-                  <PencilIcon className="w-6" />
-                </Button>
-              </Tooltip>
-            </div>
-          );
-        default:
-          return cellValue;
-      }
-    },
-    []
-  );
 
   const onRowsPerPageChange = useCallback(
     (e: ChangeEvent<HTMLSelectElement>) => {
@@ -299,6 +138,7 @@ export default function App() {
     []
   );
 
+  // Clear search filter
   const onSearchChange = useCallback((value?: string) => {
     if (value) {
       setFilterValue(value);
@@ -344,7 +184,9 @@ export default function App() {
     return (
       <BottomContent
         selectedKeys={selectedKeys as string}
-        selectedKeysSize={selectedKeys === "all" ? filteredItems.length : selectedKeys.size}
+        selectedKeysSize={
+          selectedKeys === "all" ? filteredItems.length : selectedKeys.size
+        }
         filteredItemsLenght={filteredItems.length}
         page={page}
         pages={pages}
@@ -356,99 +198,10 @@ export default function App() {
   return (
     <>
       {(selectedKeys === "all" || selectedKeys.size > 0) && (
-        <aside className="fixed bottom-0 z-50 left-1/2 transform -translate-x-1/2 mb-10">
-          <Card shadow="lg" className="bg-[#383838] p-1">
-            <CardBody className="!flex flex-row gap-40 justify-between">
-              <p className="text-white text-nowrap">
-                {selectedKeys === "all"
-                  ? "Todos los casos seleccionados"
-                  : `${selectedKeys.size} ${
-                      selectedKeys.size > 1
-                        ? "casos seleccionados"
-                        : "caso seleccionado"
-                    }`}
-              </p>
-              <div className="flex items-center gap-4">
-                <Dropdown placement="bottom-end">
-                  <DropdownTrigger>
-                    <div className="flex items-center gap-1 cursor-pointer">
-                      <CheckBadgeIcon className="w-6 text-white" />
-                      <p className="text-white">Estado</p>
-                    </div>
-                  </DropdownTrigger>
-                  <DropdownMenu aria-label="Profile Actions" variant="flat">
-                    <DropdownSection title="Estado">
-                      <DropdownItem key="approved">
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 bg-[#12A150] rounded-full"></div>
-                          Aprobado
-                        </div>
-                      </DropdownItem>
-                      <DropdownItem key="action_required">
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 bg-[#C4841D] rounded-full"></div>
-                          Acción necesaria
-                        </div>
-                      </DropdownItem>
-                      <DropdownItem key="followed">
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 bg-[#006FEE] rounded-full"></div>
-                          Seguimiento
-                        </div>
-                      </DropdownItem>
-                      <DropdownItem key="no_approved">
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 bg-[#F31260] rounded-full"></div>
-                          No aprobado
-                        </div>
-                      </DropdownItem>
-                    </DropdownSection>
-                  </DropdownMenu>
-                </Dropdown>
-                <div className="border-l border-white h-6 mx-2"></div>
-                <div className="flex items-center gap-1">
-                  <Dropdown placement="bottom-end">
-                    <DropdownTrigger>
-                      <div className="flex items-center gap-1 cursor-pointer">
-                        <UserCircleIcon className="w-6 text-white" />
-                        <p className="text-white">Asignado</p>
-                      </div>
-                    </DropdownTrigger>
-                    <DropdownMenu aria-label="Profile Actions" variant="flat">
-                      <DropdownSection title="Asignado">
-                        <DropdownItem key="user1">
-                          <User
-                            avatarProps={{
-                              radius: "sm",
-                              src: "https://i.pravatar.cc/150?u=a04258114e29026702d",
-                            }}
-                            name={"Victor Hugo"}
-                          />
-                        </DropdownItem>
-                        <DropdownItem key="aproved">
-                          <User
-                            avatarProps={{
-                              radius: "sm",
-                              src: "https://i.pravatar.cc/150?u=a04258114e29026702d",
-                            }}
-                            name={"Joaquin Fernandez"}
-                          />
-                        </DropdownItem>
-                      </DropdownSection>
-                    </DropdownMenu>
-                  </Dropdown>
-                </div>
-                <div className="border-l border-white h-6 mx-2"></div>
-                <div className="flex items-center gap-1">
-                  <TagIcon className="w-6 text-white" />
-                  <p className="text-white">Tags</p>
-                </div>
-                <div className="border-l border-white h-6 mx-2"></div>
-                <TrashIcon className="w-6 text-white" />
-              </div>
-            </CardBody>
-          </Card>
-        </aside>
+        <BulkActionsBar
+          selectedKeys={selectedKeys}
+          filteredItemsLength={filteredItems.length}
+        />
       )}
       <Table
         suppressHydrationWarning
@@ -483,7 +236,9 @@ export default function App() {
           {(item) => (
             <TableRow key={item.id}>
               {(columnKey) => (
-                <TableCell>{renderCell(item, columnKey)}</TableCell>
+                <TableCell>
+                  <TableCellRenderer user={item} columnKey={columnKey} />
+                </TableCell>
               )}
             </TableRow>
           )}

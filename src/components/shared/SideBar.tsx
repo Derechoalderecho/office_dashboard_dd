@@ -1,9 +1,6 @@
 "use client";
 
-import { NAV_LINKS } from "@/constants";
 import { useState } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { NavLinks, NavLinks2 } from "./nav-links";
 
 export function SideBar() {
@@ -31,13 +28,16 @@ export function SideBar() {
       <div className="border-t border-gray-300"></div>
       <nav className="flex flex-col gap-3">
         <ul className="flex flex-col gap-3">
-          <NavLinks handleMouseEnter={handleMouseEnter} handleMouseLeave={handleMouseLeave} setIsHovered={setIsHovered} />
+          <NavLinks handleMouseEnter={handleMouseEnter} isHovered={isHovered} />
         </ul>
       </nav>
       <div className="border-t border-gray-300"></div>
       <nav className="flex flex-col gap-3">
         <ul className="flex flex-col gap-3">
-          <NavLinks2 handleMouseEnter={handleMouseEnter} handleMouseLeave={handleMouseLeave} setIsHovered={setIsHovered} />
+          <NavLinks2
+            handleMouseEnter={handleMouseEnter}
+            isHovered={isHovered}
+          />
         </ul>
       </nav>
     </nav>
