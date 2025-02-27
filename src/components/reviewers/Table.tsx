@@ -47,7 +47,8 @@ export default function TableReviewers() {
   const [visibleColumns, setVisibleColumns] = useState<Selection>(
     new Set(INITIAL_VISIBLE_COLUMNS)
   );
-  const [statusFilter, setStatusFilter] = useState<Selection>("all");
+  const [siteFilter, setSiteFilter] = useState<Selection>("all");
+  const [userTypeFilter, setUserTypeFilter] = useState<Selection>("all");
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
     column: "age",
@@ -85,7 +86,8 @@ export default function TableReviewers() {
   const { filteredItems, hasSearchFilter } = useFilteredReviewers({
     reviewers,
     filterValue,
-    userTypeFilter: statusFilter as string | Set<string>,
+    userTypeFilter: userTypeFilter as string | Set<string>,
+    siteFilter: siteFilter as string | Set<string>,
   });
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
@@ -129,17 +131,20 @@ export default function TableReviewers() {
         usersLength={reviewers.length}
         onRowsPerPageChange={onRowsPerPageChange}
         setShowAll={setShowAll}
-        setStatusFilter={setStatusFilter}
+        setUserTypeFilter={setUserTypeFilter}
+        setSiteFilter={setSiteFilter}
+        userTypeFilter={userTypeFilter as Set<string>}
+        siteFilter={siteFilter as Set<string>}
         onClear={onClear}
         filterValue={filterValue}
-        statusFilter={statusFilter as Set<string>}
         showAll={showAll}
         onSearchChange={onSearchChange}
       />
     );
   }, [
     filterValue,
-    statusFilter,
+    userTypeFilter,
+    siteFilter,
     visibleColumns,
     onSearchChange,
     onRowsPerPageChange,

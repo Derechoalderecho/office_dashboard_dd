@@ -7,34 +7,37 @@ import { Button } from "@heroui/react";
 import { DropdownTrigger } from "@heroui/react";
 import { Dropdown } from "@heroui/react";
 import { Input } from "@heroui/react";
-import { statusOptions } from "@/constants/reviewersConstants";
+import { userTypeOptions, siteOptions } from "@/constants/reviewersConstants";
 import { capitalize } from "@/utils/capitalize";
 import React from "react";
 
 interface TopContentProps {
   usersLength: number;
-  statusFilter: Set<string>;
+  userTypeFilter: Set<string>;
+  siteFilter: Set<string>;
   showAll: boolean;
   filterValue: string;
   onClear: () => void;
   onSearchChange: (value: string) => void;
   onRowsPerPageChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   setShowAll: (value: boolean) => void;
-  setStatusFilter: (value: Set<string>) => void;
+  setUserTypeFilter: (value: Set<string>) => void;
+  setSiteFilter: (value: Set<string>) => void;
 }
 
 export default function TopContent({
   usersLength,
-  statusFilter,
+  userTypeFilter,
+  siteFilter,
+  setUserTypeFilter,
+  setSiteFilter,
   showAll,
   setShowAll,
   filterValue,
   onClear,
   onSearchChange,
   onRowsPerPageChange,
-  setStatusFilter,
 }: TopContentProps) {
-
   return (
     <div className="flex flex-col">
       <div className="flex gap-3 items-center pb-6 border-b">
@@ -54,18 +57,44 @@ export default function TopContent({
                 endContent={<ChevronDownIcon className="text-small w-4" />}
                 variant="bordered"
               >
-                Tipo de docente
+                Tipo de usuario
               </Button>
             </DropdownTrigger>
             <DropdownMenu
               disallowEmptySelection
               aria-label="Table Columns"
               closeOnSelect={false}
-              selectedKeys={statusFilter}
+              selectedKeys={userTypeFilter}
               selectionMode="multiple"
-              onSelectionChange={(keys) => setStatusFilter(keys as Set<string>)}
+              onSelectionChange={(keys) =>
+                setUserTypeFilter(keys as Set<string>)
+              }
             >
-              {statusOptions.map((status) => (
+              {userTypeOptions.map((status) => (
+                <DropdownItem key={status.uid} className="capitalize">
+                  {capitalize(status.name)}
+                </DropdownItem>
+              ))}
+            </DropdownMenu>
+          </Dropdown>
+          <Dropdown>
+            <DropdownTrigger className="hidden sm:flex">
+              <Button
+                endContent={<ChevronDownIcon className="text-small w-4" />}
+                variant="bordered"
+              >
+                Sede
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu
+              disallowEmptySelection
+              aria-label="Table Columns"
+              closeOnSelect={false}
+              selectedKeys={siteFilter}
+              selectionMode="multiple"
+              onSelectionChange={(keys) => setSiteFilter(keys as Set<string>)}
+            >
+              {siteOptions.map((status) => (
                 <DropdownItem key={status.uid} className="capitalize">
                   {capitalize(status.name)}
                 </DropdownItem>

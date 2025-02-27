@@ -1,4 +1,4 @@
-import { Column, StatusOption } from "@/types/reviewers";
+import { Column, userTypeOption, siteOption } from "@/types/reviewers";
 
 export const columns: Column[] = [
   { name: "Nombre", uid: "name" },
@@ -9,8 +9,14 @@ export const columns: Column[] = [
   { name: "Procesos", uid: "procceses_number" },
 ];
 
-export const statusOptions: StatusOption[] = [
+export const userTypeOptions: userTypeOption[] = [
   { name: "Asesor", uid: "asesor" },
   { name: "Monitor", uid: "monitor" },
   { name: "Profesor", uid: "professor" },
+];
+
+export const siteOptions: userTypeOption[] = [
+  { name: "Cali", uid: "cali" },
+  { name: "Ibagué", uid: "ibague" },
+  { name: "Cali sede sur", uid: "cali_sur" },
 ];
