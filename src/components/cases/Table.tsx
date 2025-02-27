@@ -22,7 +22,7 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { CalendarDate } from "@internationalized/date";
 import { Cases, RangeValue, DateRange } from "@/types/cases";
-import { columns } from "@/constants";
+import { columns } from "@/constants/casesConstants";
 import TopContent from "./TopContent";
 import BottomContent from "./BottomContent";
 import { useFilteredItems } from "@/hooks/useFilteredCases";

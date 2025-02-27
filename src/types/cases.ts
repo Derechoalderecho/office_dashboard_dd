@@ -1,6 +1,5 @@
 export interface Assigned {
   name: string;
-  avatar: string;
 }
 
 export interface RegistrationHistory {

@@ -8,7 +8,7 @@ import { DropdownTrigger } from "@heroui/react";
 import { Dropdown } from "@heroui/react";
 import { Input } from "@heroui/react";
 import { I18nProvider } from "@react-aria/i18n";
-import { statusOptions } from "@/constants";
+import { statusOptions } from "@/constants/casesConstants";
 import { DateRange } from "@/types/cases";
 import { RangeValue } from "@/types/cases";
 import { CalendarDate } from "@internationalized/date";
