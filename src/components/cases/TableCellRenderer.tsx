@@ -4,13 +4,17 @@ import { ClockIcon, EyeIcon, PencilIcon } from "@heroicons/react/24/outline";
 import { Chip, User, Tooltip, Button } from "@heroui/react";
 import { parseDateToLocal } from "@/utils/date";
 import { CaseWithKey } from "@/types/cases";
+import Link from "next/link";
 
 interface TableCellRendererProps {
   user: CaseWithKey;
   columnKey: keyof CaseWithKey;
 }
 
-export const TableCellRenderer = ({ user, columnKey }: TableCellRendererProps) => {
+export const TableCellRenderer = ({
+  user,
+  columnKey,
+}: TableCellRendererProps) => {
   const cellValue = user[columnKey];
 
   switch (columnKey) {
@@ -92,12 +96,14 @@ export const TableCellRenderer = ({ user, columnKey }: TableCellRendererProps) =
             </Button>
           </Tooltip>
           <Tooltip content="Editar cliente">
-            <Button
-              isIconOnly
-              className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
-            >
-              <PencilIcon className="w-6" />
-            </Button>
+            <Link href={`/cases/${user.id}`}>
+              <Button
+                isIconOnly
+                className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
+              >
+                <PencilIcon className="w-6" />
+              </Button>
+            </Link>
           </Tooltip>
         </div>
       );

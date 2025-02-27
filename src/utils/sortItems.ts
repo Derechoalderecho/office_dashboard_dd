@@ -1,4 +1,3 @@
-// src/utils/sortItems.ts
 import { SortDescriptor } from "@heroui/react";
 import { Cases } from "@/types/cases";
 

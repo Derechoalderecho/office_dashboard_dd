@@ -1,4 +1,10 @@
-import TableCases from "@/components/cases/Table";
+"use client";
+
+import dynamic from "next/dynamic";
+
+const TableCases = dynamic(() => import("@/components/cases/Table"), {
+  ssr: false,
+});
 
 export default function CasesPage() {
   return (

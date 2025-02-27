@@ -7,15 +7,6 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Button,
-  DropdownTrigger,
-  Dropdown,
-  DropdownMenu,
-  DropdownItem,
-  DropdownSection,
-  Chip,
-  User,
-  Tooltip,
   Modal,
   ModalContent,
   ModalHeader,
@@ -26,20 +17,12 @@ import {
   Selection,
   SortDescriptor,
 } from "@heroui/react";
-import { ClockIcon, EyeIcon, PencilIcon } from "@heroicons/react/24/outline";
-import {
-  CheckBadgeIcon,
-  TagIcon,
-  UserCircleIcon,
-  TrashIcon,
-} from "@heroicons/react/24/solid";
 import { useState, useCallback, useMemo, useEffect, ChangeEvent } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { parseDateToLocal } from "@/utils/date";
 import { CalendarDate } from "@internationalized/date";
 import { Cases, RangeValue, DateRange } from "@/types/cases";
-import { columns, statusOptions } from "@/constants";
+import { columns } from "@/constants";
 import TopContent from "./TopContent";
 import BottomContent from "./BottomContent";
 import { useFilteredItems } from "@/hooks/useFilteredCases";
@@ -78,8 +61,7 @@ export default function App() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [cases, setCases] = useState<CaseWithKey[]>([]);
 
-  type User = Cases;
-
+  // Fetch cases from Firestore
   useEffect(() => {
     (async () => {
       const casesCollection = collection(db, "cases");
@@ -93,6 +75,7 @@ export default function App() {
     })();
   }, []);
 
+  // Handle date range change
   const handleDateRangeChange = (newValue: RangeValue<CalendarDate> | null) => {
     if (!newValue) {
       setDateRange(null);
@@ -115,6 +98,7 @@ export default function App() {
     setDateRange(newDateRange);
   };
 
+  // Handle Bulk Actions Bar selection change
   const onSelectionChangeMasiveMenu = (keys: Selection) => {
     setSelectedKeys(keys);
   };
@@ -126,6 +110,7 @@ export default function App() {
     );
   }, [visibleColumns]);
 
+  // Filters
   const { filteredItems, hasSearchFilter } = useFilteredItems({
     cases,
     filterValue,
@@ -135,10 +120,12 @@ export default function App() {
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
+  // Paginate
   const items = useMemo(() => {
     return paginateItems(filteredItems, page, rowsPerPage);
   }, [page, filteredItems, rowsPerPage]);
 
+  //Sort items
   const sortedItems = useMemo(() => {
     return sortItems(items, sortDescriptor);
   }, [sortDescriptor, items]);
@@ -151,6 +138,7 @@ export default function App() {
     []
   );
 
+  // Clear search filter
   const onSearchChange = useCallback((value?: string) => {
     if (value) {
       setFilterValue(value);
@@ -209,12 +197,12 @@ export default function App() {
 
   return (
     <>
-     {(selectedKeys === "all" || selectedKeys.size > 0) && (
-  <BulkActionsBar
-    selectedKeys={selectedKeys}
-    filteredItemsLength={filteredItems.length}
-  />
-)}
+      {(selectedKeys === "all" || selectedKeys.size > 0) && (
+        <BulkActionsBar
+          selectedKeys={selectedKeys}
+          filteredItemsLength={filteredItems.length}
+        />
+      )}
       <Table
         suppressHydrationWarning
         isHeaderSticky
