@@ -18,20 +18,18 @@ import {
   SortDescriptor,
 } from "@heroui/react";
 import { useState, useCallback, useMemo, useEffect, ChangeEvent } from "react";
-import { Cases, RangeValue, DateRange } from "@/types/cases";
 import { columns } from "@/constants/reviewersConstants";
 import TopContent from "./TopContent";
 import BottomContent from "./BottomContent";
-import { useFilteredItems } from "@/hooks/useFilteredCases";
 import { sortItems } from "@/utils/sortItems";
 import { paginateItems } from "@/utils/paginateItems";
 import { CaseWithKey } from "@/types/cases";
 import { ReviewerWithKey } from "@/types/reviewers";
 import { TableCellRendererReviewers } from "./TableCellRenderer";
 import { BulkActionsBar } from "./BulkActionsBar";
-import { fetchAllCases } from "@/services/caseService";
 import { fetchAllReviewers } from "@/services/reviewerService";
 import { useFilteredReviewers } from "@/hooks/useFilteredReviewers";
+import { Spinner } from "@heroui/react";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "name",
@@ -56,20 +54,19 @@ export default function TableReviewers() {
   });
   const [page, setPage] = useState(1);
   const [showAll, setShowAll] = useState(false);
-  const [dateRange, setDateRange] = useState<DateRange | null>(null);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [cases, setCases] = useState<CaseWithKey[]>([]);
   const [reviewers, setReviewers] = useState<ReviewerWithKey[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Fetch reviewers from Firestore
- useEffect(() => {
+  useEffect(() => {
     const fetchReviewers = async () => {
       const reviewersList = await fetchAllReviewers();
       setReviewers(reviewersList as ReviewerWithKey[]);
+      setIsLoading(false);
     };
     fetchReviewers();
   }, []);
-
 
   // Handle Bulk Actions Bar selection change
   const onSelectionChangeMasiveMenu = (keys: Selection) => {
@@ -128,7 +125,7 @@ export default function TableReviewers() {
   const topContent = useMemo(() => {
     return (
       <TopContent
-        usersLength={cases.length}
+        usersLength={reviewers.length}
         onRowsPerPageChange={onRowsPerPageChange}
         setShowAll={setShowAll}
         setStatusFilter={setStatusFilter}
@@ -143,10 +140,9 @@ export default function TableReviewers() {
     filterValue,
     statusFilter,
     visibleColumns,
-    dateRange,
     onSearchChange,
     onRowsPerPageChange,
-    cases.length,
+    reviewers.length,
     hasSearchFilter,
   ]);
 
@@ -202,12 +198,20 @@ export default function TableReviewers() {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody emptyContent={"Casos no encontrados"} items={sortedItems}>
+        <TableBody
+          emptyContent={"Casos no encontrados"}
+          items={sortedItems}
+          isLoading={isLoading}
+          loadingContent={<Spinner label="Cargando..." />}
+        >
           {(item) => (
             <TableRow key={item.id}>
               {(columnKey) => (
                 <TableCell>
-                  <TableCellRendererReviewers user={item} columnKey={columnKey} />
+                  <TableCellRendererReviewers
+                    user={item as ReviewerWithKey}
+                    columnKey={columnKey}
+                  />
                 </TableCell>
               )}
             </TableRow>
