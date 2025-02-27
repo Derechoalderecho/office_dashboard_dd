@@ -18,33 +18,31 @@ import {
   SortDescriptor,
 } from "@heroui/react";
 import { useState, useCallback, useMemo, useEffect, ChangeEvent } from "react";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { CalendarDate } from "@internationalized/date";
 import { Cases, RangeValue, DateRange } from "@/types/cases";
-import { columns } from "@/constants";
+import { columns } from "@/constants/reviewersConstants";
 import TopContent from "./TopContent";
 import BottomContent from "./BottomContent";
 import { useFilteredItems } from "@/hooks/useFilteredCases";
 import { sortItems } from "@/utils/sortItems";
 import { paginateItems } from "@/utils/paginateItems";
 import { CaseWithKey } from "@/types/cases";
-import { TableCellRenderer } from "./TableCellRenderer";
+import { ReviewerWithKey } from "@/types/reviewers";
+import { TableCellRendererReviewers } from "./TableCellRenderer";
 import { BulkActionsBar } from "./BulkActionsBar";
 import { fetchAllCases } from "@/services/caseService";
+import { fetchAllReviewers } from "@/services/reviewerService";
+import { useFilteredReviewers } from "@/hooks/useFilteredReviewers";
 
 const INITIAL_VISIBLE_COLUMNS = [
-  "created",
-  "update",
-  "proccess_type",
-  "status",
   "name",
-  "response_time",
-  "assigned",
-  "actions",
+  "user_type",
+  "assigned_areas",
+  "email",
+  "queries_number",
+  "procceses_number",
 ];
 
-export default function TableCases() {
+export default function TableReviewers() {
   const [filterValue, setFilterValue] = useState("");
   const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([]));
   const [visibleColumns, setVisibleColumns] = useState<Selection>(
@@ -61,38 +59,17 @@ export default function TableCases() {
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [cases, setCases] = useState<CaseWithKey[]>([]);
+  const [reviewers, setReviewers] = useState<ReviewerWithKey[]>([]);
 
-  // Fetch cases from Firestore
-  useEffect(() => {
-    const fetchCases = async () => {
-      const casesList = await fetchAllCases();
-      setCases(casesList as CaseWithKey[]);
+  // Fetch reviewers from Firestore
+ useEffect(() => {
+    const fetchReviewers = async () => {
+      const reviewersList = await fetchAllReviewers();
+      setReviewers(reviewersList as ReviewerWithKey[]);
     };
-    fetchCases();
+    fetchReviewers();
   }, []);
 
-  // Handle date range change
-  const handleDateRangeChange = (newValue: RangeValue<CalendarDate> | null) => {
-    if (!newValue) {
-      setDateRange(null);
-      return;
-    }
-
-    const newDateRange: DateRange = {
-      start: {
-        year: newValue.start.year,
-        month: newValue.start.month,
-        day: newValue.start.day,
-      },
-      end: {
-        year: newValue.end.year,
-        month: newValue.end.month,
-        day: newValue.end.day,
-      },
-    };
-
-    setDateRange(newDateRange);
-  };
 
   // Handle Bulk Actions Bar selection change
   const onSelectionChangeMasiveMenu = (keys: Selection) => {
@@ -107,11 +84,10 @@ export default function TableCases() {
   }, [visibleColumns]);
 
   // Filters
-  const { filteredItems, hasSearchFilter } = useFilteredItems({
-    cases,
+  const { filteredItems, hasSearchFilter } = useFilteredReviewers({
+    reviewers,
     filterValue,
-    statusFilter: statusFilter as string | Set<string>,
-    dateRange,
+    userTypeFilter: statusFilter as string | Set<string>,
   });
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
@@ -154,14 +130,12 @@ export default function TableCases() {
       <TopContent
         usersLength={cases.length}
         onRowsPerPageChange={onRowsPerPageChange}
-        handleDateRangeChange={handleDateRangeChange}
         setShowAll={setShowAll}
         setStatusFilter={setStatusFilter}
         onClear={onClear}
         filterValue={filterValue}
         statusFilter={statusFilter as Set<string>}
         showAll={showAll}
-        dateRange={dateRange as DateRange}
         onSearchChange={onSearchChange}
       />
     );
@@ -233,7 +207,7 @@ export default function TableCases() {
             <TableRow key={item.id}>
               {(columnKey) => (
                 <TableCell>
-                  <TableCellRenderer user={item} columnKey={columnKey} />
+                  <TableCellRendererReviewers user={item} columnKey={columnKey} />
                 </TableCell>
               )}
             </TableRow>
