@@ -1,13 +1,14 @@
 import { SortDescriptor } from "@heroui/react";
 import { Cases } from "@/types/cases";
+import { Reviewers } from "@/types/reviewers";
 
-export const sortItems = (
-  items: Cases[],
+export const sortItems = <T extends Cases | Reviewers>(
+  items: T[],
   sortDescriptor: SortDescriptor
-): Cases[] => {
+): T[] => {
   return [...items].sort((a, b) => {
-    const first = a[sortDescriptor.column as keyof Cases] as unknown as number;
-    const second = b[sortDescriptor.column as keyof Cases] as unknown as number;
+    const first = a[sortDescriptor.column as keyof T] as unknown as number;
+    const second = b[sortDescriptor.column as keyof T] as unknown as number;
     const cmp = first < second ? -1 : first > second ? 1 : 0;
 
     return sortDescriptor.direction === "descending" ? -cmp : cmp;

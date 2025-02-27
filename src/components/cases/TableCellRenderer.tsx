@@ -80,7 +80,7 @@ export const TableCellRenderer = ({
     case "assigned":
       return (
         <User
-          avatarProps={{ radius: "lg", src: user.assigned.avatar }}
+          avatarProps={{ radius: "lg" }}
           name={user.assigned.name}
         />
       );

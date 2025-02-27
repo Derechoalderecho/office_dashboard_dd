@@ -1,11 +1,15 @@
 export interface Assigned {
   name: string;
-  avatar: string;
 }
 
 export interface RegistrationHistory {
   status: string;
   date: string;
+}
+
+export interface HistoryComment {
+  content: string;
+  date: string; 
 }
 
 export interface Cases {
@@ -22,7 +26,7 @@ export interface Cases {
   register_number: string;
   assigned: Assigned;
   registration_history: RegistrationHistory[];
-  history_comments: any[];
+  history_comments: HistoryComment[];
   actions?: string;
   key?: string;
 }

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Cases } from '@/types/cases';
 import { DateRange } from '@/types/cases';
-import { statusOptions } from '@/constants';
+import { statusOptions } from '@/constants/casesConstants';
 
 interface UseFilteredItemsProps {
   cases: (Cases & { key: string })[];
