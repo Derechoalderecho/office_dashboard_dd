@@ -32,6 +32,8 @@ import { CaseWithKey } from "@/types/cases";
 import { TableCellRenderer } from "./TableCellRenderer";
 import { BulkActionsBar } from "./BulkActionsBar";
 import { fetchAllCases } from "@/services/caseService";
+import SkeletonTables from "@/ui/SkeletonTables";
+import { Suspense } from "react";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "created",
@@ -199,47 +201,49 @@ export default function TableCases() {
           filteredItemsLength={filteredItems.length}
         />
       )}
-      <Table
-        suppressHydrationWarning
-        isHeaderSticky
-        aria-label="Tabla de casos"
-        bottomContent={bottomContent}
-        bottomContentPlacement="outside"
-        classNames={{
-          wrapper: "max-w-[100%]",
-        }}
-        selectedKeys={selectedKeys}
-        selectionMode="multiple"
-        sortDescriptor={sortDescriptor}
-        topContent={topContent}
-        topContentPlacement="outside"
-        onSelectionChange={onSelectionChangeMasiveMenu}
-        onSortChange={setSortDescriptor}
-      >
-        <TableHeader columns={headerColumns}>
-          {(column) => (
-            <TableColumn
-              key={column.uid}
-              align={column.uid === "actions" ? "center" : "start"}
-              allowsSorting={column.sortable}
-              className="text-base"
-            >
-              {column.name}
-            </TableColumn>
-          )}
-        </TableHeader>
-        <TableBody emptyContent={"Casos no encontrados"} items={sortedItems}>
-          {(item) => (
-            <TableRow key={item.id}>
-              {(columnKey) => (
-                <TableCell>
-                  <TableCellRenderer user={item} columnKey={columnKey} />
-                </TableCell>
-              )}
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+      <Suspense fallback={<SkeletonTables />}>
+        <Table
+          suppressHydrationWarning
+          isHeaderSticky
+          aria-label="Tabla de casos"
+          bottomContent={bottomContent}
+          bottomContentPlacement="outside"
+          classNames={{
+            wrapper: "max-w-[100%]",
+          }}
+          selectedKeys={selectedKeys}
+          selectionMode="multiple"
+          sortDescriptor={sortDescriptor}
+          topContent={topContent}
+          topContentPlacement="outside"
+          onSelectionChange={onSelectionChangeMasiveMenu}
+          onSortChange={setSortDescriptor}
+        >
+          <TableHeader columns={headerColumns}>
+            {(column) => (
+              <TableColumn
+                key={column.uid}
+                align={column.uid === "actions" ? "center" : "start"}
+                allowsSorting={column.sortable}
+                className="text-base"
+              >
+                {column.name}
+              </TableColumn>
+            )}
+          </TableHeader>
+          <TableBody emptyContent={"Casos no encontrados"} items={sortedItems}>
+            {(item) => (
+              <TableRow key={item.id}>
+                {(columnKey) => (
+                  <TableCell>
+                    <TableCellRenderer user={item} columnKey={columnKey} />
+                  </TableCell>
+                )}
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </Suspense>
     </>
   );
 }

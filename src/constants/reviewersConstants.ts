@@ -9,8 +9,7 @@ export const columns: Column[] = [
 ];
 
 export const statusOptions: StatusOption[] = [
-  { name: "Seguimiento", uid: "follow_up" },
-  { name: "Aprobado", uid: "aproved" },
-  { name: "No Aprobado", uid: "not_approved" },
-  { name: "Acción Necesaria", uid: "action_required" },
+  { name: "Asesor", uid: "asesor" },
+  { name: "Monitor", uid: "monitor" },
+  { name: "Profesor", uid: "professor" },
 ];

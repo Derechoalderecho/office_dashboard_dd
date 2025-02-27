@@ -54,7 +54,7 @@ export default function TopContent({
                 endContent={<ChevronDownIcon className="text-small w-4" />}
                 variant="bordered"
               >
-                Estado
+                Tipo de docente
               </Button>
             </DropdownTrigger>
             <DropdownMenu
