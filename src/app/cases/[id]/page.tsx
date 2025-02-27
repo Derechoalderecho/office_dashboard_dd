@@ -1,7 +1,3 @@
-"use client";
-
-import { db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
 import { Cases } from "@/types/cases";
 import { Breadcrumbs, BreadcrumbItem, Chip, Button, Textarea } from "@heroui/react";
 import Link from "next/link";
@@ -14,25 +10,22 @@ import {
   LinkIcon,
 } from "@heroicons/react/24/outline";
 import { parseDateToLocal } from "@/utils/date";
+import { fetchCaseDetails } from "@/services/caseService";
 
 interface CasePageProps {
-  params: Promise<{
+  params: {
     id: string;
-  }>;
+  };
 }
 
-export default async function CasePage(props: CasePageProps) {
-  const params = await props.params;
+export default async function CasePage({ params }: CasePageProps) {
   const { id } = await params;
 
-  console.log(params);
+  const caseData = await fetchCaseDetails(id);
 
-  const caseDoc = await getDoc(doc(db, "cases", id));
-  if (!caseDoc.exists()) {
+  if (!caseData) {
     return <div>Case not found</div>;
   }
-
-  const caseData = caseDoc.data() as Cases;
 
   return (
     <>
@@ -241,7 +234,7 @@ export default async function CasePage(props: CasePageProps) {
           <section className="mt-5">
             <h2 className="font-medium mb-4">Mensajes</h2>
             <ul className="flex flex-col gap-6">
-            
+              {/* Add messages here if needed */}
             </ul>
           </section>
           <hr className="my-5" />
@@ -249,7 +242,27 @@ export default async function CasePage(props: CasePageProps) {
 
           <section className="pl-3">
             <ol className="relative border-s border-gray-200">
-             
+            {caseData.registration_history.map((history, index) => (
+                <li key={index} className="mb-16 ms-10">
+                  <span
+                    className={`${
+                      history.status === "Generado"
+                        ? "bg-primary"
+                        : history.status === "Pagado"
+                        ? "bg-[#12A150]"
+                        : history.status === "Creado"
+                        ? "bg-primary"
+                        : history.status === "Acción Necesaria"
+                        ? "bg-[#C4841D]"
+                        : ""
+                    } absolute flex items-center justify-center w-7 h-7 rounded-full -start-[14px]  ring-4 ring-[#e7e7e7da]`}
+                  ></span>
+                  <h3 className="flex items-center mb-1">{history.status}</h3>
+                  <time className="block mb-2 text-sm font-normal leading-none text-gray-400">
+                    {parseDateToLocal(history.date)}
+                  </time>
+                </li>
+              ))}
             </ol>
           </section>
         </aside>

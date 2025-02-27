@@ -8,6 +8,11 @@ export interface RegistrationHistory {
   date: string;
 }
 
+export interface HistoryComment {
+  content: string;
+  date: string; 
+}
+
 export interface Cases {
   id: string;
   proccess_type: string;
@@ -22,7 +27,7 @@ export interface Cases {
   register_number: string;
   assigned: Assigned;
   registration_history: RegistrationHistory[];
-  history_comments: any[];
+  history_comments: HistoryComment[];
   actions?: string;
   key?: string;
 }
