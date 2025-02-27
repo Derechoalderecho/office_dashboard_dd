@@ -44,3 +44,5 @@ export type DateRange = {
   start: { year: number; month: number; day: number };
   end: { year: number; month: number; day: number };
 };
+
+export type CaseWithKey = Cases & { key: string };
