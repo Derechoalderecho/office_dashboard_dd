@@ -11,7 +11,7 @@ interface TableCellRendererProps {
   columnKey: keyof CaseWithKey;
 }
 
-export const TableCellRenderer = ({
+export const TableCellRendererCases = ({
   user,
   columnKey,
 }: TableCellRendererProps) => {

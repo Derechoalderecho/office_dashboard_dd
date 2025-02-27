@@ -29,7 +29,7 @@ import { useFilteredItems } from "@/hooks/useFilteredCases";
 import { sortItems } from "@/utils/sortItems";
 import { paginateItems } from "@/utils/paginateItems";
 import { CaseWithKey } from "@/types/cases";
-import { TableCellRenderer } from "./TableCellRenderer";
+import { TableCellRendererCases } from "./TableCellRenderer";
 import { BulkActionsBar } from "./BulkActionsBar";
 import { fetchAllCases } from "@/services/caseService";
 import SkeletonTables from "@/ui/SkeletonTables";
@@ -243,7 +243,10 @@ export default function TableCases() {
             <TableRow key={item.id}>
               {(columnKey) => (
                 <TableCell>
-                  <TableCellRenderer user={item} columnKey={columnKey} />
+                  <TableCellRendererCases
+                    user={item as CaseWithKey}
+                    columnKey={columnKey as keyof CaseWithKey}
+                  />
                 </TableCell>
               )}
             </TableRow>

@@ -35,6 +35,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   "name",
   "user_type",
   "assigned_areas",
+  "site",
   "email",
   "queries_number",
   "procceses_number",
@@ -210,7 +211,7 @@ export default function TableReviewers() {
                 <TableCell>
                   <TableCellRendererReviewers
                     user={item as ReviewerWithKey}
-                    columnKey={columnKey}
+                    columnKey={columnKey as keyof ReviewerWithKey}
                   />
                 </TableCell>
               )}

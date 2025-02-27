@@ -44,7 +44,13 @@ export const TableCellRendererReviewers = ({
     case "assigned_areas":
       return (
         <div className="flex flex-col">
-          <p className="text-base font-semibold">{String(cellValue)}</p>
+          <p className="text-base font-medium">{String(cellValue)}</p>
+        </div>
+      );
+      case "site":
+      return (
+        <div className="flex flex-col">
+          <p className="text-base">{String(cellValue)}</p>
         </div>
       );
     case "email":

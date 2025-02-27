@@ -14,6 +14,7 @@ export interface Reviewers {
   queries_number: string;
   procceses_number: string;
   assigned_areas: AssignedArea[];
+  site: string;
 }
 
 export type Column = {
