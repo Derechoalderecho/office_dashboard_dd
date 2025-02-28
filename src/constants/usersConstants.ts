@@ -1,15 +1,19 @@
-import { Column, userTypeOption, siteOption } from "@/types/reviewers";
+import { Column, userTypeOption, siteOption } from "@/types/users";
 
 export const columns: Column[] = [
+  { name: "Identificación", uid: "id_document" },
   { name: "Nombre", uid: "name" },
   { name: "Tipo de usuario", uid: "user_type" },
-  { name: "Áreas asignadas", uid: "assigned_areas" },
+  { name: "Rama de derecho", uid: "branch_law" },
   { name: "Sede", uid: "site" },
-  { name: "Consultas", uid: "queries_number" },
-  { name: "Procesos", uid: "procceses_number" },
+  { name: "Consultas activas", uid: "active_consults" },
+  { name: "Procesos activos", uid: "active_processes" },
+  { name: "Consultas calificación", uid: "consults_calification" },
+  { name: "Procesos calificación", uid: "processes_calification" },
 ];
 
 export const userTypeOptions: userTypeOption[] = [
+  { name: "Estudiante", uid: "student" },
   { name: "Asesor", uid: "asesor" },
   { name: "Monitor", uid: "monitor" },
   { name: "Profesor", uid: "professor" },
