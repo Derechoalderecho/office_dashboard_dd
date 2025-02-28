@@ -1,6 +1,7 @@
 import {
   MagnifyingGlassIcon,
   ChevronDownIcon,
+  UserPlusIcon,
 } from "@heroicons/react/24/outline";
 import { DropdownItem, DropdownMenu } from "@heroui/react";
 import { Button, Dropdown, DropdownTrigger, Input } from "@heroui/react";
@@ -32,47 +33,52 @@ export default function TopContent({
 }: TopContentProps) {
   return (
     <div className="flex flex-col">
-      <div className="flex gap-3 items-center pb-6 border-b">
-        <Input
-          isClearable
-          className="w-full sm:max-w-[25%]"
-          placeholder="Buscar por nombre..."
-          startContent={<MagnifyingGlassIcon className="w-6" />}
-          value={filterValue}
-          onClear={() => onClear()}
-          onValueChange={onSearchChange}
-        />
-        <div className="flex gap-3">
-          <Dropdown>
-            <DropdownTrigger className="hidden sm:flex">
-              <Button
-                endContent={<ChevronDownIcon className="text-small w-4" />}
-                variant="bordered"
+      <div className="flex justify-between items-center pb-6 border-b">
+        <div className="flex gap-3 items-center">
+          <Input
+            isClearable
+            className="w-full sm:max-w-[100%]"
+            placeholder="Buscar por nombre..."
+            startContent={<MagnifyingGlassIcon className="w-6" />}
+            value={filterValue}
+            onClear={() => onClear()}
+            onValueChange={onSearchChange}
+          />
+          <div className="flex gap-3">
+            <Dropdown>
+              <DropdownTrigger className="hidden sm:flex">
+                <Button
+                  endContent={<ChevronDownIcon className="text-small w-4" />}
+                  variant="bordered"
+                >
+                  Sede
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu
+                disallowEmptySelection
+                aria-label="Table Columns"
+                closeOnSelect={false}
+                selectedKeys={siteFilter}
+                selectionMode="multiple"
+                onSelectionChange={(keys) => setSiteFilter(keys as Set<string>)}
               >
-                Sede
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu
-              disallowEmptySelection
-              aria-label="Table Columns"
-              closeOnSelect={false}
-              selectedKeys={siteFilter}
-              selectionMode="multiple"
-              onSelectionChange={(keys) => setSiteFilter(keys as Set<string>)}
-            >
-              {siteOptions.map((status) => (
-                <DropdownItem key={status.uid} className="capitalize">
-                  {capitalize(status.name)}
-                </DropdownItem>
-              ))}
-            </DropdownMenu>
-          </Dropdown>
+                {siteOptions.map((status) => (
+                  <DropdownItem key={status.uid} className="capitalize">
+                    {capitalize(status.name)}
+                  </DropdownItem>
+                ))}
+              </DropdownMenu>
+            </Dropdown>
+          </div>
+          <div>
+            <Button color="primary" onPress={() => setShowAll(!showAll)}>
+              Mostrar todos
+            </Button>
+          </div>
         </div>
-        <div>
-          <Button color="primary" onPress={() => setShowAll(!showAll)}>
-            Mostrar todos
-          </Button>
-        </div>
+        <Button color="primary" startContent={<UserPlusIcon className="w-5" />}>
+          Añadir ciudadano
+        </Button>
       </div>
       <div className="flex justify-between items-center mt-6">
         <span className="text-default-400 text-small">
