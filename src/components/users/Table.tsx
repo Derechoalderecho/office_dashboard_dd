@@ -16,11 +16,12 @@ import {
   CardBody,
   Selection,
   SortDescriptor,
+  Spinner
 } from "@heroui/react";
 import { useState, useCallback, useMemo, useEffect, ChangeEvent } from "react";
 import { columns } from "@/constants/usersConstants";
 import TopContent from "./TopContent";
-import BottomContent from "./BottomContent";
+import BottomContent from "../shared/BottomContentTable";
 import { sortItems } from "@/utils/sortItems";
 import { paginateItems } from "@/utils/paginateItems";
 import { UserWithKey } from "@/types/users";
@@ -28,7 +29,6 @@ import { TableCellRendererUsers } from "./TableCellRenderer";
 import { BulkActionsBar } from "./BulkActionsBar";
 import { fetchAllUsers } from "@/services/userService";
 import { useFilteredUsers } from "@/hooks/useFilteredUsers";
-import { Spinner } from "@heroui/react";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "id_document",
@@ -61,6 +61,10 @@ export default function TableUsers() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [users, setUsers] = useState<UserWithKey[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedTab, setSelectedTab] = useState<"all" | "active" | "inactive">(
+    "all"
+  );
+
 
   // Fetch reviewers from Firestore
   useEffect(() => {
@@ -90,6 +94,7 @@ export default function TableUsers() {
     filterValue,
     userTypeFilter: userTypeFilter as string | Set<string>,
     siteFilter: siteFilter as string | Set<string>,
+    selectedTab,
   });
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
@@ -130,6 +135,8 @@ export default function TableUsers() {
   const topContent = useMemo(() => {
     return (
       <TopContent
+        selectedTab={selectedTab}
+        setSelectedTab={setSelectedTab}
         usersLength={users.length}
         onRowsPerPageChange={onRowsPerPageChange}
         setShowAll={setShowAll}
@@ -148,6 +155,7 @@ export default function TableUsers() {
     userTypeFilter,
     siteFilter,
     visibleColumns,
+    selectedTab,
     onSearchChange,
     onRowsPerPageChange,
     users.length,

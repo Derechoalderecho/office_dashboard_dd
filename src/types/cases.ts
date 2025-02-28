@@ -9,7 +9,7 @@ export interface RegistrationHistory {
 
 export interface HistoryComment {
   content: string;
-  date: string; 
+  date: string;
 }
 
 export interface Cases {
@@ -22,6 +22,7 @@ export interface Cases {
   name: string;
   email: string;
   phone: string;
+  procedure_type: string;
   response_time: string;
   register_number: string;
   assigned: Assigned;
@@ -38,6 +39,11 @@ export type Column = {
 };
 
 export type StatusOption = {
+  name: string;
+  uid: string;
+};
+
+export type userTypeOption = {
   name: string;
   uid: string;
 };

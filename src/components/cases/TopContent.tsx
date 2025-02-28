@@ -2,18 +2,12 @@ import {
   MagnifyingGlassIcon,
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
-import { DateRangePicker, DropdownItem, DropdownMenu } from "@heroui/react";
-import { Button } from "@heroui/react";
-import { DropdownTrigger } from "@heroui/react";
-import { Dropdown } from "@heroui/react";
-import { Input } from "@heroui/react";
+import { DateRangePicker, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, Button, Input } from "@heroui/react";
 import { I18nProvider } from "@react-aria/i18n";
 import { statusOptions } from "@/constants/casesConstants";
-import { DateRange } from "@/types/cases";
-import { RangeValue } from "@/types/cases";
+import { DateRange, RangeValue } from "@/types/sharedTypes";
 import { CalendarDate } from "@internationalized/date";
 import { capitalize } from "@/utils/capitalize";
-import React from "react";
 
 interface TopContentProps {
   usersLength: number;
@@ -42,7 +36,8 @@ export default function TopContent({
   handleDateRangeChange,
   setStatusFilter,
 }: TopContentProps) {
-  // Convert your dateRange to RangeValue<CalendarDate>
+
+  // Convert dateRange to RangeValue<CalendarDate>
   const convertToDateValue = (
     dateRange: DateRange | null
   ): RangeValue<CalendarDate> | null => {

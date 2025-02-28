@@ -1,4 +1,4 @@
-import { Column, userTypeOption, siteOption } from "@/types/reviewers";
+import { siteOption, userTypeOption, Column } from "@/types/sharedTypes";
 
 export const columns: Column[] = [
   { name: "Nombre", uid: "name" },

@@ -1,4 +1,4 @@
-import { Column, StatusOption } from "@/types/cases";
+import { Column, StatusOption } from "@/types/sharedTypes";
 
 export const columns: Column[] = [
   { name: "Creado en", uid: "created" },
@@ -16,12 +16,6 @@ export const statusOptions: StatusOption[] = [
   { name: "Aprobado", uid: "aproved" },
   { name: "No Aprobado", uid: "not_approved" },
   { name: "Acción Necesaria", uid: "action_required" },
-];
-
-export const siteOptions: StatusOption[] = [
-  { name: "Sede 1", uid: "site_1" },
-  { name: "Sede 2", uid: "site_2" },
-  { name: "Sede 3", uid: "site_3" },
 ];
 
 
