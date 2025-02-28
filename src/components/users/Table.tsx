@@ -16,6 +16,7 @@ import {
   CardBody,
   Selection,
   SortDescriptor,
+  Spinner
 } from "@heroui/react";
 import { useState, useCallback, useMemo, useEffect, ChangeEvent } from "react";
 import { columns } from "@/constants/usersConstants";
@@ -28,7 +29,6 @@ import { TableCellRendererUsers } from "./TableCellRenderer";
 import { BulkActionsBar } from "./BulkActionsBar";
 import { fetchAllUsers } from "@/services/userService";
 import { useFilteredUsers } from "@/hooks/useFilteredUsers";
-import { Spinner } from "@heroui/react";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "id_document",

@@ -16,7 +16,6 @@ import {
   CardBody,
   Selection,
   SortDescriptor,
-  Spinner
 } from "@heroui/react";
 import { useState, useCallback, useMemo, useEffect, ChangeEvent } from "react";
 import { columns } from "@/constants/reviewersConstants";
@@ -24,11 +23,13 @@ import TopContent from "./TopContent";
 import BottomContent from "../shared/BottomContentTable";
 import { sortItems } from "@/utils/sortItems";
 import { paginateItems } from "@/utils/paginateItems";
+import { CaseWithKey } from "@/types/cases";
 import { ReviewerWithKey } from "@/types/reviewers";
 import { TableCellRendererReviewers } from "./TableCellRenderer";
 import { BulkActionsBar } from "./BulkActionsBar";
 import { fetchAllReviewers } from "@/services/reviewerService";
 import { useFilteredReviewers } from "@/hooks/useFilteredReviewers";
+import { Spinner } from "@heroui/react";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "name",

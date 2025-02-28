@@ -15,20 +15,4 @@ export interface Users {
   key?: string;
 }
 
-export type Column = {
-  name: string;
-  uid: string;
-  sortable?: boolean;
-};
-
-export type userTypeOption = {
-  name: string;
-  uid: string;
-};
-
-export type siteOption = {
-  name: string;
-  uid: string;
-};
-
 export type UserWithKey = Users & { key: string };

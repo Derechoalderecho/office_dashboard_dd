@@ -3,13 +3,9 @@ import {
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import { DropdownItem, DropdownMenu } from "@heroui/react";
-import { Button } from "@heroui/react";
-import { DropdownTrigger } from "@heroui/react";
-import { Dropdown } from "@heroui/react";
-import { Input } from "@heroui/react";
+import { Button, Dropdown, DropdownTrigger, Input } from "@heroui/react";
 import { userTypeOptions, siteOptions } from "@/constants/reviewersConstants";
 import { capitalize } from "@/utils/capitalize";
-import React from "react";
 
 interface TopContentProps {
   usersLength: number;

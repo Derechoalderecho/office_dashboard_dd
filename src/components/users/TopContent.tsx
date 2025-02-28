@@ -16,7 +16,6 @@ import {
 } from "@heroui/react";
 import { capitalize } from "@/utils/capitalize";
 import { siteOptions, userTypeOptions } from "@/constants/usersConstants";
-import { useState } from "react";
 
 interface TopContentProps {
   usersLength: number;

@@ -1,4 +1,4 @@
-import { Column, userTypeOption, siteOption } from "@/types/users";
+import { Column, userTypeOption, siteOption } from "@/types/sharedTypes";
 
 export const columns: Column[] = [
   { name: "Identificación", uid: "id_document" },

@@ -1,4 +1,3 @@
-// src/components/cases/BulkActionsBar.tsx
 import { CheckBadgeIcon, UserCircleIcon, TagIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { Card, CardBody, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, DropdownSection, User, Selection } from "@heroui/react";
 

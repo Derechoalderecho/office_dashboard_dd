@@ -16,12 +16,11 @@ import {
   CardBody,
   Selection,
   SortDescriptor,
+  Spinner
 } from "@heroui/react";
 import { useState, useCallback, useMemo, useEffect, ChangeEvent } from "react";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import { CalendarDate } from "@internationalized/date";
-import { Cases, RangeValue, DateRange } from "@/types/cases";
+import { RangeValue, DateRange } from "@/types/sharedTypes";
 import { columns } from "@/constants/casesConstants";
 import TopContent from "./TopContent";
 import BottomContent from "../shared/BottomContentTable";
@@ -32,8 +31,6 @@ import { CaseWithKey } from "@/types/cases";
 import { TableCellRendererCases } from "./TableCellRenderer";
 import { BulkActionsBar } from "./BulkActionsBar";
 import { fetchAllCases } from "@/services/caseService";
-import SkeletonTables from "@/ui/SkeletonTables";
-import { Spinner } from "@heroui/react";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "created",

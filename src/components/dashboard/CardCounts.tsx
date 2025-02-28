@@ -61,7 +61,7 @@ export function CardCounts({
 
   return (
     <article
-      className={`relative w-full flex flex-col items-center justify-center py-16 rounded-xl mt-10 ${backgroundColorMap[type]}`}
+      className={`relative w-full flex flex-col items-center justify-center py-16 rounded-xl ${backgroundColorMap[type]}`}
     >
       <div
         className={`${colorIconMap[type]} absolute right-5 top-5 rounded-full p-2`}
