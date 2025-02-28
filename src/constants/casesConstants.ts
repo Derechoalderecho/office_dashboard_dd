@@ -18,10 +18,4 @@ export const statusOptions: StatusOption[] = [
   { name: "Acción Necesaria", uid: "action_required" },
 ];
 
-export const siteOptions: StatusOption[] = [
-  { name: "Sede 1", uid: "site_1" },
-  { name: "Sede 2", uid: "site_2" },
-  { name: "Sede 3", uid: "site_3" },
-];
-
 

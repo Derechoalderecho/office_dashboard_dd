@@ -16,6 +16,7 @@ import {
   CardBody,
   Selection,
   SortDescriptor,
+  Spinner,
 } from "@heroui/react";
 import { useState, useCallback, useMemo, useEffect, ChangeEvent } from "react";
 import { columns } from "@/constants/reviewersConstants";
@@ -23,22 +24,19 @@ import TopContent from "./TopContent";
 import BottomContent from "../shared/BottomContentTable";
 import { sortItems } from "@/utils/sortItems";
 import { paginateItems } from "@/utils/paginateItems";
-import { CaseWithKey } from "@/types/cases";
-import { ReviewerWithKey } from "@/types/reviewers";
-import { TableCellRendererReviewers } from "./TableCellRenderer";
+import { CitizenWithKey } from "@/types/citizens";
+import { TableCellRendererCitizens } from "./TableCellRenderer";
 import { BulkActionsBar } from "./BulkActionsBar";
-import { fetchAllReviewers } from "@/services/reviewerService";
-import { useFilteredReviewers } from "@/hooks/useFilteredReviewers";
-import { Spinner } from "@heroui/react";
+import { useFilteredCitizens } from "@/hooks/useFilteredCitizens";
+import { fetchAllCitizens } from "@/services/citizenService";
 
 const INITIAL_VISIBLE_COLUMNS = [
-  "name",
-  "user_type",
-  "assigned_areas",
-  "site",
+  "created_at",
+
   "email",
-  "queries_number",
-  "procceses_number",
+  "mobile_phone",
+  "site",
+  "actions",
 ];
 
 export default function TableReviewers() {
@@ -57,17 +55,17 @@ export default function TableReviewers() {
   const [page, setPage] = useState(1);
   const [showAll, setShowAll] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [reviewers, setReviewers] = useState<ReviewerWithKey[]>([]);
+  const [citizens, setCitizens] = useState<CitizenWithKey[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Fetch reviewers from Firestore
   useEffect(() => {
-    const fetchReviewers = async () => {
-      const reviewersList = await fetchAllReviewers();
-      setReviewers(reviewersList as ReviewerWithKey[]);
+    const fetchCitizens = async () => {
+      const citizensList = await fetchAllCitizens();
+      setCitizens(citizensList as CitizenWithKey[]);
       setIsLoading(false);
     };
-    fetchReviewers();
+    fetchCitizens();
   }, []);
 
   // Handle Bulk Actions Bar selection change
@@ -83,10 +81,9 @@ export default function TableReviewers() {
   }, [visibleColumns]);
 
   // Filters
-  const { filteredItems, hasSearchFilter } = useFilteredReviewers({
-    reviewers,
+  const { filteredItems, hasSearchFilter } = useFilteredCitizens({
+    citizens,
     filterValue,
-    userTypeFilter: userTypeFilter as string | Set<string>,
     siteFilter: siteFilter as string | Set<string>,
   });
 
@@ -128,12 +125,10 @@ export default function TableReviewers() {
   const topContent = useMemo(() => {
     return (
       <TopContent
-        usersLength={reviewers.length}
+        usersLength={citizens.length}
         onRowsPerPageChange={onRowsPerPageChange}
         setShowAll={setShowAll}
-        setUserTypeFilter={setUserTypeFilter}
         setSiteFilter={setSiteFilter}
-        userTypeFilter={userTypeFilter as Set<string>}
         siteFilter={siteFilter as Set<string>}
         onClear={onClear}
         filterValue={filterValue}
@@ -148,7 +143,7 @@ export default function TableReviewers() {
     visibleColumns,
     onSearchChange,
     onRowsPerPageChange,
-    reviewers.length,
+    citizens.length,
     hasSearchFilter,
   ]);
 
@@ -214,9 +209,9 @@ export default function TableReviewers() {
             <TableRow key={item.id}>
               {(columnKey) => (
                 <TableCell>
-                  <TableCellRendererReviewers
-                    user={item as ReviewerWithKey}
-                    columnKey={columnKey as keyof ReviewerWithKey}
+                  <TableCellRendererCitizens
+                    user={item as CitizenWithKey}
+                    columnKey={columnKey as keyof CitizenWithKey}
                   />
                 </TableCell>
               )}

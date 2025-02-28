@@ -3,17 +3,12 @@ import {
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import { DropdownItem, DropdownMenu } from "@heroui/react";
-import { Button } from "@heroui/react";
-import { DropdownTrigger } from "@heroui/react";
-import { Dropdown } from "@heroui/react";
-import { Input } from "@heroui/react";
-import { userTypeOptions, siteOptions } from "@/constants/reviewersConstants";
+import { Button, Dropdown, DropdownTrigger, Input } from "@heroui/react";
+import { siteOptions } from "@/constants/citizensConstants";
 import { capitalize } from "@/utils/capitalize";
-import React from "react";
 
 interface TopContentProps {
   usersLength: number;
-  userTypeFilter: Set<string>;
   siteFilter: Set<string>;
   showAll: boolean;
   filterValue: string;
@@ -21,15 +16,12 @@ interface TopContentProps {
   onSearchChange: (value: string) => void;
   onRowsPerPageChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   setShowAll: (value: boolean) => void;
-  setUserTypeFilter: (value: Set<string>) => void;
   setSiteFilter: (value: Set<string>) => void;
 }
 
 export default function TopContent({
   usersLength,
-  userTypeFilter,
   siteFilter,
-  setUserTypeFilter,
   setSiteFilter,
   showAll,
   setShowAll,
@@ -51,32 +43,6 @@ export default function TopContent({
           onValueChange={onSearchChange}
         />
         <div className="flex gap-3">
-          <Dropdown>
-            <DropdownTrigger className="hidden sm:flex">
-              <Button
-                endContent={<ChevronDownIcon className="text-small w-4" />}
-                variant="bordered"
-              >
-                Tipo de usuario
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu
-              disallowEmptySelection
-              aria-label="Table Columns"
-              closeOnSelect={false}
-              selectedKeys={userTypeFilter}
-              selectionMode="multiple"
-              onSelectionChange={(keys) =>
-                setUserTypeFilter(keys as Set<string>)
-              }
-            >
-              {userTypeOptions.map((status) => (
-                <DropdownItem key={status.uid} className="capitalize">
-                  {capitalize(status.name)}
-                </DropdownItem>
-              ))}
-            </DropdownMenu>
-          </Dropdown>
           <Dropdown>
             <DropdownTrigger className="hidden sm:flex">
               <Button
