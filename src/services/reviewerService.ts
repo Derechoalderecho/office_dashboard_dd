@@ -1,14 +1,24 @@
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { Cases, CaseWithKey } from "@/types/cases";
-import { ReviewerWithKey } from "@/types/reviewers";
+import axios from "axios";
+import { Reviewers } from "@/types/reviewers";
 
-export async function fetchAllReviewers(): Promise<ReviewerWithKey[]> {
-  const reviewersCollection = collection(db, "reviewers");
-  const reviewersSnapshot = await getDocs(reviewersCollection);
-  
-  return reviewersSnapshot.docs.map(doc => ({
-    key: doc.id,
-    ...doc.data()
-  })) as ReviewerWithKey[];
-}
+const API_BASE_URL = "http://localhost:8080";
+
+export const fetchReviewerDetails = async (id: string): Promise<Reviewers | null> => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/reviewers/${id}`);
+    return response.data as Reviewers;
+  } catch (error) {
+    console.error("Error fetching reviewer details:", error);
+    return null;
+  }
+};
+
+export const fetchAllReviewers = async (): Promise<Reviewers[]> => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/reviewers`);
+    return response.data as Reviewers[];
+  } catch (error) {
+    console.error("Error fetching reviewers:", error);
+    return [];
+  }
+};
