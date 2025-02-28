@@ -7,6 +7,8 @@ interface UseFilteredItemsProps {
   filterValue: string;
   userTypeFilter: string | Set<string>;
   siteFilter: string | Set<string>;
+  selectedTab: "all" | "active" | "inactive";
+  
 }
 
 export const useFilteredUsers = ({
@@ -14,6 +16,7 @@ export const useFilteredUsers = ({
   filterValue,
   userTypeFilter,
   siteFilter,
+  selectedTab,
 }: UseFilteredItemsProps) => {
   const hasSearchFilter = Boolean(filterValue);
 
@@ -52,8 +55,15 @@ export const useFilteredUsers = ({
       );
     }
 
+    // Filter by tab
+    if (selectedTab !== "all") {
+      filteredUsers = filteredUsers.filter((user) => 
+        selectedTab === "active" ? user.is_active : !user.is_active
+      );
+    }
+
     return filteredUsers;
-  }, [users, filterValue, userTypeFilter, siteFilter]);
+  }, [users, filterValue, userTypeFilter, siteFilter, selectedTab]);
 
   return { filteredItems, hasSearchFilter };
 };
