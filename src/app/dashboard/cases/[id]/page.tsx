@@ -19,7 +19,7 @@ interface CasePageProps {
 }
 
 export default async function CasePage({ params }: CasePageProps) {
-  const { id } = await params;
+  const { id } = params;
 
   console.log('Case ID:', id);
 

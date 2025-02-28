@@ -13,26 +13,26 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 
 export const NAV_LINKS = [
-  { href: "/", key: "dashboard", label: "Dashboard", icon: ChartPieIcon },
+  { href: "/dashboard", key: "dashboard", label: "Dashboard", icon: ChartPieIcon },
   {
-    href: "/cases",
+    href: "/dashboard/cases",
     key: "cases",
     label: "Casos",
     icon: ClipboardDocumentListIcon,
   },
-  { href: "/mails", key: "mails", label: "Correos", icon: EnvelopeIcon },
-  { href: "/citizens", key: "citizens", label: "Ciudadanos", icon: UsersIcon },
-  { href: "/users", key: "users", label: "Usuarios", icon: UserGroupIcon },
+  { href: "/dashboard/mails", key: "mails", label: "Correos", icon: EnvelopeIcon },
+  { href: "/dashboard/citizens", key: "citizens", label: "Ciudadanos", icon: UsersIcon },
+  { href: "/dashboard/users", key: "users", label: "Usuarios", icon: UserGroupIcon },
   {
-    href: "/reviewers",
+    href: "/dashboard/reviewers",
     key: "reviewers",
     label: "Revisores",
     icon: MagnifyingGlassCircleIcon,
   },
-  { href: "/accounts", key: "accounts", label: "Cuentas", icon: UserIcon },
-  { href: "/crm", key: "crm", label: "CRM", icon: Squares2X2Icon },
+  { href: "/dashboard/accounts", key: "accounts", label: "Cuentas", icon: UserIcon },
+  { href: "/dashboard/crm", key: "crm", label: "CRM", icon: Squares2X2Icon },
   {
-    href: "/config",
+    href: "/dashboard/config",
     key: "config",
     label: "Configuración",
     icon: Cog6ToothIcon,
