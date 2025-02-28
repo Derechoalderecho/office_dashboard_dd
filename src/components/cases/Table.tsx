@@ -24,7 +24,7 @@ import { CalendarDate } from "@internationalized/date";
 import { Cases, RangeValue, DateRange } from "@/types/cases";
 import { columns } from "@/constants/casesConstants";
 import TopContent from "./TopContent";
-import BottomContent from "./BottomContent";
+import BottomContent from "../shared/BottomContentTable";
 import { useFilteredItems } from "@/hooks/useFilteredCases";
 import { sortItems } from "@/utils/sortItems";
 import { paginateItems } from "@/utils/paginateItems";

@@ -20,7 +20,7 @@ import {
 import { useState, useCallback, useMemo, useEffect, ChangeEvent } from "react";
 import { columns } from "@/constants/usersConstants";
 import TopContent from "./TopContent";
-import BottomContent from "./BottomContent";
+import BottomContent from "../shared/BottomContentTable";
 import { sortItems } from "@/utils/sortItems";
 import { paginateItems } from "@/utils/paginateItems";
 import { UserWithKey } from "@/types/users";
