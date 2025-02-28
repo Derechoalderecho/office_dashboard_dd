@@ -1,22 +1,24 @@
-import { doc, getDoc, collection, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { Cases, CaseWithKey } from "@/types/cases";
+import axios from "axios";
+import { Cases } from "@/types/cases";
+
+const API_BASE_URL = "http://localhost:8080";
 
 export const fetchCaseDetails = async (id: string): Promise<Cases | null> => {
-  const caseDoc = await getDoc(doc(db, "cases", id));
-  if (!caseDoc.exists()) {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/cases/${id}`);
+    return response.data as Cases;
+  } catch (error) {
+    console.error("Error fetching case details:", error);
     return null;
   }
-  return caseDoc.data() as Cases;
 };
 
 export const fetchAllCases = async (): Promise<Cases[]> => {
-  const casesCollection = collection(db, "cases");
-  const casesSnapshot = await getDocs(casesCollection);
-  const casesList: CaseWithKey[] = [];
-  casesSnapshot.forEach((doc) => {
-    const data = doc.data() as Cases;
-    casesList.push({ key: doc.id, ...data });
-  });
-  return casesList;
+  try {
+    const response = await axios.get(`${API_BASE_URL}/cases`);
+    return response.data as Cases[];
+  } catch (error) {
+    console.error("Error fetching cases:", error);
+    return [];
+  }
 };

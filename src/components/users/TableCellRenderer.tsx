@@ -1,46 +1,35 @@
 "use client";
 
-import { ClockIcon, EyeIcon, PencilIcon } from "@heroicons/react/24/outline";
-import { Chip, User, Tooltip, Button } from "@heroui/react";
-import { parseDateToLocal } from "@/utils/date";
-import { CaseWithKey } from "@/types/cases";
+import { EyeIcon, PencilIcon } from "@heroicons/react/24/outline";
+import { Chip, Tooltip, Button } from "@heroui/react";
 import Link from "next/link";
+import { UserWithKey } from "@/types/users";
 
 interface TableCellRendererProps {
-  user: CaseWithKey;
-  columnKey: keyof CaseWithKey;
+  user: UserWithKey;
+  columnKey: keyof UserWithKey;
 }
 
-export const TableCellRendererCases = ({
+export const TableCellRendererUsers = ({
   user,
   columnKey,
 }: TableCellRendererProps) => {
   const cellValue = user[columnKey];
 
   switch (columnKey) {
-    case "created":
+    case "id_document":
       return (
         <div className="flex flex-col">
-          <p className="font-medium text-sm">
-            {parseDateToLocal(cellValue as string | number | Date)}
-          </p>
+          <p className="text-base font-medium">{String(cellValue)}</p>
         </div>
       );
-    case "update":
+    case "name":
       return (
         <div className="flex flex-col">
-          <p className="text-sm font-medium">
-            {parseDateToLocal(cellValue as string | number | Date)}
-          </p>
+          <p className="text-base font-medium">{String(cellValue)}</p>
         </div>
       );
-    case "proccess_type":
-      return (
-        <div className="flex flex-col">
-          <p className="text-sm">{String(cellValue)}</p>
-        </div>
-      );
-    case "status":
+    case "user_type":
       return (
         <Chip
           className={`capitalize ${
@@ -60,29 +49,13 @@ export const TableCellRendererCases = ({
           {String(cellValue)}
         </Chip>
       );
-    case "name":
+    case "email":
       return (
         <div className="flex flex-col">
-          <p className="text-sm font-semibold">{String(cellValue)}</p>
-          {user.email && <p className="text-sm">{user.email}</p>}
-          {user.phone && <p className="text-sm">{user.phone}</p>}
-        </div>
-      );
-    case "response_time":
-      return (
-        <div className="flex gap-2 items-center">
-          <ClockIcon className="w-6 text-[#12A150]" />
-          <p className="text-sm font-semibold text-[#12A150]">
-            {String(cellValue)} Horas
+          <p className="text-base font-medium text-primary">
+            {String(cellValue)}
           </p>
         </div>
-      );
-    case "assigned":
-      return (
-        <User
-          avatarProps={{ radius: "lg" }}
-          name={user.assigned.name}
-        />
       );
     case "actions":
       return (
@@ -96,7 +69,7 @@ export const TableCellRendererCases = ({
             </Button>
           </Tooltip>
           <Tooltip content="Editar cliente">
-            <Link href={`/cases/${user.key}`}>
+            <Link href={`/users/${user.key}`}>
               <Button
                 isIconOnly
                 className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"

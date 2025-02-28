@@ -2,14 +2,16 @@ import {
   MagnifyingGlassIcon,
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
-import { DropdownItem, DropdownMenu } from "@heroui/react";
-import { Button } from "@heroui/react";
-import { DropdownTrigger } from "@heroui/react";
-import { Dropdown } from "@heroui/react";
-import { Input } from "@heroui/react";
-import { userTypeOptions, siteOptions } from "@/constants/reviewersConstants";
+import {
+  DropdownItem,
+  DropdownMenu,
+  Button,
+  DropdownTrigger,
+  Dropdown,
+  Input,
+} from "@heroui/react";
 import { capitalize } from "@/utils/capitalize";
-import React from "react";
+import { siteOptions, userTypeOptions } from "@/constants/usersConstants";
 
 interface TopContentProps {
   usersLength: number;
@@ -50,7 +52,7 @@ export default function TopContent({
           onClear={() => onClear()}
           onValueChange={onSearchChange}
         />
-        <div className="flex gap-3">
+       <div className="flex gap-3">
           <Dropdown>
             <DropdownTrigger className="hidden sm:flex">
               <Button

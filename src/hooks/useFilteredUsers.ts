@@ -1,16 +1,16 @@
 import { useMemo } from "react";
-import { Reviewers } from "@/types/reviewers";
-import { userTypeOptions, siteOptions } from "@/constants/reviewersConstants";
+import { Users } from "@/types/users";
+import { userTypeOptions, siteOptions } from "@/constants/usersConstants";
 
 interface UseFilteredItemsProps {
-  reviewers: Reviewers[];
+  users: Users[];
   filterValue: string;
   userTypeFilter: string | Set<string>;
   siteFilter: string | Set<string>;
 }
 
-export const useFilteredReviewers = ({
-  reviewers,
+export const useFilteredUsers = ({
+  users,
   filterValue,
   userTypeFilter,
   siteFilter,
@@ -18,7 +18,7 @@ export const useFilteredReviewers = ({
   const hasSearchFilter = Boolean(filterValue);
 
   const filteredItems = useMemo(() => {
-    let filteredUsers = [...reviewers];
+    let filteredUsers = [...users];
 
     // Search filter
     if (hasSearchFilter) {
@@ -53,7 +53,7 @@ export const useFilteredReviewers = ({
     }
 
     return filteredUsers;
-  }, [reviewers, filterValue, userTypeFilter, siteFilter]);
+  }, [users, filterValue, userTypeFilter, siteFilter]);
 
   return { filteredItems, hasSearchFilter };
 };

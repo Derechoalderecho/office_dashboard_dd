@@ -1,8 +1,9 @@
 import { SortDescriptor } from "@heroui/react";
 import { Cases } from "@/types/cases";
 import { Reviewers } from "@/types/reviewers";
+import { Users } from "@/types/users";
 
-export const sortItems = <T extends Cases | Reviewers>(
+export const sortItems = <T extends Cases | Reviewers | Users>(
   items: T[],
   sortDescriptor: SortDescriptor
 ): T[] => {

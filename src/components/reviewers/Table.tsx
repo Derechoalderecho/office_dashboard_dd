@@ -18,25 +18,24 @@ import {
   SortDescriptor,
 } from "@heroui/react";
 import { useState, useCallback, useMemo, useEffect, ChangeEvent } from "react";
-import { Cases, RangeValue, DateRange } from "@/types/cases";
 import { columns } from "@/constants/reviewersConstants";
 import TopContent from "./TopContent";
 import BottomContent from "./BottomContent";
-import { useFilteredItems } from "@/hooks/useFilteredCases";
 import { sortItems } from "@/utils/sortItems";
 import { paginateItems } from "@/utils/paginateItems";
 import { CaseWithKey } from "@/types/cases";
 import { ReviewerWithKey } from "@/types/reviewers";
 import { TableCellRendererReviewers } from "./TableCellRenderer";
 import { BulkActionsBar } from "./BulkActionsBar";
-import { fetchAllCases } from "@/services/caseService";
 import { fetchAllReviewers } from "@/services/reviewerService";
 import { useFilteredReviewers } from "@/hooks/useFilteredReviewers";
+import { Spinner } from "@heroui/react";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "name",
   "user_type",
   "assigned_areas",
+  "site",
   "email",
   "queries_number",
   "procceses_number",
@@ -48,7 +47,8 @@ export default function TableReviewers() {
   const [visibleColumns, setVisibleColumns] = useState<Selection>(
     new Set(INITIAL_VISIBLE_COLUMNS)
   );
-  const [statusFilter, setStatusFilter] = useState<Selection>("all");
+  const [siteFilter, setSiteFilter] = useState<Selection>("all");
+  const [userTypeFilter, setUserTypeFilter] = useState<Selection>("all");
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
     column: "age",
@@ -56,20 +56,19 @@ export default function TableReviewers() {
   });
   const [page, setPage] = useState(1);
   const [showAll, setShowAll] = useState(false);
-  const [dateRange, setDateRange] = useState<DateRange | null>(null);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [cases, setCases] = useState<CaseWithKey[]>([]);
   const [reviewers, setReviewers] = useState<ReviewerWithKey[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Fetch reviewers from Firestore
- useEffect(() => {
+  useEffect(() => {
     const fetchReviewers = async () => {
       const reviewersList = await fetchAllReviewers();
       setReviewers(reviewersList as ReviewerWithKey[]);
+      setIsLoading(false);
     };
     fetchReviewers();
   }, []);
-
 
   // Handle Bulk Actions Bar selection change
   const onSelectionChangeMasiveMenu = (keys: Selection) => {
@@ -87,7 +86,8 @@ export default function TableReviewers() {
   const { filteredItems, hasSearchFilter } = useFilteredReviewers({
     reviewers,
     filterValue,
-    userTypeFilter: statusFilter as string | Set<string>,
+    userTypeFilter: userTypeFilter as string | Set<string>,
+    siteFilter: siteFilter as string | Set<string>,
   });
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
@@ -128,25 +128,27 @@ export default function TableReviewers() {
   const topContent = useMemo(() => {
     return (
       <TopContent
-        usersLength={cases.length}
+        usersLength={reviewers.length}
         onRowsPerPageChange={onRowsPerPageChange}
         setShowAll={setShowAll}
-        setStatusFilter={setStatusFilter}
+        setUserTypeFilter={setUserTypeFilter}
+        setSiteFilter={setSiteFilter}
+        userTypeFilter={userTypeFilter as Set<string>}
+        siteFilter={siteFilter as Set<string>}
         onClear={onClear}
         filterValue={filterValue}
-        statusFilter={statusFilter as Set<string>}
         showAll={showAll}
         onSearchChange={onSearchChange}
       />
     );
   }, [
     filterValue,
-    statusFilter,
+    userTypeFilter,
+    siteFilter,
     visibleColumns,
-    dateRange,
     onSearchChange,
     onRowsPerPageChange,
-    cases.length,
+    reviewers.length,
     hasSearchFilter,
   ]);
 
@@ -202,12 +204,20 @@ export default function TableReviewers() {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody emptyContent={"Casos no encontrados"} items={sortedItems}>
+        <TableBody
+          emptyContent={"Casos no encontrados"}
+          items={sortedItems}
+          isLoading={isLoading}
+          loadingContent={<Spinner label="Cargando..." />}
+        >
           {(item) => (
             <TableRow key={item.id}>
               {(columnKey) => (
                 <TableCell>
-                  <TableCellRendererReviewers user={item} columnKey={columnKey} />
+                  <TableCellRendererReviewers
+                    user={item as ReviewerWithKey}
+                    columnKey={columnKey as keyof ReviewerWithKey}
+                  />
                 </TableCell>
               )}
             </TableRow>
