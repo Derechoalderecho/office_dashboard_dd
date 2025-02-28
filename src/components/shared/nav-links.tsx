@@ -8,7 +8,7 @@ import {
   UserIcon,
   Squares2X2Icon,
   Cog6ToothIcon,
-} from "@heroicons/react/24/outline";
+} from "@heroicons/react/24/solid";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 
