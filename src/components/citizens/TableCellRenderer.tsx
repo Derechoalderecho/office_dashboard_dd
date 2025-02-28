@@ -30,9 +30,11 @@ export const TableCellRendererCitizens = ({
         <div className="flex flex-col">
           <p className="text-base font-semibold">{`${String(cellValue)} ${
             user.second_name ? String(user.second_name) : ""
-          } ${user.first_lastname ? String(user.first_lastname) : ""} ${
-            user.second_lastname ? String(user.second_lastname) : ""
-          }`}</p>
+          } `}</p>
+          <p className="text-base font-medium">
+            {user.first_lastname ? String(user.first_lastname) : ""} {""}
+            {user.second_lastname ? String(user.second_lastname) : ""}
+          </p>
         </div>
       );
     case "email":

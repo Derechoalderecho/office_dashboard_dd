@@ -19,7 +19,7 @@ import {
   Spinner,
 } from "@heroui/react";
 import { useState, useCallback, useMemo, useEffect, ChangeEvent } from "react";
-import { columns } from "@/constants/reviewersConstants";
+import { columns } from "@/constants/citizensConstants";
 import TopContent from "./TopContent";
 import BottomContent from "../shared/BottomContentTable";
 import { sortItems } from "@/utils/sortItems";
@@ -32,14 +32,14 @@ import { fetchAllCitizens } from "@/services/citizenService";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "created_at",
-
+  "first_name",
   "email",
   "mobile_phone",
   "site",
   "actions",
 ];
 
-export default function TableReviewers() {
+export default function TableCitizens() {
   const [filterValue, setFilterValue] = useState("");
   const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([]));
   const [visibleColumns, setVisibleColumns] = useState<Selection>(
