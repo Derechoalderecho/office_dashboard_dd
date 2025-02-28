@@ -49,11 +49,10 @@ export const TableCellRendererUsers = ({
           {String(cellValue)}
         </Chip>
       );
-    case "site":
     case "email":
       return (
         <div className="flex flex-col">
-          <p className="text-base font-semibold text-primary">
+          <p className="text-base font-medium text-primary">
             {String(cellValue)}
           </p>
         </div>

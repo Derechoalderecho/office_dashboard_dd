@@ -36,6 +36,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   "user_type",
   "branch_law",
   "site",
+  "email",
   "active_consults",
   "active_processes",
   "consults_calification",
