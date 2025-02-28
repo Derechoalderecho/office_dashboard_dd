@@ -11,6 +11,8 @@ export interface Users {
   consults_calification: string;
   processes_calification: string;
   is_active: boolean;
+  actions?: string;
+  key?: string;
 }
 
 export type Column = {

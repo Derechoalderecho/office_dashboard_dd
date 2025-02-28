@@ -1,3 +1,11 @@
+"use client";
+
+import dynamic from "next/dynamic";
+
+const TableUsers = dynamic(() => import("@/components/users/Table"), {
+  ssr: false,
+});
+
 export default function UsersPage() {
   return (
     <>
@@ -6,6 +14,7 @@ export default function UsersPage() {
       <p className="text-[#808080] text-sm">
         Filtra los Usuarios
       </p>
+      <TableUsers />
     </section>
   </>
   );

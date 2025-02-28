@@ -2,66 +2,44 @@ import {
   MagnifyingGlassIcon,
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
-import { DateRangePicker, DropdownItem, DropdownMenu } from "@heroui/react";
-import { Button } from "@heroui/react";
-import { DropdownTrigger } from "@heroui/react";
-import { Dropdown } from "@heroui/react";
-import { Input } from "@heroui/react";
-import { I18nProvider } from "@react-aria/i18n";
-import { statusOptions } from "@/constants/casesConstants";
-import { DateRange } from "@/types/cases";
-import { RangeValue } from "@/types/cases";
-import { CalendarDate } from "@internationalized/date";
+import {
+  DropdownItem,
+  DropdownMenu,
+  Button,
+  DropdownTrigger,
+  Dropdown,
+  Input,
+} from "@heroui/react";
 import { capitalize } from "@/utils/capitalize";
-import React from "react";
+import { siteOptions, userTypeOptions } from "@/constants/usersConstants";
 
 interface TopContentProps {
   usersLength: number;
-  dateRange: DateRange;
-  statusFilter: Set<string>;
+  userTypeFilter: Set<string>;
+  siteFilter: Set<string>;
   showAll: boolean;
   filterValue: string;
   onClear: () => void;
   onSearchChange: (value: string) => void;
   onRowsPerPageChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
-  handleDateRangeChange: (range: RangeValue<CalendarDate>) => void;
   setShowAll: (value: boolean) => void;
-  setStatusFilter: (value: Set<string>) => void;
+  setUserTypeFilter: (value: Set<string>) => void;
+  setSiteFilter: (value: Set<string>) => void;
 }
 
 export default function TopContent({
   usersLength,
-  dateRange,
-  statusFilter,
+  userTypeFilter,
+  siteFilter,
+  setUserTypeFilter,
+  setSiteFilter,
   showAll,
   setShowAll,
   filterValue,
   onClear,
   onSearchChange,
   onRowsPerPageChange,
-  handleDateRangeChange,
-  setStatusFilter,
 }: TopContentProps) {
-  // Convert your dateRange to RangeValue<CalendarDate>
-  const convertToDateValue = (
-    dateRange: DateRange | null
-  ): RangeValue<CalendarDate> | null => {
-    if (!dateRange) return null;
-
-    return {
-      start: new CalendarDate(
-        dateRange.start.year,
-        dateRange.start.month,
-        dateRange.start.day
-      ),
-      end: new CalendarDate(
-        dateRange.end.year,
-        dateRange.end.month,
-        dateRange.end.day
-      ),
-    };
-  };
-
   return (
     <div className="flex flex-col">
       <div className="flex gap-3 items-center pb-6 border-b">
@@ -74,25 +52,51 @@ export default function TopContent({
           onClear={() => onClear()}
           onValueChange={onSearchChange}
         />
-        <div className="flex gap-3">
+       <div className="flex gap-3">
           <Dropdown>
             <DropdownTrigger className="hidden sm:flex">
               <Button
                 endContent={<ChevronDownIcon className="text-small w-4" />}
                 variant="bordered"
               >
-                Estado
+                Tipo de usuario
               </Button>
             </DropdownTrigger>
             <DropdownMenu
               disallowEmptySelection
               aria-label="Table Columns"
               closeOnSelect={false}
-              selectedKeys={statusFilter}
+              selectedKeys={userTypeFilter}
               selectionMode="multiple"
-              onSelectionChange={(keys) => setStatusFilter(keys as Set<string>)}
+              onSelectionChange={(keys) =>
+                setUserTypeFilter(keys as Set<string>)
+              }
             >
-              {statusOptions.map((status) => (
+              {userTypeOptions.map((status) => (
+                <DropdownItem key={status.uid} className="capitalize">
+                  {capitalize(status.name)}
+                </DropdownItem>
+              ))}
+            </DropdownMenu>
+          </Dropdown>
+          <Dropdown>
+            <DropdownTrigger className="hidden sm:flex">
+              <Button
+                endContent={<ChevronDownIcon className="text-small w-4" />}
+                variant="bordered"
+              >
+                Sede
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu
+              disallowEmptySelection
+              aria-label="Table Columns"
+              closeOnSelect={false}
+              selectedKeys={siteFilter}
+              selectionMode="multiple"
+              onSelectionChange={(keys) => setSiteFilter(keys as Set<string>)}
+            >
+              {siteOptions.map((status) => (
                 <DropdownItem key={status.uid} className="capitalize">
                   {capitalize(status.name)}
                 </DropdownItem>
@@ -100,15 +104,6 @@ export default function TopContent({
             </DropdownMenu>
           </Dropdown>
         </div>
-        <I18nProvider locale="es-ES">
-          <DateRangePicker
-            variant="bordered"
-            label="Buscar por fecha"
-            className="max-w-xs"
-            value={convertToDateValue(dateRange)}
-            onChange={(value) => handleDateRangeChange(value as RangeValue<CalendarDate>)}
-          />
-        </I18nProvider>
         <div>
           <Button color="primary" onPress={() => setShowAll(!showAll)}>
             Mostrar todos

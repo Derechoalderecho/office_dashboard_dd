@@ -2,10 +2,10 @@ import { Column, userTypeOption, siteOption } from "@/types/users";
 
 export const columns: Column[] = [
   { name: "Identificación", uid: "id_document" },
-  { name: "Nombre", uid: "name" },
-  { name: "Tipo de usuario", uid: "user_type" },
-  { name: "Rama de derecho", uid: "branch_law" },
-  { name: "Sede", uid: "site" },
+  { name: "Nombre", uid: "name", sortable: true },
+  { name: "Tipo de usuario", uid: "user_type", sortable: true },
+  { name: "Rama de derecho", uid: "branch_law", sortable: true },
+  { name: "Sede", uid: "site", sortable: true },
   { name: "Consultas activas", uid: "active_consults" },
   { name: "Procesos activos", uid: "active_processes" },
   { name: "Consultas calificación", uid: "consults_calification" },

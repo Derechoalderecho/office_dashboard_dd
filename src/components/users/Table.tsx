@@ -18,41 +18,38 @@ import {
   SortDescriptor,
 } from "@heroui/react";
 import { useState, useCallback, useMemo, useEffect, ChangeEvent } from "react";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { CalendarDate } from "@internationalized/date";
-import { Cases, RangeValue, DateRange } from "@/types/cases";
-import { columns } from "@/constants/casesConstants";
+import { columns } from "@/constants/usersConstants";
 import TopContent from "./TopContent";
 import BottomContent from "./BottomContent";
-import { useFilteredItems } from "@/hooks/useFilteredCases";
 import { sortItems } from "@/utils/sortItems";
 import { paginateItems } from "@/utils/paginateItems";
-import { CaseWithKey } from "@/types/cases";
-import { TableCellRendererCases } from "./TableCellRenderer";
+import { UserWithKey } from "@/types/users";
+import { TableCellRendererUsers } from "./TableCellRenderer";
 import { BulkActionsBar } from "./BulkActionsBar";
-import { fetchAllCases } from "@/services/caseService";
-import SkeletonTables from "@/ui/SkeletonTables";
+import { fetchAllUsers } from "@/services/userService";
+import { useFilteredUsers } from "@/hooks/useFilteredUsers";
 import { Spinner } from "@heroui/react";
 
 const INITIAL_VISIBLE_COLUMNS = [
-  "created",
-  "update",
-  "proccess_type",
-  "status",
+  "id_document",
   "name",
-  "response_time",
-  "assigned",
-  "actions",
+  "user_type",
+  "branch_law",
+  "site",
+  "active_consults",
+  "active_processes",
+  "consults_calification",
+  "processes_calification",
 ];
 
-export default function TableCases() {
+export default function TableUsers() {
   const [filterValue, setFilterValue] = useState("");
   const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([]));
   const [visibleColumns, setVisibleColumns] = useState<Selection>(
     new Set(INITIAL_VISIBLE_COLUMNS)
   );
-  const [statusFilter, setStatusFilter] = useState<Selection>("all");
+  const [siteFilter, setSiteFilter] = useState<Selection>("all");
+  const [userTypeFilter, setUserTypeFilter] = useState<Selection>("all");
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
     column: "age",
@@ -60,43 +57,19 @@ export default function TableCases() {
   });
   const [page, setPage] = useState(1);
   const [showAll, setShowAll] = useState(false);
-  const [dateRange, setDateRange] = useState<DateRange | null>(null);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [cases, setCases] = useState<CaseWithKey[]>([]);
+  const [users, setUsers] = useState<UserWithKey[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch cases from Firestore
+  // Fetch reviewers from Firestore
   useEffect(() => {
-    const fetchCases = async () => {
-      const casesList = await fetchAllCases();
-      setCases(casesList as CaseWithKey[]);
+    const fetchUsers = async () => {
+      const usersList = await fetchAllUsers();
+      setUsers(usersList as UserWithKey[]);
       setIsLoading(false);
     };
-    fetchCases();
+    fetchUsers();
   }, []);
-
-  // Handle date range change
-  const handleDateRangeChange = (newValue: RangeValue<CalendarDate> | null) => {
-    if (!newValue) {
-      setDateRange(null);
-      return;
-    }
-
-    const newDateRange: DateRange = {
-      start: {
-        year: newValue.start.year,
-        month: newValue.start.month,
-        day: newValue.start.day,
-      },
-      end: {
-        year: newValue.end.year,
-        month: newValue.end.month,
-        day: newValue.end.day,
-      },
-    };
-
-    setDateRange(newDateRange);
-  };
 
   // Handle Bulk Actions Bar selection change
   const onSelectionChangeMasiveMenu = (keys: Selection) => {
@@ -111,11 +84,11 @@ export default function TableCases() {
   }, [visibleColumns]);
 
   // Filters
-  const { filteredItems, hasSearchFilter } = useFilteredItems({
-    cases,
+  const { filteredItems, hasSearchFilter } = useFilteredUsers({
+    users,
     filterValue,
-    statusFilter: statusFilter as string | Set<string>,
-    dateRange,
+    userTypeFilter: userTypeFilter as string | Set<string>,
+    siteFilter: siteFilter as string | Set<string>,
   });
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
@@ -156,27 +129,27 @@ export default function TableCases() {
   const topContent = useMemo(() => {
     return (
       <TopContent
-        usersLength={cases.length}
+        usersLength={users.length}
         onRowsPerPageChange={onRowsPerPageChange}
-        handleDateRangeChange={handleDateRangeChange}
         setShowAll={setShowAll}
-        setStatusFilter={setStatusFilter}
+        setUserTypeFilter={setUserTypeFilter}
+        setSiteFilter={setSiteFilter}
+        userTypeFilter={userTypeFilter as Set<string>}
+        siteFilter={siteFilter as Set<string>}
         onClear={onClear}
         filterValue={filterValue}
-        statusFilter={statusFilter as Set<string>}
         showAll={showAll}
-        dateRange={dateRange as DateRange}
         onSearchChange={onSearchChange}
       />
     );
   }, [
     filterValue,
-    statusFilter,
+    userTypeFilter,
+    siteFilter,
     visibleColumns,
-    dateRange,
     onSearchChange,
     onRowsPerPageChange,
-    cases.length,
+    users.length,
     hasSearchFilter,
   ]);
 
@@ -203,7 +176,6 @@ export default function TableCases() {
           filteredItemsLength={filteredItems.length}
         />
       )}
-
       <Table
         suppressHydrationWarning
         isHeaderSticky
@@ -243,9 +215,9 @@ export default function TableCases() {
             <TableRow key={item.id}>
               {(columnKey) => (
                 <TableCell>
-                  <TableCellRendererCases
-                    user={item as CaseWithKey}
-                    columnKey={columnKey as keyof CaseWithKey}
+                  <TableCellRendererUsers
+                    user={item as UserWithKey}
+                    columnKey={columnKey as keyof UserWithKey}
                   />
                 </TableCell>
               )}
