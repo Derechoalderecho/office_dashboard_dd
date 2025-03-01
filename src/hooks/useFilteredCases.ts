@@ -24,7 +24,7 @@ export const useFilteredItems = ({
     // Search filter
     if (hasSearchFilter) {
       filteredUsers = filteredUsers.filter((user) =>
-        user.name.toLowerCase().includes(filterValue.toLowerCase())
+        user.citizen.primer_nombre.toLowerCase().includes(filterValue.toLowerCase())
       );
     }
     
@@ -36,7 +36,7 @@ export const useFilteredItems = ({
       });
 
       filteredUsers = filteredUsers.filter((user) =>
-        selectedStatuses.includes(user.status)
+        selectedStatuses.includes(user.estado)
       );
     }
 
@@ -47,9 +47,9 @@ export const useFilteredItems = ({
       const endDate = new Date(end.year, end.month - 1, end.day);
 
       filteredUsers = filteredUsers.filter((user) => {
-        const userDate = new Date(user.created);
+        const userDate = new Date(user.fecha_crea);
         if (isNaN(userDate.getTime())) {
-          console.error(`Invalid date for user: ${user.id}`, user.created);
+          console.error(`Invalid date for user: ${user.id_caso}`, user.fecha_crea);
           return false;
         }
 

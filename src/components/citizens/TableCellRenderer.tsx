@@ -17,7 +17,7 @@ export const TableCellRendererCitizens = ({
   const cellValue = user[columnKey];
 
   switch (columnKey) {
-    case "created_at":
+    case "fecha_crea":
       return (
         <div className="flex flex-col">
           <p className="font-medium text-sm">
@@ -25,17 +25,11 @@ export const TableCellRendererCitizens = ({
           </p>
         </div>
       );
-    case "first_name":
+    case "primer_nombre":
       return (
-        <div className="flex flex-col">
-          <p className="text-base font-semibold">{`${String(cellValue)} ${
-            user.second_name ? String(user.second_name) : ""
-          } `}</p>
-          <p className="text-base font-medium">
-            {user.first_lastname ? String(user.first_lastname) : ""} {""}
-            {user.second_lastname ? String(user.second_lastname) : ""}
-          </p>
-        </div>
+        <p className="text-sm font-semibold">
+        {user?.primer_nombre} {user?.primer_apellido}
+      </p>
       );
     case "email":
       return (
@@ -43,13 +37,7 @@ export const TableCellRendererCitizens = ({
           <p className="text-base font-medium">{String(cellValue)}</p>
         </div>
       );
-    case "mobile_phone":
-      return (
-        <div className="flex flex-col">
-          <p className="text-base">{String(cellValue)}</p>
-        </div>
-      );
-    case "site":
+    case "num_movil":
       return (
         <div className="flex flex-col">
           <p className="text-base">{String(cellValue)}</p>

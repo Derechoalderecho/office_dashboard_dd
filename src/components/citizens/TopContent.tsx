@@ -7,6 +7,7 @@ import { DropdownItem, DropdownMenu } from "@heroui/react";
 import { Button, Dropdown, DropdownTrigger, Input } from "@heroui/react";
 import { siteOptions } from "@/constants/citizensConstants";
 import { capitalize } from "@/utils/capitalize";
+import Link from "next/link";
 
 interface TopContentProps {
   usersLength: number;
@@ -76,9 +77,11 @@ export default function TopContent({
             </Button>
           </div>
         </div>
-        <Button color="primary" startContent={<UserPlusIcon className="w-5" />}>
-          Añadir ciudadano
-        </Button>
+        <Link href="/dashboard/citizens/create">
+          <Button color="primary" startContent={<UserPlusIcon className="w-5" />}>
+            Añadir ciudadano
+          </Button>
+        </Link>
       </div>
       <div className="flex justify-between items-center mt-6">
         <span className="text-default-400 text-small">

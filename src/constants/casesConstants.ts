@@ -1,13 +1,12 @@
 import { Column, StatusOption } from "@/types/sharedTypes";
 
 export const columns: Column[] = [
-  { name: "Creado en", uid: "created" },
-  { name: "Actualizado en", uid: "update" },
-  { name: "Tipo de proceso", uid: "proccess_type", sortable: true },
-  { name: "Estado", uid: "status", sortable: true },
-  { name: "Cliente", uid: "name" },
-  { name: "Tiempo Respuesta", uid: "response_time", sortable: true },
-  { name: "Asignado", uid: "assigned", sortable: true },
+  { name: "Fecha de creación", uid: "fecha_crea" },
+  { name: "Fecha de actualización", uid: "fecha_actualiza" },
+  { name: "Tipo de proceso", uid: "tipo_proceso", sortable: true },
+  { name: "Estado", uid: "estado", sortable: true },
+  { name: "Ciudadano", uid: "ciudadano" },
+  { name: "Tiempo de respuesta", uid: "tiempo_respuesta", sortable: true },
   { name: "Acciones", uid: "actions" },
 ];
 

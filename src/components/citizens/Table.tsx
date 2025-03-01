@@ -31,11 +31,10 @@ import { useFilteredCitizens } from "@/hooks/useFilteredCitizens";
 import { fetchAllCitizens } from "@/services/citizenService";
 
 const INITIAL_VISIBLE_COLUMNS = [
-  "created_at",
-  "first_name",
+  "fecha_crea",
+  "primer_nombre",
   "email",
-  "mobile_phone",
-  "site",
+  "num_movil",
   "actions",
 ];
 
@@ -206,7 +205,7 @@ export default function TableCitizens() {
           loadingContent={<Spinner label="Cargando..." />}
         >
           {(item) => (
-            <TableRow key={item.id}>
+            <TableRow key={item.id_ciudadano}>
               {(columnKey) => (
                 <TableCell>
                   <TableCellRendererCitizens

@@ -1,23 +1,18 @@
 import { Column, userTypeOption, siteOption } from "@/types/sharedTypes";
 
 export const columns: Column[] = [
-  { name: "Identificación", uid: "id_document" },
-  { name: "Nombre", uid: "name", sortable: true },
-  { name: "Tipo de usuario", uid: "user_type", sortable: true },
-  { name: "Rama de derecho", uid: "branch_law", sortable: true },
-  { name: "Sede", uid: "site", sortable: true },
+  { name: "Identificación", uid: "num_documento" },
+  { name: "Nombre", uid: "primer_nombre" },
+  { name: "Rol", uid: "rol", sortable: true },
   { name: "Email", uid: "email" },
-  { name: "Consultas activas", uid: "active_consults" },
-  { name: "Procesos activos", uid: "active_processes" },
-  { name: "Consultas calificación", uid: "consults_calification" },
-  { name: "Procesos calificación", uid: "processes_calification" },
+  { name: "Acciones", uid: "actions" },
 ];
 
 export const userTypeOptions: userTypeOption[] = [
   { name: "Estudiante", uid: "student" },
-  { name: "Asesor", uid: "asesor" },
+  { name: "Director", uid: "director" },
   { name: "Monitor", uid: "monitor" },
-  { name: "Profesor", uid: "professor" },
+  { name: "Docente", uid: "professor" },
 ];
 
 export const siteOptions: siteOption[] = [

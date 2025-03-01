@@ -31,16 +31,11 @@ import { fetchAllUsers } from "@/services/userService";
 import { useFilteredUsers } from "@/hooks/useFilteredUsers";
 
 const INITIAL_VISIBLE_COLUMNS = [
-  "id_document",
-  "name",
-  "user_type",
-  "branch_law",
-  "site",
+  "num_documento",
+  "primer_nombre",
+  "rol",
   "email",
-  "active_consults",
-  "active_processes",
-  "consults_calification",
-  "processes_calification",
+  "actions",
 ];
 
 export default function TableUsers() {
@@ -221,7 +216,7 @@ export default function TableUsers() {
           loadingContent={<Spinner label="Cargando..." />}
         >
           {(item) => (
-            <TableRow key={item.id}>
+            <TableRow key={item.id_usuario}>
               {(columnKey) => (
                 <TableCell>
                   <TableCellRendererUsers

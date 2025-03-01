@@ -1,33 +1,17 @@
-export interface Assigned {
-  name: string;
-}
-
-export interface RegistrationHistory {
-  status: string;
-  date: string;
-}
-
-export interface HistoryComment {
-  content: string;
-  date: string;
-}
-
+import { Citizen } from "./citizens";
 export interface Cases {
-  id: string;
-  proccess_type: string;
-  created: string;
-  update: string;
-  id_document: string;
-  status: string;
-  name: string;
-  email: string;
-  phone: string;
-  procedure_type: string;
-  response_time: string;
-  register_number: string;
-  assigned: Assigned;
-  registration_history: RegistrationHistory[];
-  history_comments: HistoryComment[];
+  id_caso: number;
+  id_ciudadano: number;
+  persona_modifica: number;
+  tipo_proceso: string;
+  estado: string;
+  tiempo_respuesta: number;
+  notas: string;
+  fecha_crea: string;
+  fecha_actualiza: string;
+  fecha_elimina: string;
+  eliminado: boolean;
+  ciudadano: Citizen;
   actions?: string;
   key?: string;
 }

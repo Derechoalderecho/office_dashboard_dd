@@ -1,5 +1,6 @@
 "use server"
 
+// src/services/caseService.ts
 import axios from "axios";
 import { Citizen } from "@/types/citizens";
 import { Cases } from "@/types/cases";
@@ -28,5 +29,3 @@ export const fetchAllCases = async (): Promise<Cases[]> => {
     return [];
   }
 };
- 
-

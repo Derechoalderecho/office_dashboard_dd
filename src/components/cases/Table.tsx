@@ -33,13 +33,12 @@ import { BulkActionsBar } from "./BulkActionsBar";
 import { fetchAllCases } from "@/services/caseService";
 
 const INITIAL_VISIBLE_COLUMNS = [
-  "created",
-  "update",
-  "proccess_type",
-  "status",
-  "name",
-  "response_time",
-  "assigned",
+  "fecha_crea",
+  "fecha_actualiza",
+  "tipo_proceso",
+  "estado",
+  "ciudadano",
+  "tiempo_respuesta",
   "actions",
 ];
 
@@ -237,7 +236,7 @@ export default function TableCases() {
           loadingContent={<Spinner label="Cargando..." />}
         >
           {(item) => (
-            <TableRow key={item.id}>
+            <TableRow key={item.id_caso}>
               {(columnKey) => (
                 <TableCell>
                   <TableCellRendererCases
