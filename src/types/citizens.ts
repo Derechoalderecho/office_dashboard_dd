@@ -1,5 +1,6 @@
 export interface Citizen {
   id_ciudadano: number;
+  persona_modifica: number;
   primer_nombre: string;
   segundo_nombre: string | null;
   primer_apellido: string;
@@ -12,7 +13,6 @@ export interface Citizen {
   dane_municipio: string;
   fecha_crea: string;
   fecha_actualiza: string;
-  persona_modifica: number;
   actions?: string;
   key?: string;
 }

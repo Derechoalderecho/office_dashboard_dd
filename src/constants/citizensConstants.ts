@@ -1,11 +1,10 @@
 import { Column, siteOption } from "@/types/sharedTypes";
 
 export const columns: Column[] = [
-  { name: "Creado en", uid: "created_at" },
-  { name: "Nombre", uid: "first_name" },
+  { name: "Creado en", uid: "fecha_crea" },
+  { name: "Nombre", uid: "primer_nombre" },
   { name: "Email", uid: "email" },
-  { name: "Teléfono", uid: "mobile_phone" },
-  { name: "Sede", uid: "site", sortable: true },
+  { name: "Teléfono", uid: "num_movil" },
   { name: "Acciones", uid: "actions" },
 ];
 
