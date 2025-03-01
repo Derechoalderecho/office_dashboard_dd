@@ -29,14 +29,4 @@ export const fetchAllCases = async (): Promise<Cases[]> => {
   }
 };
  
-/*
-export const fetchCaseDetails = async (id: string): Promise<Cases | null> => {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/casos/${id}`);
-    return response.data as Cases;
-  } catch (error) {
-    console.error("Error fetching case details:", error);
-    return null;
-  }
-};
-*/
+
