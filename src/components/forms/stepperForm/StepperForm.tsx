@@ -4,6 +4,7 @@ import type React from "react";
 
 import { useState } from "react";
 import { Check, ChevronRight } from "lucide-react";
+import { CheckIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { Button } from "@heroui/react";
 import {
   Card,
@@ -32,7 +33,7 @@ export default function StepperForm() {
     sexo: "",
     genero: "",
     orient_sexual: "",
-    fecha_nacimiento: "",
+    //fecha_nacimiento: "",
     num_movil: "",
     num_fijo: "",
     email: "",
@@ -55,7 +56,7 @@ export default function StepperForm() {
 
   const steps = [
     { title: "Información básica", component: PersonalInfoStep },
-    { title: "Location", component: ContactInfoStep },
+    { title: "Información general", component: ContactInfoStep },
     { title: "Professional", component: ProfessionalInfoStep },
     { title: "Review", component: ReviewStep },
   ];
@@ -111,7 +112,7 @@ export default function StepperForm() {
           {steps.map((step, index) => (
             <div key={index} className="flex flex-col items-center">
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
+                className={`w-14 h-14 rounded-lg flex items-center justify-center border-2 ${
                   index < currentStep
                     ? "bg-primary border-primary text-primary-foreground"
                     : index === currentStep
@@ -120,9 +121,9 @@ export default function StepperForm() {
                 }`}
               >
                 {index < currentStep ? (
-                  <Check className="h-5 w-5" />
+                  <CheckIcon className="h-8 w-8 stroke-2" />
                 ) : (
-                  <span>{index + 1}</span>
+                  <span className="text-lg font-bold">{index + 1}</span>
                 )}
               </div>
               <span
@@ -138,9 +139,9 @@ export default function StepperForm() {
           ))}
         </div>
         <div className="relative mt-2">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-muted">
+          <div className="absolute top-0 left-0 right-0 h-2 rounded-full bg-muted">
             <div
-              className="h-1 bg-primary transition-all duration-300"
+              className="h-2 bg-primary transition-all rounded-full duration-300"
               style={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }}
             />
           </div>
@@ -202,7 +203,7 @@ export default function StepperForm() {
                 ? "Enviar"
                 : "Siguiente"}
               {!isSubmitting && currentStep < steps.length - 1 && (
-                <ChevronRight className="ml-2 h-4 w-4" />
+                <ChevronRightIcon className="ml-2 h-4 w-4 stroke-2" />
               )}
             </Button>
           </CardFooter>

@@ -1,7 +1,9 @@
 "use client";
 
+import { parseNumberToString } from "@/utils/string";
 import { Input, Select, SelectItem, DateInput, DateValue } from "@heroui/react";
 import { useState } from "react";
+
 type PersonalInfoProps = {
   formData: {
     num_documento: string;
@@ -13,7 +15,7 @@ type PersonalInfoProps = {
     sexo: string;
     genero: string;
     orient_sexual: string;
-    fecha_nacimiento: Date;
+    //fecha_nacimiento: Date;
     num_movil: string;
     num_fijo: string;
     email: string;
@@ -66,6 +68,7 @@ export default function PersonalInfoStep({
           variant="bordered"
           label="Tipo de documento"
           labelPlacement="outside"
+          placeholder="Seleccione su tipo de documento"
           value={formData.tipo_documento}
           onChange={(e) => updateFormData({ tipo_documento: e.target.value })}
         >
@@ -141,6 +144,7 @@ export default function PersonalInfoStep({
           variant="bordered"
           label="Sexo"
           labelPlacement="outside"
+          placeholder="Seleccione su sexo"
           value={formData.sexo}
           onChange={(e) => updateFormData({ sexo: e.target.value })}
         >
@@ -165,13 +169,14 @@ export default function PersonalInfoStep({
         </Select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Select
           id="orient_sexual"
           name="orient_sexual"
           variant="bordered"
           label="Orientación sexual"
           labelPlacement="outside"
+          placeholder="Seleccione su orientación sexual"
           value={formData.orient_sexual}
           onChange={(e) => updateFormData({ orient_sexual: e.target.value })}
         >
@@ -201,7 +206,7 @@ export default function PersonalInfoStep({
           label="Número de teléfono móvil"
           labelPlacement="outside"
           type="number"
-          value={formData.num_movil}
+          value={parseNumberToString(formData.num_movil)}
           onChange={(e) => updateFormData({ num_movil: e.target.value })}
           placeholder="Ingrese su número de teléfono móvil"
           required
@@ -241,6 +246,7 @@ export default function PersonalInfoStep({
           variant="bordered"
           label="Nacionalidad"
           labelPlacement="outside"
+          placeholder="Seleccione su nacionalidad"
           value={formData.nacionalidad}
           onChange={(e) => updateFormData({ nacionalidad: e.target.value })}
         >
@@ -255,6 +261,7 @@ export default function PersonalInfoStep({
           variant="bordered"
           label="Estado civil"
           labelPlacement="outside"
+          placeholder="Seleccione su estado civil"
           value={formData.estado_civil}
           onChange={(e) => updateFormData({ estado_civil: e.target.value })}
         >
@@ -272,6 +279,7 @@ export default function PersonalInfoStep({
           variant="bordered"
           label="Escolaridad"
           labelPlacement="outside"
+          placeholder="Seleccione su escolaridad"
           value={formData.escolaridad}
           onChange={(e) => updateFormData({ escolaridad: e.target.value })}
         >
@@ -286,6 +294,7 @@ export default function PersonalInfoStep({
           variant="bordered"
           label="Etnia"
           labelPlacement="outside"
+          placeholder="Seleccione su etnia"
           value={formData.etnia}
           onChange={(e) => updateFormData({ etnia: e.target.value })}
         >
@@ -304,6 +313,7 @@ export default function PersonalInfoStep({
           variant="bordered"
           label="Discapacidad"
           labelPlacement="outside"
+          placeholder="Seleccione si tiene discapacidad"
           value={formData.discapacidad}
           onChange={(e) => updateFormData({ discapacidad: e.target.value })}
         >
@@ -317,6 +327,7 @@ export default function PersonalInfoStep({
           variant="bordered"
           label="Sabe leer y escribir"
           labelPlacement="outside"
+          placeholder="Seleccione si sabe leer y escribir"
           value={formData.sabe_leer_escribir}
           onChange={(e) =>
             updateFormData({ sabe_leer_escribir: e.target.value })
