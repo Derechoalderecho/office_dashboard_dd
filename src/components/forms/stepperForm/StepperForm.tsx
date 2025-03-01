@@ -83,7 +83,7 @@ export default function StepperForm() {
   const CurrentStepComponent = steps[currentStep].component
 
   return (
-    <div className="container max-w-3xl mx-auto py-10 px-4">
+    <div className="">
       <Card>
         <CardHeader>
           <CardTitle>Application Form</CardTitle>
@@ -146,7 +146,7 @@ export default function StepperForm() {
             <Button type="button" variant="bordered" onPress={handlePrevious} disabled={currentStep === 0}>
               Previous
             </Button>
-            <Button type="submit" onPress={handleSubmit} disabled={isSubmitting} className="flex items-center">
+            <Button type="submit" onClick={handleSubmit} disabled={isSubmitting} className="flex items-center">
               {isSubmitting ? "Submitting..." : currentStep === steps.length - 1 ? "Submit" : "Next"}
               {!isSubmitting && currentStep < steps.length - 1 && <ChevronRight className="ml-2 h-4 w-4" />}
             </Button>

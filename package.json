@@ -12,6 +12,8 @@
     "@heroicons/react": "^2.2.0",
     "@heroui/react": "^2.7.2",
     "@internationalized/date": "^3.7.0",
+    "@radix-ui/react-label": "^2.1.2",
+    "@radix-ui/react-select": "^2.1.6",
     "@react-aria/i18n": "^3.12.5",
     "axios": "^1.7.9",
     "class-variance-authority": "^0.7.1",

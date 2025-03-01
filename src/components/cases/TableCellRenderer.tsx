@@ -15,10 +15,10 @@ export const TableCellRendererCases = ({
   user,
   columnKey,
 }: TableCellRendererProps) => {
-  const cellValue = user[columnKey];
+  const cellValue = user[columnKey as keyof CaseWithKey];
 
   switch (columnKey) {
-    case "created":
+    case "fecha_crea":
       return (
         <div className="flex flex-col">
           <p className="font-medium text-sm">
@@ -26,7 +26,7 @@ export const TableCellRendererCases = ({
           </p>
         </div>
       );
-    case "update":
+    case "fecha_actualiza":
       return (
         <div className="flex flex-col">
           <p className="text-sm font-medium">
@@ -34,13 +34,13 @@ export const TableCellRendererCases = ({
           </p>
         </div>
       );
-    case "proccess_type":
+    case "tipo_proceso":
       return (
         <div className="flex flex-col">
           <p className="text-sm">{String(cellValue)}</p>
         </div>
       );
-    case "status":
+    case "estado":
       return (
         <Chip
           className={`capitalize ${
@@ -60,15 +60,22 @@ export const TableCellRendererCases = ({
           {String(cellValue)}
         </Chip>
       );
-    case "name":
+    case "ciudadano":
+      const ciudadano = user.citizen;
       return (
         <div className="flex flex-col">
-          <p className="text-sm font-semibold">{String(cellValue)}</p>
-          {user.email && <p className="text-sm">{user.email}</p>}
-          {user.phone && <p className="text-sm">{user.phone}</p>}
+          <p className="text-sm font-semibold">
+            {ciudadano?.primer_nombre} {ciudadano?.primer_apellido}
+          </p>
+          {ciudadano?.email && (
+            <p className="text-sm">{ciudadano.email}</p>
+          )}
+          {ciudadano?.num_movil && (
+            <p className="text-sm">{ciudadano.num_movil}</p>
+          )}
         </div>
       );
-    case "response_time":
+    case "tiempo_respuesta":
       return (
         <div className="flex gap-2 items-center">
           <ClockIcon className="w-6 text-[#12A150]" />
@@ -76,13 +83,6 @@ export const TableCellRendererCases = ({
             {String(cellValue)} Horas
           </p>
         </div>
-      );
-    case "assigned":
-      return (
-        <User
-          avatarProps={{ radius: "lg" }}
-          name={user.assigned.name}
-        />
       );
     case "actions":
       return (
@@ -96,7 +96,7 @@ export const TableCellRendererCases = ({
             </Button>
           </Tooltip>
           <Tooltip content="Editar cliente">
-            <Link href={`/dashboard/cases/${user.id}`}>
+            <Link href={`/dashboard/cases/${user.id_caso}`}>
               <Button
                 isIconOnly
                 className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
