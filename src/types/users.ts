@@ -1,16 +1,16 @@
 export interface Users {
-  id: string;
-  id_document: string;
-  name: string;
-  user_type: string;
-  branch_law: string;
-  site: string;
+  id_usuario: number;
+  id_usuario_firebase: string;
+  primer_nombre: string;
+  segundo_nombre: string | null;
+  primer_apellido: string;
+  segundo_apellido: string;
   email: string;
-  active_consults: string;
-  active_processes: string;
-  consults_calification: string;
-  processes_calification: string;
-  is_active: boolean;
+  rol: string;
+  tipo_documento: string;
+  num_documento: string;
+  fecha_creacion: string;
+  fecha_actualizacion: string;
   actions?: string;
   key?: string;
 }

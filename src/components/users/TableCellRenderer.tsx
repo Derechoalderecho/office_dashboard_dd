@@ -17,29 +17,29 @@ export const TableCellRendererUsers = ({
   const cellValue = user[columnKey];
 
   switch (columnKey) {
-    case "id_document":
+    case "num_documento":
       return (
         <div className="flex flex-col">
           <p className="text-base font-medium">{String(cellValue)}</p>
         </div>
       );
-    case "name":
+    case "primer_nombre":
       return (
-        <div className="flex flex-col">
-          <p className="text-base font-medium">{String(cellValue)}</p>
-        </div>
+        <p className="text-sm font-semibold">
+          {user?.primer_nombre} {user?.primer_apellido}
+        </p>
       );
-    case "user_type":
+    case "rol":
       return (
         <Chip
           className={`capitalize ${
-            cellValue === "Aprobado"
+            cellValue === "Docente"
               ? "bg-success text-[#12A150]"
-              : cellValue === "Seguimiento"
+              : cellValue === "Monitor"
               ? "bg-followed text-[#006FEE]"
-              : cellValue === "Acción Necesaria"
+              : cellValue === "Director"
               ? "bg-warning text-[#C4841D]"
-              : cellValue === "No Aprobado"
+              : cellValue === "Estudiante"
               ? "bg-error text-[#F31260]"
               : ""
           }`}
@@ -69,14 +69,12 @@ export const TableCellRendererUsers = ({
             </Button>
           </Tooltip>
           <Tooltip content="Editar cliente">
-            <Link href={`/users/${user.key}`}>
-              <Button
-                isIconOnly
-                className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
-              >
-                <PencilIcon className="w-6" />
-              </Button>
-            </Link>
+            <Button
+              isIconOnly
+              className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
+            >
+              <PencilIcon className="w-6" />
+            </Button>
           </Tooltip>
         </div>
       );

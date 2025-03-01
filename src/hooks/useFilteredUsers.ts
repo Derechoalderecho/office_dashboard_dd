@@ -26,11 +26,11 @@ export const useFilteredUsers = ({
     // Search filter
     if (hasSearchFilter) {
       filteredUsers = filteredUsers.filter((user) =>
-        user.name.toLowerCase().includes(filterValue.toLowerCase())
+        user.primer_nombre.toLowerCase().includes(filterValue.toLowerCase())
       );
     }
 
-    // user tpe filter
+    // user role filter
     if (userTypeFilter !== "all") {
       const selectedStatuses = Array.from(userTypeFilter).map((key) => {
         const userTypeOption = userTypeOptions.find(
@@ -40,10 +40,10 @@ export const useFilteredUsers = ({
       });
 
       filteredUsers = filteredUsers.filter((user) =>
-        selectedStatuses.includes(user.user_type)
+        selectedStatuses.includes(user.rol)
       );
     }
-
+ /*
     if (siteFilter !== "all") {
       const selectedSites = Array.from(siteFilter).map((key) => {
         const siteOption = siteOptions.find((option) => option.uid === key);
@@ -61,6 +61,7 @@ export const useFilteredUsers = ({
         selectedTab === "active" ? user.is_active : !user.is_active
       );
     }
+      */
 
     return filteredUsers;
   }, [users, filterValue, userTypeFilter, siteFilter, selectedTab]);

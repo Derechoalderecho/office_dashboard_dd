@@ -14,7 +14,7 @@ export default function ReviewersPage() {
         <p className="text-[#808080] text-sm">
           Filtra los revisores por su nombre
         </p>
-        <TableReviewers />
+       
       </section>
     </>
   );
