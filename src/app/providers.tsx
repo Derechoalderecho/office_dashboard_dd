@@ -1,11 +1,14 @@
 import { HeroUIProvider } from "@heroui/react";
 import { ToastProvider } from "@heroui/toast";
+import { AuthProvider } from '@/context/AuthContext';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <HeroUIProvider>
-      <ToastProvider />
-      {children}
-    </HeroUIProvider>
+    <AuthProvider>
+      <HeroUIProvider>
+        <ToastProvider />
+        {children}
+      </HeroUIProvider>
+    </AuthProvider>
   );
 }

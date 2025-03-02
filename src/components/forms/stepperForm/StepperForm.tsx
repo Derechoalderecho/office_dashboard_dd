@@ -96,7 +96,7 @@ export default function StepperForm() {
       try {
         // Submit the form data with mock mode enabled temporarily
         // Set to true to use mock mode, false to use real API calls
-        const useMockMode = true; // Toggle this when database permissions are fixed
+        const useMockMode = false; // Toggle this when database permissions are fixed
         const result = await submitFormData(formDataObj, useMockMode);
         
         if (result.success) {

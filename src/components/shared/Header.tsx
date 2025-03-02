@@ -5,10 +5,14 @@ import {
   DropdownItem,
   User,
 } from "@heroui/react";
+import LogoutButton from '@/components/auth/LogoutButton';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Header() {
+  const { user } = useAuth();
+
   return (
-    <header className="flex justify-end mb-7 py-4 border-b-1">
+    <header className="flex items-center justify-between w-full py-4">
       <Dropdown placement="bottom-start">
         <DropdownTrigger>
           <User
@@ -33,6 +37,15 @@ export default function Header() {
           </DropdownItem>
         </DropdownMenu>
       </Dropdown>
+
+      <div className="flex items-center gap-4">
+        {user && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">{user.displayName || user.email}</span>
+            <LogoutButton />
+          </div>
+        )}
+      </div>
     </header>
   );
 }
