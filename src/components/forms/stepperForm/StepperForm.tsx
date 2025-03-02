@@ -5,7 +5,7 @@ import type React from "react";
 import { useState } from "react";
 import { Check, ChevronRight } from "lucide-react";
 import { CheckIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
-import { Button } from "@heroui/react";
+import { Button, Divider } from "@heroui/react";
 import {
   Card,
   CardContent,
@@ -43,6 +43,11 @@ export default function StepperForm() {
     etnia: "",
     discapacidad: "",
     sabe_leer_escribir: "",
+    notas: "",
+    rol: "",
+    profesor_id: "",
+    monitor_id: "",
+    alumno_id: "",
 
     country: "",
     city: "",
@@ -155,6 +160,7 @@ export default function StepperForm() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <Divider className="mb-7" />
           {/* Stepper Header */}
 
           {/* Form Content */}
