@@ -1,121 +1,145 @@
 type ReviewStepProps = {
   formData: {
-    firstName: string
-    lastName: string
-    email: string
-    phone: string
-    country: string
-    city: string
-    occupation: string
-    education: string
-    department: string
-    position: string
-  }
-  updateFormData: (data: Partial<typeof formData>) => void
-}
+    num_documento: string;
+    tipo_documento: string;
+    primer_nombre: string;
+    segundo_nombre: string;
+    primer_apellido: string;
+    segundo_apellido: string;
+    sexo: string;
+    genero: string;
+    orient_sexual: string;
+    //fecha_nacimiento: "",
+    num_movil: string;
+    num_fijo: string;
+    email: string;
+    nacionalidad: string;
+    estado_civil: string;
+    escolaridad: string;
+    etnia: string;
+    discapacidad: string;
+    sabe_leer_escribir: string;
+    notas: string;
+    rol: string;
+    profesor_id: string;
+    monitor_id: string;
+    alumno_id: string;
+  };
+  updateFormData: (data: Partial<typeof formData>) => void;
+};
 
 export default function ReviewStep({ formData }: ReviewStepProps) {
-  const countryNames: Record<string, string> = {
-    us: "United States",
-    ca: "Canada",
-    uk: "United Kingdom",
-    au: "Australia",
-    de: "Germany",
-    fr: "France",
-    jp: "Japan",
-    other: "Other",
-  }
-
-  const educationLabels: Record<string, string> = {
-    "high-school": "High School",
-    associate: "Associate Degree",
-    bachelor: "Bachelor's Degree",
-    master: "Master's Degree",
-    doctorate: "Doctorate",
-    other: "Other",
-  }
-
-  const departmentLabels: Record<string, string> = {
-    engineering: "Engineering",
-    marketing: "Marketing",
-    sales: "Sales",
-    finance: "Finance",
-    hr: "Human Resources",
-    operations: "Operations",
-    other: "Other",
-  }
-
-  const positionLabels: Record<string, string> = {
-    entry: "Entry Level",
-    mid: "Mid Level",
-    senior: "Senior Level",
-    manager: "Manager",
-    director: "Director",
-    executive: "Executive",
-  }
-
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <h2 className="text-xl font-semibold">Review Your Information</h2>
-        <p className="text-sm text-muted-foreground">Please review your information before submitting.</p>
-      </div>
-
       <div className="space-y-6">
         <div className="space-y-3">
-          <h3 className="font-medium">Personal Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <h3 className="font-medium">Información personal</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div>
-              <span className="text-muted-foreground">First Name:</span>
-              <p>{formData.firstName}</p>
+              <span className="text-muted-foreground">Tipo de documento:</span>
+              <p>{formData.tipo_documento}</p>
             </div>
             <div>
-              <span className="text-muted-foreground">Last Name:</span>
-              <p>{formData.lastName}</p>
+              <span className="text-muted-foreground">
+                Número de documento:
+              </span>
+              <p>{formData.num_documento}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Primer nombre:</span>
+              <p>{formData.primer_nombre}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Segundo nombre:</span>
+              <p>{formData.segundo_nombre}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Primer apellido:</span>
+              <p>{formData.primer_apellido}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Segundo apellido:</span>
+              <p>{formData.segundo_apellido}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Sexo:</span>
+              <p>{formData.sexo}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Genero:</span>
+              <p>{formData.genero}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Orientación sexual:</span>
+              <p>{formData.orient_sexual}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Número de teléfono:</span>
+              <p>{formData.num_movil}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">
+                Número de teléfono fijo:
+              </span>
+              <p>{formData.num_fijo}</p>
             </div>
             <div>
               <span className="text-muted-foreground">Email:</span>
               <p>{formData.email}</p>
             </div>
             <div>
-              <span className="text-muted-foreground">Phone:</span>
-              <p>{formData.phone}</p>
+              <span className="text-muted-foreground">Nacionalidad:</span>
+              <p>{formData.nacionalidad}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Estado civil:</span>
+              <p>{formData.estado_civil}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Escolaridad:</span>
+              <p>{formData.escolaridad}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Etnia:</span>
+              <p>{formData.etnia}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Discapacidad:</span>
+              <p>{formData.discapacidad}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">
+                Sabe leer y escribir:
+              </span>
+              <p>{formData.sabe_leer_escribir}</p>
             </div>
           </div>
         </div>
 
         <div className="space-y-3">
-          <h3 className="font-medium">Location Information</h3>
+          <h3 className="font-medium">Información General</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-muted-foreground">Country:</span>
-              <p>{formData.country ? countryNames[formData.country] : "Not specified"}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">City:</span>
-              <p>{formData.city}</p>
+              <span className="text-muted-foreground">Notas:</span>
+              <p>{formData.notas}</p>
             </div>
           </div>
         </div>
 
         <div className="space-y-3">
-          <h3 className="font-medium">Professional Information</h3>
+          <h3 className="font-medium">Información administrativa</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-muted-foreground">Occupation:</span>
-              <p>{formData.occupation || "Not specified"}</p>
+              <span className="text-muted-foreground">Profesor:</span>
+              <p>{formData.profesor_id || "Not specified"}</p>
             </div>
             <div>
-              <span className="text-muted-foreground">Education:</span>
-              <p>{formData.education ? educationLabels[formData.education] : "Not specified"}</p>
+              <span className="text-muted-foreground">Monitor:</span>
+              <p>{formData.monitor_id || "Not specified"}</p>
             </div>
             <div>
-              <span className="text-muted-foreground">Department:</span>
-              <p>{formData.department ? departmentLabels[formData.department] : "Not specified"}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Position Level:</span>
-              <p>{formData.position ? positionLabels[formData.position] : "Not specified"}</p>
+              <span className="text-muted-foreground">Alumno:</span>
+              <p>{formData.alumno_id || "Not specified"}</p>
             </div>
           </div>
         </div>
@@ -123,11 +147,10 @@ export default function ReviewStep({ formData }: ReviewStepProps) {
 
       <div className="rounded-md bg-muted p-4">
         <p className="text-sm">
-          By submitting this form, you agree to our Terms of Service and Privacy Policy. Please ensure all information
-          is correct before proceeding.
+          By submitting this form, you agree to our Terms of Service and Privacy
+          Policy. Please ensure all information is correct before proceeding.
         </p>
       </div>
     </div>
-  )
+  );
 }
-

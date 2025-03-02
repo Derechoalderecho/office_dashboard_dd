@@ -15,9 +15,9 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 
-import PersonalInfoStep from "./steps/personal-info-step";
-import ContactInfoStep from "./steps/contact-info-step";
-import ProfessionalInfoStep from "./steps/professional-info-step";
+import BasicInformationStep from "./steps/BasicInformationStep";
+import GeneralInformationStep from "./steps/GeneralInformationStep";
+import AdministrationStep from "./steps/AdministrationStep";
 import ReviewStep from "./steps/review-step";
 import { submitFormData } from "@/actions/citizenActions";
 
@@ -60,10 +60,10 @@ export default function StepperForm() {
   const [isComplete, setIsComplete] = useState(false);
 
   const steps = [
-    { title: "Información básica", component: PersonalInfoStep },
-    { title: "Información general", component: ContactInfoStep },
-    { title: "Professional", component: ProfessionalInfoStep },
-    { title: "Review", component: ReviewStep },
+    { title: "Información básica", component: BasicInformationStep },
+    { title: "Información general", component: GeneralInformationStep },
+    { title: "Información administrativa", component: AdministrationStep },
+    { title: "Revisión", component: ReviewStep },
   ];
 
   const updateFormData = (data: Partial<typeof formData>) => {

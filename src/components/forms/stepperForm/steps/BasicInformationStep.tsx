@@ -4,7 +4,7 @@ import { parseNumberToString } from "@/utils/string";
 import { Input, Select, SelectItem, DateInput, DateValue } from "@heroui/react";
 import { useState } from "react";
 
-type PersonalInfoProps = {
+type BasicInformationProps = {
   formData: {
     num_documento: string;
     tipo_documento: string;
@@ -51,10 +51,10 @@ type PersonalInfoProps = {
   ) => void;
 };
 
-export default function PersonalInfoStep({
+export default function BasicInformationStep({
   formData,
   updateFormData,
-}: PersonalInfoProps) {
+}: BasicInformationProps) {
   const [fechaNacimiento, setFechaNacimiento] = useState<DateValue | null>(
     null
   );
