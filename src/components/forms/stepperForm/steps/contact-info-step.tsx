@@ -3,11 +3,11 @@ import { useState } from "react";
 
 type ContactInfoProps = {
   formData: {
-    hechos: string;
+    notas: string;
   };
   updateFormData: (
     data: Partial<{
-      hechos: string;
+      notas: string;
     }>
   ) => void;
 };
@@ -20,14 +20,16 @@ export default function ContactInfoStep({
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
         <Textarea
-          id="hechos"
-          name="hechos"
+          id="notas"
+          name="notas"
           variant="bordered"
-          label="Hechos"
+          label="Notas"
           labelPlacement="outside"
-          value={formData.hechos}
-          onChange={(e) => updateFormData({ hechos: e.target.value })}
-          placeholder="Ingrese los hechos"
+          size="lg"
+
+          value={formData.notas}
+          onChange={(e) => updateFormData({ notas: e.target.value })}
+          placeholder="Ingrese las notas"
           required
         />
       </div>
