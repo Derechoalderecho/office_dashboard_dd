@@ -7,14 +7,12 @@ import { fetchAllUsers } from "@/services/userService";
 
 type AdministrationProps = {
   formData: {
-    rol: string;
     profesor_id?: string;
     monitor_id?: string;
     alumno_id?: string;
   };
   updateFormData: (
     data: Partial<{
-      rol: string;
       profesor_id?: string;
       monitor_id?: string;
       alumno_id?: string;

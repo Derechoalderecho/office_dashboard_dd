@@ -147,8 +147,13 @@ export default function ReviewStep({ formData }: ReviewStepProps) {
 
       <div className="rounded-md bg-muted p-4">
         <p className="text-sm">
-          By submitting this form, you agree to our Terms of Service and Privacy
-          Policy. Please ensure all information is correct before proceeding.
+          Al enviar este formulario, aceptas todos los datos que has ingresado.
+          Por favor, asegúrate de que toda la información sea correcta antes de
+          continuar.
+          <br />
+          <br />
+          Si tienes alguna duda, por favor contacta al administrador del
+          sistema.
         </p>
       </div>
     </div>

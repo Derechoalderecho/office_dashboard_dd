@@ -44,17 +44,9 @@ export default function StepperForm() {
     discapacidad: "",
     sabe_leer_escribir: "",
     notas: "",
-    rol: "",
     profesor_id: "",
     monitor_id: "",
     alumno_id: "",
-
-    country: "",
-    city: "",
-    occupation: "",
-    education: "",
-    department: "",
-    position: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
