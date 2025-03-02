@@ -5,6 +5,7 @@ import {
 } from "@heroicons/react/24/solid";
 import { fetchAllUsers } from "@/services/userService";
 import { fetchAllCases } from "@/services/caseService";
+import { fetchAllCitizens } from "@/services/citizenService";
 
 const iconMap = {
   students: UserPlusIcon,
@@ -27,9 +28,11 @@ const colorIconMap = {
 export default async function CardCountsWrapper() {
   const users = await fetchAllUsers();
   const cases = await fetchAllCases();
+  const citizens = await fetchAllCitizens();
 
   const totalStudents = users.length;
   const totalCases = cases.length;
+  const totalCitizens = citizens.length;
 
   return (
     <>
@@ -40,10 +43,14 @@ export default async function CardCountsWrapper() {
       />
       <CardCounts
         description="Total de ciudadanos"
-        value={100}
+        value={totalCitizens}
         type="citizens"
       />
-      <CardCounts description="Total de casos" value={totalCases} type="cases" />
+      <CardCounts
+        description="Total de casos"
+        value={totalCases}
+        type="cases"
+      />
     </>
   );
 }
