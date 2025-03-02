@@ -1,7 +1,7 @@
 import { Input, Select, SelectItem, Textarea } from "@heroui/react";
 import { useState } from "react";
 
-type ContactInfoProps = {
+type GeneralInformationProps = {
   formData: {
     notas: string;
   };
@@ -12,10 +12,10 @@ type ContactInfoProps = {
   ) => void;
 };
 
-export default function ContactInfoStep({
+export default function GeneralInformationStep({
   formData,
   updateFormData,
-}: ContactInfoProps) {
+}: GeneralInformationProps) {
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-1 gap-4">

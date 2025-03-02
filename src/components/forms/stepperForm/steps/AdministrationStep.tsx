@@ -5,16 +5,14 @@ import { useEffect, useState } from "react";
 import { Users } from "@/types/users";
 import { fetchAllUsers } from "@/services/userService";
 
-type ProfessionalInfoProps = {
+type AdministrationProps = {
   formData: {
-    rol: string;
     profesor_id?: string;
     monitor_id?: string;
     alumno_id?: string;
   };
   updateFormData: (
     data: Partial<{
-      rol: string;
       profesor_id?: string;
       monitor_id?: string;
       alumno_id?: string;
@@ -22,10 +20,10 @@ type ProfessionalInfoProps = {
   ) => void;
 };
 
-export default function ProfessionalInfoStep({
-  formData,
+export default function AdministrationStep({
+  formData, 
   updateFormData,
-}: ProfessionalInfoProps) {
+}: AdministrationProps) {
   const [users, setUsers] = useState<Users[]>([]);
 
   useEffect(() => {
