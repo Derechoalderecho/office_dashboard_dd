@@ -5,7 +5,7 @@ import type React from "react";
 import { useState } from "react";
 import { Check, ChevronRight } from "lucide-react";
 import { CheckIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
-import { Button, Divider } from "@heroui/react";
+import { Button, Divider, addToast } from "@heroui/react";
 import {
   Card,
   CardContent,
@@ -18,11 +18,12 @@ import {
 import BasicInformationStep from "./steps/BasicInformationStep";
 import GeneralInformationStep from "./steps/GeneralInformationStep";
 import AdministrationStep from "./steps/AdministrationStep";
-import ReviewStep from "./steps/review-step";
+import ReviewStep from "./steps/ReviewStep";
 import { submitFormData } from "@/actions/citizenActions";
 
 export default function StepperForm() {
   const [currentStep, setCurrentStep] = useState(0);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     num_documento: "",
     tipo_documento: "",
@@ -47,6 +48,11 @@ export default function StepperForm() {
     profesor_id: "",
     monitor_id: "",
     alumno_id: "",
+    rol: "",
+    tipo_proceso: "Tutela", 
+    estado: "Nuevo",
+    tiempo_respuesta: "48",
+    dane_municipio: "05001",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
@@ -79,6 +85,7 @@ export default function StepperForm() {
 
     if (currentStep === steps.length - 1) {
       setIsSubmitting(true);
+      setSubmissionError(null);
 
       // Create FormData object
       const formDataObj = new FormData();
@@ -87,11 +94,31 @@ export default function StepperForm() {
       });
 
       try {
-        // Submit the form data
-        await submitFormData(formDataObj);
-        setIsComplete(true);
+        // Submit the form data with mock mode enabled temporarily
+        // Set to true to use mock mode, false to use real API calls
+        const useMockMode = false; // Toggle this when database permissions are fixed
+        const result = await submitFormData(formDataObj, useMockMode);
+        
+        if (result.success) {
+          setIsComplete(true);
+          addToast({
+            title: "Formulario enviado exitosamente",
+            description: useMockMode ? "Modo de prueba: Simulación exitosa" : "El formulario se ha enviado correctamente",
+          });
+        } else {
+          setSubmissionError(result.error || "Error al enviar el formulario");
+          addToast({
+            title: "Error al enviar el formulario",
+            description: result.error || "Error al enviar el formulario",
+          });
+        }
       } catch (error) {
         console.error("Error submitting form:", error);
+        setSubmissionError("Error inesperado al enviar el formulario");
+        addToast({
+          title: "Error inesperado al enviar el formulario",
+          description: "Error inesperado al enviar el formulario",
+        });
       } finally {
         setIsSubmitting(false);
       }

@@ -24,3 +24,52 @@ export const fetchAllUsers = async (): Promise<Users[]> => {
     return [];
   }
 };
+
+// Fetch user by Firebase UID
+export async function fetchUserByFirebaseUid(firebaseUid: string): Promise<Users | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/usuarios/${firebaseUid}`);
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null; // User not found
+      }
+      throw new Error(`Error fetching user: ${response.statusText}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching user by Firebase UID:', error);
+    return null;
+  }
+}
+
+// Create a new user with Firebase UID
+export async function createUserWithFirebaseUid(userData: {
+  id_usuario_firebase: string;
+  primer_nombre: string;
+  segundo_nombre?: string;
+  primer_apellido: string;
+  segundo_apellido?: string;
+  email: string;
+  rol: string;
+  tipo_documento: string;
+  num_documento: string;
+}): Promise<Users | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/usuarios`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Error creating user: ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error creating user:', error);
+    return null;
+  }
+}
