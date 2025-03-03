@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { NavLinks, NavLinks2 } from "./nav-links";
+import { NavLinks } from "./nav-links";
+import { addToast } from "@heroui/react";
 
 export function SideBar() {
   const [isHovered, setIsHovered] = useState(false);
@@ -32,14 +33,14 @@ export function SideBar() {
         </ul>
       </nav>
       <div className="border-t border-gray-300"></div>
-      <nav className="flex flex-col gap-3">
+      {/*    <nav className="flex flex-col gap-3">
         <ul className="flex flex-col gap-3">
           <NavLinks2
             handleMouseEnter={handleMouseEnter}
             isHovered={isHovered}
           />
         </ul>
-      </nav>
+      </nav> */}
     </nav>
   );
 }
