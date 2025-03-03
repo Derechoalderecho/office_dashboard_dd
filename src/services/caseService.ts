@@ -5,12 +5,7 @@ import { Citizen } from "@/types/citizens";
 import { Cases } from "@/types/cases";
 import { API_BASE_URL } from "@/config/api";
 
-
-
-// Define a type that includes the citizen property
-type CaseWithCitizen = Cases & { citizen: Citizen };
-
-// Create a promise type for the cases
+type CaseWithCitizen = Cases & { ciudadano: Citizen };
 type CasesPromise = Promise<CaseWithCitizen[]>;
 
 export const fetchAllCases = async (): Promise<CaseWithCitizen[]> => {
@@ -24,8 +19,8 @@ export const fetchAllCases = async (): Promise<CaseWithCitizen[]> => {
         const citizenResponse = await axios.get(
           `${API_BASE_URL}/ciudadanos/${caseItem.id_ciudadano}`
         );
-        const citizen = citizenResponse.data as Citizen;
-        return { ...caseItem, citizen };
+        const ciudadano = citizenResponse.data as Citizen;
+        return { ...caseItem, ciudadano };
       })
     );
 
@@ -56,10 +51,10 @@ export const fetchCaseById = async (id: number): Promise<CaseWithCitizen | null>
     const citizenResponse = await axios.get(
       `${API_BASE_URL}/ciudadanos/${caseData.id_ciudadano}`
     );
-    const citizen = citizenResponse.data as Citizen;
+    const ciudadano = citizenResponse.data as Citizen;
     
     // Combine the case and citizen data
-    return { ...caseData, citizen };
+    return { ...caseData, ciudadano };
   } catch (error) {
     console.error(`Error fetching case with ID ${id}:`, error);
     return null;

@@ -60,8 +60,8 @@ export const TableCellRendererCases = ({
           {String(cellValue)}
         </Chip>
       );
-    case "citizen":
-      const ciudadano = user.citizen; 
+    case "ciudadano":
+      const ciudadano = user.ciudadano; 
       return (
         <div className="flex flex-col">
           <p className="text-sm font-semibold">
@@ -76,10 +76,16 @@ export const TableCellRendererCases = ({
         </div>
       );
     case "tiempo_respuesta":
+      const tiempo = Number(cellValue);
+      const getColor = () => {
+        if (tiempo <= 24) return "text-[#F31260]"; 
+        if (tiempo <= 48) return "text-[#C4841D]"; 
+        return "text-[#12A150]"; 
+      };
       return (
         <div className="flex gap-2 items-center">
-          <ClockIcon className="w-6 text-[#12A150]" />
-          <p className="text-sm font-semibold text-[#12A150]">
+          <ClockIcon className={`w-6 ${getColor()}`} />
+          <p className={`text-sm font-semibold ${getColor()}`}>
             {String(cellValue)} Horas
           </p>
         </div>

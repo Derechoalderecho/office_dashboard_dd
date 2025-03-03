@@ -4,8 +4,7 @@
 import axios from "axios";
 import { Citizen } from "@/types/citizens";
 import { Cases } from "@/types/cases";
-
-const API_BASE_URL = "http://127.0.0.1:8000";
+import { API_BASE_URL } from "@/config/api";
 
 export const fetchAllCases = async (): Promise<Cases[]> => {
   try {
@@ -18,8 +17,8 @@ export const fetchAllCases = async (): Promise<Cases[]> => {
         const citizenResponse = await axios.get(
           `${API_BASE_URL}/ciudadanos/${caseItem.id_ciudadano}`
         );
-        const citizen = citizenResponse.data as Citizen;
-        return { ...caseItem, citizen };
+        const ciudadano = citizenResponse.data as Citizen;
+        return { ...caseItem, ciudadano };
       })
     );
 

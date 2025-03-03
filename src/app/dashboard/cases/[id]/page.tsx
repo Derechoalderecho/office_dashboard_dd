@@ -1,4 +1,3 @@
-import { Cases } from "@/types/cases";
 import {
   Breadcrumbs,
   BreadcrumbItem,
