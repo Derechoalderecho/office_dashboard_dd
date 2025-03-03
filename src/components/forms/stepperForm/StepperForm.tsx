@@ -24,7 +24,10 @@ import { submitFormData } from "@/actions/citizenActions";
 export default function StepperForm() {
   const [currentStep, setCurrentStep] = useState(0);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [isExistingCitizen, setIsExistingCitizen] = useState(false);
+  const [selectedCitizenId, setSelectedCitizenId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
+    // Citizen information
     num_documento: "",
     tipo_documento: "",
     primer_nombre: "",
@@ -44,15 +47,25 @@ export default function StepperForm() {
     etnia: "",
     discapacidad: "",
     sabe_leer_escribir: "",
+    
+    // Case information
     notas: "",
-    profesor_id: "",
-    monitor_id: "",
-    alumno_id: "",
-    rol: "",
     tipo_proceso: "Tutela", 
     estado: "Nuevo",
     tiempo_respuesta: "48",
+    
+    // Administration information
+    persona_modifica: "",
+    profesor_id: "",
+    monitor_id: "",
+    alumno_id: "",
+    
+    // Other required fields
     dane_municipio: "05001",
+    
+    // For tracking citizen selection
+    citizen_id: "",
+    is_existing_citizen: "false",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
@@ -65,6 +78,16 @@ export default function StepperForm() {
   ];
 
   const updateFormData = (data: Partial<typeof formData>) => {
+    // Check if we're updating citizen_id
+    if (data.citizen_id) {
+      setIsExistingCitizen(true);
+      setSelectedCitizenId(Number(data.citizen_id));
+      data.is_existing_citizen = "true";
+    } else if (data.is_existing_citizen === "false") {
+      setIsExistingCitizen(false);
+      setSelectedCitizenId(null);
+    }
+    
     setFormData((prev) => ({ ...prev, ...data }));
   };
 
@@ -89,8 +112,21 @@ export default function StepperForm() {
 
       // Create FormData object
       const formDataObj = new FormData();
+      
+      // Add flag to indicate if we're using an existing citizen
+      formDataObj.append('isExistingCitizen', isExistingCitizen.toString());
+      
+      // If using existing citizen, add the citizen ID
+      if (isExistingCitizen && selectedCitizenId) {
+        formDataObj.append('citizenId', selectedCitizenId.toString());
+      }
+      
+      // Add all form data
       Object.entries(formData).forEach(([key, value]) => {
-        formDataObj.append(key, value.toString());
+        // Skip the tracking fields that we don't want to send to the server
+        if (key !== 'citizen_id' && key !== 'is_existing_citizen') {
+          formDataObj.append(key, value.toString());
+        }
       });
 
       try {

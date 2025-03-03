@@ -32,92 +32,102 @@ export async function submitFormData(formData: FormData, mockMode = false): Prom
   }
   
   try {
-    // Step 1: Create citizen first to get the citizen ID
-    const citizenData = {
-      // Only include required fields with proper types
-      primer_nombre: formData.get('primer_nombre') || "",
-      segundo_nombre: formData.get('segundo_nombre') || "",
-      primer_apellido: formData.get('primer_apellido') || "",
-      segundo_apellido: formData.get('segundo_apellido') || "",
-      tipo_documento: formData.get('tipo_documento') || "",
-      num_documento: formData.get('num_documento') || "",
-      email: formData.get('email') || "",
-      num_fijo: formData.get('num_fijo') || "",
-      num_movil: formData.get('num_movil') || "",
-      sexo: formData.get('sexo') || "",
-      genero: formData.get('genero') || "",
-      orient_sexual: formData.get('orient_sexual') || "",
-      nacionalidad: formData.get('nacionalidad') || "",
-      estado_civil: formData.get('estado_civil') || "",
-      escolaridad: formData.get('escolaridad') || "",
-      etnia: formData.get('etnia') || "",
-      discapacidad: formData.get('discapacidad') || "",
-      sabe_leer_escribir: formData.get('sabe_leer_escribir') || "",
-      dane_municipio: formData.get('dane_municipio') || "05001",
-      persona_modifica: formData.get('persona_modifica') || "",
-      // Don't include fields that aren't in the citizen table
-    };
-
-    // Log the exact data we're sending
-    console.log("Sending citizen data:", JSON.stringify(citizenData, null, 2));
-
-    // Make a test request to see the API schema
-    try {
-      const schemaResponse = await fetch('http://127.0.0.1:8000/ciudadanos', {
-        method: 'GET',
-      });
-      if (schemaResponse.ok) {
-        const schema = await schemaResponse.json();
-        console.log("API Schema:", schema);
-      }
-    } catch (e) {
-      console.log("Could not fetch schema, continuing with request");
-    }
-
-    const citizenResponse = await fetch('http://127.0.0.1:8000/ciudadanos', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify(citizenData),
-    });
-
-    // Get the full error details
-    if (!citizenResponse.ok) {
-      const errorText = await citizenResponse.text();
-      console.error("Raw error response:", errorText);
-      
-      let errorData;
-      try {
-        errorData = JSON.parse(errorText);
-      } catch (e) {
-        errorData = { message: errorText };
-      }
-      
-      console.error("Citizen API error response:", errorData);
-      
-      // Check for specific error types
-      const errorDetail = typeof errorData.detail === 'string' ? errorData.detail : JSON.stringify(errorData);
-      let errorMessage = `Error al crear ciudadano (${citizenResponse.status})`;
-      
-      if (errorDetail.includes("permission denied") || errorDetail.includes("InsufficientPrivilege")) {
-        errorMessage = "Error de permisos en la base de datos. Por favor, contacte al administrador del sistema.";
-      } else if (errorDetail.includes("Field required")) {
-        errorMessage = "Faltan campos requeridos en el formulario.";
-      }
-      
-      // Return detailed error information
-      return { 
-        success: false, 
-        error: errorMessage,
-        details: errorData
+    // Check if we're using an existing citizen
+    const isExistingCitizen = formData.get('isExistingCitizen') === 'true';
+    let citizenId: number;
+    
+    if (isExistingCitizen && formData.get('citizenId')) {
+      // Use the existing citizen ID
+      citizenId = Number(formData.get('citizenId'));
+      console.log("Using existing citizen with ID:", citizenId);
+    } else {
+      // Step 1: Create a new citizen to get the citizen ID
+      const citizenData = {
+        // Only include required fields with proper types
+        primer_nombre: formData.get('primer_nombre') || "",
+        segundo_nombre: formData.get('segundo_nombre') || "",
+        primer_apellido: formData.get('primer_apellido') || "",
+        segundo_apellido: formData.get('segundo_apellido') || "",
+        tipo_documento: formData.get('tipo_documento') || "",
+        num_documento: formData.get('num_documento') || "",
+        email: formData.get('email') || "",
+        num_fijo: formData.get('num_fijo') || "",
+        num_movil: formData.get('num_movil') || "",
+        sexo: formData.get('sexo') || "",
+        genero: formData.get('genero') || "",
+        orient_sexual: formData.get('orient_sexual') || "",
+        nacionalidad: formData.get('nacionalidad') || "",
+        estado: formData.get('estado') || "Seguimiento",
+        escolaridad: formData.get('escolaridad') || "",
+        etnia: formData.get('etnia') || "",
+        discapacidad: formData.get('discapacidad') || "",
+        sabe_leer_escribir: formData.get('sabe_leer_escribir') || "",
+        dane_municipio: formData.get('dane_municipio') || "05001",
+        persona_modifica: formData.get('persona_modifica') || "",
+        // Don't include fields that aren't in the citizen table
       };
-    }
 
-    const citizenResult = await citizenResponse.json();
-    console.log("Citizen created successfully:", citizenResult);
-    const citizenId = citizenResult.id_ciudadano;
+      // Log the exact data we're sending
+      console.log("Sending citizen data:", JSON.stringify(citizenData, null, 2));
+
+      // Make a test request to see the API schema
+      try {
+        const schemaResponse = await fetch('http://127.0.0.1:8000/ciudadanos', {
+          method: 'GET',
+        });
+        if (schemaResponse.ok) {
+          const schema = await schemaResponse.json();
+          console.log("API Schema:", schema);
+        }
+      } catch (e) {
+        console.log("Could not fetch schema, continuing with request");
+      }
+
+      const citizenResponse = await fetch('http://127.0.0.1:8000/ciudadanos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(citizenData),
+      });
+
+      // Get the full error details
+      if (!citizenResponse.ok) {
+        const errorText = await citizenResponse.text();
+        console.error("Raw error response:", errorText);
+        
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch (e) {
+          errorData = { message: errorText };
+        }
+        
+        console.error("Citizen API error response:", errorData);
+        
+        // Check for specific error types
+        const errorDetail = typeof errorData.detail === 'string' ? errorData.detail : JSON.stringify(errorData);
+        let errorMessage = `Error al crear ciudadano (${citizenResponse.status})`;
+        
+        if (errorDetail.includes("permission denied") || errorDetail.includes("InsufficientPrivilege")) {
+          errorMessage = "Error de permisos en la base de datos. Por favor, contacte al administrador del sistema.";
+        } else if (errorDetail.includes("Field required")) {
+          errorMessage = "Faltan campos requeridos en el formulario.";
+        }
+        
+        // Return detailed error information
+        return { 
+          success: false, 
+          error: errorMessage,
+          details: errorData
+        };
+      }
+
+      const citizenResult = await citizenResponse.json();
+      console.log("Citizen created successfully:", citizenResult);
+      citizenId = citizenResult.id_ciudadano;
+    }
 
     // Step 2: Create case with the citizen ID
     const caseData = {
@@ -126,6 +136,7 @@ export async function submitFormData(formData: FormData, mockMode = false): Prom
       estado: formData.get('estado') || "Nuevo",
       tiempo_respuesta: parseInt(formData.get('tiempo_respuesta')?.toString() || "48"),
       notas: formData.get('notas')?.toString() || "",
+      persona_modifica: formData.get('persona_modifica') || "",
       // Only include fields that are in the case table
     };
 
@@ -169,58 +180,13 @@ export async function submitFormData(formData: FormData, mockMode = false): Prom
 
     const caseResult = await caseResponse.json();
 
-    // Step 3: Create or update user assignments if needed
-    if (formData.get('profesor_id') || formData.get('monitor_id') || formData.get('alumno_id')) {
-      const userAssignmentData = {
-        id_caso: caseResult.id_caso,
-        profesor_id: formData.get('profesor_id') ? Number(formData.get('profesor_id')) : null,
-        monitor_id: formData.get('monitor_id') ? Number(formData.get('monitor_id')) : null,
-        alumno_id: formData.get('alumno_id') ? Number(formData.get('alumno_id')) : null,
-      };
-
-      console.log("Sending user assignment data:", JSON.stringify(userAssignmentData, null, 2));
-
-      const userAssignmentResponse = await fetch('http://127.0.0.1:8000/usuarios/asignacion', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userAssignmentData),
-      });
-
-      if (!userAssignmentResponse.ok) {
-        const errorText = await userAssignmentResponse.text();
-        let errorData;
-        try {
-          errorData = JSON.parse(errorText);
-        } catch (e) {
-          errorData = { message: errorText };
-        }
-        
-        console.error("User assignment API error response:", errorData);
-        
-        // Check for specific error types
-        const errorDetail = typeof errorData.detail === 'string' ? errorData.detail : JSON.stringify(errorData);
-        let errorMessage = `Error al asignar usuarios (${userAssignmentResponse.status})`;
-        
-        if (errorDetail.includes("permission denied") || errorDetail.includes("InsufficientPrivilege")) {
-          errorMessage = "Error de permisos en la base de datos. Por favor, contacte al administrador del sistema.";
-        } else if (errorDetail.includes("Field required")) {
-          errorMessage = "Faltan campos requeridos en la asignación de usuarios.";
-        }
-        
-        return { 
-          success: false, 
-          error: errorMessage,
-          details: errorData
-        };
-      }
-    }
+    // We're no longer making the third post to the users table
+    // Just return success with the citizen and case data
 
     return { 
       success: true, 
       data: {
-        citizen: citizenResult,
+        citizen: { id_ciudadano: citizenId },
         case: caseResult
       }
     };

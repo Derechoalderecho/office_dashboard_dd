@@ -11,10 +11,10 @@ export const columns: Column[] = [
 ];
 
 export const statusOptions: StatusOption[] = [
-  { name: "Seguimiento", uid: "follow_up" },
-  { name: "Aprobado", uid: "aproved" },
-  { name: "No Aprobado", uid: "not_approved" },
-  { name: "Acción Necesaria", uid: "action_required" },
+  { name: "Seguimiento", uid: "Seguimiento" },
+  { name: "Aprobado", uid: "Aprobado" },
+  { name: "No aprobado", uid: "No aprobado" },
+  { name: "Acción necesaria", uid: "Acción necesaria" },
 ];
 
 
