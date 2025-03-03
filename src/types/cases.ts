@@ -11,7 +11,7 @@ export interface Cases {
   fecha_actualiza: string;
   fecha_elimina: string;
   eliminado: boolean;
-  ciudadano: Citizen;
+  citizen: Citizen;
   actions?: string;
   key?: string;
 }

@@ -1,5 +1,7 @@
 "use server"
 
+import { API_BASE_URL } from "@/config/api";
+
 interface ApiResponse {
   success: boolean;
   data?: any;
@@ -72,7 +74,7 @@ export async function submitFormData(formData: FormData, mockMode = false): Prom
 
       // Make a test request to see the API schema
       try {
-        const schemaResponse = await fetch('http://127.0.0.1:8000/ciudadanos', {
+        const schemaResponse = await fetch(`${API_BASE_URL}/ciudadanos`, {
           method: 'GET',
         });
         if (schemaResponse.ok) {
@@ -83,7 +85,7 @@ export async function submitFormData(formData: FormData, mockMode = false): Prom
         console.log("Could not fetch schema, continuing with request");
       }
 
-      const citizenResponse = await fetch('http://127.0.0.1:8000/ciudadanos', {
+      const citizenResponse = await fetch(`${API_BASE_URL}/ciudadanos`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -142,7 +144,7 @@ export async function submitFormData(formData: FormData, mockMode = false): Prom
 
     console.log("Sending case data:", JSON.stringify(caseData, null, 2));
 
-    const caseResponse = await fetch('http://127.0.0.1:8000/casos', {
+    const caseResponse = await fetch(`${API_BASE_URL}/casos`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

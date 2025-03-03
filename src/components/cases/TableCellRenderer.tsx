@@ -60,8 +60,8 @@ export const TableCellRendererCases = ({
           {String(cellValue)}
         </Chip>
       );
-    case "ciudadano":
-      const ciudadano = user.citizen;
+    case "citizen":
+      const ciudadano = user.citizen; 
       return (
         <div className="flex flex-col">
           <p className="text-sm font-semibold">
@@ -108,6 +108,6 @@ export const TableCellRendererCases = ({
         </div>
       );
     default:
-      return cellValue;
+      return <div className="text-sm">{String(cellValue)}</div>;
   }
 };

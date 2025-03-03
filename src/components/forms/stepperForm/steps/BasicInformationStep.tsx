@@ -81,19 +81,21 @@ export default function BasicInformationStep({
   // Handle citizen selection and auto-populate form fields
   const handleCitizenSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedId = e.target.value;
-    
+
     if (!selectedId) {
       // No citizen selected, reset form
-      updateFormData({ 
+      updateFormData({
         is_existing_citizen: "false",
-        citizen_id: ""
+        citizen_id: "",
       });
       return;
     }
-    
+
     // Find the citizen by ID
-    const citizen = citizens.find(c => c.id_ciudadano.toString() === selectedId);
-    
+    const citizen = citizens.find(
+      (c) => c.id_ciudadano.toString() === selectedId
+    );
+
     if (citizen) {
       // Update form data with citizen information
       updateFormData({
@@ -107,7 +109,7 @@ export default function BasicInformationStep({
         num_movil: citizen.num_movil || "",
         num_fijo: citizen.num_fijo || "",
         citizen_id: selectedId,
-        is_existing_citizen: "true"
+        is_existing_citizen: "true",
         // Add other fields as needed based on your citizen data structure
       });
     }
@@ -116,23 +118,26 @@ export default function BasicInformationStep({
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6">
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium">Seleccionar ciudadano existente</label>
-          <select 
-            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md"
-            onChange={handleCitizenSelect}
-            disabled={isLoading}
-            value={formData.citizen_id}
-          >
-            <option value="">Seleccione un ciudadano o cree uno nuevo</option>
-            {citizens.map((citizen) => (
-              <option key={citizen.id_ciudadano.toString()} value={citizen.id_ciudadano.toString()}>
-                {`${citizen.primer_nombre} ${citizen.primer_apellido} - ${citizen.num_documento}`}
-              </option>
-            ))}
-          </select>
-          {isLoading && <p className="text-sm text-gray-500">Cargando ciudadanos...</p>}
-        </div>
+        <Select
+          id="citizen_id"
+          name="citizen_id"
+          variant="bordered"
+          label="Seleccionar ciudadano existente"
+          labelPlacement="outside"
+          placeholder="Seleccione un ciudadano o cree uno nuevo"
+          value={formData.citizen_id}
+          onChange={handleCitizenSelect}
+          disabled={isLoading}
+        >
+          {citizens.map((citizen) => (
+            <SelectItem key={citizen.id_ciudadano.toString()}>
+              {`${citizen.primer_nombre} ${citizen.primer_apellido} - ${citizen.num_documento}`}
+            </SelectItem>
+          ))}
+        </Select>
+        {isLoading && (
+          <p className="text-sm text-gray-500">Cargando ciudadanos...</p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

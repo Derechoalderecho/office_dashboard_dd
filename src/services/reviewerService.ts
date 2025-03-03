@@ -1,7 +1,6 @@
 import axios from "axios";
 import { Reviewers } from "@/types/reviewers";
-
-const API_BASE_URL = "http://localhost:8080";
+import { API_BASE_URL } from "@/config/api";
 
 export const fetchReviewerDetails = async (id: string): Promise<Reviewers | null> => {
   try {

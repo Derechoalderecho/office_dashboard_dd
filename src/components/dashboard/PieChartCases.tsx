@@ -21,7 +21,7 @@ import { Cases } from "@/types/cases";
 import { Citizen } from "@/types/citizens";
 
 // Define the CaseWithCitizen type locally
-type CaseWithCitizen = Cases & { ciudadano: Citizen };
+type CaseWithCitizen = Cases & { citizen: Citizen };
 
 // Define colors for different process types
 const PROCESS_COLORS = {

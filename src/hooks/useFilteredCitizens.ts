@@ -20,18 +20,18 @@ export const useFilteredCitizens = ({
 
     if (hasSearchFilter) {
       filteredCitizens = filteredCitizens.filter((citizen) =>
-        citizen.first_name.toLowerCase().includes(filterValue.toLowerCase())
+        citizen.primer_nombre.toLowerCase().includes(filterValue.toLowerCase())
       );
     }
-
+/*
     if (siteFilter !== "all") {
       filteredCitizens = filteredCitizens.filter((citizen) =>
         siteOptions.some((site) => site.uid === citizen.site)
       );
     }
-
+*/
     return filteredCitizens;
-  }, [citizens, filterValue, siteFilter]);
+  }, [citizens, filterValue, /*siteFilter*/]);
 
   return { filteredItems, hasSearchFilter };
 };

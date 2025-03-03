@@ -65,6 +65,6 @@ export const TableCellRendererCitizens = ({
         </div>
       );
     default:
-      return cellValue;
+      return <div className="text-sm">{String(cellValue)}</div>;
   }
 };
