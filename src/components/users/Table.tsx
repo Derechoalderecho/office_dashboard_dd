@@ -46,7 +46,7 @@ export default function TableUsers() {
   );
   const [siteFilter, setSiteFilter] = useState<Selection>("all");
   const [userTypeFilter, setUserTypeFilter] = useState<Selection>("all");
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
     column: "age",
     direction: "ascending",
