@@ -60,7 +60,7 @@ export const TableCellRendererCases = ({
           {String(cellValue)}
         </Chip>
       );
-    case "ciudadano":
+    case "citizen":
       const ciudadano = user.citizen; 
       return (
         <div className="flex flex-col">
