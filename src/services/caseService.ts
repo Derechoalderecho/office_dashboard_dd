@@ -9,6 +9,9 @@ const API_BASE_URL = "http://127.0.0.1:8000";
 // Define a type that includes the citizen property
 type CaseWithCitizen = Cases & { citizen: Citizen };
 
+// Create a promise type for the cases
+type CasesPromise = Promise<CaseWithCitizen[]>;
+
 export const fetchAllCases = async (): Promise<CaseWithCitizen[]> => {
   try {
     const response = await axios.get(`${API_BASE_URL}/casos`);
@@ -65,9 +68,9 @@ export const fetchCaseById = async (id: number): Promise<CaseWithCitizen | null>
 /**
  * Fetches all cases for a specific citizen
  * @param citizenId The ID of the citizen
- * @returns Array of cases belonging to the citizen
+ * @returns Promise of array of cases belonging to the citizen
  */
-export const fetchCasesByCitizenId = async (citizenId: number): Promise<CaseWithCitizen[]> => {
+export const fetchCasesByCitizenId = async (citizenId: number): CasesPromise => {
   try {
     // Fetch all cases
     const response = await axios.get(`${API_BASE_URL}/casos`);

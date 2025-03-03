@@ -17,29 +17,33 @@ import {
 } from "@heroicons/react/24/outline";
 import { parseDateToLocal } from "@/utils/date";
 import { fetchCasesByCitizenId } from "@/services/caseService";
+import React from "react";
 
 interface CasePageProps {
   params: {
     id: string;
   };
+  searchParams: { [key: string]: string | string[] | undefined };
 }
 
-export default async function CasePage({ params }: CasePageProps) {
-  const { id } = params;
+export default async function CasePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
 
-  console.log("Case ID:", id);
+  try {
+    const casesData = await fetchCasesByCitizenId(parseInt(id));
 
-  const casesData = await fetchCasesByCitizenId(parseInt(id));
+    if (!casesData || casesData.length === 0) {
+      return <div>Case not found</div>;
+    }
 
-  if (!casesData || casesData.length === 0) {
-    return <div>Case not found</div>;
-  }
-
-  return (
-    <div>
-      {casesData.map((caseItem) => {
-        return (
-          <>
+    return (
+      <div>
+        {casesData.map((caseItem) => (
+          <div key={caseItem.id_caso}>
             <Breadcrumbs className="mb-5">
               <BreadcrumbItem>
                 <Link href="/cases">Casos</Link>
@@ -308,9 +312,12 @@ export default async function CasePage({ params }: CasePageProps) {
                 </section>
               </aside>
             </section>
-          </>
-        );
-      })}
-    </div>
-  );
+          </div>
+        ))}
+      </div>
+    );
+  } catch (error) {
+    console.error("Error loading case:", error);
+    return <div>Error loading case</div>;
+  }
 }
