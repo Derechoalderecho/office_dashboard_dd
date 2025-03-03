@@ -1,77 +1,47 @@
-"use client"
- 
-import { TrendingUp } from "lucide-react"
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart"
-const chartData = [
-  { month: "January", desktop: 186, mobile: 80 },
-  { month: "February", desktop: 305, mobile: 200 },
-  { month: "March", desktop: 237, mobile: 120 },
-  { month: "April", desktop: 73, mobile: 190 },
-  { month: "May", desktop: 209, mobile: 130 },
-  { month: "June", desktop: 214, mobile: 140 },
-]
-const chartConfig = {
-  desktop: {
-    label: "Desktop",
-    color: "hsl(var(--chart-1))",
-  },
-  mobile: {
-    label: "Mobile",
-    color: "hsl(var(--chart-2))",
-  },
-} satisfies ChartConfig
- 
+import Link from "next/link";
+import { ArrowRightIcon } from "@heroicons/react/24/outline";
+import { Button } from "@heroui/react";
+import Image from "next/image";
 
-
-export default function Home() {
+export default function WelcomePage() {
   return (
-    <Card className="w-1/2">
-    <CardHeader>
-      <CardTitle>Bar Chart - Multiple</CardTitle>
-      <CardDescription>January - June 2024</CardDescription>
-    </CardHeader>
-    <CardContent>
-      <ChartContainer config={chartConfig}>
-        <BarChart accessibilityLayer data={chartData}>
-          <CartesianGrid vertical={false} />
-          <XAxis
-            dataKey="month"
-            tickLine={false}
-            tickMargin={10}
-            axisLine={false}
-            tickFormatter={(value) => value.slice(0, 3)}
-          />
-          <ChartTooltip
-            cursor={false}
-            content={<ChartTooltipContent indicator="dashed" />}
-          />
-          <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
-          <Bar dataKey="mobile" fill="var(--color-mobile)" radius={4} />
-        </BarChart>
-      </ChartContainer>
-    </CardContent>
-    <CardFooter className="flex-col items-start gap-2 text-sm">
-      <div className="flex gap-2 font-medium leading-none">
-        Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex flex-col items-center justify-center">
+      <div className="text-center px-4 max-w-3xl">
+        {/* Logo y título */}
+        <div className="mb-10 flex flex-col items-center">
+          <img src="/icons/logo.svg" alt="Logo" className="h-20 mb-4" />
+          <h1 className="text-4xl font-bold text-gray-900">
+            Derecho al Derecho
+          </h1>
+        </div>
+
+        {/* Mensaje de bienvenida */}
+        <p className="text-xl text-gray-600 mb-10">
+          Bienvenido a la plataforma de Consultorios Jurídicos	
+        </p>
+
+        {/* Botones de acceso */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link
+            href="/dashboard"
+            className="px-8 py-3 bg-primary text-white rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
+          >
+            Ingresar al Dashboard
+            <ArrowRightIcon className="w-5 h-5" />
+          </Link>
+          <Link
+            href="/login"
+            className="px-8 py-3 bg-white text-primary border border-primary rounded-lg font-medium hover:bg-blue-50 transition-colors"
+          >
+            Iniciar Sesión
+          </Link>
+        </div>
+
+        {/* Footer simple */}
+        <p className="mt-16 text-gray-500 text-sm">
+          © 2024 Legal Office. Todos los derechos reservados.
+        </p>
       </div>
-      <div className="leading-none text-muted-foreground">
-        Showing total visitors for the last 6 months
-      </div>
-    </CardFooter>
-  </Card>
+    </div>
   );
 }
