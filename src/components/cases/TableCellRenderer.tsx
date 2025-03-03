@@ -48,9 +48,9 @@ export const TableCellRendererCases = ({
               ? "bg-success text-[#12A150]"
               : cellValue === "Seguimiento"
               ? "bg-followed text-[#006FEE]"
-              : cellValue === "Acción Necesaria"
+              : cellValue === "Acción necesaria"
               ? "bg-warning text-[#C4841D]"
-              : cellValue === "No Aprobado"
+              : cellValue === "No aprobado"
               ? "bg-error text-[#F31260]"
               : ""
           }`}
