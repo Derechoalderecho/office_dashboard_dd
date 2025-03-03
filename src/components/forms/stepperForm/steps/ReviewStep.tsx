@@ -1,5 +1,6 @@
 type ReviewStepProps = {
   formData: {
+    // Citizen information
     num_documento: string;
     tipo_documento: string;
     primer_nombre: string;
@@ -19,128 +20,105 @@ type ReviewStepProps = {
     etnia: string;
     discapacidad: string;
     sabe_leer_escribir: string;
+    
+    // Case information
     notas: string;
-    rol: string;
+    tipo_proceso: string;
+    estado: string;
+    tiempo_respuesta: string;
+    
+    // Administration information
+    persona_modifica: string;
     profesor_id: string;
     monitor_id: string;
     alumno_id: string;
+    
+    // Citizen selection tracking
+    citizen_id: string;
+    is_existing_citizen: string;
   };
-  updateFormData: (data: Partial<typeof formData>) => void;
+  updateFormData?: (data: Partial<ReviewStepProps["formData"]>) => void;
 };
 
 export default function ReviewStep({ formData }: ReviewStepProps) {
+  const isExistingCitizen = formData.is_existing_citizen === "true";
+  
   return (
-    <div className="space-y-6">
-      <div className="space-y-6">
-        <div className="space-y-3">
-          <h3 className="font-medium">Información personal</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div>
-              <span className="text-muted-foreground">Tipo de documento:</span>
-              <p>{formData.tipo_documento}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">
-                Número de documento:
-              </span>
-              <p>{formData.num_documento}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Primer nombre:</span>
-              <p>{formData.primer_nombre}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Segundo nombre:</span>
-              <p>{formData.segundo_nombre}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Primer apellido:</span>
-              <p>{formData.primer_apellido}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Segundo apellido:</span>
-              <p>{formData.segundo_apellido}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Sexo:</span>
-              <p>{formData.sexo}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Genero:</span>
-              <p>{formData.genero}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Orientación sexual:</span>
-              <p>{formData.orient_sexual}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Número de teléfono:</span>
-              <p>{formData.num_movil}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">
-                Número de teléfono fijo:
-              </span>
-              <p>{formData.num_fijo}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Email:</span>
-              <p>{formData.email}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Nacionalidad:</span>
-              <p>{formData.nacionalidad}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Estado civil:</span>
-              <p>{formData.estado_civil}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Escolaridad:</span>
-              <p>{formData.escolaridad}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Etnia:</span>
-              <p>{formData.etnia}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Discapacidad:</span>
-              <p>{formData.discapacidad}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">
-                Sabe leer y escribir:
-              </span>
-              <p>{formData.sabe_leer_escribir}</p>
-            </div>
+    <div className="space-y-8">
+      <div className="border rounded-lg p-4">
+        <h3 className="text-lg font-semibold mb-4">
+          Información del Ciudadano 
+          {isExistingCitizen && <span className="text-sm text-green-600 ml-2">(Ciudadano existente)</span>}
+        </h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className="text-sm text-gray-500">Tipo de documento</p>
+            <p>{formData.tipo_documento}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Número de documento</p>
+            <p>{formData.num_documento}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Nombre completo</p>
+            <p>{`${formData.primer_nombre} ${formData.segundo_nombre || ''} ${formData.primer_apellido} ${formData.segundo_apellido || ''}`}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Correo electrónico</p>
+            <p>{formData.email}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Teléfono móvil</p>
+            <p>{formData.num_movil}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Teléfono fijo</p>
+            <p>{formData.num_fijo}</p>
           </div>
         </div>
+      </div>
 
-        <div className="space-y-3">
-          <h3 className="font-medium">Información General</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-muted-foreground">Notas:</span>
-              <p>{formData.notas}</p>
-            </div>
+      <div className="border rounded-lg p-4">
+        <h3 className="text-lg font-semibold mb-4">Información del Caso</h3>
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <p className="text-sm text-gray-500">Tipo de proceso</p>
+            <p>{formData.tipo_proceso}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Estado</p>
+            <p>{formData.estado}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Tiempo de respuesta (horas)</p>
+            <p>{formData.tiempo_respuesta}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Usuario encargado</p>
+            <p>{formData.persona_modifica}</p>
           </div>
         </div>
+        <div>
+          <p className="text-sm text-gray-500">Notas</p>
+          <p className="whitespace-pre-wrap">{formData.notas}</p>
+        </div>
+      </div>
 
-        <div className="space-y-3">
-          <h3 className="font-medium">Información administrativa</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-muted-foreground">Profesor:</span>
-              <p>{formData.profesor_id || "Not specified"}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Monitor:</span>
-              <p>{formData.monitor_id || "Not specified"}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Alumno:</span>
-              <p>{formData.alumno_id || "Not specified"}</p>
-            </div>
+      <div className="border rounded-lg p-4">
+        <h3 className="text-lg font-semibold mb-4">Información Adicional (Solo Referencia)</h3>
+        <p className="text-sm text-gray-500 mb-4">Esta información se guarda solo para referencia y no se realiza ninguna asignación automática en el sistema.</p>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className="text-sm text-gray-500">Profesor de referencia</p>
+            <p>{formData.profesor_id || "No especificado"}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Monitor de referencia</p>
+            <p>{formData.monitor_id || "No especificado"}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Alumno de referencia</p>
+            <p>{formData.alumno_id || "No especificado"}</p>
           </div>
         </div>
       </div>

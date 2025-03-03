@@ -2,7 +2,9 @@
 
 import { parseNumberToString } from "@/utils/string";
 import { Input, Select, SelectItem, DateInput, DateValue } from "@heroui/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { fetchAllCitizens } from "@/services/citizenService";
+import { Citizen } from "@/types/citizens";
 
 type BasicInformationProps = {
   formData: {
@@ -25,6 +27,8 @@ type BasicInformationProps = {
     etnia: string;
     discapacidad: string;
     sabe_leer_escribir: string;
+    citizen_id: string;
+    is_existing_citizen: string;
   };
   updateFormData: (
     data: Partial<{
@@ -47,6 +51,8 @@ type BasicInformationProps = {
       etnia: string;
       discapacidad: string;
       sabe_leer_escribir: string;
+      citizen_id: string;
+      is_existing_citizen: string;
     }>
   ) => void;
 };
@@ -58,9 +64,77 @@ export default function BasicInformationStep({
   const [fechaNacimiento, setFechaNacimiento] = useState<DateValue | null>(
     null
   );
+  const [citizens, setCitizens] = useState<Citizen[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch all citizens for the dropdown
+  useEffect(() => {
+    const loadCitizens = async () => {
+      setIsLoading(true);
+      const allCitizens = await fetchAllCitizens();
+      setCitizens(allCitizens);
+      setIsLoading(false);
+    };
+    loadCitizens();
+  }, []);
+
+  // Handle citizen selection and auto-populate form fields
+  const handleCitizenSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = e.target.value;
+    
+    if (!selectedId) {
+      // No citizen selected, reset form
+      updateFormData({ 
+        is_existing_citizen: "false",
+        citizen_id: ""
+      });
+      return;
+    }
+    
+    // Find the citizen by ID
+    const citizen = citizens.find(c => c.id_ciudadano.toString() === selectedId);
+    
+    if (citizen) {
+      // Update form data with citizen information
+      updateFormData({
+        num_documento: citizen.num_documento || "",
+        tipo_documento: citizen.tipo_documento || "",
+        primer_nombre: citizen.primer_nombre || "",
+        segundo_nombre: citizen.segundo_nombre || "",
+        primer_apellido: citizen.primer_apellido || "",
+        segundo_apellido: citizen.segundo_apellido || "",
+        email: citizen.email || "",
+        num_movil: citizen.num_movil || "",
+        num_fijo: citizen.num_fijo || "",
+        citizen_id: selectedId,
+        is_existing_citizen: "true"
+        // Add other fields as needed based on your citizen data structure
+      });
+    }
+  };
 
   return (
     <div className="space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium">Seleccionar ciudadano existente</label>
+          <select 
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md"
+            onChange={handleCitizenSelect}
+            disabled={isLoading}
+            value={formData.citizen_id}
+          >
+            <option value="">Seleccione un ciudadano o cree uno nuevo</option>
+            {citizens.map((citizen) => (
+              <option key={citizen.id_ciudadano.toString()} value={citizen.id_ciudadano.toString()}>
+                {`${citizen.primer_nombre} ${citizen.primer_apellido} - ${citizen.num_documento}`}
+              </option>
+            ))}
+          </select>
+          {isLoading && <p className="text-sm text-gray-500">Cargando ciudadanos...</p>}
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Select
           id="tipo_documento"
@@ -206,7 +280,7 @@ export default function BasicInformationStep({
           label="Número de teléfono móvil"
           labelPlacement="outside"
           type="number"
-          value={parseNumberToString(formData.num_movil)}
+          value={formData.num_movil}
           onChange={(e) => updateFormData({ num_movil: e.target.value })}
           placeholder="Ingrese su número de teléfono móvil"
           required
