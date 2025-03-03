@@ -3,8 +3,9 @@
 import axios from "axios";
 import { Citizen } from "@/types/citizens";
 import { Cases } from "@/types/cases";
+import { API_BASE_URL } from "@/config/api";
 
-const API_BASE_URL = "http://127.0.0.1:8000";
+
 
 // Define a type that includes the citizen property
 type CaseWithCitizen = Cases & { citizen: Citizen };

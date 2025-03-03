@@ -2,8 +2,7 @@
 
 import axios from "axios";
 import { Users } from "@/types/users";
-
-const API_BASE_URL = "http://127.0.0.1:8000";
+import { API_BASE_URL } from "@/config/api";
 
 export const fetchUserDetails = async (id: string): Promise<Users | null> => {
   try {
