@@ -30,7 +30,7 @@ export default function WelcomePage() {
             <ArrowRightIcon className="w-5 h-5" />
           </Link>
           <Link
-            href="/login"
+            href="/auth/login"
             className="px-8 py-3 bg-white text-primary border border-primary rounded-lg font-medium hover:bg-blue-50 transition-colors"
           >
             Iniciar Sesión
