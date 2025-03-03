@@ -11,7 +11,7 @@ import {
 } from "@heroicons/react/24/solid";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { toast } from "react-hot-toast";
+import { addToast } from "@heroui/react";
 
 export const NAV_LINKS = [
   { href: "/dashboard", key: "dashboard", label: "Dashboard", icon: ChartPieIcon, enabled: true },
@@ -55,9 +55,10 @@ export function NavLinks({ handleMouseEnter, isHovered }: NavLinksProps) {
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, menu: typeof NAV_LINKS[0]) => {
     if (!menu.enabled) {
       e.preventDefault();
-      toast.error(`La página ${menu.label} aún no está habilitada.`, {
-        duration: 3000,
-        position: "top-center",
+      addToast({
+        title: "Página no habilitada",
+        description: `La página ${menu.label} aún no está habilitada.`,
+        color: "primary",
       });
     }
   };

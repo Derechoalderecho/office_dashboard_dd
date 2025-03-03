@@ -1,5 +1,6 @@
 import CardCountsWrapper from "@/components/dashboard/CardCounts";
-import PieChartsWrapper from "@/components/dashboard/PieChartsWrapper";
+import PieChartsWrapper from "@/components/dashboard/PieChartProcedures";
+import PieChartCases from "@/components/dashboard/PieChartCases";
   import { CardsSkeleton } from "@/ui/Skeletons";
 import { Suspense } from "react";
 
@@ -16,7 +17,7 @@ export default async function DashboardPage() {
       </div>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
         <PieChartsWrapper />
-        <PieChartsWrapper />
+        <PieChartCases />
       </div>
     </main>
   );

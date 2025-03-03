@@ -17,47 +17,51 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { useMemo } from "react";
-import { fetchAllCases } from "@/services/caseService";
 
-const chartData = [
-  { branch_law: "civil_law", procedures: 275, fill: "#4285F4" },
-  { branch_law: "laboral_law", procedures: 200, fill: "hsla(261, 99%, 64%, 1)" },
-  { branch_law: "family_law", procedures: 287, fill: "#FF9900" },
-  { branch_law: "criminal_law", procedures: 173, fill: "hsla(233, 100%, 89%, 1)" },
+// Manual data for procedure types
+const procedureData = [
+  { procedure_type: "Ganados", count: 19, fill: "hsla(130, 67%, 54%, 1)" },
+  { procedure_type: "Perdidos", count: 2, fill: "hsl(0, 70%, 50%)" },
 ];
+
+// Chart configuration
 const chartConfig = {
-  procedures: {
-    label: "Procedimientos",
+  count: {
+    label: "Cantidad",
   },
-  civil_law: {
-    label: "Civil",
+  "Ganados": {
+    label: "Ganados",
     color: "#4285F4",
   },
-  laboral_law: {
-    label: "Laboral",
+  "Perdidos": {
+    label: "Perdidos",
     color: "hsla(261, 99%, 64%, 1)",
   },
-  family_law: {
-    label: "Familia",
+  "Conciliación": {
+    label: "Conciliación",
     color: "#FF9900",
   },
-  criminal_law: {
-    label: "Penal",
+  "Audiencia": {
+    label: "Audiencia",
     color: "hsla(233, 100%, 89%, 1)",
+  },
+  "Otro": {
+    label: "Otro",
+    color: "#34A853",
   },
 } satisfies ChartConfig;
 
-export default function PieChartsWrapper() {
-
+export default function PieChartProcedures() {
+  // Calculate total procedures
   const totalProcedures = useMemo(() => {
-    return chartData.reduce((acc, curr) => acc + curr.procedures, 0);
+    return procedureData.reduce((acc, curr) => acc + curr.count, 0);
   }, []);
 
   return (
     <Card className="flex flex-col">
       <CardHeader className="items-center pb-0">
-        <CardTitle>Pie Chart - Donut with Text</CardTitle>
-        <CardDescription>January - June 2024</CardDescription>
+        <CardTitle>Distribución Casos Ganados y Perdidos</CardTitle>
+        <CardDescription>Total de Casos: {totalProcedures}</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 pb-0">
         <ChartContainer
@@ -70,9 +74,9 @@ export default function PieChartsWrapper() {
               content={<ChartTooltipContent hideLabel />}
             />
             <Pie
-              data={chartData}
-              dataKey="procedures"
-              nameKey="branch_law"
+              data={procedureData}
+              dataKey="count"
+              nameKey="procedure_type"
               innerRadius={60}
               strokeWidth={5}
             >
@@ -98,7 +102,7 @@ export default function PieChartsWrapper() {
                           y={(viewBox.cy || 0) + 24}
                           className="fill-muted-foreground"
                         >
-                          Visitors
+                          Casos
                         </tspan>
                       </text>
                     );
@@ -110,11 +114,19 @@ export default function PieChartsWrapper() {
         </ChartContainer>
       </CardContent>
       <CardFooter className="flex-col gap-2 text-sm">
-        <div className="flex items-center gap-2 font-medium leading-none">
-          Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
+        <div className="flex items-center justify-center gap-4 pt-2">
+          {procedureData.map((item) => (
+            <div key={item.procedure_type} className="flex items-center gap-1">
+              <div
+                className="h-3 w-3 rounded-full"
+                style={{ backgroundColor: item.fill }}
+              />
+              <span className="text-xs">{item.procedure_type}</span>
+            </div>
+          ))}
         </div>
-        <div className="leading-none text-muted-foreground">
-          Showing total visitors for the last 6 months
+        <div className="leading-none text-muted-foreground text-center pt-2">
+          Distribución de Casos Ganados y Perdidos según el resultado
         </div>
       </CardFooter>
     </Card>
