@@ -20,12 +20,16 @@ import GeneralInformationStep from "./steps/GeneralInformationStep";
 import AdministrationStep from "./steps/AdministrationStep";
 import ReviewStep from "./steps/ReviewStep";
 import { submitFormData } from "@/actions/citizenActions";
+import { useRouter } from "next/navigation";
 
 export default function StepperForm() {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [isExistingCitizen, setIsExistingCitizen] = useState(false);
-  const [selectedCitizenId, setSelectedCitizenId] = useState<number | null>(null);
+  const [selectedCitizenId, setSelectedCitizenId] = useState<number | null>(
+    null
+  );
   const [formData, setFormData] = useState({
     // Citizen information
     num_documento: "",
@@ -47,22 +51,22 @@ export default function StepperForm() {
     etnia: "",
     discapacidad: "",
     sabe_leer_escribir: "",
-    
+
     // Case information
     notas: "",
-    tipo_proceso: "Tutela", 
+    tipo_proceso: "Tutela",
     estado: "Nuevo",
     tiempo_respuesta: "48",
-    
+
     // Administration information
     persona_modifica: "",
     profesor_id: "",
     monitor_id: "",
     alumno_id: "",
-    
+
     // Other required fields
     dane_municipio: "05001",
-    
+
     // For tracking citizen selection
     citizen_id: "",
     is_existing_citizen: "false",
@@ -87,7 +91,7 @@ export default function StepperForm() {
       setIsExistingCitizen(false);
       setSelectedCitizenId(null);
     }
-    
+
     setFormData((prev) => ({ ...prev, ...data }));
   };
 
@@ -112,19 +116,19 @@ export default function StepperForm() {
 
       // Create FormData object
       const formDataObj = new FormData();
-      
+
       // Add flag to indicate if we're using an existing citizen
-      formDataObj.append('isExistingCitizen', isExistingCitizen.toString());
-      
+      formDataObj.append("isExistingCitizen", isExistingCitizen.toString());
+
       // If using existing citizen, add the citizen ID
       if (isExistingCitizen && selectedCitizenId) {
-        formDataObj.append('citizenId', selectedCitizenId.toString());
+        formDataObj.append("citizenId", selectedCitizenId.toString());
       }
-      
+
       // Add all form data
       Object.entries(formData).forEach(([key, value]) => {
         // Skip the tracking fields that we don't want to send to the server
-        if (key !== 'citizen_id' && key !== 'is_existing_citizen') {
+        if (key !== "citizen_id" && key !== "is_existing_citizen") {
           formDataObj.append(key, value.toString());
         }
       });
@@ -134,12 +138,14 @@ export default function StepperForm() {
         // Set to true to use mock mode, false to use real API calls
         const useMockMode = false; // Toggle this when database permissions are fixed
         const result = await submitFormData(formDataObj, useMockMode);
-        
+
         if (result.success) {
           setIsComplete(true);
           addToast({
             title: "Formulario enviado exitosamente",
-            description: useMockMode ? "Modo de prueba: Simulación exitosa" : "El formulario se ha enviado correctamente",
+            description: useMockMode
+              ? "Modo de prueba: Simulación exitosa"
+              : "El formulario se ha enviado correctamente",
           });
         } else {
           setSubmissionError(result.error || "Error al enviar el formulario");
@@ -220,16 +226,27 @@ export default function StepperForm() {
 
           {/* Form Content */}
           {isComplete ? (
-            <div className="text-center py-10">
+            <div className="text-center py-28">
               <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-100 mb-6">
                 <Check className="h-8 w-8 text-green-600" />
               </div>
               <h3 className="text-2xl font-semibold mb-2">
-                Application Submitted!
+                Ciudadano creado exitosamente
               </h3>
               <p className="text-muted-foreground">
-                Thank you for completing all steps. We'll be in touch soon.
+                Ahora puedes revisar la información del ciudadano en la sección
+                de ciudadanos o los casos que se han creado.
               </p>
+              <Button
+                color="primary"
+                className="mt-10"
+                type="button"
+                onPress={() => {
+                  router.push("/dashboard/citizens");   
+                }}
+              >
+                Volver al dashboard
+              </Button>
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
