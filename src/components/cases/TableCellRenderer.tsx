@@ -9,11 +9,13 @@ import Link from "next/link";
 interface TableCellRendererProps {
   user: CaseWithKey;
   columnKey: keyof CaseWithKey;
+  onPreviewCase?: (caseData: CaseWithKey) => void;
 }
 
 export const TableCellRendererCases = ({
   user,
   columnKey,
+  onPreviewCase,
 }: TableCellRendererProps) => {
   const cellValue = user[columnKey as keyof CaseWithKey];
 
@@ -97,6 +99,7 @@ export const TableCellRendererCases = ({
             <Button
               isIconOnly
               className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
+              onPress={() => onPreviewCase?.(user)}
             >
               <EyeIcon className="w-6" />
             </Button>
