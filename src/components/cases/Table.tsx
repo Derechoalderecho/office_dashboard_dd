@@ -7,16 +7,10 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Card,
-  CardBody,
   Selection,
   SortDescriptor,
-  Spinner
+  Spinner,
+  useDisclosure,
 } from "@heroui/react";
 import { useState, useCallback, useMemo, useEffect, ChangeEvent } from "react";
 import { CalendarDate } from "@internationalized/date";
@@ -31,6 +25,7 @@ import { CaseWithKey } from "@/types/cases";
 import { TableCellRendererCases } from "./TableCellRenderer";
 import { BulkActionsBar } from "./BulkActionsBar";
 import { fetchAllCases } from "@/services/caseService";
+import ModalCase from "../ui/modal-table";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "fecha_crea",
@@ -60,6 +55,8 @@ export default function TableCases() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [cases, setCases] = useState<CaseWithKey[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [selectedCase, setSelectedCase] = useState<CaseWithKey | null>(null);
 
   // Fetch cases from Firestore
   useEffect(() => {
@@ -191,6 +188,11 @@ export default function TableCases() {
     );
   }, [selectedKeys, items.length, page, pages, hasSearchFilter]);
 
+  const handlePreviewCase = (caseData: CaseWithKey) => {
+    setSelectedCase(caseData);
+    onOpen();
+  };
+
   return (
     <>
       {(selectedKeys === "all" || selectedKeys.size > 0) && (
@@ -199,6 +201,12 @@ export default function TableCases() {
           filteredItemsLength={filteredItems.length}
         />
       )}
+
+      <ModalCase
+        isOpen={isOpen}
+        onClose={onOpenChange}
+        caseData={selectedCase}
+      />
 
       <Table
         suppressHydrationWarning
@@ -242,6 +250,7 @@ export default function TableCases() {
                   <TableCellRendererCases
                     user={item as CaseWithKey}
                     columnKey={columnKey as keyof CaseWithKey}
+                    onPreviewCase={handlePreviewCase}
                   />
                 </TableCell>
               )}
