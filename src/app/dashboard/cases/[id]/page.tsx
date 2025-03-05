@@ -115,8 +115,8 @@ export default async function CasePage({
                           Nombre{" "}
                         </p>
                         <span className="text-sm">
-                          {caseItem.citizen.primer_nombre}{" "}
-                          {caseItem.citizen.primer_apellido}
+                          {caseItem.ciudadano.primer_nombre}{" "}
+                          {caseItem.ciudadano.primer_apellido}
                         </span>
                       </article>
                       <article className="flex items-center gap-8">
@@ -124,7 +124,7 @@ export default async function CasePage({
                           Correo
                         </p>
                         <span className="text-sm">
-                          {caseItem.citizen.email}
+                          {caseItem.ciudadano.email}
                         </span>
                       </article>
                       <article className="flex items-center gap-8">
@@ -132,7 +132,7 @@ export default async function CasePage({
                           Teléfono
                         </p>
                         <span className="text-sm">
-                          {caseItem.citizen.num_movil}
+                          {caseItem.ciudadano.num_movil}
                         </span>
                       </article>
                       <article className="flex items-center gap-8">
@@ -140,7 +140,7 @@ export default async function CasePage({
                           Documento
                         </p>
                         <span className="text-sm">
-                          {caseItem.citizen.num_documento}
+                          {caseItem.ciudadano.num_documento}
                         </span>
                       </article>
                     </div>

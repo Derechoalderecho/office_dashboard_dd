@@ -81,10 +81,10 @@ export const fetchCasesByCitizenId = async (citizenId: number): CasesPromise => 
     const citizenResponse = await axios.get(
       `${API_BASE_URL}/ciudadanos/${citizenId}`
     );
-    const citizen = citizenResponse.data as Citizen;
+    const ciudadano = citizenResponse.data as Citizen;
     
     // Add the citizen data to each case
-    return citizenCases.map(caseItem => ({ ...caseItem, citizen }));
+    return citizenCases.map(caseItem => ({ ...caseItem, ciudadano }));
   } catch (error) {
     console.error(`Error fetching cases for citizen ${citizenId}:`, error);
     return [];
