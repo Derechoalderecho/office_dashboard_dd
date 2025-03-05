@@ -24,7 +24,7 @@ export const useFilteredItems = ({
     // Search filter
     if (hasSearchFilter) {
       filteredUsers = filteredUsers.filter((user) =>
-        user.citizen.primer_nombre.toLowerCase().includes(filterValue.toLowerCase())
+        user.ciudadano.primer_nombre.toLowerCase().includes(filterValue.toLowerCase())
       );
     }
     

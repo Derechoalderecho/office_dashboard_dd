@@ -19,8 +19,8 @@ export const useFilteredCitizens = ({
     let filteredCitizens = [...citizens];
 
     if (hasSearchFilter) {
-      filteredCitizens = filteredCitizens.filter((citizen) =>
-        citizen.primer_nombre.toLowerCase().includes(filterValue.toLowerCase())
+      filteredCitizens = filteredCitizens.filter((ciudadano) =>
+        ciudadano.primer_nombre.toLowerCase().includes(filterValue.toLowerCase())
       );
     }
 /*
