@@ -7,8 +7,8 @@ export default async function page() {
     const cases = await fetchCasesByCitizenId(parseInt("18"));
     const allCases = await fetchAllCases();
  
-    console.log(allCases);
-    console.log(cases);
+    //console.log(allCases);
+    //console.log(cases);
   return (
     <div>page</div>
   )
