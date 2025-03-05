@@ -25,7 +25,7 @@ import { CaseWithKey } from "@/types/cases";
 import { TableCellRendererCases } from "./TableCellRenderer";
 import { BulkActionsBar } from "./BulkActionsBar";
 import { fetchAllCases } from "@/services/caseService";
-import ModalCase from "../ui/modal-table";
+import { ModalCase } from "../ui/modal-table";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "fecha_crea",

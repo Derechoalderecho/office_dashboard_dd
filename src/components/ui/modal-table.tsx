@@ -7,6 +7,7 @@ import {
     Button,
   } from "@heroui/react";
 import { CaseWithKey } from "@/types/cases";
+import { CitizenWithKey } from "@/types/citizens";
 
 interface ModalTableProps {
   isOpen: boolean;
@@ -14,7 +15,7 @@ interface ModalTableProps {
   caseData: CaseWithKey | null;
 }
 
-export default function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
+export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
   if (!caseData) return null;
 
   return (
@@ -71,4 +72,34 @@ export default function ModalCase({ isOpen, onClose, caseData }: ModalTableProps
       </ModalContent>
     </Modal>
   );
+}
+
+interface ModalCitizenProps {
+    isOpen: boolean;
+    onClose: () => void;
+    citizenData: CitizenWithKey | null;
+  }
+
+export function ModalCitizen({ isOpen, onClose, citizenData }: ModalCitizenProps) {
+  if (!citizenData) return null;
+
+  return (
+    <Modal isOpen={isOpen} onOpenChange={onClose}>
+      <ModalContent>
+        {(onClose) => (
+          <>
+            <ModalHeader>
+              <h2>Ciudadano</h2>
+            </ModalHeader>
+            <ModalBody>
+              <div>
+                <p>{citizenData.primer_nombre} {citizenData.primer_apellido}</p>
+                    <p>{citizenData.email}</p>
+                </div>
+            </ModalBody>
+          </>
+        )}
+      </ModalContent>
+    </Modal>
+  )
 }
