@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Shadcn UI */
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -129,5 +131,79 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+  }
+}
+
+@layer utilities {
+  /* Tailwind CSS */
+
+  .max-container {
+    @apply mx-auto max-w-[1440px];
+  }
+
+  .flexCenter {
+    @apply flex items-center justify-center;
+  }
+
+  .flexBetween {
+    @apply flex items-center justify-between;
+  }
+
+  .flexStart {
+    @apply flex items-center justify-start;
+  }
+
+  .flexEnd {
+    @apply flex items-center justify-end;
+  }
+
+  /* FONTS */
+
+  .regular-12 {
+    @apply text-[12px] font-normal leading-[18px];
+  }
+  .semibold-12 {
+    @apply text-[12px] font-semibold leading-[18px];
+  }
+  .regular-14 {
+    @apply text-[14px] font-normal leading-[20px];
+  }
+  .semibold-14 {
+    @apply text-[14px] font-semibold leading-[20px];
+  }
+  .regular-18 {
+    @apply text-[18px] font-normal leading-[24px];
+  }
+  .semibold-18 {
+    @apply text-[18px] font-semibold leading-[24px];
+  }
+  .regular-24 {
+    @apply text-[24px] font-normal leading-[36px];
+  }
+  .semibold-24 {
+    @apply text-[24px] font-semibold leading-[36px];
+  }
+  .regular-48 {
+    @apply text-[48px] font-normal leading-[58px];
+  }
+  .semibold-48 {
+    @apply text-[48px] font-semibold leading-[58px];
+  }
+  .regular-64 {
+    @apply text-[64px] font-normal leading-[78px];
+  }
+  .semibold-64 {
+    @apply text-[64px] font-semibold leading-[78px];
+  }
+
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .hide-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
   }
 }
