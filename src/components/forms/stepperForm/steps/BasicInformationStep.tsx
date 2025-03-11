@@ -110,7 +110,6 @@ export default function BasicInformationStep({
         num_fijo: citizen.num_fijo || "",
         citizen_id: selectedId,
         is_existing_citizen: "true",
-        // Add other fields as needed based on your citizen data structure
       });
     }
   };
@@ -150,6 +149,7 @@ export default function BasicInformationStep({
           placeholder="Seleccione su tipo de documento"
           value={formData.tipo_documento}
           onChange={(e) => updateFormData({ tipo_documento: e.target.value })}
+          isRequired
         >
           <SelectItem key="CC">Cédula de ciudadanía</SelectItem>
           <SelectItem key="TI">Tarjeta de identidad</SelectItem>
@@ -165,7 +165,7 @@ export default function BasicInformationStep({
           value={formData.num_documento}
           onChange={(e) => updateFormData({ num_documento: e.target.value })}
           placeholder="Ingrese su número de documento"
-          required
+          isRequired
         />
 
         <Input
@@ -177,7 +177,7 @@ export default function BasicInformationStep({
           value={formData.primer_nombre}
           onChange={(e) => updateFormData({ primer_nombre: e.target.value })}
           placeholder="Ingrese su primer nombre"
-          required
+          isRequired
         />
 
         <Input
@@ -189,7 +189,6 @@ export default function BasicInformationStep({
           value={formData.segundo_nombre}
           onChange={(e) => updateFormData({ segundo_nombre: e.target.value })}
           placeholder="Ingrese su segundo nombre"
-          required
         />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -202,7 +201,7 @@ export default function BasicInformationStep({
           value={formData.primer_apellido}
           onChange={(e) => updateFormData({ primer_apellido: e.target.value })}
           placeholder="Ingrese su primer apellido"
-          required
+          isRequired
         />
 
         <Input
@@ -226,6 +225,7 @@ export default function BasicInformationStep({
           placeholder="Seleccione su sexo"
           value={formData.sexo}
           onChange={(e) => updateFormData({ sexo: e.target.value })}
+          isRequired
         >
           <SelectItem key="M">Masculino</SelectItem>
           <SelectItem key="F">Femenino</SelectItem>
@@ -239,8 +239,10 @@ export default function BasicInformationStep({
           variant="bordered"
           label="Género"
           labelPlacement="outside"
+          placeholder="Seleccione su género"
           value={formData.genero}
           onChange={(e) => updateFormData({ genero: e.target.value })}
+          isRequired
         >
           <SelectItem key="M">Hombre</SelectItem>
           <SelectItem key="F">Femenino</SelectItem>
@@ -258,6 +260,7 @@ export default function BasicInformationStep({
           placeholder="Seleccione su orientación sexual"
           value={formData.orient_sexual}
           onChange={(e) => updateFormData({ orient_sexual: e.target.value })}
+          isRequired
         >
           <SelectItem key="H">Heterosexual</SelectItem>
           <SelectItem key="B">Bisexual</SelectItem>
@@ -288,7 +291,7 @@ export default function BasicInformationStep({
           value={formData.num_movil}
           onChange={(e) => updateFormData({ num_movil: e.target.value })}
           placeholder="Ingrese su número de teléfono móvil"
-          required
+          isRequired
         />
       </div>
 
@@ -302,7 +305,6 @@ export default function BasicInformationStep({
           value={formData.num_fijo}
           onChange={(e) => updateFormData({ num_fijo: e.target.value })}
           placeholder="Ingrese su número de teléfono fijo"
-          required
         />
 
         <Input
@@ -314,7 +316,7 @@ export default function BasicInformationStep({
           value={formData.email}
           onChange={(e) => updateFormData({ email: e.target.value })}
           placeholder="Ingrese su correo electrónico"
-          required
+          isRequired
         />
       </div>
 
@@ -328,6 +330,7 @@ export default function BasicInformationStep({
           placeholder="Seleccione su nacionalidad"
           value={formData.nacionalidad}
           onChange={(e) => updateFormData({ nacionalidad: e.target.value })}
+          isRequired
         >
           <SelectItem key="Colombia">Colombia</SelectItem>
           <SelectItem key="Venezuela">Venezuela</SelectItem>
@@ -343,6 +346,7 @@ export default function BasicInformationStep({
           placeholder="Seleccione su estado civil"
           value={formData.estado_civil}
           onChange={(e) => updateFormData({ estado_civil: e.target.value })}
+          isRequired
         >
           <SelectItem key="Soltero">Soltero</SelectItem>
           <SelectItem key="Casado">Casado</SelectItem>
@@ -361,6 +365,7 @@ export default function BasicInformationStep({
           placeholder="Seleccione su escolaridad"
           value={formData.escolaridad}
           onChange={(e) => updateFormData({ escolaridad: e.target.value })}
+          isRequired
         >
           <SelectItem key="Primaria">Primaria</SelectItem>
           <SelectItem key="Secundaria">Secundaria</SelectItem>
@@ -376,6 +381,7 @@ export default function BasicInformationStep({
           placeholder="Seleccione su etnia"
           value={formData.etnia}
           onChange={(e) => updateFormData({ etnia: e.target.value })}
+          isRequired
         >
           <SelectItem key="Indígena">Indígena</SelectItem>
           <SelectItem key="Afrodescendiente">Afrodescendiente</SelectItem>
@@ -395,6 +401,7 @@ export default function BasicInformationStep({
           placeholder="Seleccione si tiene discapacidad"
           value={formData.discapacidad}
           onChange={(e) => updateFormData({ discapacidad: e.target.value })}
+          isRequired
         >
           <SelectItem key="Sí">Sí</SelectItem>
           <SelectItem key="No">No</SelectItem>
@@ -411,6 +418,7 @@ export default function BasicInformationStep({
           onChange={(e) =>
             updateFormData({ sabe_leer_escribir: e.target.value })
           }
+          isRequired
         >
           <SelectItem key="Sí">Sí</SelectItem>
           <SelectItem key="No">No</SelectItem>

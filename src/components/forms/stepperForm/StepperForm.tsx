@@ -264,7 +264,7 @@ export default function StepperForm() {
               type="button"
               variant="bordered"
               onPress={handlePrevious}
-              disabled={currentStep === 0}
+              isDisabled={currentStep === 0}
             >
               Anterior
             </Button>
