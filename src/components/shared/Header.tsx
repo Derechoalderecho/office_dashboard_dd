@@ -12,6 +12,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import NotificationsPanel from "../notifications/NotificationsPanel";
 
 const pathTranslations: { [key: string]: string } = {
   dashboard: "Dashboard",
@@ -83,47 +84,56 @@ export default function Header() {
 
   return (
     <>
-      <header className="flex items-center justify-between w-full py-5">
+      <header className="flex items-center justify-between w-full py-4">
         <Breadcrumbs
           itemClasses={{
             separator: "px-2",
+            item: "text-default-500 hover:text-primary",
+            base: "gap-1",
           }}
           separator="/"
         >
           {breadcrumbItems.map((item, index) => (
-            <BreadcrumbItem key={item.href} isCurrent={item.isCurrent}>
+            <BreadcrumbItem 
+              key={item.href} 
+              isCurrent={item.isCurrent}
+              className={item.isCurrent ? "text-primary font-medium" : ""}
+            >
               <Link href={item.href}>{item.label}</Link>
             </BreadcrumbItem>
           ))}
         </Breadcrumbs>
-        <Dropdown placement="bottom-start">
-          <DropdownTrigger>
-            <Avatar
-              as="button"
-              radius="sm"
-              size="sm"
-              isBordered
-              src={
-                user?.photoURL ||
-                "https://i.pravatar.cc/150?u=a042581f4e29026024d"
-              }
-              className="transition-transform"
-            />
-          </DropdownTrigger>
-          <DropdownMenu aria-label="User Actions" variant="flat">
-            <DropdownItem key="profile" className="h-14 gap-2">
-              <p className="font-bold">Ingresaste como</p>
-              <p className="font-bold">
-                {user && (user.displayName || user.email)}
-              </p>
-            </DropdownItem>
-            <DropdownItem key="settings">Configuración</DropdownItem>
-            <DropdownItem key="help_and_feedback">Ayuda y mejora</DropdownItem>
-            <DropdownItem key="logout" color="danger" onPress={handleLogout}>
-              {loading ? "Cerrando sesión..." : "Cerrar sesión"}
-            </DropdownItem>
-          </DropdownMenu>
-        </Dropdown>
+        <div className="flex items-center gap-4">
+          <NotificationsPanel />
+          <Dropdown placement="bottom-start">
+            <DropdownTrigger>
+              <Avatar
+                as="button"
+                radius="sm"
+                size="sm"
+                isBordered
+                src={
+                  user?.photoURL ||
+                  "https://i.pravatar.cc/150?u=a042581f4e29026024d"
+                }
+                className="transition-transform"
+              />
+            </DropdownTrigger>
+            <DropdownMenu aria-label="User Actions" variant="flat">
+              <DropdownItem key="profile" className="h-14 gap-2">
+                <p className="font-bold">Ingresaste como</p>
+                <p className="font-bold">
+                  {user && (user.displayName || user.email)}
+                </p>
+              </DropdownItem>
+              <DropdownItem key="settings">Configuración</DropdownItem>
+              <DropdownItem key="help_and_feedback">Ayuda y mejora</DropdownItem>
+              <DropdownItem key="logout" color="danger" onPress={handleLogout}>
+                {loading ? "Cerrando sesión..." : "Cerrar sesión"}
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
+        </div>
       </header>
       <Divider className="mb-7" />
     </>
