@@ -73,6 +73,7 @@ export default function StepperForm() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
 
   const steps = [
     { title: "Información básica", component: BasicInformationStep },
@@ -95,15 +96,91 @@ export default function StepperForm() {
     setFormData((prev) => ({ ...prev, ...data }));
   };
 
+  // Validation rules for each step
+  const stepValidations = {
+    0: (data: typeof formData) => {
+      const errors: { [key: string]: string } = {};
+      
+      // Skip validation if using existing citizen
+      if (data.is_existing_citizen === "true") {
+        if (!data.citizen_id) {
+          errors.citizen_id = "Debe seleccionar un ciudadano existente";
+        }
+        return errors;
+      }
+
+      // Basic Information validation
+      if (!data.tipo_documento) errors.tipo_documento = "El tipo de documento es requerido";
+      if (!data.num_documento) errors.num_documento = "El número de documento es requerido";
+      if (!data.primer_nombre) errors.primer_nombre = "El primer nombre es requerido";
+      if (!data.primer_apellido) errors.primer_apellido = "El primer apellido es requerido";
+      if (!data.sexo) errors.sexo = "El sexo es requerido";
+      if (!data.genero) errors.genero = "El género es requerido";
+      if (!data.orient_sexual) errors.orient_sexual = "La orientación sexual es requerida";
+      if (!data.num_movil) errors.num_movil = "El número móvil es requerido";
+      if (!data.email) errors.email = "El correo electrónico es requerido";
+      if (!data.nacionalidad) errors.nacionalidad = "La nacionalidad es requerida";
+      if (!data.estado_civil) errors.estado_civil = "El estado civil es requerido";
+      if (!data.escolaridad) errors.escolaridad = "La escolaridad es requerida";
+      if (!data.etnia) errors.etnia = "La etnia es requerida";
+      if (!data.discapacidad) errors.discapacidad = "Debe indicar si tiene discapacidad";
+      if (!data.sabe_leer_escribir) errors.sabe_leer_escribir = "Debe indicar si sabe leer y escribir";
+
+      return errors;
+    },
+    1: (data: typeof formData) => {
+      const errors: { [key: string]: string } = {};
+      
+      // General Information validation
+      if (!data.tipo_proceso) errors.tipo_proceso = "El tipo de proceso es requerido";
+      if (!data.estado) errors.estado = "El estado es requerido";
+      if (!data.tiempo_respuesta) errors.tiempo_respuesta = "El tiempo de respuesta es requerido";
+
+      return errors;
+    },
+    2: (data: typeof formData) => {
+      const errors: { [key: string]: string } = {};
+      
+      // Administration validation
+      if (!data.persona_modifica) errors.persona_modifica = "Debe seleccionar un usuario encargado";
+      if (!data.profesor_id) errors.profesor_id = "Debe seleccionar un profesor";
+      if (!data.monitor_id) errors.monitor_id = "Debe seleccionar un monitor";
+      if (!data.alumno_id) errors.alumno_id = "Debe seleccionar un alumno";
+
+      return errors;
+    }
+  };
+
+  const validateCurrentStep = () => {
+    const currentValidation = stepValidations[currentStep as keyof typeof stepValidations];
+    if (currentValidation) {
+      const errors = currentValidation(formData);
+      setValidationErrors(errors);
+      return Object.keys(errors).length === 0;
+    }
+    return true;
+  };
+
   const handleNext = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep((prev) => prev + 1);
+    if (validateCurrentStep()) {
+      if (currentStep < steps.length - 1) {
+        setCurrentStep((prev) => prev + 1);
+        setValidationErrors({});
+      }
+    } else {
+      // Show error toast for validation errors
+      addToast({
+        title: "Error de validación",
+        description: "Por favor complete todos los campos requeridos",
+        color: "danger",
+      });
     }
   };
 
   const handlePrevious = () => {
     if (currentStep > 0) {
       setCurrentStep((prev) => prev - 1);
+      setValidationErrors({});
     }
   };
 
@@ -170,6 +247,13 @@ export default function StepperForm() {
   };
 
   const CurrentStepComponent = steps[currentStep].component;
+
+  // Pass validation errors to child components
+  const currentStepProps = {
+    formData,
+    updateFormData,
+    validationErrors,
+  };
 
   return (
     <div className="py-6">
@@ -250,10 +334,7 @@ export default function StepperForm() {
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
-              <CurrentStepComponent
-                formData={formData}
-                updateFormData={updateFormData}
-              />
+              <CurrentStepComponent {...currentStepProps} />
             </form>
           )}
         </CardContent>

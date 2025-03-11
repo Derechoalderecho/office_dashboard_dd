@@ -1,8 +1,16 @@
 "use client";
 
 import { parseNumberToString } from "@/utils/string";
-import { Input, Select, SelectItem, DateInput, DateValue } from "@heroui/react";
-import { useState, useEffect } from "react";
+import {
+  Input,
+  Select,
+  SelectItem,
+  DateInput,
+  DateValue,
+  Autocomplete,
+  AutocompleteItem,
+} from "@heroui/react";
+import { useState, useEffect, Key } from "react";
 import { fetchAllCitizens } from "@/services/citizenService";
 import { Citizen } from "@/types/citizens";
 
@@ -79,8 +87,8 @@ export default function BasicInformationStep({
   }, []);
 
   // Handle citizen selection and auto-populate form fields
-  const handleCitizenSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedId = e.target.value;
+  const handleCitizenSelect = (selectedKey: Key | null) => {
+    const selectedId = selectedKey?.toString();
 
     if (!selectedId) {
       // No citizen selected, reset form
@@ -117,7 +125,7 @@ export default function BasicInformationStep({
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6">
-        <Select
+        <Autocomplete
           id="citizen_id"
           name="citizen_id"
           variant="bordered"
@@ -125,15 +133,15 @@ export default function BasicInformationStep({
           labelPlacement="outside"
           placeholder="Seleccione un ciudadano o cree uno nuevo"
           value={formData.citizen_id}
-          onChange={handleCitizenSelect}
+          onSelectionChange={handleCitizenSelect}
           disabled={isLoading}
         >
           {citizens.map((citizen) => (
-            <SelectItem key={citizen.id_ciudadano.toString()}>
+            <AutocompleteItem  key={citizen.id_ciudadano.toString()}>
               {`${citizen.primer_nombre} ${citizen.primer_apellido} - ${citizen.num_documento}`}
-            </SelectItem>
+            </AutocompleteItem>
           ))}
-        </Select>
+        </Autocomplete>
         {isLoading && (
           <p className="text-sm text-gray-500">Cargando ciudadanos...</p>
         )}
