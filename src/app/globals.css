@@ -183,6 +183,13 @@
   .semibold-24 {
     @apply text-[24px] font-semibold leading-[36px];
   }
+  .regular-32 {
+    @apply text-[32px] font-normal leading-[40px];
+  }
+  .semibold-32 {
+    @apply text-[32px] font-semibold leading-[40px];
+  }
+
   .regular-48 {
     @apply text-[48px] font-normal leading-[58px];
   }
