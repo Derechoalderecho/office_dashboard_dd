@@ -1,47 +1,46 @@
 "use client";
 
+import { useState } from "react";
 import { NavLinks } from "./nav-links";
-import { PanelLeft } from "lucide-react";
-import { Button } from "@heroui/react";
+import { addToast } from "@heroui/react";
 
-interface SideBarProps {
-  isExpanded: boolean;
-  setIsExpanded: (value: boolean) => void;
-}
+export function SideBar() {
+  const [isHovered, setIsHovered] = useState(false);
 
-export function SideBar({ isExpanded, setIsExpanded }: SideBarProps) {
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+  };
+
   return (
-    <aside
-      className={`sticky top-0 h-screen flex flex-col gap-7 px-3 py-6 bg-[#F9FAFB] border-r 
-        transition-[width] duration-300 ease-in-out overflow-hidden
-        ${isExpanded ? "w-[212px]" : "w-16"}`}
+    <nav
+      className={`fixed z-50 top-0 left-0 h-full flex flex-col gap-7 px-2 py-4 bg-[#F9FAFB] border-r transition-all duration-300 ${
+        isHovered ? "w-60" : "w-16"
+      }`}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
-      <div
-        className={`transition-transform duration-300 ${
-          isExpanded ? "scale-100" : "scale-90"
-        }`}
-      >
-        <div className="flex items-center justify-between w-full">
-          <img src="/images/logo.png" alt="brand" className="w-[23px] h-[32px]" />
-          {isExpanded && (
-            <Button
-              variant="light"
-              className="transition-opacity duration-300 px-1"
-              onPress={() => setIsExpanded(false)}
-              isIconOnly
-            >
-              <PanelLeft className="w-6 h-6 text-neutral-500" />
-            </Button>
-          )}
-        </div>
+      <div className="mx-auto">
+        <img src="/images/logo.png" alt="brand" />
       </div>
       <div className="border-t border-gray-300"></div>
-      <nav className="flex flex-col gap-3 flex-1">
+      <nav className="flex flex-col gap-3">
         <ul className="flex flex-col gap-3">
-          <NavLinks isHovered={isExpanded} />
+          <NavLinks handleMouseEnter={handleMouseEnter} isHovered={isHovered} />
         </ul>
       </nav>
       <div className="border-t border-gray-300"></div>
-    </aside>
+      {/*    <nav className="flex flex-col gap-3">
+        <ul className="flex flex-col gap-3">
+          <NavLinks2
+            handleMouseEnter={handleMouseEnter}
+            isHovered={isHovered}
+          />
+        </ul>
+      </nav> */}
+    </nav>
   );
 }
