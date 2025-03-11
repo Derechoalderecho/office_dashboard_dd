@@ -8,7 +8,8 @@ import {
   UserIcon,
   Squares2X2Icon,
   Cog6ToothIcon,
-} from "@heroicons/react/24/solid";
+} from "@heroicons/react/24/outline";
+import { PanelLeft } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { addToast } from "@heroui/react";
@@ -44,11 +45,10 @@ export const NAV_LINKS = [
 ];
 
 interface NavLinksProps {
-  handleMouseEnter: React.MouseEventHandler<HTMLAnchorElement>;
   isHovered: boolean;
 }
 
-export function NavLinks({ handleMouseEnter, isHovered }: NavLinksProps) {
+export function NavLinks({ isHovered }: NavLinksProps) {
   const pathname = usePathname();
   const router = useRouter();
   
@@ -72,17 +72,16 @@ export function NavLinks({ handleMouseEnter, isHovered }: NavLinksProps) {
             key={menu.key}
             href={menu.href}
             onClick={(e) => handleNavClick(e, menu)}
-            className={`flex font-medium gap-4 items-center px-3 py-3 rounded-xl transition-all ${
+            className={`flex regular-14 gap-2 items-center p-3 rounded-lg transition-all ${
               pathname === menu.href
                 ? "text-primary bg-bgNav"
                 : !menu.enabled
                 ? "text-gray-400 pointer-events-auto cursor-not-allowed"
-                : "text-secondary hover:bg-[#D4EAFF]"
+                : "text-neutral-500 hover:bg-[#D4EAFF]"
             }`}
-            onMouseEnter={handleMouseEnter}
           >
             <div>
-              <Icon className="size-6" />
+              <Icon className="size-6 stroke-[1.5px]" />
             </div>
             <span
               className={`overflow-hidden text-ellipsis ${
