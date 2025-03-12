@@ -49,11 +49,12 @@ export default function NotificationsPanel() {
           <BellIcon className="h-5 w-5" />
           {unreadCount > 0 && (
             <Badge
-              content={unreadCount}
               color="danger"
               size="sm"
               className="absolute -top-1 -right-1"
-            />
+            >
+              {unreadCount}
+            </Badge>
           )}
         </Button>
       </PopoverTrigger>

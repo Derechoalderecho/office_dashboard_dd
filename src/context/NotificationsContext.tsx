@@ -16,6 +16,7 @@ export interface Notification {
 interface NotificationsContextType {
   notifications: Notification[];
   unreadCount: number;
+  addNotification: (notification: Omit<Notification, "id" | "timestamp" | "read">) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   clearNotification: (id: string) => void;
@@ -37,6 +38,19 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({ child
 
   // Calculate unread count
   const unreadCount = notifications.filter(notification => !notification.read).length;
+
+  // Add a new notification
+  const addNotification = (notification: Omit<Notification, "id" | "timestamp" | "read">) => {
+    const id = Math.random().toString(36).substring(2, 15);
+    const newNotification: Notification = {
+      ...notification,
+      id,
+      timestamp: new Date(),
+      read: false,
+    };
+    
+    setNotifications(prevNotifications => [newNotification, ...prevNotifications]);
+  };
 
   // Mark a notification as read
   const markAsRead = (id: string) => {
@@ -69,6 +83,7 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({ child
   const value = {
     notifications,
     unreadCount,
+    addNotification,
     markAsRead,
     markAllAsRead,
     clearNotification,
