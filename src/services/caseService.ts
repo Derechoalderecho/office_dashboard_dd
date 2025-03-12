@@ -5,15 +5,6 @@ import { Citizen } from "@/types/citizens";
 import { Cases } from "@/types/cases";
 import { API_BASE_URL } from "@/config/api";
 
-// Define a type for the history log entries
-export interface CaseHistoryLog {
-  id_caso: number;
-  estado_anterior: string;
-  estado_nuevo: string;
-  id_historial: number;
-  fecha_cambio: string;
-}
-
 type CaseWithCitizen = Cases & { ciudadano: Citizen };
 type CasesPromise = Promise<CaseWithCitizen[]>;
 
@@ -96,32 +87,6 @@ export const fetchCasesByCitizenId = async (citizenId: number): CasesPromise => 
     return citizenCases.map(caseItem => ({ ...caseItem, ciudadano }));
   } catch (error) {
     console.error(`Error fetching cases for citizen ${citizenId}:`, error);
-    return [];
-  }
-};
-
-/**
- * Fetches history logs for a specific case
- * @param caseId The ID of the case to fetch history for
- * @returns Promise of array of history logs
- */
-export const fetchCaseHistory = async (caseId: number): Promise<CaseHistoryLog[]> => {
-  try {
-    // Fetch all history logs
-    const response = await axios.get(`${API_BASE_URL}/historial`);
-    const allHistoryLogs = response.data as CaseHistoryLog[];
-    
-    // Filter logs by case ID
-    const caseHistoryLogs = allHistoryLogs.filter(
-      (log) => log.id_caso === caseId
-    );
-    
-    // Sort logs by date (newest first)
-    return caseHistoryLogs.sort((a, b) => 
-      new Date(b.fecha_cambio).getTime() - new Date(a.fecha_cambio).getTime()
-    );
-  } catch (error) {
-    console.error(`Error fetching history for case ${caseId}:`, error);
     return [];
   }
 };
