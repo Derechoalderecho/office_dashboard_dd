@@ -103,7 +103,7 @@ export const fetchCasesByCitizenId = async (citizenId: number): CasesPromise => 
 /**
  * Fetches history logs for a specific case
  * @param caseId The ID of the case to fetch history for
- * @returns Promise of array of history logs
+ * @returns Promise of array of history logs related to the case
  */
 export const fetchCaseHistory = async (caseId: number): Promise<CaseHistoryLog[]> => {
   try {
