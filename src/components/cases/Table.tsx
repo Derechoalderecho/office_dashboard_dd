@@ -216,6 +216,7 @@ export default function TableCases() {
         bottomContentPlacement="outside"
         classNames={{
           wrapper: "max-w-[100%]",
+          td: "whitespace-normal break-words",
         }}
         selectedKeys={selectedKeys}
         selectionMode="multiple"

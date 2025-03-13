@@ -34,6 +34,7 @@ export default function GeneralInformationStep({
           placeholder="Seleccione el tipo de proceso"
           value={formData.tipo_proceso}
           onChange={(e) => updateFormData({ tipo_proceso: e.target.value })}
+          isRequired
         >
           <SelectItem key="Tutela">Tutela</SelectItem>
           <SelectItem key="Derecho de petición">Derecho de petición</SelectItem>
@@ -51,6 +52,7 @@ export default function GeneralInformationStep({
           placeholder="Seleccione el estado"
           value={formData.estado}
           onChange={(e) => updateFormData({ estado: e.target.value })}
+          isRequired
         >
           <SelectItem key="Seguimiento">Seguimiento</SelectItem>
           <SelectItem key="Acción necesaria">Acción necesaria</SelectItem>
@@ -67,6 +69,7 @@ export default function GeneralInformationStep({
           placeholder="Ingrese el tiempo de respuesta"
           value={formData.tiempo_respuesta}
           onChange={(e) => updateFormData({ tiempo_respuesta: e.target.value })}
+          isRequired
         />
       </div>
 
@@ -81,7 +84,6 @@ export default function GeneralInformationStep({
           value={formData.notas}
           onChange={(e) => updateFormData({ notas: e.target.value })}
           placeholder="Ingrese las notas"
-          required
         />
       </div>
     </div>

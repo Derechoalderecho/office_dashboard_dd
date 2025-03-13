@@ -56,6 +56,7 @@ export default function AdministrationStep({
             value={formData.persona_modifica}
             onChange={(e) => updateFormData({ persona_modifica: e.target.value })}
             className="w-full"
+            isRequired
           >
             {allUsers.map((user) => (
               <SelectItem key={user.id_usuario.toString()}>
@@ -83,6 +84,7 @@ export default function AdministrationStep({
               placeholder="Seleccione un profesor"
               value={formData.profesor_id}
               onChange={(e) => updateFormData({ profesor_id: e.target.value })}
+              isRequired
             >
               {users.filter(user => user.rol === "Docente").map((profesor) => (
                 <SelectItem key={profesor.id_usuario.toString()}>
@@ -100,6 +102,7 @@ export default function AdministrationStep({
               placeholder="Seleccione un monitor"
               value={formData.monitor_id}
               onChange={(e) => updateFormData({ monitor_id: e.target.value })}
+              isRequired
             >
               {users.filter(user => user.rol === "Monitor").map((monitor) => (
                 <SelectItem key={monitor.id_usuario.toString()}>
@@ -117,6 +120,7 @@ export default function AdministrationStep({
               placeholder="Seleccione un alumno"
               value={formData.alumno_id}
               onChange={(e) => updateFormData({ alumno_id: e.target.value })}
+              isRequired
             >
               {users.filter(user => user.rol === "Estudiante").map((alumno) => (
                 <SelectItem key={alumno.id_usuario.toString()}>
