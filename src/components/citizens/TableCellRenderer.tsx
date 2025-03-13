@@ -8,11 +8,13 @@ import { parseDateToLocal } from "@/utils/date";
 interface TableCellRendererProps {
   user: CitizenWithKey;
   columnKey: keyof CitizenWithKey;
+  onPreviewCitizen?: (citizenData: CitizenWithKey) => void;
 }
 
 export const TableCellRendererCitizens = ({
   user,
   columnKey,
+  onPreviewCitizen,
 }: TableCellRendererProps) => {
   const cellValue = user[columnKey];
 
@@ -50,6 +52,7 @@ export const TableCellRendererCitizens = ({
             <Button
               isIconOnly
               className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
+              onPress={() => onPreviewCitizen?.(user)}
             >
               <EyeIcon className="w-6" />
             </Button>

@@ -1,13 +1,14 @@
 import {
-    Modal,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
-    Button,
-  } from "@heroui/react";
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Button,
+} from "@heroui/react";
 import { CaseWithKey } from "@/types/cases";
 import { CitizenWithKey } from "@/types/citizens";
+import { UserWithKey } from "@/types/users";
 
 interface ModalTableProps {
   isOpen: boolean;
@@ -30,7 +31,10 @@ export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
               <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Ciudadano</strong>
-                  <p>{caseData.ciudadano?.primer_nombre} {caseData.ciudadano?.primer_apellido}</p>
+                  <p>
+                    {caseData.ciudadano?.primer_nombre}{" "}
+                    {caseData.ciudadano?.primer_apellido}
+                  </p>
                 </div>
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Correo</strong>
@@ -75,12 +79,16 @@ export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
 }
 
 interface ModalCitizenProps {
-    isOpen: boolean;
-    onClose: () => void;
-    citizenData: CitizenWithKey | null;
-  }
+  isOpen: boolean;
+  onClose: () => void;
+  citizenData: CitizenWithKey | null;
+}
 
-export function ModalCitizen({ isOpen, onClose, citizenData }: ModalCitizenProps) {
+export function ModalCitizen({
+  isOpen,
+  onClose,
+  citizenData,
+}: ModalCitizenProps) {
   if (!citizenData) return null;
 
   return (
@@ -89,17 +97,121 @@ export function ModalCitizen({ isOpen, onClose, citizenData }: ModalCitizenProps
         {(onClose) => (
           <>
             <ModalHeader>
-              <h2>Ciudadano</h2>
+              Vista previa del ciudadano #{citizenData.id_ciudadano}
             </ModalHeader>
             <ModalBody>
-              <div>
-                <p>{citizenData.primer_nombre} {citizenData.primer_apellido}</p>
-                    <p>{citizenData.email}</p>
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between border-b pb-3">
+                  <strong>Ciudadano</strong>
+                  <p>
+                    {citizenData.primer_nombre} {citizenData.primer_apellido}
+                  </p>
                 </div>
+                <div className="flex items-center justify-between border-b pb-3">
+                  <strong>Correo</strong>
+                  <p>{citizenData.email}</p>
+                </div>
+                <div className="flex items-center justify-between border-b pb-3">
+                  <strong>Documento</strong>
+                  <p>
+                    {citizenData.tipo_documento} {citizenData.num_documento}
+                  </p>
+                </div>
+                <div className="flex items-center justify-between border-b pb-3">
+                  <strong>Celular</strong>
+                  <p>{citizenData.num_movil}</p>
+                </div>
+                <div className="flex items-center justify-between border-b pb-3">
+                  <strong>Dane Municipio</strong>
+                  <p>{citizenData.dane_municipio}</p>
+                </div>
+                <div className="flex items-center justify-between border-b pb-3">
+                  <strong>Fecha de Creación</strong>
+                  <p>{new Date(citizenData.fecha_crea).toLocaleDateString()}</p>
+                </div>
+                <div className="flex items-center justify-between border-b pb-3">
+                  <strong>Fecha de Actualización</strong>
+                  <p>
+                    {new Date(citizenData.fecha_actualiza).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
             </ModalBody>
+            <ModalFooter>
+              <Button color="danger" variant="light" onPress={onClose}>
+                Cerrar
+              </Button>
+            </ModalFooter>
           </>
         )}
       </ModalContent>
     </Modal>
-  )
+  );
+}
+
+interface ModalUserProps {
+  isOpen: boolean;
+  onClose: () => void;
+  userData: UserWithKey | null;
+}
+
+export function ModalUser({ isOpen, onClose, userData }: ModalUserProps) {
+  if (!userData) return null;
+
+  return (
+    <Modal isOpen={isOpen} onOpenChange={onClose}>
+      <ModalContent>
+        {(onClose) => (
+          <>
+            <ModalHeader>
+              Vista previa del usuario #{userData.id_usuario}
+            </ModalHeader>
+            <ModalBody>
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between border-b pb-3">
+                  <strong>Ciudadano</strong>
+                  <p>
+                    {userData.primer_nombre} {userData.primer_apellido}
+                  </p>
+                </div>
+                <div className="flex items-center justify-between border-b pb-3">
+                  <strong>Correo</strong>
+                  <p>{userData.email}</p>
+                </div>
+                <div className="flex items-center justify-between border-b pb-3">
+                  <strong>Rol</strong>
+                  <p>{userData.rol}</p>
+                </div>
+                <div className="flex items-center justify-between border-b pb-3">
+                  <strong>Documento</strong>
+                  <p>
+                    {userData.tipo_documento} {userData.num_documento}
+                  </p>
+                </div>
+                <div className="flex items-center justify-between border-b pb-3">
+                  <strong>Fecha de Creación</strong>
+                  <p>
+                    {new Date(userData.fecha_creacion).toLocaleDateString()}
+                  </p>
+                </div>
+                <div className="flex items-center justify-between border-b pb-3">
+                  <strong>Fecha de Actualización</strong>
+                  <p>
+                    {new Date(
+                      userData.fecha_actualizacion
+                    ).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+            </ModalBody>
+            <ModalFooter>
+              <Button color="danger" variant="light" onPress={onClose}>
+                Cerrar
+              </Button>
+            </ModalFooter>
+          </>
+        )}
+      </ModalContent>
+    </Modal>
+  );
 }

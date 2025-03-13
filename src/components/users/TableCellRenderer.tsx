@@ -2,17 +2,18 @@
 
 import { EyeIcon, PencilIcon } from "@heroicons/react/24/outline";
 import { Chip, Tooltip, Button } from "@heroui/react";
-import Link from "next/link";
 import { UserWithKey } from "@/types/users";
 
 interface TableCellRendererProps {
   user: UserWithKey;
   columnKey: keyof UserWithKey;
+  onPreviewUser?: (user: UserWithKey) => void;
 }
 
 export const TableCellRendererUsers = ({
   user,
   columnKey,
+  onPreviewUser,
 }: TableCellRendererProps) => {
   const cellValue = user[columnKey];
 
@@ -64,6 +65,7 @@ export const TableCellRendererUsers = ({
             <Button
               isIconOnly
               className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
+              onPress={() => onPreviewUser?.(user)}
             >
               <EyeIcon className="w-6" />
             </Button>

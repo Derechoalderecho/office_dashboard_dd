@@ -7,16 +7,10 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Card,
-  CardBody,
   Selection,
   SortDescriptor,
-  Spinner
+  Spinner,
+  useDisclosure,
 } from "@heroui/react";
 import { useState, useCallback, useMemo, useEffect, ChangeEvent } from "react";
 import { columns } from "@/constants/usersConstants";
@@ -29,6 +23,7 @@ import { TableCellRendererUsers } from "./TableCellRenderer";
 import { BulkActionsBar } from "./BulkActionsBar";
 import { fetchAllUsers } from "@/services/userService";
 import { useFilteredUsers } from "@/hooks/useFilteredUsers";
+import { ModalUser } from "../ui/modal-table";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "num_documento",
@@ -53,13 +48,13 @@ export default function TableUsers() {
   });
   const [page, setPage] = useState(1);
   const [showAll, setShowAll] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
   const [users, setUsers] = useState<UserWithKey[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState<"all" | "active" | "inactive">(
     "all"
   );
-
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [selectedUser, setSelectedUser] = useState<UserWithKey | null>(null);
 
   // Fetch reviewers from Firestore
   useEffect(() => {
@@ -172,6 +167,11 @@ export default function TableUsers() {
     );
   }, [selectedKeys, items.length, page, pages, hasSearchFilter]);
 
+  const handlePreviewUser = (userData: UserWithKey) => {
+    setSelectedUser(userData);
+    onOpen();
+  };
+
   return (
     <>
       {(selectedKeys === "all" || selectedKeys.size > 0) && (
@@ -180,6 +180,13 @@ export default function TableUsers() {
           filteredItemsLength={filteredItems.length}
         />
       )}
+
+      <ModalUser
+        isOpen={isOpen}
+        onClose={onOpenChange}
+        userData={selectedUser}
+      />
+
       <Table
         suppressHydrationWarning
         isHeaderSticky
@@ -222,6 +229,7 @@ export default function TableUsers() {
                   <TableCellRendererUsers
                     user={item as UserWithKey}
                     columnKey={columnKey as keyof UserWithKey}
+                    onPreviewUser={handlePreviewUser}
                   />
                 </TableCell>
               )}
