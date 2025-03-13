@@ -15,7 +15,7 @@ import {
   LinkIcon,
 } from "@heroicons/react/24/outline";
 import { parseDateToLocal } from "@/utils/date";
-import { fetchCasesByCitizenId } from "@/services/caseService";
+import { fetchCasesByCitizenId, fetchCaseHistory } from "@/services/caseService";
 import React from "react";
 
 interface CasePageProps {
@@ -34,20 +34,28 @@ export default async function CasePage({
 
   try {
     const casesData = await fetchCasesByCitizenId(parseInt(id));
-
+    
     if (!casesData || casesData.length === 0) {
       return <div>Case not found</div>;
     }
 
+    // For each case, fetch its history
+    const casesWithHistory = await Promise.all(
+      casesData.map(async (caseItem) => {
+        const historyLogs = await fetchCaseHistory(caseItem.id_caso);
+        return { ...caseItem, historyLogs };
+      })
+    );
+
     return (
       <div>
-        {casesData.map((caseItem) => (
+        {casesWithHistory.map((caseItem) => (
           <div key={caseItem.id_caso}>
             <Breadcrumbs className="mb-5">
               <BreadcrumbItem>
                 <Link href="/cases">Casos</Link>
               </BreadcrumbItem>
-              <BreadcrumbItem>{`Vista de caso N#`}</BreadcrumbItem>
+              <BreadcrumbItem>{`Vista de caso N#${caseItem.id_caso}`}</BreadcrumbItem>
             </Breadcrumbs>
             <section className="flex items-center justify-between pb-4 mb-7 border-b-1">
               <div>
@@ -280,33 +288,41 @@ export default async function CasePage({
                   </ul>
                 </section>
                 <hr className="my-5" />
-                <p className="font-medium mb-8">Registro</p>
+                <p className="font-medium mb-8">Registro de cambios de estado</p>
 
                 <section className="pl-3">
                   <ol className="relative border-s border-gray-200">
-                    {/*
-               {caseData.registration_history.map((history, index) => (
-                <li key={index} className="mb-16 ms-10">
-                  <span
-                    className={`${
-                      history.status === "Generado"
-                        ? "bg-primary"
-                        : history.status === "Pagado"
-                        ? "bg-[#12A150]"
-                        : history.status === "Creado"
-                        ? "bg-primary"
-                        : history.status === "Acción Necesaria"
-                        ? "bg-[#C4841D]"
-                        : ""
-                    } absolute flex items-center justify-center w-7 h-7 rounded-full -start-[14px]  ring-4 ring-[#e7e7e7da]`}
-                  ></span>
-                  <h3 className="flex items-center mb-1">{history.status}</h3>
-                  <time className="block mb-2 text-sm font-normal leading-none text-gray-400">
-                    {parseDateToLocal(history.date)}
-                  </time>
-                </li>
-              ))}
-              */}
+                    {caseItem.historyLogs && caseItem.historyLogs.map((history, index) => (
+                      <li key={history.id_historial} className="mb-16 ms-10">
+                        <span
+                          className={`${
+                            history.estado_nuevo === "Aprobado"
+                              ? "bg-[#12A150]"
+                              : history.estado_nuevo === "Seguimiento"
+                              ? "bg-primary"
+                              : history.estado_nuevo === "Acción necesaria"
+                              ? "bg-[#C4841D]"
+                              : history.estado_nuevo === "No aprobado"
+                              ? "bg-error"
+                              : "bg-primary"
+                          } absolute flex items-center justify-center w-7 h-7 rounded-full -start-[14px] ring-4 ring-[#e7e7e7da]`}
+                        ></span>
+                        <h3 className="flex items-center mb-1 text-sm font-semibold">
+                          {history.estado_anterior !== history.estado_nuevo 
+                            ? `Cambio de ${history.estado_anterior} a ${history.estado_nuevo}`
+                            : `Estado: ${history.estado_nuevo}`}
+                        </h3>
+                        <time className="block mb-2 text-sm font-normal leading-none text-gray-400">
+                          {parseDateToLocal(history.fecha_cambio)}
+                        </time>
+                      </li>
+                    ))}
+                    
+                    {(!caseItem.historyLogs || caseItem.historyLogs.length === 0) && (
+                      <li className="ms-10">
+                        <p className="text-sm text-gray-500">No hay registros de cambios de estado</p>
+                      </li>
+                    )}
                   </ol>
                 </section>
               </aside>
