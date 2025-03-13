@@ -12,7 +12,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import NotificationsPanel from "../notifications/NotificationsPanel";
+import NotificationsPanel from "@/components/notifications/NotificationsPanel";
 
 const pathTranslations: { [key: string]: string } = {
   dashboard: "Dashboard",
