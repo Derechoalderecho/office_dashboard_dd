@@ -126,5 +126,48 @@ export const fetchCaseHistory = async (caseId: number): Promise<CaseHistoryLog[]
   }
 };
 
+/**
+ * Fetches all users assigned to a specific case
+ * @param caseId The ID of the case
+ * @returns Promise of array of users assigned to the case
+ */
+export const fetchUsersByCaseId = async (caseId: number) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/casos/${caseId}/usuarios/`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching users for case ${caseId}:`, error);
+    return [];
+  }
+};
+
+/**
+ * Fetches all cases assigned to a specific user
+ * @param userId The ID of the user
+ * @returns Promise of array of cases assigned to the user
+ */
+export const fetchCasesByUserId = async (userId: number): CasesPromise => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/usuarios/${userId}/casos/`);
+    const userCases = response.data as Cases[];
+    
+    // Fetch the citizen data for each case
+    const casesWithCitizens = await Promise.all(
+      userCases.map(async (caseItem) => {
+        const citizenResponse = await axios.get(
+          `${API_BASE_URL}/ciudadanos/${caseItem.id_ciudadano}`
+        );
+        const ciudadano = citizenResponse.data as Citizen;
+        return { ...caseItem, ciudadano };
+      })
+    );
+    
+    return casesWithCitizens;
+  } catch (error) {
+    console.error(`Error fetching cases for user ${userId}:`, error);
+    return [];
+  }
+};
+
 
 

@@ -33,6 +33,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   "tipo_proceso",
   "estado",
   "ciudadano",
+  "usuarios_asignados",
   "tiempo_respuesta",
   "actions",
 ];
@@ -58,7 +59,7 @@ export default function TableCases() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [selectedCase, setSelectedCase] = useState<CaseWithKey | null>(null);
 
-  // Fetch cases from Firestore
+  // Fetch cases from API
   useEffect(() => {
     const fetchCases = async () => {
       const casesList = await fetchAllCases();
