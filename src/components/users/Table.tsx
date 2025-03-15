@@ -30,6 +30,8 @@ const INITIAL_VISIBLE_COLUMNS = [
   "primer_nombre",
   "rol",
   "email",
+  "rama_derecho",
+  "nivel_consultorio",
   "actions",
 ];
 

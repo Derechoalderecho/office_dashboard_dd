@@ -58,6 +58,30 @@ export const TableCellRendererUsers = ({
           </p>
         </div>
       );
+    case "rama_derecho":
+      return (
+        <div className="flex flex-col">
+          <p className="text-base">
+            {String(cellValue)
+              ? cellValue === null
+                ? "-"
+                : cellValue
+              : "-"}
+          </p>
+        </div>
+      );
+    case "nivel_consultorio":
+      return (
+        <div className="flex flex-col">
+          <p className="text-base">
+            {String(cellValue)
+              ? cellValue === null
+                ? "-"
+                : cellValue
+              : "-"}
+          </p>
+        </div>
+      );
     case "actions":
       return (
         <div className="relative flex items-center gap-2">
@@ -68,14 +92,6 @@ export const TableCellRendererUsers = ({
               onPress={() => onPreviewUser?.(user)}
             >
               <EyeIcon className="w-6" />
-            </Button>
-          </Tooltip>
-          <Tooltip content="Editar cliente">
-            <Button
-              isIconOnly
-              className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
-            >
-              <PencilIcon className="w-6" />
             </Button>
           </Tooltip>
         </div>
