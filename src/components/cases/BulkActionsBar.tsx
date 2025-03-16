@@ -1,12 +1,35 @@
 import { CheckBadgeIcon, UserCircleIcon, TagIcon, TrashIcon } from "@heroicons/react/24/solid";
-import { Card, CardBody, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, DropdownSection, User, Selection } from "@heroui/react";
-
+import { Card, CardBody, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, DropdownSection, User, Selection, Button } from "@heroui/react";
+import { useCallback } from "react";
 interface BulkActionsBarProps {
   selectedKeys: Selection;
   filteredItemsLength: number;
+  onDeleteCases: (ids: number[]) => void;
 }
 
-export const BulkActionsBar = ({ selectedKeys, filteredItemsLength }: BulkActionsBarProps) => {
+export const BulkActionsBar = ({ selectedKeys, filteredItemsLength, onDeleteCases }: BulkActionsBarProps) => {
+  const handleDeleteCases = useCallback(() => {
+    if (selectedKeys === "all") {
+      // Si se seleccionaron todos los casos, podrías pedir confirmación antes de eliminarlos
+      const confirmDelete = window.confirm(
+        "¿Estás seguro de que deseas eliminar todos los casos?"
+      );
+      if (confirmDelete) {
+        // Lógica para eliminar todos los casos
+        onDeleteCases([]); // Pasa un array vacío o maneja la lógica para eliminar todos
+      }
+    } else if (selectedKeys.size > 0) {
+      // Si se seleccionaron casos específicos
+      const confirmDelete = window.confirm(
+        `¿Estás seguro de que deseas eliminar ${selectedKeys.size} caso(s)?`
+      );
+      if (confirmDelete) {
+        // Convertir las claves seleccionadas a un array de IDs
+        const caseIds = Array.from(selectedKeys).map((key) => Number(key));
+        onDeleteCases(caseIds);
+      }
+    }
+  }, [selectedKeys, onDeleteCases]);
   return (
     <aside className="fixed bottom-0 z-50 left-1/2 transform -translate-x-1/2 mb-10">
       <Card shadow="lg" className="bg-[#383838] p-1">
@@ -96,7 +119,9 @@ export const BulkActionsBar = ({ selectedKeys, filteredItemsLength }: BulkAction
               <p className="text-white">Tags</p>
             </div>
             <div className="border-l border-white h-6 mx-2"></div>
-            <TrashIcon className="w-6 text-white" />
+            <Button isIconOnly color="danger" variant="light" onPress={handleDeleteCases}>
+              <TrashIcon className="w-6 text-white" />
+            </Button>
           </div>
         </CardBody>
       </Card>

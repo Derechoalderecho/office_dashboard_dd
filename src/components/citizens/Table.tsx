@@ -7,16 +7,10 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Card,
-  CardBody,
   Selection,
   SortDescriptor,
   Spinner,
+  useDisclosure,
 } from "@heroui/react";
 import { useState, useCallback, useMemo, useEffect, ChangeEvent } from "react";
 import { columns } from "@/constants/citizensConstants";
@@ -29,6 +23,7 @@ import { TableCellRendererCitizens } from "./TableCellRenderer";
 import { BulkActionsBar } from "./BulkActionsBar";
 import { useFilteredCitizens } from "@/hooks/useFilteredCitizens";
 import { fetchAllCitizens } from "@/services/citizenService";
+import { ModalCitizen } from "../ui/modal-table";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "fecha_crea",
@@ -56,6 +51,9 @@ export default function TableCitizens() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [citizens, setCitizens] = useState<CitizenWithKey[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [selectedCitizen, setSelectedCitizen] = useState<CitizenWithKey | null>(null);
+
 
   // Fetch reviewers from Firestore
   useEffect(() => {
@@ -161,6 +159,11 @@ export default function TableCitizens() {
     );
   }, [selectedKeys, items.length, page, pages, hasSearchFilter]);
 
+  const handlePreviewCitizen = (citizenData: CitizenWithKey) => {
+    setSelectedCitizen(citizenData);
+    onOpen();
+  };
+
   return (
     <>
       {(selectedKeys === "all" || selectedKeys.size > 0) && (
@@ -169,6 +172,12 @@ export default function TableCitizens() {
           filteredItemsLength={filteredItems.length}
         />
       )}
+      <ModalCitizen
+        isOpen={isOpen}
+        onClose={onOpenChange}
+        citizenData={selectedCitizen}
+      />
+
       <Table
         suppressHydrationWarning
         isHeaderSticky
@@ -211,6 +220,7 @@ export default function TableCitizens() {
                   <TableCellRendererCitizens
                     user={item as CitizenWithKey}
                     columnKey={columnKey as keyof CitizenWithKey}
+                    onPreviewCitizen={handlePreviewCitizen}
                   />
                 </TableCell>
               )}

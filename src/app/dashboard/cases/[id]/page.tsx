@@ -47,6 +47,8 @@ export default async function CasePage({
       })
     );
 
+    console.log(casesWithHistory);
+
     return (
       <div>
         {casesWithHistory.map((caseItem) => (
@@ -303,14 +305,12 @@ export default async function CasePage({
                               : history.estado_nuevo === "Acción necesaria"
                               ? "bg-[#C4841D]"
                               : history.estado_nuevo === "No aprobado"
-                              ? "bg-error"
+                              ? "bg-[#F31260]"
                               : "bg-primary"
                           } absolute flex items-center justify-center w-7 h-7 rounded-full -start-[14px] ring-4 ring-[#e7e7e7da]`}
                         ></span>
                         <h3 className="flex items-center mb-1 text-sm font-semibold">
-                          {history.estado_anterior !== history.estado_nuevo 
-                            ? `Cambio de ${history.estado_anterior} a ${history.estado_nuevo}`
-                            : `Estado: ${history.estado_nuevo}`}
+                        {history.estado_nuevo}
                         </h3>
                         <time className="block mb-2 text-sm font-normal leading-none text-gray-400">
                           {parseDateToLocal(history.fecha_cambio)}

@@ -26,6 +26,7 @@ import { TableCellRendererCases } from "./TableCellRenderer";
 import { BulkActionsBar } from "./BulkActionsBar";
 import { fetchAllCases } from "@/services/caseService";
 import { ModalCase } from "../ui/modal-table";
+import { deleteCasesByIds } from "@/services/caseService";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "fecha_crea",
@@ -33,6 +34,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   "tipo_proceso",
   "estado",
   "ciudadano",
+  "usuarios_asignados",
   "tiempo_respuesta",
   "actions",
 ];
@@ -58,7 +60,7 @@ export default function TableCases() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [selectedCase, setSelectedCase] = useState<CaseWithKey | null>(null);
 
-  // Fetch cases from Firestore
+  // Fetch cases from API
   useEffect(() => {
     const fetchCases = async () => {
       const casesList = await fetchAllCases();
@@ -67,6 +69,20 @@ export default function TableCases() {
     };
     fetchCases();
   }, []);
+
+  // Handle delete cases
+  const handleDeleteCases = async (ids: number[]) => {
+    const success = await deleteCasesByIds(ids);
+    if (success) {
+      // Update cases list after deletion
+      const updatedCases = cases.filter((caseItem) => !ids.includes(caseItem.id_caso));
+      setCases(updatedCases);
+      setSelectedKeys(new Set([])); // Clear selections
+      alert("Casos eliminados correctamente");
+    } else {
+      alert("Error al eliminar los casos");
+    }
+  };
 
   // Handle date range change
   const handleDateRangeChange = (newValue: RangeValue<CalendarDate> | null) => {
@@ -199,6 +215,7 @@ export default function TableCases() {
         <BulkActionsBar
           selectedKeys={selectedKeys}
           filteredItemsLength={filteredItems.length}
+          onDeleteCases={handleDeleteCases}
         />
       )}
 

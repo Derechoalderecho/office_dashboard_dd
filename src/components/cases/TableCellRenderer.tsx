@@ -1,10 +1,12 @@
 "use client";
 
 import { ClockIcon, EyeIcon, PencilIcon } from "@heroicons/react/24/outline";
-import { Chip, User, Tooltip, Button } from "@heroui/react";
+import { Chip, Tooltip, Button, Avatar, AvatarGroup } from "@heroui/react";
 import { parseDateToLocal } from "@/utils/date";
 import { CaseWithKey } from "@/types/cases";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { fetchUsersByCaseId } from "@/services/caseService";
 
 interface TableCellRendererProps {
   user: CaseWithKey;
@@ -17,7 +19,20 @@ export const TableCellRendererCases = ({
   columnKey,
   onPreviewCase,
 }: TableCellRendererProps) => {
+  const [assignedUsers, setAssignedUsers] = useState([]);
   const cellValue = user[columnKey as keyof CaseWithKey];
+
+  useEffect(() => {
+    if (columnKey === "usuarios_asignados") {
+      const loadAssignedUsers = async () => {
+        const assignedUsers = await fetchUsersByCaseId(user.id_caso);
+        setAssignedUsers(assignedUsers);
+      };
+      loadAssignedUsers();
+    }
+  }, [columnKey, user.id_caso]);
+
+  console.log(assignedUsers);
 
   switch (columnKey) {
     case "fecha_crea":
@@ -63,15 +78,13 @@ export const TableCellRendererCases = ({
         </Chip>
       );
     case "ciudadano":
-      const ciudadano = user.ciudadano; 
+      const ciudadano = user.ciudadano;
       return (
         <div className="flex flex-col">
           <p className="text-sm font-semibold">
             {ciudadano?.primer_nombre} {ciudadano?.primer_apellido}
           </p>
-          {ciudadano?.email && (
-            <p className="text-sm">{ciudadano.email}</p>
-          )}
+          {ciudadano?.email && <p className="text-sm">{ciudadano.email}</p>}
           {ciudadano?.num_movil && (
             <p className="text-sm">{ciudadano.num_movil}</p>
           )}
@@ -80,9 +93,9 @@ export const TableCellRendererCases = ({
     case "tiempo_respuesta":
       const tiempo = Number(cellValue);
       const getColor = () => {
-        if (tiempo <= 24) return "text-[#F31260]"; 
-        if (tiempo <= 48) return "text-[#C4841D]"; 
-        return "text-[#12A150]"; 
+        if (tiempo <= 24) return "text-[#F31260]";
+        if (tiempo <= 48) return "text-[#C4841D]";
+        return "text-[#12A150]";
       };
       return (
         <div className="flex gap-2 items-center">
@@ -115,6 +128,36 @@ export const TableCellRendererCases = ({
             </Link>
           </Tooltip>
         </div>
+      );
+    case "usuarios_asignados":
+      return (
+        <>
+          {assignedUsers.length > 0 ? (
+            <AvatarGroup isBordered max={2} total={assignedUsers.length - 1}>
+              {assignedUsers.map((assignedUser, index) => (
+                <Tooltip
+                  key={index}
+                  content={
+                    assignedUser.primer_nombre +
+                    " " +
+                    assignedUser.primer_apellido
+                  }
+                >
+                  <Avatar
+                    key={index}
+                    name={
+                      assignedUser.primer_nombre +
+                      " " +
+                      assignedUser.primer_apellido
+                    }
+                  />
+                </Tooltip>
+              ))}
+            </AvatarGroup>
+          ) : (
+            <p className="text-sm text-gray-500">Sin usuarios asignados</p>
+          )}
+        </>
       );
     default:
       return <div className="text-sm">{String(cellValue)}</div>;

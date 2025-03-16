@@ -2,17 +2,18 @@
 
 import { EyeIcon, PencilIcon } from "@heroicons/react/24/outline";
 import { Chip, Tooltip, Button } from "@heroui/react";
-import Link from "next/link";
 import { UserWithKey } from "@/types/users";
 
 interface TableCellRendererProps {
   user: UserWithKey;
   columnKey: keyof UserWithKey;
+  onPreviewUser?: (user: UserWithKey) => void;
 }
 
 export const TableCellRendererUsers = ({
   user,
   columnKey,
+  onPreviewUser,
 }: TableCellRendererProps) => {
   const cellValue = user[columnKey];
 
@@ -57,6 +58,30 @@ export const TableCellRendererUsers = ({
           </p>
         </div>
       );
+    case "rama_derecho":
+      return (
+        <div className="flex flex-col">
+          <p className="text-base">
+            {String(cellValue)
+              ? cellValue === null
+                ? "-"
+                : cellValue
+              : "-"}
+          </p>
+        </div>
+      );
+    case "nivel_consultorio":
+      return (
+        <div className="flex flex-col">
+          <p className="text-base">
+            {String(cellValue)
+              ? cellValue === null
+                ? "-"
+                : cellValue
+              : "-"}
+          </p>
+        </div>
+      );
     case "actions":
       return (
         <div className="relative flex items-center gap-2">
@@ -64,16 +89,9 @@ export const TableCellRendererUsers = ({
             <Button
               isIconOnly
               className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
+              onPress={() => onPreviewUser?.(user)}
             >
               <EyeIcon className="w-6" />
-            </Button>
-          </Tooltip>
-          <Tooltip content="Editar cliente">
-            <Button
-              isIconOnly
-              className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
-            >
-              <PencilIcon className="w-6" />
             </Button>
           </Tooltip>
         </div>

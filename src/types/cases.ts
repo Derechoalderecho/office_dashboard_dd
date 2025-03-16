@@ -1,4 +1,5 @@
 import { Citizen } from "./citizens";
+import { Users } from "./users";
 export interface Cases {
   id_caso: number;
   id_ciudadano: number;
@@ -12,6 +13,7 @@ export interface Cases {
   fecha_elimina: string;
   eliminado: boolean;
   ciudadano: Citizen;
+  usuarios_asignados: Users[];
   actions?: string;
   key?: string;
 }

@@ -9,6 +9,8 @@ export interface Users {
   rol: string;
   tipo_documento: string;
   num_documento: string;
+  rama_derecho: string;
+  nivel_consultorio: string;
   fecha_creacion: string;
   fecha_actualizacion: string;
   actions?: string;

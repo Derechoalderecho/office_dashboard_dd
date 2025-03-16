@@ -5,6 +5,8 @@ export const columns: Column[] = [
   { name: "Nombre", uid: "primer_nombre" },
   { name: "Rol", uid: "rol", sortable: true },
   { name: "Email", uid: "email" },
+  { name: "Rama de derecho", uid: "rama_derecho" },
+  { name: "Nivel de consultorio", uid: "nivel_consultorio" },
   { name: "Acciones", uid: "actions" },
 ];
 

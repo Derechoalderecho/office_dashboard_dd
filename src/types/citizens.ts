@@ -1,4 +1,5 @@
 export interface Citizen {
+  id_caso: number;
   id_ciudadano: number;
   persona_modifica: number;
   primer_nombre: string;
