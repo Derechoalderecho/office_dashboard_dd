@@ -5,8 +5,6 @@ import { Chip, Tooltip, Button, Avatar, AvatarGroup } from "@heroui/react";
 import { parseDateToLocal } from "@/utils/date";
 import { CaseWithKey } from "@/types/cases";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { fetchUsersByCaseId } from "@/services/caseService";
 
 interface TableCellRendererProps {
   user: CaseWithKey;
@@ -19,20 +17,7 @@ export const TableCellRendererCases = ({
   columnKey,
   onPreviewCase,
 }: TableCellRendererProps) => {
-  const [assignedUsers, setAssignedUsers] = useState([]);
   const cellValue = user[columnKey as keyof CaseWithKey];
-
-  useEffect(() => {
-    if (columnKey === "usuarios_asignados") {
-      const loadAssignedUsers = async () => {
-        const assignedUsers = await fetchUsersByCaseId(user.id_caso);
-        setAssignedUsers(assignedUsers);
-      };
-      loadAssignedUsers();
-    }
-  }, [columnKey, user.id_caso]);
-
-  console.log(assignedUsers);
 
   switch (columnKey) {
     case "fecha_crea":
@@ -132,32 +117,32 @@ export const TableCellRendererCases = ({
     case "usuarios_asignados":
       return (
         <>
-          {assignedUsers.length > 0 ? (
-            <AvatarGroup isBordered max={2} total={assignedUsers.length - 1}>
-              {assignedUsers.map((assignedUser, index) => (
-                <Tooltip
+        {user.assignedUsers && user.assignedUsers.length > 0 ? (
+          <AvatarGroup isBordered max={2} total={user.assignedUsers.length - 1}>
+            {user.assignedUsers.map((assignedUser, index) => (
+              <Tooltip
+                key={index}
+                content={
+                  assignedUser.primer_nombre +
+                  " " +
+                  assignedUser.primer_apellido
+                }
+              >
+                <Avatar
                   key={index}
-                  content={
+                  name={
                     assignedUser.primer_nombre +
                     " " +
                     assignedUser.primer_apellido
                   }
-                >
-                  <Avatar
-                    key={index}
-                    name={
-                      assignedUser.primer_nombre +
-                      " " +
-                      assignedUser.primer_apellido
-                    }
-                  />
-                </Tooltip>
-              ))}
-            </AvatarGroup>
-          ) : (
-            <p className="text-sm text-gray-500">Sin usuarios asignados</p>
-          )}
-        </>
+                />
+              </Tooltip>
+            ))}
+          </AvatarGroup>
+        ) : (
+          <p className="text-sm text-gray-500">Sin usuarios asignados</p>
+        )}
+      </>
       );
     default:
       return <div className="text-sm">{String(cellValue)}</div>;

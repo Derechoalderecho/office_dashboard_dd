@@ -24,7 +24,7 @@ import { paginateItems } from "@/utils/paginateItems";
 import { CaseWithKey } from "@/types/cases";
 import { TableCellRendererCases } from "./TableCellRenderer";
 import { BulkActionsBar } from "./BulkActionsBar";
-import { fetchAllCases } from "@/services/caseService";
+import { fetchAllCases, fetchUsersByCaseId } from "@/services/caseService";
 import { ModalCase } from "../ui/modal-table";
 import { deleteCasesByIds } from "@/services/caseService";
 
@@ -62,12 +62,21 @@ export default function TableCases() {
 
   // Fetch cases from API
   useEffect(() => {
-    const fetchCases = async () => {
+    const fetchData = async () => {
       const casesList = await fetchAllCases();
-      setCases(casesList as CaseWithKey[]);
+  
+      // Obtener usuarios asignados en paralelo y agregarlos a cada caso
+      const casesWithAssignedUsers = await Promise.all(
+        casesList.map(async (caseItem) => {
+          const assignedUsers = await fetchUsersByCaseId(caseItem.id_caso);
+          return { ...caseItem, assignedUsers }; // Agregar usuarios asignados al caso
+        })
+      );
+  
+      setCases(casesWithAssignedUsers as CaseWithKey[]);
       setIsLoading(false);
     };
-    fetchCases();
+    fetchData();
   }, []);
 
   // Handle delete cases
