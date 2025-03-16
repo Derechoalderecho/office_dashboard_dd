@@ -25,8 +25,8 @@ export const TableCellRendererCases = ({
   useEffect(() => {
     if (columnKey === "usuarios_asignados") {
       const loadAssignedUsers = async () => {
-        const users = await fetchUsersByCaseId(user.id_caso);
-        setAssignedUsers(users);
+        const assignedUsers = await fetchUsersByCaseId(user.id_caso);
+        setAssignedUsers(assignedUsers);
       };
       loadAssignedUsers();
     }

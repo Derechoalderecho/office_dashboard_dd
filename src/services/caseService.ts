@@ -170,4 +170,34 @@ export const fetchCasesByUserId = async (userId: number): CasesPromise => {
 };
 
 
+/**
+ * Deletes a specific case by ID
+ * @param id The ID of the case to delete
+ * @returns True if the case was deleted successfully, false otherwise
+ */
+export const deleteCaseById = async (id: number): Promise<boolean> => {
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/casos/${id}`);
+    return response.status === 200; // Asume que la API devuelve 200 en caso de éxito
+  } catch (error) {
+    console.error(`Error deleting case with ID ${id}:`, error);
+    return false;
+  }
+};
+
+/**
+ * Deletes multiple cases by their IDs
+ * @param ids Array of case IDs to delete
+ * @returns True if all cases were deleted successfully, false otherwise
+ */
+export const deleteCasesByIds = async (ids: number[]): Promise<boolean> => {
+  try {
+    const results = await Promise.all(ids.map((id) => deleteCaseById(id)));
+    return results.every((result) => result); // Verifica que todas las eliminaciones fueron exitosas
+  } catch (error) {
+    console.error("Error deleting cases:", error);
+    return false;
+  }
+};
+
 
