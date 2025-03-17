@@ -11,6 +11,7 @@ import {
   SortDescriptor,
   Spinner,
   useDisclosure,
+  addToast,
 } from "@heroui/react";
 import { useState, useCallback, useMemo, useEffect, ChangeEvent } from "react";
 import { CalendarDate } from "@internationalized/date";
@@ -64,7 +65,7 @@ export default function TableCases() {
   useEffect(() => {
     const fetchData = async () => {
       const casesList = await fetchAllCases();
-  
+
       // Obtener usuarios asignados en paralelo y agregarlos a cada caso
       const casesWithAssignedUsers = await Promise.all(
         casesList.map(async (caseItem) => {
@@ -72,7 +73,7 @@ export default function TableCases() {
           return { ...caseItem, assignedUsers }; // Agregar usuarios asignados al caso
         })
       );
-  
+
       setCases(casesWithAssignedUsers as CaseWithKey[]);
       setIsLoading(false);
     };
@@ -84,12 +85,22 @@ export default function TableCases() {
     const success = await deleteCasesByIds(ids);
     if (success) {
       // Update cases list after deletion
-      const updatedCases = cases.filter((caseItem) => !ids.includes(caseItem.id_caso));
+      const updatedCases = cases.filter(
+        (caseItem) => !ids.includes(caseItem.id_caso)
+      );
       setCases(updatedCases);
-      setSelectedKeys(new Set([])); // Clear selections
-      alert("Casos eliminados correctamente");
+      setSelectedKeys(new Set([]));
+      addToast({
+        title: "Casos eliminados correctamente",
+        description: "Los casos han sido eliminados correctamente",
+        color: "success",
+      });
     } else {
-      alert("Error al eliminar los casos");
+      addToast({
+        title: "Error al eliminar los casos",
+        description: "Ha ocurrido un error al eliminar los casos",
+        color: "danger",
+      });
     }
   };
 
