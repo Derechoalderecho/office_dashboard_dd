@@ -117,32 +117,40 @@ export const TableCellRendererCases = ({
     case "usuarios_asignados":
       return (
         <>
-        {user.assignedUsers && user.assignedUsers.length > 0 ? (
-          <AvatarGroup isBordered max={2} total={user.assignedUsers.length - 1}>
-            {user.assignedUsers.map((assignedUser, index) => (
-              <Tooltip
-                key={index}
-                content={
-                  assignedUser.primer_nombre +
-                  " " +
-                  assignedUser.primer_apellido
-                }
-              >
-                <Avatar
+          {user.assignedUsers && user.assignedUsers.length > 0 ? (
+            <AvatarGroup
+              isBordered
+              max={2}
+              total={user.assignedUsers.length - 1}
+              classNames={{
+                count: "text-sm h-8 w-8",
+              }}
+            >
+              {user.assignedUsers.map((assignedUser, index) => (
+                <Tooltip
                   key={index}
-                  name={
+                  content={
                     assignedUser.primer_nombre +
                     " " +
                     assignedUser.primer_apellido
                   }
-                />
-              </Tooltip>
-            ))}
-          </AvatarGroup>
-        ) : (
-          <p className="text-sm text-gray-500">Sin usuarios asignados</p>
-        )}
-      </>
+                >
+                  <Avatar
+                    key={index}
+                    size="sm"
+                    name={
+                      assignedUser.primer_nombre +
+                      " " +
+                      assignedUser.primer_apellido
+                    }
+                  />
+                </Tooltip>
+              ))}
+            </AvatarGroup>
+          ) : (
+            <p className="text-sm text-gray-500">Sin usuarios asignados</p>
+          )}
+        </>
       );
     default:
       return <div className="text-sm">{String(cellValue)}</div>;

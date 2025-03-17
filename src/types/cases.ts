@@ -41,4 +41,7 @@ export type DateRange = {
   end: { year: number; month: number; day: number };
 };
 
-export type CaseWithKey = Cases & { key: string };
+export type CaseWithKey = Cases & { 
+  key: string;
+  assignedUsers?: Users[];
+};
