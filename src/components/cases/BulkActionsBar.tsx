@@ -19,11 +19,13 @@ import {
 } from "@heroui/react";
 import { useCallback, useState } from "react";
 import { AlertDialog } from "@/components/ui/alert-dialog";
+import { useDeleteRows } from "@/hooks/useDeleteRows";
+import { getDeleteAlertMessageCases } from "@/utils/alertMessage";
 
 interface BulkActionsBarProps {
   selectedKeys: Selection;
   filteredItemsLength: number;
-  onDeleteCases: (ids: number[]) => Promise<void>;
+  onDeleteCases: (ids: number[]) => Promise<boolean>;
 }
 
 export const BulkActionsBar = ({
@@ -32,39 +34,25 @@ export const BulkActionsBar = ({
   onDeleteCases,
 }: BulkActionsBarProps) => {
   const [isAlertOpen, setIsAlertOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const { handleDelete, isLoading } = useDeleteRows(onDeleteCases);
 
-  const handleDeleteConfirm = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      if (selectedKeys === "all") {
-        await onDeleteCases([]);
-      } else if (selectedKeys.size > 0) {
-        const caseIds = Array.from(selectedKeys).map((key) => Number(key));
-        await onDeleteCases(caseIds);
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-      setIsAlertOpen(false);
-    }
-  }, [selectedKeys, onDeleteCases]);
-
-  const getAlertMessage = () => {
-    return selectedKeys === "all"
-      ? "¿Estás seguro de que deseas eliminar todos los casos?"
-      : `¿Estás seguro de que deseas eliminar ${selectedKeys.size} caso(s)?`;
+  const convertSelection = (selection: Selection): Set<number> | "all" => {
+    if (selection === "all") return "all";
+    return new Set(Array.from(selection).map(Number));
   };
+
+  const alertMessage = getDeleteAlertMessageCases(
+    convertSelection(selectedKeys)
+  );
 
   return (
     <>
       <AlertDialog
         isOpen={isAlertOpen}
         onClose={() => !isLoading && setIsAlertOpen(false)}
-        onConfirm={handleDeleteConfirm}
+        onConfirm={() => handleDelete(convertSelection(selectedKeys), () => setIsAlertOpen(false))}
         title="Confirmar eliminación"
-        description={getAlertMessage()}
+        description={alertMessage}
         confirmText="Eliminar"
         type="danger"
         isLoading={isLoading}

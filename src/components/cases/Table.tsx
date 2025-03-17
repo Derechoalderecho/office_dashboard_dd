@@ -11,7 +11,6 @@ import {
   SortDescriptor,
   Spinner,
   useDisclosure,
-  addToast,
 } from "@heroui/react";
 import { useState, useCallback, useMemo, useEffect, ChangeEvent } from "react";
 import { CalendarDate } from "@internationalized/date";
@@ -81,26 +80,22 @@ export default function TableCases() {
   }, []);
 
   // Handle delete cases
-  const handleDeleteCases = async (ids: number[]) => {
-    const success = await deleteCasesByIds(ids);
-    if (success) {
-      // Update cases list after deletion
-      const updatedCases = cases.filter(
-        (caseItem) => !ids.includes(caseItem.id_caso)
-      );
-      setCases(updatedCases);
-      setSelectedKeys(new Set([]));
-      addToast({
-        title: "Casos eliminados correctamente",
-        description: "Los casos han sido eliminados correctamente",
-        color: "success",
-      });
-    } else {
-      addToast({
-        title: "Error al eliminar los casos",
-        description: "Ha ocurrido un error al eliminar los casos",
-        color: "danger",
-      });
+  const handleDeleteCases = async (ids: number[]): Promise<boolean> => {
+    try {
+      const success = await deleteCasesByIds(ids);
+      if (success) {
+        // Update cases list after deletion
+        const updatedCases = cases.filter(
+          (caseItem) => !ids.includes(caseItem.id_caso)
+        );
+        setCases(updatedCases);
+        setSelectedKeys(new Set([]));
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error deleting cases:", error);
+      return false;
     }
   };
 
