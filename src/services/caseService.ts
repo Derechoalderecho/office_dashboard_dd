@@ -169,7 +169,6 @@ export const fetchCasesByUserId = async (userId: number): CasesPromise => {
   }
 };
 
-
 /**
  * Deletes a specific case by ID
  * @param id The ID of the case to delete
@@ -178,9 +177,16 @@ export const fetchCasesByUserId = async (userId: number): CasesPromise => {
 export const deleteCaseById = async (id: number): Promise<boolean> => {
   try {
     const response = await axios.delete(`${API_BASE_URL}/casos/${id}`);
-    return response.status === 200; // Asume que la API devuelve 200 en caso de éxito
-  } catch (error) {
-    console.error(`Error deleting case with ID ${id}:`, error);
+    return response.status === 200 || response.status === 204;
+  } catch (error: any) {
+    if (error.response) {
+      console.error(`Error deleting case with ID ${id}: Server responded with status ${error.response.status}`);
+      console.error('Response data:', error.response.data);
+    } else if (error.request) {
+      console.error(`Error deleting case with ID ${id}: No response received from server`);
+    } else {
+      console.error(`Error deleting case with ID ${id}: ${error.message}`);
+    }
     return false;
   }
 };
@@ -191,11 +197,24 @@ export const deleteCaseById = async (id: number): Promise<boolean> => {
  * @returns True if all cases were deleted successfully, false otherwise
  */
 export const deleteCasesByIds = async (ids: number[]): Promise<boolean> => {
+  if (ids.length === 0) {
+    console.warn("No case IDs provided for deletion");
+    return true;
+  }
+
   try {
-    const results = await Promise.all(ids.map((id) => deleteCaseById(id)));
-    return results.every((result) => result); // Verifica que todas las eliminaciones fueron exitosas
+    const results = await Promise.allSettled(ids.map((id) => deleteCaseById(id)));
+    
+    const failures = results.filter(result => result.status === 'rejected' || (result.status === 'fulfilled' && !result.value));
+    
+    if (failures.length > 0) {
+      console.error(`Failed to delete ${failures.length} out of ${ids.length} cases`);
+      return false;
+    }
+    
+    return true;
   } catch (error) {
-    console.error("Error deleting cases:", error);
+    console.error("Unexpected error deleting cases:", error);
     return false;
   }
 };

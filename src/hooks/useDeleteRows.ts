@@ -20,20 +20,25 @@ export const useDeleteRows = (
 
       if (success) {
         addToast({
-          title: "Casos eliminados correctamente",
+          title: "Operación completada",
           description: "Los casos han sido eliminados correctamente",
           color: "success",
         });
       } else {
-        throw new Error("Error al eliminar los casos");
+        addToast({
+          title: "Error en la operación",
+          description: "No se pudieron eliminar algunos o todos los casos. Revise la consola para más detalles.",
+          color: "danger",
+        });
+        return false;
       }
     } catch (error) {
+      console.error("Error en la operación de eliminación:", error);
       addToast({
-        title: "Error al eliminar los casos",
-        description: "Ha ocurrido un error al eliminar los casos",
+        title: "Error inesperado",
+        description: "Ha ocurrido un error al procesar la solicitud. Por favor, inténtelo de nuevo.",
         color: "danger",
       });
-      console.error(error);
       return false;
     } finally {
       setIsLoading(false);
