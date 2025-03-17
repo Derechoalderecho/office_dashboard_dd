@@ -22,18 +22,26 @@ export const fetchAllCases = async (): Promise<CaseWithCitizen[]> => {
     const response = await axios.get(`${API_BASE_URL}/casos`);
     const cases = response.data as Cases[];
 
-    // Fetch related citizen data for each case
-    const casesWithCitizens = await Promise.all(
+    // Fetch related citizen data and usuario data for each case
+    const casesWithData = await Promise.all(
       cases.map(async (caseItem) => {
+        // Get citizen data
         const citizenResponse = await axios.get(
           `${API_BASE_URL}/ciudadanos/${caseItem.id_ciudadano}`
         );
         const ciudadano = citizenResponse.data as Citizen;
-        return { ...caseItem, ciudadano };
+        
+        // Get usuarios (assigned users) data
+        const usuariosResponse = await axios.get(
+          `${API_BASE_URL}/casos/${caseItem.id_caso}/usuarios/`
+        );
+        const usuarios = usuariosResponse.data;
+        
+        return { ...caseItem, ciudadano, usuarios };
       })
     );
 
-    return casesWithCitizens;
+    return casesWithData;
   } catch (error) {
     console.error("Error fetching cases:", error);
     return [];

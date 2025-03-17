@@ -24,9 +24,8 @@ import { paginateItems } from "@/utils/paginateItems";
 import { CaseWithKey } from "@/types/cases";
 import { TableCellRendererCases } from "./TableCellRenderer";
 import { BulkActionsBar } from "./BulkActionsBar";
-import { fetchAllCases, fetchUsersByCaseId } from "@/services/caseService";
+import { fetchAllCases, deleteCasesByIds } from "@/services/caseService";
 import { ModalCase } from "../ui/modal-table";
-import { deleteCasesByIds } from "@/services/caseService";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "fecha_crea",
@@ -34,7 +33,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   "tipo_proceso",
   "estado",
   "ciudadano",
-  "usuarios_asignados",
+  "usuarios",
   "tiempo_respuesta",
   "actions",
 ];
@@ -62,21 +61,12 @@ export default function TableCases() {
 
   // Fetch cases from API
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchCases = async () => {
       const casesList = await fetchAllCases();
-
-      // Obtener usuarios asignados en paralelo y agregarlos a cada caso
-      const casesWithAssignedUsers = await Promise.all(
-        casesList.map(async (caseItem) => {
-          const assignedUsers = await fetchUsersByCaseId(caseItem.id_caso);
-          return { ...caseItem, assignedUsers }; // Agregar usuarios asignados al caso
-        })
-      );
-
-      setCases(casesWithAssignedUsers as CaseWithKey[]);
+      setCases(casesList as CaseWithKey[]);
       setIsLoading(false);
     };
-    fetchData();
+    fetchCases();
   }, []);
 
   // Handle delete cases

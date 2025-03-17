@@ -13,7 +13,7 @@ export interface Cases {
   fecha_elimina: string;
   eliminado: boolean;
   ciudadano: Citizen;
-  usuarios_asignados: Users[];
+  usuarios: Users[];
   actions?: string;
   key?: string;
 }
@@ -44,4 +44,5 @@ export type DateRange = {
 export type CaseWithKey = Cases & { 
   key: string;
   assignedUsers?: Users[];
+  usuarios?: Users[];
 };

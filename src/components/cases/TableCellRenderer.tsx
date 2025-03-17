@@ -114,19 +114,19 @@ export const TableCellRendererCases = ({
           </Tooltip>
         </div>
       );
-    case "usuarios_asignados":
+    case "usuarios":
       return (
         <>
-          {user.assignedUsers && user.assignedUsers.length > 0 ? (
+          {user.usuarios && user.usuarios.length > 0 ? (
             <AvatarGroup
               isBordered
               max={2}
-              total={user.assignedUsers.length - 1}
+              total={user.usuarios.length > 2 ? user.usuarios.length : undefined}
               classNames={{
                 count: "text-sm h-8 w-8",
               }}
             >
-              {user.assignedUsers.map((assignedUser, index) => (
+              {user.usuarios.map((assignedUser, index) => (
                 <Tooltip
                   key={index}
                   content={
