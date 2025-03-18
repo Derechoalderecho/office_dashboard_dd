@@ -294,7 +294,7 @@ export default async function CasePage({
 
                 <section className="pl-3">
                   <ol className="relative border-s border-gray-200">
-                    {caseItem.historyLogs && caseItem.historyLogs.map((history, index) => (
+                    {caseItem.historyLogs && caseItem.historyLogs.map((history) => (
                       <li key={history.id_historial} className="mb-16 ms-10">
                         <span
                           className={`${

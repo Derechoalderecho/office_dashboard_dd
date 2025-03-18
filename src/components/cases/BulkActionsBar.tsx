@@ -20,7 +20,7 @@ import {
 import { useCallback, useState } from "react";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import { useDeleteRows } from "@/hooks/useDeleteRows";
-import { getDeleteAlertMessageCases } from "@/utils/alertMessage";
+import { getDeleteAlertMessage } from "@/utils/alertMessage";
 
 interface BulkActionsBarProps {
   selectedKeys: Selection;
@@ -41,8 +41,9 @@ export const BulkActionsBar = ({
     return new Set(Array.from(selection).map(Number));
   };
 
-  const alertMessage = getDeleteAlertMessageCases(
-    convertSelection(selectedKeys)
+  const alertMessage = getDeleteAlertMessage(
+    convertSelection(selectedKeys),
+    "caso"
   );
 
   return (
@@ -50,7 +51,11 @@ export const BulkActionsBar = ({
       <AlertDialog
         isOpen={isAlertOpen}
         onClose={() => !isLoading && setIsAlertOpen(false)}
-        onConfirm={() => handleDelete(convertSelection(selectedKeys), () => setIsAlertOpen(false))}
+        onConfirm={() =>
+          handleDelete(convertSelection(selectedKeys), () =>
+            setIsAlertOpen(false)
+          )
+        }
         title="Confirmar eliminación"
         description={alertMessage}
         confirmText="Eliminar"

@@ -2,17 +2,8 @@
 
 import axios from "axios";
 import { Citizen } from "@/types/citizens";
-import { Cases } from "@/types/cases";
+import { Cases, CaseHistoryLog } from "@/types/cases";
 import { API_BASE_URL } from "@/config/api";
-
-// Define a type for the history log entries
-export interface CaseHistoryLog {
-  id_caso: number;
-  estado_anterior: string;
-  estado_nuevo: string;
-  id_historial: number;
-  fecha_cambio: string;
-}
 
 type CaseWithCitizen = Cases & { ciudadano: Citizen };
 type CasesPromise = Promise<CaseWithCitizen[]>;
