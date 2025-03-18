@@ -98,6 +98,7 @@ export default function TopContent({
         <I18nProvider locale="es-ES">
           <DateRangePicker
             variant="bordered"
+            labelPlacement="inside"
             label="Buscar por fecha"
             className="max-w-xs"
             value={convertToDateValue(dateRange)}

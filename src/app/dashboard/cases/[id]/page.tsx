@@ -20,7 +20,7 @@ export default async function CasePage({
 }: {
   params: { id: string };
 }) {
-  const { id } = params;
+  const { id } = await params;
 
   const caseData = await fetchCaseById(parseInt(id));
   const historyLogs = await fetchCaseHistory(parseInt(id));
