@@ -1,32 +1,37 @@
-import { Card, Skeleton } from "@heroui/react";
+import { Skeleton } from "@heroui/react";
 
 export function CardSkeleton() {
   return (
-    <Card className="w-[200px] h-96 space-y-5 p-4" radius="lg">
-    <Skeleton className="rounded-lg">
-      <div className="h-24 rounded-lg bg-default-300" />
-    </Skeleton>
-    <div className="space-y-3">
-      <Skeleton className="w-3/5 rounded-lg">
-        <div className="h-3 w-3/5 rounded-lg bg-default-200" />
-      </Skeleton>
-      <Skeleton className="w-4/5 rounded-lg">
-        <div className="h-3 w-4/5 rounded-lg bg-default-200" />
-      </Skeleton>
-      <Skeleton className="w-2/5 rounded-lg">
-        <div className="h-3 w-2/5 rounded-lg bg-default-300" />
-      </Skeleton>
+    <div className="space-y-5">
+      <Skeleton className="h-10 w-3/4 rounded-lg" />
+      <Skeleton className="h-6 w-1/2 rounded-lg" />
+      <Skeleton className="h-4 w-full rounded-lg" />
+      <Skeleton className="h-4 w-full rounded-lg" />
+      <Skeleton className="h-4 w-full rounded-lg" />
+      <Skeleton className="h-4 w-full rounded-lg" />
     </div>
-  </Card>
+  );
+}
+
+export function SkeletonLoader() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-10 w-3/4 rounded-lg" />
+      <Skeleton className="h-6 w-1/2 rounded-lg" />
+      <Skeleton className="h-4 w-full rounded-lg" />
+      <Skeleton className="h-4 w-full rounded-lg" />
+      <Skeleton className="h-4 w-full rounded-lg" />
+      <Skeleton className="h-4 w-full rounded-lg" />
+    </div>
   );
 }
 
 export function CardsSkeleton() {
   return (
-    <>
+    <div className="grid grid-cols-3 gap-6 space-y-5">
       <CardSkeleton />
       <CardSkeleton />
       <CardSkeleton />
-    </>
+    </div>
   );
 }
