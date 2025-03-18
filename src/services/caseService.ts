@@ -1,4 +1,4 @@
-"use server"
+"use server";
 
 import axios from "axios";
 import { Citizen } from "@/types/citizens";
@@ -7,6 +7,17 @@ import { API_BASE_URL } from "@/config/api";
 
 type CaseWithCitizen = Cases & { ciudadano: Citizen };
 type CasesPromise = Promise<CaseWithCitizen[]>;
+
+export const fetchAllCasesDashboard = async (): Promise<CaseWithCitizen[]> => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/casos`);
+    const cases = response.data as Cases[];
+    return cases;
+  } catch (error) {
+    console.error("Error fetching cases:", error);
+    return [];
+  }
+};
 
 export const fetchAllCases = async (): Promise<CaseWithCitizen[]> => {
   try {
@@ -21,13 +32,13 @@ export const fetchAllCases = async (): Promise<CaseWithCitizen[]> => {
           `${API_BASE_URL}/ciudadanos/${caseItem.id_ciudadano}`
         );
         const ciudadano = citizenResponse.data as Citizen;
-        
+
         // Get usuarios (assigned users) data
         const usuariosResponse = await axios.get(
           `${API_BASE_URL}/casos/${caseItem.id_caso}/usuarios/`
         );
         const usuarios = usuariosResponse.data;
-        
+
         return { ...caseItem, ciudadano, usuarios };
       })
     );
@@ -44,23 +55,25 @@ export const fetchAllCases = async (): Promise<CaseWithCitizen[]> => {
  * @param id The ID of the case to fetch
  * @returns The case with citizen data or null if not found
  */
-export const fetchCaseById = async (id: number): Promise<CaseWithCitizen | null> => {
+export const fetchCaseById = async (
+  id: number
+): Promise<CaseWithCitizen | null> => {
   try {
     // Fetch the case data
     const caseResponse = await axios.get(`${API_BASE_URL}/casos/${id}`);
     const caseData = caseResponse.data as Cases;
-    
+
     if (!caseData) {
       console.error(`Case with ID ${id} not found`);
       return null;
     }
-    
+
     // Fetch the related citizen data
     const citizenResponse = await axios.get(
       `${API_BASE_URL}/ciudadanos/${caseData.id_ciudadano}`
     );
     const ciudadano = citizenResponse.data as Citizen;
-    
+
     // Combine the case and citizen data
     return { ...caseData, ciudadano };
   } catch (error) {
@@ -74,25 +87,27 @@ export const fetchCaseById = async (id: number): Promise<CaseWithCitizen | null>
  * @param citizenId The ID of the citizen
  * @returns Promise of array of cases belonging to the citizen
  */
-export const fetchCasesByCitizenId = async (citizenId: number): CasesPromise => {
+export const fetchCasesByCitizenId = async (
+  citizenId: number
+): CasesPromise => {
   try {
     // Fetch all cases
     const response = await axios.get(`${API_BASE_URL}/casos`);
     const allCases = response.data as Cases[];
-    
+
     // Filter cases by citizen ID
     const citizenCases = allCases.filter(
       (caseItem) => caseItem.id_ciudadano === citizenId
     );
-    
+
     // Fetch the citizen data once
     const citizenResponse = await axios.get(
       `${API_BASE_URL}/ciudadanos/${citizenId}`
     );
     const ciudadano = citizenResponse.data as Citizen;
-    
+
     // Add the citizen data to each case
-    return citizenCases.map(caseItem => ({ ...caseItem, ciudadano }));
+    return citizenCases.map((caseItem) => ({ ...caseItem, ciudadano }));
   } catch (error) {
     console.error(`Error fetching cases for citizen ${citizenId}:`, error);
     return [];
@@ -104,20 +119,23 @@ export const fetchCasesByCitizenId = async (citizenId: number): CasesPromise => 
  * @param caseId The ID of the case to fetch history for
  * @returns Promise of array of history logs related to the case
  */
-export const fetchCaseHistory = async (caseId: number): Promise<CaseHistoryLog[]> => {
+export const fetchCaseHistory = async (
+  caseId: number
+): Promise<CaseHistoryLog[]> => {
   try {
     // Fetch all history logs
     const response = await axios.get(`${API_BASE_URL}/historial`);
     const allHistoryLogs = response.data as CaseHistoryLog[];
-    
+
     // Filter logs by case ID
     const caseHistoryLogs = allHistoryLogs.filter(
       (log) => log.id_caso === caseId
     );
-    
+
     // Sort logs by date (newest first)
-    return caseHistoryLogs.sort((a, b) => 
-      new Date(b.fecha_cambio).getTime() - new Date(a.fecha_cambio).getTime()
+    return caseHistoryLogs.sort(
+      (a, b) =>
+        new Date(b.fecha_cambio).getTime() - new Date(a.fecha_cambio).getTime()
     );
   } catch (error) {
     console.error(`Error fetching history for case ${caseId}:`, error);
@@ -132,7 +150,9 @@ export const fetchCaseHistory = async (caseId: number): Promise<CaseHistoryLog[]
  */
 export const fetchUsersByCaseId = async (caseId: number) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/casos/${caseId}/usuarios/`);
+    const response = await axios.get(
+      `${API_BASE_URL}/casos/${caseId}/usuarios/`
+    );
     return response.data;
   } catch (error) {
     console.error(`Error fetching users for case ${caseId}:`, error);
@@ -147,9 +167,11 @@ export const fetchUsersByCaseId = async (caseId: number) => {
  */
 export const fetchCasesByUserId = async (userId: number): CasesPromise => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/usuarios/${userId}/casos/`);
+    const response = await axios.get(
+      `${API_BASE_URL}/usuarios/${userId}/casos/`
+    );
     const userCases = response.data as Cases[];
-    
+
     // Fetch the citizen data for each case
     const casesWithCitizens = await Promise.all(
       userCases.map(async (caseItem) => {
@@ -160,7 +182,7 @@ export const fetchCasesByUserId = async (userId: number): CasesPromise => {
         return { ...caseItem, ciudadano };
       })
     );
-    
+
     return casesWithCitizens;
   } catch (error) {
     console.error(`Error fetching cases for user ${userId}:`, error);
@@ -179,10 +201,14 @@ export const deleteCaseById = async (id: number): Promise<boolean> => {
     return response.status === 200 || response.status === 204;
   } catch (error: any) {
     if (error.response) {
-      console.error(`Error deleting case with ID ${id}: Server responded with status ${error.response.status}`);
-      console.error('Response data:', error.response.data);
+      console.error(
+        `Error deleting case with ID ${id}: Server responded with status ${error.response.status}`
+      );
+      console.error("Response data:", error.response.data);
     } else if (error.request) {
-      console.error(`Error deleting case with ID ${id}: No response received from server`);
+      console.error(
+        `Error deleting case with ID ${id}: No response received from server`
+      );
     } else {
       console.error(`Error deleting case with ID ${id}: ${error.message}`);
     }
@@ -202,20 +228,26 @@ export const deleteCasesByIds = async (ids: number[]): Promise<boolean> => {
   }
 
   try {
-    const results = await Promise.allSettled(ids.map((id) => deleteCaseById(id)));
-    
-    const failures = results.filter(result => result.status === 'rejected' || (result.status === 'fulfilled' && !result.value));
-    
+    const results = await Promise.allSettled(
+      ids.map((id) => deleteCaseById(id))
+    );
+
+    const failures = results.filter(
+      (result) =>
+        result.status === "rejected" ||
+        (result.status === "fulfilled" && !result.value)
+    );
+
     if (failures.length > 0) {
-      console.error(`Failed to delete ${failures.length} out of ${ids.length} cases`);
+      console.error(
+        `Failed to delete ${failures.length} out of ${ids.length} cases`
+      );
       return false;
     }
-    
+
     return true;
   } catch (error) {
     console.error("Unexpected error deleting cases:", error);
     return false;
   }
 };
-
-

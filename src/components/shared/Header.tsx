@@ -17,10 +17,8 @@ import NotificationsPanel from "@/components/notifications/NotificationsPanel";
 const pathTranslations: { [key: string]: string } = {
   dashboard: "Dashboard",
   cases: "Casos",
-  ciudadanos: "Ciudadanos",
+  citizens: "Ciudadanos",
   create: "Crear Ciudadano",
-  settings: "Configuración",
-  profile: "Perfil",
   users: "Usuarios",
   new: "Nuevo",
   edit: "Editar",
