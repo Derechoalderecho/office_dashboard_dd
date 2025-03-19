@@ -11,7 +11,6 @@ import {
   SortDescriptor,
   Spinner,
   useDisclosure,
-  addToast,
 } from "@heroui/react";
 import { useState, useCallback, useMemo, useEffect, ChangeEvent } from "react";
 import { CalendarDate } from "@internationalized/date";
@@ -25,9 +24,8 @@ import { paginateItems } from "@/utils/paginateItems";
 import { CaseWithKey } from "@/types/cases";
 import { TableCellRendererCases } from "./TableCellRenderer";
 import { BulkActionsBar } from "./BulkActionsBar";
-import { fetchAllCases, fetchUsersByCaseId } from "@/services/caseService";
+import { fetchAllCases, deleteCasesByIds } from "@/services/caseService";
 import { ModalCase } from "../ui/modal-table";
-import { deleteCasesByIds } from "@/services/caseService";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "fecha_crea",
@@ -35,7 +33,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   "tipo_proceso",
   "estado",
   "ciudadano",
-  "usuarios_asignados",
+  "usuarios",
   "tiempo_respuesta",
   "actions",
 ];
@@ -63,44 +61,31 @@ export default function TableCases() {
 
   // Fetch cases from API
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchCases = async () => {
       const casesList = await fetchAllCases();
-
-      // Obtener usuarios asignados en paralelo y agregarlos a cada caso
-      const casesWithAssignedUsers = await Promise.all(
-        casesList.map(async (caseItem) => {
-          const assignedUsers = await fetchUsersByCaseId(caseItem.id_caso);
-          return { ...caseItem, assignedUsers }; // Agregar usuarios asignados al caso
-        })
-      );
-
-      setCases(casesWithAssignedUsers as CaseWithKey[]);
+      setCases(casesList as CaseWithKey[]);
       setIsLoading(false);
     };
-    fetchData();
+    fetchCases();
   }, []);
 
   // Handle delete cases
-  const handleDeleteCases = async (ids: number[]) => {
-    const success = await deleteCasesByIds(ids);
-    if (success) {
-      // Update cases list after deletion
-      const updatedCases = cases.filter(
-        (caseItem) => !ids.includes(caseItem.id_caso)
-      );
-      setCases(updatedCases);
-      setSelectedKeys(new Set([]));
-      addToast({
-        title: "Casos eliminados correctamente",
-        description: "Los casos han sido eliminados correctamente",
-        color: "success",
-      });
-    } else {
-      addToast({
-        title: "Error al eliminar los casos",
-        description: "Ha ocurrido un error al eliminar los casos",
-        color: "danger",
-      });
+  const handleDeleteCases = async (ids: number[]): Promise<boolean> => {
+    try {
+      const success = await deleteCasesByIds(ids);
+      if (success) {
+        // Update cases list after deletion
+        const updatedCases = cases.filter(
+          (caseItem) => !ids.includes(caseItem.id_caso)
+        );
+        setCases(updatedCases);
+        setSelectedKeys(new Set([]));
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error deleting cases:", error);
+      return false;
     }
   };
 

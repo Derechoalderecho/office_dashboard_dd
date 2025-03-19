@@ -6,7 +6,7 @@ export const columns: Column[] = [
   { name: "Tipo de proceso", uid: "tipo_proceso", sortable: true },
   { name: "Estado", uid: "estado", sortable: true },
   { name: "Ciudadano", uid: "ciudadano" },
-  { name: "Asignados", uid: "usuarios_asignados" },
+  { name: "Asignados", uid: "usuarios" },
   { name: "Tiempo de respuesta", uid: "tiempo_respuesta", sortable: true },
   { name: "Acciones", uid: "actions" },
 ];

@@ -1,5 +1,13 @@
 import { Citizen } from "./citizens";
 import { Users } from "./users";
+
+export interface CaseHistoryLog {
+  id_caso: number;
+  estado_anterior: string;
+  estado_nuevo: string;
+  id_historial: number;
+  fecha_cambio: string;
+}
 export interface Cases {
   id_caso: number;
   id_ciudadano: number;
@@ -13,7 +21,7 @@ export interface Cases {
   fecha_elimina: string;
   eliminado: boolean;
   ciudadano: Citizen;
-  usuarios_asignados: Users[];
+  usuarios: Users[];
   actions?: string;
   key?: string;
 }
@@ -41,7 +49,8 @@ export type DateRange = {
   end: { year: number; month: number; day: number };
 };
 
-export type CaseWithKey = Cases & { 
+export type CaseWithKey = Cases & {
   key: string;
   assignedUsers?: Users[];
+  usuarios?: Users[];
 };

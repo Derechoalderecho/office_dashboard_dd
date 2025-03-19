@@ -4,7 +4,7 @@ import {
   DocumentTextIcon,
 } from "@heroicons/react/24/solid";
 import { fetchAllUsers } from "@/services/userService";
-import { fetchAllCases } from "@/services/caseService";
+import { fetchAllCasesDashboard } from "@/services/caseService";
 import { fetchAllCitizens } from "@/services/citizenService";
 
 const iconMap = {
@@ -27,7 +27,7 @@ const colorIconMap = {
 
 export default async function CardCountsWrapper() {
   const users = await fetchAllUsers();
-  const cases = await fetchAllCases();
+  const cases = await fetchAllCasesDashboard();
   const citizens = await fetchAllCitizens();
 
   const totalStudents = users.length;
