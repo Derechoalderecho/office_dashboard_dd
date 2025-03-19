@@ -1,8 +1,4 @@
-import {
-  Chip,
-  Button,
-  Textarea,
-} from "@heroui/react";
+import { Chip, Button, Textarea } from "@heroui/react";
 
 import {
   PencilSquareIcon,
@@ -15,10 +11,17 @@ import {
 import { parseDateToLocal } from "@/utils/date";
 import { fetchCaseById, fetchCaseHistory } from "@/services/caseService";
 
+interface CasePageProps {
+  params: {
+    id: string;
+  };
+  searchParams: { [key: string]: string | string[] | undefined };
+}
+
 export default async function CasePage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
 
@@ -174,16 +177,14 @@ export default async function CasePage({
                   <br /> EPS SURA
                   <br />
                   Asunto de la tutela:
-                  <br /> EPS Sura dilata la autorización de resonancia
-                  magnética y la asignación de cita médica con el ortopedista
-                  tratante, además de no pagar la incapacidad médica.
+                  <br /> EPS Sura dilata la autorización de resonancia magnética
+                  y la asignación de cita médica con el ortopedista tratante,
+                  además de no pagar la incapacidad médica.
                 </p>
               </div>
               <section>
                 <div className="flex flex-col justify-center items-center mb-10">
-                  <h4 className="font-medium">
-                    Cargue o descargue la tutela
-                  </h4>
+                  <h4 className="font-medium">Cargue o descargue la tutela</h4>
                   <span className="text-sm text-secondary">
                     Archivo debe ser docx, pdf
                   </span>
@@ -218,8 +219,8 @@ export default async function CasePage({
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
                         <CloudArrowUpIcon className="w-12 h-12 text-gray-400" />
                         <p className="mb-2 text-sm text-gray-500">
-                          Click para <span className="font-bold">subir</span>{" "}
-                          el archivo
+                          Click para <span className="font-bold">subir</span> el
+                          archivo
                         </p>
                         <p className="text-xs text-gray-500">docx, pdf</p>
                       </div>
@@ -239,9 +240,7 @@ export default async function CasePage({
               <div className="flex items-center justify-between mb-2">
                 <p className="font-medium">Notas</p>
                 <Button
-                  startContent={
-                    <LinkIcon className="w-[18px] text-primary" />
-                  }
+                  startContent={<LinkIcon className="w-[18px] text-primary" />}
                   variant="light"
                   className="text-primary"
                 >
