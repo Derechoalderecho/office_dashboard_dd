@@ -12,7 +12,6 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import NotificationsPanel from "@/components/notifications/NotificationsPanel";
 
 const pathTranslations: { [key: string]: string } = {
   dashboard: "Dashboard",
@@ -102,7 +101,6 @@ export default function Header() {
           ))}
         </Breadcrumbs>
         <div className="flex items-center gap-4">
-          <NotificationsPanel />
           <Dropdown placement="bottom-start">
             <DropdownTrigger>
               <Avatar
