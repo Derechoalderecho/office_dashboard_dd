@@ -1,17 +1,21 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Button, Spinner, addToast } from "@heroui/react";
-import { CloudArrowUpIcon, DocumentTextIcon } from "@heroicons/react/24/outline";
+import { Button, Spinner, addToast, Chip } from "@heroui/react";
+import { CloudArrowUpIcon, DocumentTextIcon, ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import { uploadDocument, getDocumentById, DocumentResponse } from "@/actions/uploadDocsActions";
 import { parseDateToLocal } from "@/utils/date";
 
 interface DocumentUploaderProps {
   caseId: number;
+  onDocumentUploaded?: (document: DocumentResponse) => void;
 }
 
-export default function DocumentUploader({ caseId }: DocumentUploaderProps) {
+export default function DocumentUploader({ 
+  caseId,
+  onDocumentUploaded 
+}: DocumentUploaderProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -19,8 +23,8 @@ export default function DocumentUploader({ caseId }: DocumentUploaderProps) {
   const [uploadedDocument, setUploadedDocument] = useState<DocumentResponse | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Max file size in bytes (1MB)
-  const MAX_FILE_SIZE = 1 * 1024 * 1024;
+  // Max file size in bytes (5MB)
+  const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
   const showErrorToast = (message: string) => {
     addToast({
@@ -45,9 +49,9 @@ export default function DocumentUploader({ caseId }: DocumentUploaderProps) {
       
       // Check file size
       if (file.size > MAX_FILE_SIZE) {
-        setError(`El archivo es demasiado grande. El tamaño máximo es 1 MB.`);
+        setError(`El archivo es demasiado grande. El tamaño máximo es 5 MB.`);
         setSelectedFile(null);
-        showErrorToast(`El archivo es demasiado grande. El tamaño máximo es 1 MB.`);
+        showErrorToast(`El archivo es demasiado grande. El tamaño máximo es 5 MB.`);
         return;
       }
       
@@ -82,6 +86,12 @@ export default function DocumentUploader({ caseId }: DocumentUploaderProps) {
         
         if (documentResult.success && documentResult.data) {
           setUploadedDocument(documentResult.data);
+          
+          // Call the callback if provided
+          if (onDocumentUploaded && documentResult.data) {
+            onDocumentUploaded(documentResult.data);
+          }
+          
           addToast({
             title: "Archivo subido correctamente",
             description: "El documento ha sido cargado con éxito",
@@ -126,7 +136,7 @@ export default function DocumentUploader({ caseId }: DocumentUploaderProps) {
             <p className="mb-2 text-sm text-gray-500">
               Click para <span className="font-bold">subir</span> el archivo
             </p>
-            <p className="text-xs text-gray-500">docx, pdf (Máx. 1 MB)</p>
+            <p className="text-xs text-gray-500">docx, pdf (Máx. 5 MB)</p>
             {error && (
               <p className="mt-2 text-sm text-red-500">{error}</p>
             )}
@@ -151,14 +161,24 @@ export default function DocumentUploader({ caseId }: DocumentUploaderProps) {
             <div>
               <p className="font-medium">{uploadedDocument.nombre_documento}{uploadedDocument.ext_documento}</p>
               <p className="text-sm text-gray-500 mb-1">Subido el {parseDateToLocal(uploadedDocument.fecha_asigna)}</p>
-              <a 
-                href={uploadedDocument.enlace} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-primary hover:underline text-sm"
+              <Chip
+                size="sm"
+                variant="flat"
+                color={uploadedDocument.ext_documento === '.pdf' ? 'danger' : 'primary'}
+                className="mt-1"
               >
-                Ver documento
-              </a>
+                {uploadedDocument.ext_documento.substring(1).toUpperCase()}
+              </Chip>
+              <div className="mt-2">
+                <a 
+                  href={uploadedDocument.enlace} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline text-sm"
+                >
+                  Ver documento
+                </a>
+              </div>
             </div>
           </div>
         </div>
