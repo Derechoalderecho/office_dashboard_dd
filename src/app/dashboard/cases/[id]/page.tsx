@@ -30,13 +30,37 @@ export default async function CasePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const caseId = parseInt(id);
 
-  const caseData = await fetchCaseById(parseInt(id));
-  const historyLogs = await fetchCaseHistory(parseInt(id));
+  // Verificar que el ID del caso sea válido
+  if (isNaN(caseId)) {
+    console.error(`ID de caso no válido: ${id}`);
+    return <div>ID de caso no válido</div>;
+  }
 
+  console.log(`Cargando caso ID: ${caseId}`);
+  
+  const caseData = await fetchCaseById(caseId);
+  const historyLogs = await fetchCaseHistory(caseId);
+  
   if (!caseData) {
+    console.error(`Caso con ID ${caseId} no encontrado`);
     return <div>Caso no encontrado</div>;
   }
+
+  // Log detallado para verificar notas en el caso
+  if (caseData.notas_list) {
+    console.log(`El caso tiene ${caseData.notas_list.length} notas precargadas`);
+    if (caseData.notas_list.length > 0) {
+      console.log(`Primera nota: ID=${caseData.notas_list[0].id_nota}, Mensaje="${caseData.notas_list[0].mensaje.substring(0, 30)}..."`);
+    }
+  } else {
+    console.log('El caso no tiene notas precargadas (notas_list es undefined)');
+  }
+
+  // Asegurarse de que notas_list siempre sea un array, incluso si es undefined
+  const notasList = caseData.notas_list || [];
+  console.log(`Pasando ${notasList.length} notas al componente NotesSection`);
 
   return (
     <main>
@@ -46,7 +70,7 @@ export default async function CasePage({
         <section className="flex gap-6">
           <div className="w-[70%] shadow-custom bg-[#F9FAFB] rounded-lg">
             <div className="p-5">
-              <h2 className="text-xl font-medium">Caso n# - 2259689498</h2>
+              <h2 className="text-xl font-medium">Caso n# - {caseData.id_caso}</h2>
               <hr className="my-4" />
               
               <CaseInfo caseData={caseData} />
@@ -62,7 +86,7 @@ export default async function CasePage({
             </div>
           </div>
           <aside className="w-[30%]">
-            <NotesSection />
+            <NotesSection caseId={caseData.id_caso} initialNotes={notasList} />
             
             <section className="mt-5">
               <h2 className="font-medium mb-4">Mensajes</h2>

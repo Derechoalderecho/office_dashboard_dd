@@ -8,6 +8,18 @@ export interface CaseHistoryLog {
   id_historial: number;
   fecha_cambio: string;
 }
+
+export interface Nota {
+  id_nota: number;
+  id_caso: number;
+  id_usuario: number;
+  id_usuario_crea?: number; // Campo que viene de la API
+  mensaje: string;
+  fecha_crea: string;
+  fecha_actualiza: string;
+  usuario?: Users; // Optional user info to display
+}
+
 export interface Cases {
   id_caso: number;
   id_ciudadano: number;
@@ -24,6 +36,7 @@ export interface Cases {
   usuarios: Users[];
   actions?: string;
   key?: string;
+  notas_list?: Nota[]; // List of notes related to this case
 }
 
 export type Column = {

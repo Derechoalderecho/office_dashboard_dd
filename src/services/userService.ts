@@ -27,16 +27,51 @@ export const fetchAllUsers = async (): Promise<Users[]> => {
 // Fetch user by Firebase UID
 export async function fetchUserByFirebaseUid(firebaseUid: string): Promise<Users | null> {
   try {
-    const response = await fetch(`${API_BASE_URL}/usuarios/${firebaseUid}`);
-    if (!response.ok) {
-      if (response.status === 404) {
-        return null; // User not found
-      }
-      throw new Error(`Error fetching user: ${response.statusText}`);
+    // Obtener todos los usuarios
+    const allUsers = await fetchAllUsers();
+    console.log(`Buscando usuario con Firebase UID: ${firebaseUid}`);
+    
+    if (allUsers.length === 0) {
+      console.warn("No se encontraron usuarios en el sistema");
+      return null;
     }
-    return await response.json();
+    
+    // Buscar el usuario con el id_usuario_firebase correspondiente
+    const user = allUsers.find(user => user.id_usuario_firebase === firebaseUid);
+    
+    if (user) {
+      console.log(`Usuario encontrado: ID=${user.id_usuario}, Nombre=${user.primer_nombre}`);
+      return user;
+    } else {
+      console.warn(`No se encontró ningún usuario con Firebase UID: ${firebaseUid}`);
+      return null;
+    }
   } catch (error) {
     console.error('Error fetching user by Firebase UID:', error);
+    return null;
+  }
+}
+
+// Get internal user ID from Firebase user
+export async function getUserIdFromFirebase(firebaseUid: string): Promise<number | null> {
+  try {
+    if (!firebaseUid) {
+      console.error("Firebase UID no proporcionado");
+      return null;
+    }
+    
+    console.log(`Obteniendo ID interno para Firebase UID: ${firebaseUid}`);
+    const user = await fetchUserByFirebaseUid(firebaseUid);
+    
+    if (user && user.id_usuario) {
+      console.log(`ID interno de usuario encontrado: ${user.id_usuario}`);
+      return user.id_usuario;
+    }
+    
+    console.warn("No se pudo obtener el ID interno del usuario");
+    return null;
+  } catch (error) {
+    console.error("Error al obtener ID interno de usuario:", error);
     return null;
   }
 }
