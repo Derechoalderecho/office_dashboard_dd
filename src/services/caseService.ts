@@ -3,7 +3,7 @@
 import { Citizen } from "@/types/citizens";
 import { Cases, CaseHistoryLog } from "@/types/cases";
 import { enrichNotesWithUserInfo } from "@/services/noteService";
-import { get, del, batchRequests } from "@/utils/apiUtils";
+import { get, del, batchRequests, put } from "@/utils/apiUtils";
 import { 
   getWithCache, 
   getCollectionWithCache,
@@ -278,6 +278,40 @@ export const fetchCasesByUserId = async (userId: number): CasesPromise => {
   } catch (error) {
     logger.error(`Error al obtener casos para el usuario ${userId}:`, error);
     return [];
+  }
+};
+
+/**
+ * Actualiza el estado de un caso específico
+ * @param id ID del caso a actualizar
+ * @param estado Nuevo estado del caso (Acción necesaria, No aprobado, Seguimiento)
+ * @returns true si el caso se actualizó correctamente, false en caso contrario
+ */
+export const updateCaseStatus = async (
+  id: number,
+  estado: string
+): Promise<boolean> => {
+  try {
+    logger.info(`Actualizando estado del caso ${id} a "${estado}"`);
+    
+    // Validar que el estado sea válido
+    const validStatuses = ["Acción necesaria", "No aprobado", "Seguimiento"];
+    if (!validStatuses.includes(estado)) {
+      logger.warn(`Estado "${estado}" no válido para el caso ${id}`);
+      return false;
+    }
+    
+    // Realizar la solicitud PUT con solo el estado
+    await put<Cases>(`casos/${id}`, { estado });
+    
+    // Invalidar cachés relacionadas con el caso
+    invalidateCacheItem(CASES_CACHE, id);
+    
+    logger.info(`Estado del caso ${id} actualizado correctamente a "${estado}"`);
+    return true;
+  } catch (error) {
+    logger.error(`Error al actualizar estado del caso ${id}:`, error);
+    return false;
   }
 };
 

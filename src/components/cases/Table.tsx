@@ -26,6 +26,7 @@ import { TableCellRendererCases } from "./TableCellRenderer";
 import { BulkActionsBar } from "./BulkActionsBar";
 import { fetchAllCases, deleteCasesByIds } from "@/services/caseService";
 import { ModalCase } from "../ui/modal-table";
+import { invalidateCache } from "@/utils/cacheUtils";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "fecha_crea",
@@ -59,13 +60,20 @@ export default function TableCases() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [selectedCase, setSelectedCase] = useState<CaseWithKey | null>(null);
 
+  // Definir fetchCases fuera de useEffect para poder reutilizarlo
+  const fetchCases = async () => {
+    setIsLoading(true);
+    // Invalidar la caché de casos para forzar una recarga fresca
+    invalidateCache('cases');
+    const casesList = await fetchAllCases();
+    setCases(casesList as CaseWithKey[]);
+    setIsLoading(false);
+    // Limpiar la selección al recargar los datos
+    setSelectedKeys(new Set([]));
+  };
+
   // Fetch cases from API
   useEffect(() => {
-    const fetchCases = async () => {
-      const casesList = await fetchAllCases();
-      setCases(casesList as CaseWithKey[]);
-      setIsLoading(false);
-    };
     fetchCases();
   }, []);
 
@@ -221,6 +229,7 @@ export default function TableCases() {
           selectedKeys={selectedKeys}
           filteredItemsLength={filteredItems.length}
           onDeleteCases={handleDeleteCases}
+          onStatusUpdated={fetchCases}
         />
       )}
 
