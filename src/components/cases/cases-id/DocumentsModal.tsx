@@ -23,8 +23,8 @@ import {
   MagnifyingGlassIcon,
   ArrowsUpDownIcon
 } from "@heroicons/react/24/outline";
-import { getDocumentsByCaseId, DocumentResponse, downloadDocument } from "@/actions/uploadDocsActions";
-import { downloadBlobAsFile } from "@/utils/fileUtils";
+import { DocumentResponse } from "@/actions/uploadDocsActions";
+import { fetchCaseById } from "@/services/caseService";
 import { parseDateToLocal } from "@/utils/date";
 
 interface DocumentsModalProps {
@@ -52,21 +52,25 @@ export default function DocumentsModal({ isOpen, onClose, caseId }: DocumentsMod
         setIsLoading(true);
         setError(null);
         
-        const response = await getDocumentsByCaseId(caseId);
+        // Obtener documentos directamente del fetchCaseById
+        console.log(`Obteniendo documentos para el caso ${caseId} desde fetchCaseById...`);
+        const caseData = await fetchCaseById(caseId);
         
-        if (response.success && response.data) {
-          setDocuments(response.data);
-          setFilteredDocuments(sortDocuments(response.data, "newest"));
+        if (caseData && caseData.documentos) {
+          // Mapear los documentos de la respuesta a DocumentResponse si es necesario
+          const docsFromCase = caseData.documentos as DocumentResponse[];
+          console.log(`Se encontraron ${docsFromCase.length} documentos en el caso`);
+          
+          setDocuments(docsFromCase);
+          setFilteredDocuments(sortDocuments(docsFromCase, "newest"));
         } else {
-          setError(response.error || "No se pudieron cargar los documentos");
-          addToast({
-            title: "Error",
-            description: response.error || "No se pudieron cargar los documentos",
-            color: "danger",
-          });
+          console.log('No se encontraron documentos en la respuesta del caso');
+          setDocuments([]);
+          setFilteredDocuments([]);
         }
       } catch (error: any) {
         const errorMsg = error.message || "Error al cargar documentos";
+        console.error("Error obteniendo documentos:", errorMsg);
         setError(errorMsg);
         addToast({
           title: "Error",
@@ -125,32 +129,28 @@ export default function DocumentsModal({ isOpen, onClose, caseId }: DocumentsMod
     }
   };
 
-  const handleDownload = async (documentId: number) => {
-    setDownloadingId(documentId);
+  const handleDownload = async (document: DocumentResponse) => {
+    setDownloadingId(document.id_documento);
     
     try {
-      const result = await downloadDocument(documentId);
+      // Usar directamente el enlace del documento en lugar de hacer una solicitud adicional
+      console.log(`Descargando documento desde el enlace: ${document.enlace}`);
       
-      if (result.success && result.data && result.fileName) {
-        // Download the file
-        downloadBlobAsFile(result.data, result.fileName);
-        
-        // Show success toast
-        addToast({
-          title: "Descarga exitosa",
-          description: `El archivo ${result.fileName} se ha descargado correctamente`,
-          color: "success",
-        });
-      } else {
-        // Show error toast
-        addToast({
-          title: "Error al descargar",
-          description: result.error || "No se pudo descargar el documento",
-          color: "danger",
-        });
-      }
+      // Crear un anclaje temporal para descargar el archivo
+      const link = document.enlace;
+      const fileName = `${document.nombre_documento}${document.ext_documento}`;
+      
+      // Abrir el enlace en una nueva pestaña/ventana
+      window.open(link, '_blank');
+      
+      // Mostrar toast de éxito
+      addToast({
+        title: "Descarga iniciada",
+        description: `La descarga de ${fileName} ha comenzado`,
+        color: "success",
+      });
     } catch (error: any) {
-      // Show error toast
+      // Mostrar toast de error
       addToast({
         title: "Error al descargar",
         description: error.message || "Ha ocurrido un error al intentar descargar el documento",
@@ -166,7 +166,14 @@ export default function DocumentsModal({ isOpen, onClose, caseId }: DocumentsMod
   };
 
   const handleSortChange = (value: string) => {
-    setSortBy(value as SortOption);
+    // Mapea el índice seleccionado a una opción de ordenamiento
+    const sortOptions: SortOption[] = ["newest", "oldest", "name", "type"];
+    if (sortOptions.includes(value as SortOption)) {
+      setSortBy(value as SortOption);
+    } else {
+      console.warn(`Opción de ordenamiento no reconocida: ${value}`);
+      setSortBy("newest"); // Valor por defecto
+    }
   };
 
   return (
@@ -197,15 +204,15 @@ export default function DocumentsModal({ isOpen, onClose, caseId }: DocumentsMod
               />
               <Select
                 label="Ordenar por"
-                value={sortBy}
                 onChange={(e) => handleSortChange(e.target.value)}
                 startContent={<ArrowsUpDownIcon className="w-4 h-4 text-gray-400" />}
                 className="w-full sm:w-auto sm:min-w-[180px]"
+                defaultSelectedKeys={["newest"]}
               >
-                <SelectItem key="newest" value="newest">Más recientes</SelectItem>
-                <SelectItem key="oldest" value="oldest">Más antiguos</SelectItem>
-                <SelectItem key="name" value="name">Nombre</SelectItem>
-                <SelectItem key="type" value="type">Tipo</SelectItem>
+                <SelectItem key="newest">Más recientes</SelectItem>
+                <SelectItem key="oldest">Más antiguos</SelectItem>
+                <SelectItem key="name">Nombre</SelectItem>
+                <SelectItem key="type">Tipo</SelectItem>
               </Select>
             </div>
           )}
@@ -252,7 +259,7 @@ export default function DocumentsModal({ isOpen, onClose, caseId }: DocumentsMod
                     color="primary"
                     isLoading={downloadingId === doc.id_documento}
                     spinner={<Spinner size="sm" color="white" />}
-                    onPress={() => handleDownload(doc.id_documento)}
+                    onPress={() => handleDownload(doc)}
                     startContent={<ArrowDownTrayIcon className="w-5 h-5" />}
                     className="sm:self-end"
                   >

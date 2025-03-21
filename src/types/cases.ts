@@ -1,5 +1,6 @@
 import { Citizen } from "./citizens";
 import { Users } from "./users";
+import { DocumentResponse } from "@/actions/uploadDocsActions";
 
 export interface CaseHistoryLog {
   id_caso: number;
@@ -37,6 +38,7 @@ export interface Cases {
   actions?: string;
   key?: string;
   notas_list?: Nota[]; // List of notes related to this case
+  documentos?: DocumentResponse[]; // List of documents related to this case
 }
 
 export type Column = {
