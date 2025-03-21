@@ -4,6 +4,7 @@ import axios from "axios";
 import { Citizen } from "@/types/citizens";
 import { Cases, CaseHistoryLog } from "@/types/cases";
 import { API_BASE_URL } from "@/config/api";
+import { enrichNotesWithUserInfo } from "@/services/noteService";
 
 type CaseWithCitizen = Cases & { ciudadano: Citizen };
 type CasesPromise = Promise<CaseWithCitizen[]>;
@@ -73,6 +74,19 @@ export const fetchCaseById = async (
       `${API_BASE_URL}/ciudadanos/${caseData.id_ciudadano}`
     );
     const ciudadano = citizenResponse.data as Citizen;
+    
+    // Inicializar notas_list si no existe
+    if (!caseData.notas_list) {
+      caseData.notas_list = [];
+    } else if (caseData.notas_list.length > 0) {
+      // Usar el nuevo servicio optimizado para cargar la información de usuarios
+      caseData.notas_list = await enrichNotesWithUserInfo(caseData.notas_list);
+    }
+    
+    // Inicializar documentos si no existe
+    if (!caseData.documentos) {
+      caseData.documentos = [];
+    }
 
     // Combine the case and citizen data
     return { ...caseData, ciudadano };

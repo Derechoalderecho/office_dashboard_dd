@@ -3,7 +3,94 @@
 import axios from "axios";
 import { API_BASE_URL } from "@/config/api";
 import { Nota } from "@/types/cases";
-import { fetchUserDetails } from "./userService";
+import { fetchUserDetails, fetchAllUsers } from "./userService";
+import { Users } from "@/types/users";
+
+// Caché en memoria para usuarios (solo durante la sesión del servidor)
+let userCache: Map<number, Users> | null = null;
+let lastCacheTime: number = 0;
+const CACHE_TTL = 15 * 60 * 1000; // 15 minutos en milisegundos
+
+/**
+ * Obtiene todos los usuarios y los almacena en caché
+ */
+async function refreshUserCache(): Promise<Map<number, Users>> {
+  try {
+    console.log("Actualizando caché de usuarios...");
+    const users = await fetchAllUsers();
+    const newCache = new Map<number, Users>();
+    
+    users.forEach(user => {
+      if (user.id_usuario) {
+        newCache.set(user.id_usuario, user);
+      }
+    });
+    
+    userCache = newCache;
+    lastCacheTime = Date.now();
+    console.log(`Caché actualizada con ${newCache.size} usuarios`);
+    return newCache;
+  } catch (error) {
+    console.error("Error al actualizar caché de usuarios:", error);
+    // Si hay un error, devolver un caché vacío o el caché existente
+    return userCache || new Map<number, Users>();
+  }
+}
+
+/**
+ * Obtiene un usuario por ID, utilizando caché para mejorar rendimiento
+ */
+export async function getUserDetails(userId: number): Promise<Users | undefined> {
+  // Verificar si la caché está expirada o no existe
+  if (!userCache || Date.now() - lastCacheTime > CACHE_TTL) {
+    await refreshUserCache();
+  }
+  
+  // Intentar obtener el usuario de la caché
+  let user = userCache?.get(userId);
+  
+  // Si no está en caché, intentar obtenerlo directamente
+  if (!user) {
+    try {
+      const fetchedUser = await fetchUserDetails(userId.toString());
+      if (fetchedUser && userCache) {
+        userCache.set(userId, fetchedUser);
+        user = fetchedUser;
+      }
+    } catch (error) {
+      console.error(`Error al obtener usuario ${userId}:`, error);
+    }
+  }
+  
+  return user;
+}
+
+/**
+ * Enriquece las notas con información de usuarios de manera eficiente
+ * Esta función es mucho más eficiente que hacer requests individuales
+ */
+export async function enrichNotesWithUserInfo(notes: Nota[]): Promise<Nota[]> {
+  if (!notes || notes.length === 0) {
+    return [];
+  }
+  
+  // Asegurarse de que la caché esté actualizada
+  if (!userCache || Date.now() - lastCacheTime > CACHE_TTL) {
+    await refreshUserCache();
+  }
+  
+  // Mapear las notas con la información de usuario
+  return notes.map(nota => {
+    const userId = nota.id_usuario || nota.id_usuario_crea;
+    if (userId && userCache) {
+      const user = userCache.get(userId);
+      if (user) {
+        return { ...nota, usuario: user };
+      }
+    }
+    return nota;
+  });
+}
 
 /**
  * Creates a new note for a case
@@ -54,22 +141,17 @@ export const createNote = async (
     if (response.status === 201 || response.status === 200) {
       const createdNote = response.data as Nota;
       
-      // Fetch user details for the note
-      let userId: string | undefined = undefined;
-      if (createdNote.id_usuario) {
-        userId = createdNote.id_usuario.toString();
-      } else if (createdNote.id_usuario_crea) {
-        userId = createdNote.id_usuario_crea.toString();
-      }
-      
+      // Obtener detalles del usuario de la caché
+      const userId = createdNote.id_usuario || createdNote.id_usuario_crea;
       let user = undefined;
+      
       if (userId) {
-        user = await fetchUserDetails(userId);
+        user = await getUserDetails(userId);
       }
       
       return {
         ...createdNote,
-        usuario: user || undefined
+        usuario: user
       };
     }
     
