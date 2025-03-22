@@ -11,6 +11,7 @@ import {
   SortDescriptor,
   Spinner,
   useDisclosure,
+  addToast,
 } from "@heroui/react";
 import { useState, useCallback, useMemo, useEffect, ChangeEvent } from "react";
 import { CalendarDate } from "@internationalized/date";
@@ -26,6 +27,7 @@ import { TableCellRendererCases } from "./TableCellRenderer";
 import { BulkActionsBar } from "./BulkActionsBar";
 import { fetchAllCases, deleteCasesByIds } from "@/services/caseService";
 import { ModalCase } from "../ui/modal-table";
+import { invalidateCache } from "@/utils/cacheUtils";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "fecha_crea",
@@ -59,13 +61,73 @@ export default function TableCases() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [selectedCase, setSelectedCase] = useState<CaseWithKey | null>(null);
 
+  // Función para actualizar un caso directamente en la UI
+  const updateCaseInUI = useCallback((id: number, data: Partial<CaseWithKey>) => {
+    setCases(prevCases => 
+      prevCases.map(caseItem => 
+        caseItem.id_caso === id 
+          ? { ...caseItem, ...data } 
+          : caseItem
+      )
+    );
+  }, []);
+
+  // Definir fetchCases fuera de useEffect para poder reutilizarlo
+  const fetchCases = async (showToast = false) => {
+    try {
+      setIsLoading(true);
+      
+      // Limpiar las selecciones actuales
+      setSelectedKeys(new Set([]));
+      
+      // Invalidar todas las cachés relacionadas con casos
+      invalidateCache('cases');
+      invalidateCache('caseHistory');
+      
+      // Registrar el tiempo de inicio para asegurar un tiempo mínimo de carga
+      const startTime = Date.now();
+      
+      // Simulamos una demora mínima para asegurar que el usuario siempre vea el indicador de carga
+      const minimumLoadTime = 800; // milisegundos
+      
+      // Obtener datos frescos
+      const casesList = await fetchAllCases();
+      
+      // Calcular tiempo transcurrido
+      const elapsedTime = Date.now() - startTime;
+      
+      // Si el tiempo transcurrido es menor que el tiempo mínimo, esperamos la diferencia
+      if (elapsedTime < minimumLoadTime) {
+        await new Promise(resolve => setTimeout(resolve, minimumLoadTime - elapsedTime));
+      }
+      
+      // Actualizar el estado con los nuevos datos
+      setCases(casesList as CaseWithKey[]);
+      
+      if (showToast) {
+        addToast({
+          title: "Datos actualizados",
+          description: "La tabla ha sido actualizada con los datos más recientes",
+          color: "success",
+        });
+      }
+    } catch (error) {
+      console.error("Error al actualizar los casos:", error);
+      
+      if (showToast) {
+        addToast({
+          title: "Error al actualizar",
+          description: "No se pudieron actualizar los datos. Intente nuevamente.",
+          color: "danger",
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Fetch cases from API
   useEffect(() => {
-    const fetchCases = async () => {
-      const casesList = await fetchAllCases();
-      setCases(casesList as CaseWithKey[]);
-      setIsLoading(false);
-    };
     fetchCases();
   }, []);
 
@@ -214,6 +276,11 @@ export default function TableCases() {
     onOpen();
   };
 
+  // Función para actualizar datos después de cambios de estado
+  const handleStatusUpdated = () => {
+    fetchCases(true); // Mostrar toast al actualizar después de cambio de estado
+  };
+
   return (
     <>
       {(selectedKeys === "all" || selectedKeys.size > 0) && (
@@ -221,6 +288,9 @@ export default function TableCases() {
           selectedKeys={selectedKeys}
           filteredItemsLength={filteredItems.length}
           onDeleteCases={handleDeleteCases}
+          onStatusUpdated={handleStatusUpdated}
+          cases={cases}
+          updateCaseInUI={updateCaseInUI}
         />
       )}
 
@@ -262,9 +332,15 @@ export default function TableCases() {
         </TableHeader>
         <TableBody
           emptyContent={"Casos no encontrados"}
-          items={sortedItems}
+          items={isLoading ? [] : sortedItems}
           isLoading={isLoading}
-          loadingContent={<Spinner label="Cargando..." />}
+          loadingContent={
+            <div className="flex flex-col items-center justify-center py-8">
+              <Spinner size="lg" color="primary" className="mb-4" />
+              <p className="text-lg font-medium">Cargando datos...</p>
+              <p className="text-sm text-gray-500">Por favor espere mientras se actualiza la información</p>
+            </div>
+          }
         >
           {(item) => (
             <TableRow key={item.id_caso}>
