@@ -3,7 +3,7 @@
 import { Citizen } from "@/types/citizens";
 import { Cases, CaseHistoryLog } from "@/types/cases";
 import { enrichNotesWithUserInfo } from "@/services/noteService";
-import { get, del, batchRequests, put } from "@/utils/apiUtils";
+import { get, del, batchRequests, put, post } from "@/utils/apiUtils";
 import { 
   getWithCache, 
   getCollectionWithCache,
@@ -417,6 +417,56 @@ export const deleteCasesByIds = async (ids: number[]): Promise<boolean> => {
     return success;
   } catch (error) {
     logger.error("Error inesperado al eliminar casos:", error);
+    return false;
+  }
+};
+
+/**
+ * Asigna un usuario a un caso
+ * @param caseId ID del caso
+ * @param userId ID del usuario
+ * @param role Rol del usuario (estudiante, docente, monitor)
+ * @returns true si la asignación fue exitosa, false en caso contrario
+ */
+export const assignUserToCase = async (
+  caseId: number,
+  userId: number,
+  role: string
+): Promise<boolean> => {
+  try {
+    logger.info(`Asignando usuario ${userId} como ${role} al caso ${caseId}`);
+    
+    // Primero obtenemos las asignaciones actuales para verificar si ya existe alguien con este rol
+    const currentUsers = await fetchUsersByCaseId(caseId);
+    const existingAssignment = currentUsers.find(user => user.rol === role);
+    
+    // Si existe una asignación con el mismo rol, la eliminamos primero
+    if (existingAssignment) {
+      logger.info(`Eliminando asignación existente: caso ${caseId}, usuario ${existingAssignment.id_usuario}, rol ${role}`);
+      
+      try {
+        await del(`casos-usuarios/${existingAssignment.id_usuario}/${caseId}`);
+      } catch (deleteError) {
+        logger.error(`Error al eliminar asignación existente: ${deleteError}`);
+        // Continuamos con la nueva asignación incluso si la eliminación falla
+      }
+    }
+    
+    // Realizar la solicitud POST para la asignación
+    await post<any>('casos-usuarios', { 
+      id_caso: caseId, 
+      id_usuario: userId,
+      rol: role 
+    });
+    
+    // Invalidar cachés relacionadas
+    invalidateCacheItem(CASES_CACHE, caseId);
+    invalidateCache(`${CASES_CACHE}_usuarios_${caseId}`);
+    
+    logger.info(`Usuario ${userId} asignado correctamente como ${role} al caso ${caseId}`);
+    return true;
+  } catch (error) {
+    logger.error(`Error al asignar usuario ${userId} al caso ${caseId}:`, error);
     return false;
   }
 };

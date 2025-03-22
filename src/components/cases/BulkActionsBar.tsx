@@ -22,6 +22,7 @@ import { AlertDialog } from "@/components/ui/alert-dialog";
 import { useDeleteRows } from "@/hooks/useDeleteRows";
 import { getDeleteAlertMessage } from "@/utils/alertMessage";
 import { updateCaseStatus } from "@/services/caseService";
+import { UserAssignmentModal } from "./UserAssignmentModal";
 
 interface BulkActionsBarProps {
   selectedKeys: Selection;
@@ -58,6 +59,7 @@ export const BulkActionsBar = ({
   const [isStatusAlertOpen, setIsStatusAlertOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [isStatusLoading, setIsStatusLoading] = useState(false);
+  const [isUserAssignmentModalOpen, setIsUserAssignmentModalOpen] = useState(false);
   const { handleDelete, isLoading: isDeleteLoading } = useDeleteRows(onDeleteCases);
 
   const convertSelection = (selection: Selection): Set<number> | "all" => {
@@ -152,6 +154,51 @@ export const BulkActionsBar = ({
     }
   };
 
+  // Obtener IDs de casos seleccionados
+  const getSelectedCaseIds = (): number[] => {
+    const selection = convertSelection(selectedKeys);
+    if (selection === "all") {
+      // En este caso, necesitaríamos obtener todos los IDs de los casos filtrados
+      return []; // Por simplicidad, no implementamos "all" para asignación de usuarios
+    }
+    return Array.from(selection);
+  };
+
+  // Manejar apertura del modal de asignación de usuarios
+  const handleOpenUserAssignmentModal = () => {
+    if (selectedKeys === "all") {
+      addToast({
+        title: "Operación no soportada",
+        description: "No se puede asignar usuarios a todos los casos. Por favor, seleccione casos específicos.",
+        color: "warning",
+      });
+      return;
+    }
+    
+    if (selectedKeys.size === 0) {
+      addToast({
+        title: "Selección requerida",
+        description: "Debe seleccionar al menos un caso para asignar usuarios.",
+        color: "warning",
+      });
+      return;
+    }
+    
+    setIsUserAssignmentModalOpen(true);
+  };
+
+  // Manejar cierre del modal
+  const handleCloseUserAssignmentModal = () => {
+    setIsUserAssignmentModalOpen(false);
+  };
+
+  // Manejar asignación de usuarios completada
+  const handleUserAssignmentComplete = () => {
+    if (onStatusUpdated) {
+      onStatusUpdated();
+    }
+  };
+
   return (
     <>
       {/* Diálogo de confirmación para eliminar */}
@@ -180,6 +227,14 @@ export const BulkActionsBar = ({
         confirmText="Cambiar estado"
         type="info"
         isLoading={isStatusLoading}
+      />
+      
+      {/* Modal de asignación de usuarios */}
+      <UserAssignmentModal
+        isOpen={isUserAssignmentModalOpen}
+        onClose={handleCloseUserAssignmentModal}
+        selectedCaseIds={getSelectedCaseIds()}
+        onAssignUsers={handleUserAssignmentComplete}
       />
       
       <aside className="fixed bottom-0 z-50 left-1/2 transform -translate-x-1/2 mb-10">
@@ -235,37 +290,9 @@ export const BulkActionsBar = ({
                 </DropdownMenu>
               </Dropdown>
               <div className="border-l border-white h-6 mx-2"></div>
-              <div className="flex items-center gap-1">
-                <Dropdown placement="bottom-end">
-                  <DropdownTrigger>
-                    <div className="flex items-center gap-1 cursor-pointer">
-                      <UserCircleIcon className="w-6 text-white" />
-                      <p className="text-white">Asignado</p>
-                    </div>
-                  </DropdownTrigger>
-                  <DropdownMenu aria-label="Profile Actions" variant="flat">
-                    <DropdownSection title="Asignado">
-                      <DropdownItem key="user1">
-                        <User
-                          avatarProps={{
-                            radius: "sm",
-                            src: "https://i.pravatar.cc/150?u=a04258114e29026702d",
-                          }}
-                          name={"Victor Hugo"}
-                        />
-                      </DropdownItem>
-                      <DropdownItem key="aproved">
-                        <User
-                          avatarProps={{
-                            radius: "sm",
-                            src: "https://i.pravatar.cc/150?u=a04258114e29026702d",
-                          }}
-                          name={"Joaquin Fernandez"}
-                        />
-                      </DropdownItem>
-                    </DropdownSection>
-                  </DropdownMenu>
-                </Dropdown>
+              <div className="flex items-center gap-1 cursor-pointer" onClick={handleOpenUserAssignmentModal}>
+                <UserCircleIcon className="w-6 text-white" />
+                <p className="text-white">Asignado</p>
               </div>
               <div className="border-l border-white h-6 mx-2"></div>
               <div className="flex items-center gap-1">
