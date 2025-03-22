@@ -11,6 +11,7 @@ import {
   SortDescriptor,
   Spinner,
   useDisclosure,
+  addToast,
 } from "@heroui/react";
 import { useState, useCallback, useMemo, useEffect, ChangeEvent } from "react";
 import { CalendarDate } from "@internationalized/date";
@@ -60,16 +61,61 @@ export default function TableCases() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [selectedCase, setSelectedCase] = useState<CaseWithKey | null>(null);
 
+  // Función para actualizar un caso directamente en la UI
+  const updateCaseInUI = useCallback((id: number, data: Partial<CaseWithKey>) => {
+    setCases(prevCases => 
+      prevCases.map(caseItem => 
+        caseItem.id_caso === id 
+          ? { ...caseItem, ...data } 
+          : caseItem
+      )
+    );
+  }, []);
+
   // Definir fetchCases fuera de useEffect para poder reutilizarlo
-  const fetchCases = async () => {
-    setIsLoading(true);
-    // Invalidar la caché de casos para forzar una recarga fresca
-    invalidateCache('cases');
-    const casesList = await fetchAllCases();
-    setCases(casesList as CaseWithKey[]);
-    setIsLoading(false);
-    // Limpiar la selección al recargar los datos
-    setSelectedKeys(new Set([]));
+  const fetchCases = async (showToast = false) => {
+    try {
+      setIsLoading(true);
+      
+      // Limpiar las selecciones actuales
+      setSelectedKeys(new Set([]));
+      
+      // Invalidar todas las cachés relacionadas con casos
+      invalidateCache('cases');
+      invalidateCache('caseHistory');
+      
+      // Simular una pequeña demora para asegurar que la API tenga tiempo 
+      // de procesar los cambios recientes antes de que hagamos un nuevo fetch
+      if (showToast) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+      
+      // Obtener datos frescos
+      const casesList = await fetchAllCases();
+      
+      // Actualizar el estado con los nuevos datos
+      setCases(casesList as CaseWithKey[]);
+      
+      if (showToast) {
+        addToast({
+          title: "Datos actualizados",
+          description: "La tabla ha sido actualizada con los datos más recientes",
+          color: "success",
+        });
+      }
+    } catch (error) {
+      console.error("Error al actualizar los casos:", error);
+      
+      if (showToast) {
+        addToast({
+          title: "Error al actualizar",
+          description: "No se pudieron actualizar los datos. Intente nuevamente.",
+          color: "danger",
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Fetch cases from API
@@ -222,6 +268,11 @@ export default function TableCases() {
     onOpen();
   };
 
+  // Función para actualizar datos después de cambios de estado
+  const handleStatusUpdated = () => {
+    fetchCases(true); // Mostrar toast al actualizar después de cambio de estado
+  };
+
   return (
     <>
       {(selectedKeys === "all" || selectedKeys.size > 0) && (
@@ -229,7 +280,9 @@ export default function TableCases() {
           selectedKeys={selectedKeys}
           filteredItemsLength={filteredItems.length}
           onDeleteCases={handleDeleteCases}
-          onStatusUpdated={fetchCases}
+          onStatusUpdated={handleStatusUpdated}
+          cases={cases}
+          updateCaseInUI={updateCaseInUI}
         />
       )}
 

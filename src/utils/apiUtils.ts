@@ -186,7 +186,11 @@ export async function batchRequests<T>(
 
 // Funciones de conveniencia para cada método HTTP
 export function get<T>(url: string, config?: AxiosRequestConfig & RetryConfig): Promise<T> {
-  return apiRequest<T>('get', url, undefined, config);
+  // Añadir parámetro de timestamp para evitar caché del navegador
+  const urlWithTimestamp = url.includes('?') 
+    ? `${url}&_t=${Date.now()}` 
+    : `${url}?_t=${Date.now()}`;
+  return apiRequest<T>('get', urlWithTimestamp, undefined, config);
 }
 
 export function post<T>(url: string, data?: any, config?: AxiosRequestConfig & RetryConfig): Promise<T> {

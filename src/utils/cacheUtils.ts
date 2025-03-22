@@ -118,7 +118,9 @@ export function setCachedCollection<T>(
 }
 
 /**
- * Invalida un elemento específico en la caché
+ * Invalida un elemento específico de una caché
+ * @param cacheName Nombre de la caché
+ * @param key Clave del elemento a invalidar
  */
 export function invalidateCacheItem(
   cacheName: string,
@@ -126,15 +128,23 @@ export function invalidateCacheItem(
 ): void {
   const cache = globalCache.get(cacheName);
   if (cache) {
-    cache.data.delete(key);
+    const data = cache.data.get(key);
+    if (data) {
+      cache.data.delete(key);
+      console.log(`Caché invalidada: ${cacheName}[${key}]`);
+    }
   }
 }
 
 /**
- * Invalida toda una caché por nombre
+ * Invalida completamente una caché
+ * @param cacheName Nombre de la caché a invalidar
  */
 export function invalidateCache(cacheName: string): void {
-  globalCache.delete(cacheName);
+  if (globalCache.has(cacheName)) {
+    globalCache.delete(cacheName);
+    console.log(`Caché completa invalidada: ${cacheName}`);
+  }
 }
 
 /**

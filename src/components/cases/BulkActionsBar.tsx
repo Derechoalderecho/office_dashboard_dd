@@ -28,6 +28,8 @@ interface BulkActionsBarProps {
   filteredItemsLength: number;
   onDeleteCases: (ids: number[]) => Promise<boolean>;
   onStatusUpdated?: () => void;
+  cases?: any[]; // Array de casos para actualización optimista
+  updateCaseInUI?: (id: number, data: any) => void; // Función para actualizar un caso en la UI
 }
 
 // Mapeo de claves de estado a valores de API
@@ -49,6 +51,8 @@ export const BulkActionsBar = ({
   filteredItemsLength,
   onDeleteCases,
   onStatusUpdated,
+  cases = [],
+  updateCaseInUI,
 }: BulkActionsBarProps) => {
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [isStatusAlertOpen, setIsStatusAlertOpen] = useState(false);
@@ -90,7 +94,19 @@ export const BulkActionsBar = ({
           description: "No se puede cambiar el estado de todos los casos. Por favor, seleccione casos específicos.",
           color: "warning",
         });
+        setIsStatusLoading(false);
+        setIsStatusAlertOpen(false);
         return;
+      }
+      
+      // Actualización optimista en la UI si está disponible
+      if (updateCaseInUI) {
+        // Comprobar si selection es una instancia de Set (no es "all")
+        if (selection instanceof Set) {
+          for (const id of Array.from(selection)) {
+            updateCaseInUI(id, { estado: selectedStatus });
+          }
+        }
       }
       
       // Crear promesas para actualizar cada caso seleccionado

@@ -8,7 +8,8 @@ import {
   getWithCache, 
   getCollectionWithCache,
   invalidateCacheItem,
-  invalidateCache
+  invalidateCache,
+  setCachedItem
 } from "@/utils/cacheUtils";
 import { logger } from "@/utils/logUtils";
 
@@ -150,6 +151,53 @@ export const fetchCaseById = async (
     return { ...caseData, ciudadano };
   } catch (error) {
     logger.error(`Error al obtener caso ${id}:`, error);
+    return null;
+  }
+};
+
+/**
+ * Obtiene un caso específico por ID directamente de la API sin usar caché
+ * @param id ID del caso a obtener
+ * @returns El caso con datos de ciudadano o null si no se encuentra
+ */
+export const fetchCaseByIdFresh = async (
+  id: number
+): Promise<CaseWithCitizen | null> => {
+  try {
+    logger.debug(`Obteniendo caso ${id} (fresh)`);
+    
+    // Obtener el caso directamente, sin usar caché
+    const caseData = await get<Cases>(`casos/${id}`);
+    
+    if (!caseData) {
+      logger.warn(`Caso con ID ${id} no encontrado`);
+      return null;
+    }
+    
+    // Obtener el ciudadano relacionado directamente
+    logger.debug(`Obteniendo ciudadano ${caseData.id_ciudadano} para caso ${id} (fresh)`);
+    const ciudadano = await get<Citizen>(`ciudadanos/${caseData.id_ciudadano}`);
+    
+    // Inicializar notas_list si no existe
+    if (!caseData.notas_list) {
+      caseData.notas_list = [];
+    } else if (caseData.notas_list.length > 0) {
+      // Enriquecer las notas con información de usuario
+      caseData.notas_list = await enrichNotesWithUserInfo(caseData.notas_list);
+    }
+    
+    // Inicializar documentos si no existe
+    if (!caseData.documentos) {
+      caseData.documentos = [];
+    }
+    
+    // Actualizar la caché con los datos nuevos
+    setCachedItem(CASES_CACHE, id, caseData);
+    
+    // Combinar el caso con los datos del ciudadano
+    return { ...caseData, ciudadano };
+  } catch (error) {
+    logger.error(`Error al obtener caso ${id} (fresh):`, error);
     return null;
   }
 };
@@ -304,8 +352,10 @@ export const updateCaseStatus = async (
     // Realizar la solicitud PUT con solo el estado
     await put<Cases>(`casos/${id}`, { estado });
     
-    // Invalidar cachés relacionadas con el caso
+    // Invalidar cachés de forma más agresiva
     invalidateCacheItem(CASES_CACHE, id);
+    invalidateCache(CASES_CACHE); // Invalidar colección completa
+    invalidateCache(`${CASES_CACHE}_usuarios_${id}`);
     
     logger.info(`Estado del caso ${id} actualizado correctamente a "${estado}"`);
     return true;
