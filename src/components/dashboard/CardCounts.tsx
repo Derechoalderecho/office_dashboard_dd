@@ -3,7 +3,9 @@ import {
   ChartBarSquareIcon,
   DocumentTextIcon,
 } from "@heroicons/react/24/solid";
-import { getDashboardCounts } from "@/services/dashboardService";
+import { fetchAllUsers } from "@/services/userService";
+import { fetchAllCasesDashboard } from "@/services/caseService";
+import { fetchAllCitizens } from "@/services/citizenService";
 
 const iconMap = {
   students: UserPlusIcon,
@@ -24,13 +26,19 @@ const colorIconMap = {
 };
 
 export default async function CardCountsWrapper() {
-  const { totalUsers, totalCases, totalCitizens } = await getDashboardCounts();
+  const users = await fetchAllUsers();
+  const cases = await fetchAllCasesDashboard();
+  const citizens = await fetchAllCitizens();
+
+  const totalStudents = users.length;
+  const totalCases = cases.length;
+  const totalCitizens = citizens.length;
 
   return (
     <>
       <CardCounts
         description="Total de estudiantes"
-        value={totalUsers}
+        value={totalStudents}
         type="students"
       />
       <CardCounts

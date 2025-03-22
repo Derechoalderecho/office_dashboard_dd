@@ -184,6 +184,45 @@ export async function batchRequests<T>(
   }
 }
 
+/**
+ * Descarga un archivo desde la API
+ * @param url URL relativa para la descarga
+ * @param config Configuración adicional para la solicitud
+ * @returns Promise con la URL de descarga o null si ocurre un error
+ */
+export async function downloadFile(
+  url: string,
+  config?: AxiosRequestConfig & RetryConfig
+): Promise<string> {
+  // Agregar el prefijo si no existe
+  const fullUrl = url.startsWith('http') ? url : url.startsWith('/') ? `${API_BASE_URL}${url}` : `${API_BASE_URL}/${url}`;
+  
+  try {
+    // Realizamos una solicitud GET para obtener la URL o datos del documento
+    const response = await axiosInstance.get(fullUrl, {
+      ...config,
+      // No transformar la respuesta automáticamente
+      responseType: 'json',
+    });
+    
+    // Si la API devuelve una URL directa para el archivo
+    if (response.data && typeof response.data === 'object' && response.data.enlace) {
+      return response.data.enlace;
+    } else if (response.data && typeof response.data === 'string') {
+      // Si la API devuelve directamente una URL como string
+      return response.data;
+    } else {
+      // Si no se puede obtener una URL clara, generamos un error
+      throw new Error('No se pudo obtener una URL válida para el documento');
+    }
+  } catch (error) {
+    // Usar el manejo de errores estándar
+    handleApiError(error as AxiosError | Error);
+    // Esta línea nunca se ejecuta debido a que handleApiError lanza una excepción
+    throw error;
+  }
+}
+
 // Funciones de conveniencia para cada método HTTP
 export function get<T>(url: string, config?: AxiosRequestConfig & RetryConfig): Promise<T> {
   // Añadir parámetro de timestamp para evitar caché del navegador
