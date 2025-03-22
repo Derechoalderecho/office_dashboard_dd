@@ -84,14 +84,22 @@ export default function TableCases() {
       invalidateCache('cases');
       invalidateCache('caseHistory');
       
-      // Simular una pequeña demora para asegurar que la API tenga tiempo 
-      // de procesar los cambios recientes antes de que hagamos un nuevo fetch
-      if (showToast) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
+      // Registrar el tiempo de inicio para asegurar un tiempo mínimo de carga
+      const startTime = Date.now();
+      
+      // Simulamos una demora mínima para asegurar que el usuario siempre vea el indicador de carga
+      const minimumLoadTime = 800; // milisegundos
       
       // Obtener datos frescos
       const casesList = await fetchAllCases();
+      
+      // Calcular tiempo transcurrido
+      const elapsedTime = Date.now() - startTime;
+      
+      // Si el tiempo transcurrido es menor que el tiempo mínimo, esperamos la diferencia
+      if (elapsedTime < minimumLoadTime) {
+        await new Promise(resolve => setTimeout(resolve, minimumLoadTime - elapsedTime));
+      }
       
       // Actualizar el estado con los nuevos datos
       setCases(casesList as CaseWithKey[]);
@@ -324,9 +332,15 @@ export default function TableCases() {
         </TableHeader>
         <TableBody
           emptyContent={"Casos no encontrados"}
-          items={sortedItems}
+          items={isLoading ? [] : sortedItems}
           isLoading={isLoading}
-          loadingContent={<Spinner label="Cargando..." />}
+          loadingContent={
+            <div className="flex flex-col items-center justify-center py-8">
+              <Spinner size="lg" color="primary" className="mb-4" />
+              <p className="text-lg font-medium">Cargando datos...</p>
+              <p className="text-sm text-gray-500">Por favor espere mientras se actualiza la información</p>
+            </div>
+          }
         >
           {(item) => (
             <TableRow key={item.id_caso}>
