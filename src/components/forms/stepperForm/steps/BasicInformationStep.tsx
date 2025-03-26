@@ -77,6 +77,26 @@ export default function BasicInformationStep({
   const [citizens, setCitizens] = useState<Citizen[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showNewCitizenForm, setShowNewCitizenForm] = useState(false);
+  const [nacionalidadPersonalizada, setNacionalidadPersonalizada] = useState("");
+  const [showNacionalidadInput, setShowNacionalidadInput] = useState(false);
+
+  const handleNacionalidadChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    if (value === "Otro") {
+      setShowNacionalidadInput(true);
+      updateFormData({ nacionalidad: nacionalidadPersonalizada || "" });
+    } else {
+      setShowNacionalidadInput(false);
+      setNacionalidadPersonalizada("");
+      updateFormData({ nacionalidad: value });
+    }
+  };
+
+  const handleNacionalidadPersonalizadaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNacionalidadPersonalizada(value);
+    updateFormData({ nacionalidad: value });
+  };
 
   // Fetch all citizens for the dropdown
   useEffect(() => {
@@ -300,9 +320,9 @@ export default function BasicInformationStep({
               onChange={(e) => updateFormData({ sexo: e.target.value })}
               isRequired
             >
-              <SelectItem key="M">Masculino</SelectItem>
-              <SelectItem key="F">Femenino</SelectItem>
-              <SelectItem key="I">Intersexual</SelectItem>
+              <SelectItem key="Hombre">Hombre</SelectItem>
+              <SelectItem key="Mujer">Mujer</SelectItem>
+              <SelectItem key="Intersexual">Intersexual</SelectItem>
             </Select>
 
             <Select
@@ -386,14 +406,28 @@ export default function BasicInformationStep({
               label="Nacionalidad"
               labelPlacement="outside"
               placeholder="Seleccione su nacionalidad"
-              value={formData.nacionalidad}
-              onChange={(e) => updateFormData({ nacionalidad: e.target.value })}
+              value={showNacionalidadInput ? "Otro" : formData.nacionalidad}
+              onChange={handleNacionalidadChange}
               isRequired
             >
-              <SelectItem key="CO">Colombiana</SelectItem>
-              <SelectItem key="VE">Venezolana</SelectItem>
-              <SelectItem key="OT">Otra</SelectItem>
+              <SelectItem key="Colombia">Colombia</SelectItem>
+              <SelectItem key="Venezuela">Venezuela</SelectItem>
+              <SelectItem key="Otro">Otro</SelectItem>
             </Select>
+
+            {showNacionalidadInput && (
+              <Input
+                id="nacionalidad_personalizada"
+                name="nacionalidad_personalizada"
+                variant="bordered"
+                label="Especifique su nacionalidad"
+                labelPlacement="outside"
+                placeholder="Ingrese su nacionalidad"
+                value={nacionalidadPersonalizada}
+                onChange={handleNacionalidadPersonalizadaChange}
+                isRequired
+              />
+            )}
 
             <Select
               id="estado_civil"
@@ -453,9 +487,7 @@ export default function BasicInformationStep({
               <SelectItem key="RA">Raizal</SelectItem>
               <SelectItem key="RO">Rom/Gitano</SelectItem>
             </Select>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Select
               id="discapacidad"
               name="discapacidad"
