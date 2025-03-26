@@ -8,6 +8,7 @@ interface UseFilteredItemsProps {
   filterValue: string;
   statusFilter: string | Set<string>;
   dateRange: DateRange | null;
+  onResetFilters?: () => void;
 }
 
 export const useFilteredItems = ({
@@ -15,6 +16,7 @@ export const useFilteredItems = ({
   filterValue,
   statusFilter,
   dateRange,
+  onResetFilters,
 }: UseFilteredItemsProps) => {
   const hasSearchFilter = Boolean(filterValue);
 
@@ -60,5 +62,15 @@ export const useFilteredItems = ({
     return filteredUsers;
   }, [cases, filterValue, statusFilter, dateRange]);
 
-  return { filteredItems, hasSearchFilter };
+  const resetFilters = () => {
+    if (onResetFilters) {
+      onResetFilters();
+    }
+  };
+
+  return { 
+    filteredItems, 
+    hasSearchFilter,
+    resetFilters 
+  };
 };

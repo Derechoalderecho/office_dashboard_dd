@@ -21,6 +21,7 @@ interface TopContentProps {
   handleDateRangeChange: (range: RangeValue<CalendarDate>) => void;
   setShowAll: (value: boolean) => void;
   setStatusFilter: (value: Set<string>) => void;
+  onResetFilters: () => void;
 }
 
 export default function TopContent({
@@ -35,6 +36,7 @@ export default function TopContent({
   onRowsPerPageChange,
   handleDateRangeChange,
   setStatusFilter,
+  onResetFilters,
 }: TopContentProps) {
 
   // Convert dateRange to RangeValue<CalendarDate>
@@ -106,7 +108,7 @@ export default function TopContent({
           />
         </I18nProvider>
         <div>
-          <Button color="primary" onPress={() => setShowAll(!showAll)}>
+          <Button color="primary" onPress={onResetFilters}>
             Mostrar todos
           </Button>
         </div>
