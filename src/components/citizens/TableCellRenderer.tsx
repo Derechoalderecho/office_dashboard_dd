@@ -1,7 +1,7 @@
 "use client";
 
 import { Tooltip, Button } from "@heroui/react";
-import { EyeIcon, PencilIcon } from "@heroicons/react/24/outline";
+import { EyeIcon } from "@heroicons/react/24/outline";
 import { CitizenWithKey } from "@/types/citizens";
 import { parseDateToLocal } from "@/utils/date";
 
@@ -55,14 +55,6 @@ export const TableCellRendererCitizens = ({
               onPress={() => onPreviewCitizen?.(user)}
             >
               <EyeIcon className="w-6" />
-            </Button>
-          </Tooltip>
-          <Tooltip content="Editar cliente">
-            <Button
-              isIconOnly
-              className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
-            >
-              <PencilIcon className="w-6" />
             </Button>
           </Tooltip>
         </div>

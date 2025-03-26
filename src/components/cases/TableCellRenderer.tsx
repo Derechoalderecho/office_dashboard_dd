@@ -102,7 +102,7 @@ export const TableCellRendererCases = ({
               <EyeIcon className="w-6" />
             </Button>
           </Tooltip>
-          <Tooltip content="Editar cliente">
+          <Tooltip content="Editar caso">
             <Link href={`/dashboard/cases/${user.id_caso}`}>
               <Button
                 isIconOnly

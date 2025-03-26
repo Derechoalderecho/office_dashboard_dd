@@ -424,12 +424,15 @@ export default function BasicInformationStep({
               onChange={(e) => updateFormData({ escolaridad: e.target.value })}
               isRequired
             >
-              <SelectItem key="NI">Ninguna</SelectItem>
-              <SelectItem key="PR">Primaria</SelectItem>
-              <SelectItem key="SE">Secundaria</SelectItem>
-              <SelectItem key="TE">Técnica</SelectItem>
-              <SelectItem key="UN">Universitaria</SelectItem>
-              <SelectItem key="PO">Posgrado</SelectItem>
+              <SelectItem key="Ninguna">Ninguna</SelectItem>
+              <SelectItem key="Preescolar">Preescolar</SelectItem>
+              <SelectItem key="Primaria">Primaria (1.º a 5.º grado)</SelectItem>
+              <SelectItem key="Secundaria">Secundaria (6.º a 9.º grado)</SelectItem>
+              <SelectItem key="Media">Media (10.º a 11.º grado)</SelectItem>
+              <SelectItem key="Técnica">Técnica o tecnológica</SelectItem>
+              <SelectItem key="Pregrado">Pregrado</SelectItem>
+              <SelectItem key="Maestría">Maestría</SelectItem>
+              <SelectItem key="Doctorado">Doctorado</SelectItem>
             </Select>
 
             <Select

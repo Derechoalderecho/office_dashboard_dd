@@ -61,6 +61,15 @@ export default function TableCases() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [selectedCase, setSelectedCase] = useState<CaseWithKey | null>(null);
 
+  // Función para reiniciar todos los filtros
+  const handleResetAllFilters = useCallback(() => {
+    setFilterValue("");
+    setStatusFilter("all");
+    setDateRange(null);
+    setPage(1);
+    setShowAll(false);
+  }, []);
+
   // Función para actualizar un caso directamente en la UI
   const updateCaseInUI = useCallback((id: number, data: Partial<CaseWithKey>) => {
     setCases(prevCases => 
@@ -192,6 +201,7 @@ export default function TableCases() {
     filterValue,
     statusFilter: statusFilter as string | Set<string>,
     dateRange,
+    onResetFilters: handleResetAllFilters,
   });
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
@@ -243,6 +253,7 @@ export default function TableCases() {
         showAll={showAll}
         dateRange={dateRange as DateRange}
         onSearchChange={onSearchChange}
+        onResetFilters={handleResetAllFilters}
       />
     );
   }, [
@@ -254,6 +265,7 @@ export default function TableCases() {
     onRowsPerPageChange,
     cases.length,
     hasSearchFilter,
+    handleResetAllFilters,
   ]);
 
   const bottomContent = useMemo(() => {

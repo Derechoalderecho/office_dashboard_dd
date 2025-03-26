@@ -31,6 +31,7 @@ interface TopContentProps {
   setUserTypeFilter: (value: Set<string>) => void;
   setSiteFilter: (value: Set<string>) => void;
   setSelectedTab: (tab: "all" | "active" | "inactive") => void;
+  onResetFilters: () => void;
 }
 
 export default function TopContent({
@@ -47,7 +48,16 @@ export default function TopContent({
   onRowsPerPageChange,
   selectedTab,
   setSelectedTab,
+  onResetFilters,
 }: TopContentProps) {
+
+  // Verificar si hay filtros activos
+  const hasActiveFilters = Boolean(
+    filterValue || // Filtro de búsqueda
+    (userTypeFilter instanceof Set && userTypeFilter.size > 0) || // Filtro de tipo de usuario
+    (siteFilter instanceof Set && siteFilter.size > 0) || // Filtro de sede
+    selectedTab !== "all" // Filtro de tab
+  );
 
   return (
     <>
@@ -115,23 +125,27 @@ export default function TopContent({
             </Dropdown>
           </div>
           <div>
-            <Button color="primary" onPress={() => setShowAll(!showAll)}>
-              Mostrar todos
+            <Button
+              color="primary"
+              onPress={onResetFilters}
+              isDisabled={!hasActiveFilters}
+            >
+              Limpiar filtros
             </Button>
           </div>
         </div>
         <Tabs
-        className="mt-6"
-        aria-label="Filter users"
-        selectedKey={selectedTab}
-        onSelectionChange={(key) =>
-          setSelectedTab(key as "all" | "active" | "inactive")
-        }
-      >
-        <Tab key="all" title="Todos" />
-        <Tab key="active" title="Activos" />
-        <Tab key="inactive" title="Inactivos" />
-      </Tabs>
+          className="mt-6"
+          aria-label="Filter users"
+          selectedKey={selectedTab}
+          onSelectionChange={(key) =>
+            setSelectedTab(key as "all" | "active" | "inactive")
+          }
+        >
+          <Tab key="all" title="Todos" />
+          <Tab key="active" title="Activos" />
+          <Tab key="inactive" title="Inactivos" />
+        </Tabs>
         <div className="flex justify-between items-center mt-6">
           <span className="text-default-400 text-small">
             Total {usersLength} casos
@@ -149,7 +163,6 @@ export default function TopContent({
           </label>
         </div>
       </div>
-
     </>
   );
 }

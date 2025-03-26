@@ -19,6 +19,7 @@ interface TopContentProps {
   onRowsPerPageChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   setShowAll: (value: boolean) => void;
   setSiteFilter: (value: Set<string>) => void;
+  onResetFilters: () => void;
 }
 
 export default function TopContent({
@@ -31,7 +32,15 @@ export default function TopContent({
   onClear,
   onSearchChange,
   onRowsPerPageChange,
+  onResetFilters,
 }: TopContentProps) {
+
+  // Verificar si hay filtros activos
+  const hasActiveFilters = Boolean(
+    filterValue || // Filtro de búsqueda
+    (siteFilter instanceof Set && siteFilter.size > 0) // Filtro de sede
+  );
+
   return (
     <div className="flex flex-col">
       <div className="flex justify-between items-center pb-6 border-b">
@@ -72,8 +81,12 @@ export default function TopContent({
             </Dropdown>
           </div>
           <div>
-            <Button color="primary" onPress={() => setShowAll(!showAll)}>
-              Mostrar todos
+            <Button
+              color="primary"
+              onPress={onResetFilters}
+              isDisabled={!hasActiveFilters}
+            >
+              Limpiar filtros
             </Button>
           </div>
         </div>

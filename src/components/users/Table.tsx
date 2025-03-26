@@ -80,6 +80,16 @@ export default function TableUsers() {
     );
   }, [visibleColumns]);
 
+  // Función para reiniciar todos los filtros
+  const handleResetAllFilters = useCallback(() => {
+    setFilterValue("");
+    setUserTypeFilter("all");
+    setSiteFilter("all");
+    setSelectedTab("all");
+    setPage(1);
+    setShowAll(false);
+  }, []);
+
   // Filters
   const { filteredItems, hasSearchFilter } = useFilteredUsers({
     users,
@@ -87,6 +97,7 @@ export default function TableUsers() {
     userTypeFilter: userTypeFilter as string | Set<string>,
     siteFilter: siteFilter as string | Set<string>,
     selectedTab,
+    onResetFilters: handleResetAllFilters,
   });
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
@@ -140,6 +151,7 @@ export default function TableUsers() {
         filterValue={filterValue}
         showAll={showAll}
         onSearchChange={onSearchChange}
+        onResetFilters={handleResetAllFilters}
       />
     );
   }, [
@@ -152,6 +164,7 @@ export default function TableUsers() {
     onRowsPerPageChange,
     users.length,
     hasSearchFilter,
+    handleResetAllFilters,
   ]);
 
   const bottomContent = useMemo(() => {

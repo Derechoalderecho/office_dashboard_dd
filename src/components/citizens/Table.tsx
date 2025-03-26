@@ -77,11 +77,20 @@ export default function TableCitizens() {
     );
   }, [visibleColumns]);
 
+  // Función para reiniciar todos los filtros
+  const handleResetAllFilters = useCallback(() => {
+    setFilterValue("");
+    setSiteFilter("all");
+    setPage(1);
+    setShowAll(false);
+  }, []);
+
   // Filters
   const { filteredItems, hasSearchFilter } = useFilteredCitizens({
     citizens,
     filterValue,
     siteFilter: siteFilter as string | Set<string>,
+    onResetFilters: handleResetAllFilters,
   });
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
@@ -131,6 +140,7 @@ export default function TableCitizens() {
         filterValue={filterValue}
         showAll={showAll}
         onSearchChange={onSearchChange}
+        onResetFilters={handleResetAllFilters}
       />
     );
   }, [
@@ -142,6 +152,7 @@ export default function TableCitizens() {
     onRowsPerPageChange,
     citizens.length,
     hasSearchFilter,
+    handleResetAllFilters,
   ]);
 
   const bottomContent = useMemo(() => {

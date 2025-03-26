@@ -2,7 +2,15 @@ import {
   MagnifyingGlassIcon,
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
-import { DateRangePicker, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, Button, Input } from "@heroui/react";
+import {
+  DateRangePicker,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+  Button,
+  Input,
+} from "@heroui/react";
 import { I18nProvider } from "@react-aria/i18n";
 import { statusOptions } from "@/constants/casesConstants";
 import { DateRange, RangeValue } from "@/types/sharedTypes";
@@ -21,6 +29,7 @@ interface TopContentProps {
   handleDateRangeChange: (range: RangeValue<CalendarDate>) => void;
   setShowAll: (value: boolean) => void;
   setStatusFilter: (value: Set<string>) => void;
+  onResetFilters: () => void;
 }
 
 export default function TopContent({
@@ -35,8 +44,8 @@ export default function TopContent({
   onRowsPerPageChange,
   handleDateRangeChange,
   setStatusFilter,
+  onResetFilters,
 }: TopContentProps) {
-
   // Convert dateRange to RangeValue<CalendarDate>
   const convertToDateValue = (
     dateRange: DateRange | null
@@ -56,6 +65,13 @@ export default function TopContent({
       ),
     };
   };
+
+  // Verificar si hay filtros activos
+  const hasActiveFilters = Boolean(
+    filterValue || // Filtro de búsqueda
+    (statusFilter instanceof Set && statusFilter.size > 0) || // Filtro de estado
+    (dateRange && dateRange.start && dateRange.end) // Filtro de fecha
+  );
 
   return (
     <div className="flex flex-col">
@@ -102,12 +118,18 @@ export default function TopContent({
             label="Buscar por fecha"
             className="max-w-xs"
             value={convertToDateValue(dateRange)}
-            onChange={(value) => handleDateRangeChange(value as RangeValue<CalendarDate>)}
+            onChange={(value) =>
+              handleDateRangeChange(value as RangeValue<CalendarDate>)
+            }
           />
         </I18nProvider>
         <div>
-          <Button color="primary" onPress={() => setShowAll(!showAll)}>
-            Mostrar todos
+          <Button
+            color="primary"
+            onPress={onResetFilters}
+            isDisabled={!hasActiveFilters}
+          >
+            Limpiar filtros
           </Button>
         </div>
       </div>

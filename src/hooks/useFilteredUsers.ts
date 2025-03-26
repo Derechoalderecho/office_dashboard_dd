@@ -8,7 +8,7 @@ interface UseFilteredItemsProps {
   userTypeFilter: string | Set<string>;
   siteFilter: string | Set<string>;
   selectedTab: "all" | "active" | "inactive";
-  
+  onResetFilters?: () => void;
 }
 
 export const useFilteredUsers = ({
@@ -17,6 +17,7 @@ export const useFilteredUsers = ({
   userTypeFilter,
   siteFilter,
   selectedTab,
+  onResetFilters,
 }: UseFilteredItemsProps) => {
   const hasSearchFilter = Boolean(filterValue);
 
@@ -66,5 +67,11 @@ export const useFilteredUsers = ({
     return filteredUsers;
   }, [users, filterValue, userTypeFilter, siteFilter, selectedTab]);
 
-  return { filteredItems, hasSearchFilter };
+  const resetFilters = () => {
+    if (onResetFilters) {
+      onResetFilters();
+    }
+  };
+
+  return { filteredItems, hasSearchFilter, resetFilters };
 };
