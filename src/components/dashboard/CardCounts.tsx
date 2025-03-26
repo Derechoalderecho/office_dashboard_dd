@@ -77,9 +77,6 @@ export function CardCounts({
       </div>
       <h3 className="text-[#151D48] text-5xl font-semibold">{value}</h3>
       <p className="text-[#425166] text-base font-medium mt-2">{description}</p>
-      <p className="text-[#4079ED] text-sm mt-2 hover:text-[#456bb6]">
-        mostrar más
-      </p>
     </article>
   );
 }
