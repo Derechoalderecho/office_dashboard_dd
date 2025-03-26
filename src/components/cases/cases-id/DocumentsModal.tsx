@@ -23,7 +23,7 @@ import {
   MagnifyingGlassIcon,
   ArrowsUpDownIcon
 } from "@heroicons/react/24/outline";
-import { DocumentResponse } from "@/actions/uploadDocsActions";
+import { DocumentResponse, downloadDocument } from "@/actions/uploadDocsActions";
 import { fetchCaseById } from "@/services/caseService";
 import { parseDateToLocal } from "@/utils/date";
 
@@ -133,24 +133,34 @@ export default function DocumentsModal({ isOpen, onClose, caseId }: DocumentsMod
     setDownloadingId(document.id_documento);
     
     try {
-      // Usar directamente el enlace del documento en lugar de hacer una solicitud adicional
-      console.log(`Descargando documento desde el enlace: ${document.enlace}`);
+      console.log(`Iniciando descarga del documento ${document.id_documento}`);
       
-      // Crear un anclaje temporal para descargar el archivo
-      const link = document.enlace;
-      const fileName = `${document.nombre_documento}${document.ext_documento}`;
+      const result = await downloadDocument(document.id_documento);
       
-      // Abrir el enlace en una nueva pestaña/ventana
-      window.open(link, '_blank');
-      
-      // Mostrar toast de éxito
-      addToast({
-        title: "Descarga iniciada",
-        description: `La descarga de ${fileName} ha comenzado`,
-        color: "success",
-      });
+      if (result.success && result.data && result.fileName) {
+        // Crear un enlace temporal para la descarga
+        const url = window.URL.createObjectURL(result.data);
+        const link = window.document.createElement('a');
+        link.href = url;
+        link.download = result.fileName;
+        
+        // Añadir el enlace al DOM, hacer clic y limpiar
+        window.document.body.appendChild(link);
+        link.click();
+        window.document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+        // Mostrar toast de éxito
+        addToast({
+          title: "Descarga iniciada",
+          description: `La descarga de ${result.fileName} ha comenzado`,
+          color: "success",
+        });
+      } else {
+        throw new Error(result.error || "Error al descargar el documento");
+      }
     } catch (error: any) {
-      // Mostrar toast de error
+      console.error("Error en la descarga:", error);
       addToast({
         title: "Error al descargar",
         description: error.message || "Ha ocurrido un error al intentar descargar el documento",

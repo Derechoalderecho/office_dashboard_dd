@@ -88,19 +88,23 @@ export async function downloadDocument(
   documentId: number
 ): Promise<{ success: boolean; data?: Blob; fileName?: string; error?: string }> {
   try {
-    const response = await axios.get(`${API_BASE_URL}/documentos/${documentId}/download`, {
-      responseType: 'blob'
-    });
-
-    // First, get document details to get the name and extension
+    // Primero, obtener los detalles del documento para obtener el nombre y la extensión
     const docResponse = await axios.get(`${API_BASE_URL}/documentos/${documentId}`);
     const documentData = docResponse.data as DocumentResponse;
     const fileName = `${documentData.nombre_documento}${documentData.ext_documento}`;
+
+    // Luego, hacer la solicitud de descarga al nuevo endpoint
+    const response = await axios.get(`${API_BASE_URL}/documentos/${documentId}/download`, {
+      responseType: 'blob'
+    });
     
     if (response.status === 200) {
+      // Crear un blob con los datos recibidos
+      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+      
       return { 
         success: true, 
-        data: response.data,
+        data: blob,
         fileName: fileName
       };
     } else {
