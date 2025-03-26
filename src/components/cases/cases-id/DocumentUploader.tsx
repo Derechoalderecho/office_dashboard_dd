@@ -249,40 +249,6 @@ export default function DocumentUploader({
         </div>
       </div>
 
-      {uploadedDocument && (
-        <div className="mt-6 p-4 border border-gray-200 rounded-lg bg-white shadow-sm transition-all duration-300 ease-in">
-          <h3 className="font-medium text-lg mb-3">Documento cargado</h3>
-          <div className="flex items-start gap-3">
-            <DocumentTextIcon className="w-8 h-8 text-primary flex-shrink-0" />
-            <div>
-              <p className="font-medium">{uploadedDocument.nombre_documento}{uploadedDocument.ext_documento}</p>
-              <p className="text-sm text-gray-500 mb-1">Subido el {parseDateToLocal(uploadedDocument.fecha_asigna)}</p>
-              <Chip
-                size="sm"
-                variant="flat"
-                color={uploadedDocument.ext_documento === '.pdf' ? 'danger' : 'primary'}
-                className="mt-1"
-              >
-                {uploadedDocument.ext_documento.substring(1).toUpperCase()}
-              </Chip>
-              <div className="mt-2">
-                <a 
-                  href={uploadedDocument.enlace} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline text-sm inline-flex items-center"
-                >
-                  Ver documento
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       <AlertDialog
         isOpen={isAlertOpen}
         onClose={handleCancelUpload}
