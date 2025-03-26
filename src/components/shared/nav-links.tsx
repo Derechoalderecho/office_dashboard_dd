@@ -22,9 +22,10 @@ export const NAV_LINKS = [
     icon: ClipboardDocumentListIcon,
     enabled: true,
   },
-  { href: "/dashboard/mails", key: "mails", label: "Correos", icon: EnvelopeIcon, enabled: false },
+  /*{ href: "/dashboard/mails", key: "mails", label: "Correos", icon: EnvelopeIcon, enabled: false },*/
   { href: "/dashboard/citizens", key: "citizens", label: "Ciudadanos", icon: UsersIcon, enabled: true },
   { href: "/dashboard/users", key: "users", label: "Usuarios", icon: UserGroupIcon, enabled: true },
+/*
   {
     href: "/dashboard/reviewers",
     key: "reviewers",
@@ -32,6 +33,7 @@ export const NAV_LINKS = [
     icon: MagnifyingGlassCircleIcon,
     enabled: false,
   },
+
   { href: "/dashboard/accounts", key: "accounts", label: "Cuentas", icon: UserIcon, enabled: false },
   { href: "/dashboard/crm", key: "crm", label: "CRM", icon: Squares2X2Icon, enabled: false },
   {
@@ -41,6 +43,7 @@ export const NAV_LINKS = [
     icon: Cog6ToothIcon,
     enabled: false,
   },
+    */
 ];
 
 interface NavLinksProps {

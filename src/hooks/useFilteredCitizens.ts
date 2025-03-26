@@ -6,12 +6,14 @@ interface UseFilteredItemsProps {
   citizens: Citizen[];
   filterValue: string;
   siteFilter: string | Set<string>;
+  onResetFilters?: () => void;
 }
 
 export const useFilteredCitizens = ({
   citizens,
   filterValue,
   siteFilter,
+  onResetFilters,
 }: UseFilteredItemsProps) => {
   const hasSearchFilter = Boolean(filterValue);
 
@@ -33,5 +35,11 @@ export const useFilteredCitizens = ({
     return filteredCitizens;
   }, [citizens, filterValue, /*siteFilter*/]);
 
-  return { filteredItems, hasSearchFilter };
+  const resetFilters = () => {
+    if (onResetFilters) {
+      onResetFilters();
+    }
+  };
+
+  return { filteredItems, hasSearchFilter, resetFilters };
 };
