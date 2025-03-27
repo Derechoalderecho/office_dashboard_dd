@@ -1,6 +1,6 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { Nota } from '@/types/cases';
-import { createNote } from '@/services/noteService';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { Nota } from "@/types/cases";
+import { createNote } from "@/services/noteService";
 
 interface NoteState {
   notes: Nota[];
@@ -15,8 +15,15 @@ const initialState: NoteState = {
 };
 
 export const addNote = createAsyncThunk(
-  'note/addNote',
-  async ({ caseId, content, userId }: { caseId: number; content: string; userId: number }, { rejectWithValue }) => {
+  "note/addNote",
+  async (
+    {
+      caseId,
+      content,
+      userId,
+    }: { caseId: number; content: string; userId: number },
+    { rejectWithValue }
+  ) => {
     try {
       const newNote = await createNote(caseId, content, userId);
       return newNote;
@@ -27,7 +34,7 @@ export const addNote = createAsyncThunk(
 );
 
 const noteSlice = createSlice({
-  name: 'note',
+  name: "note",
   initialState,
   reducers: {
     setNotes: (state, action) => {
@@ -49,7 +56,9 @@ const noteSlice = createSlice({
         state.error = null;
       })
       .addCase(addNote.fulfilled, (state, action) => {
-        state.notes.push(action.payload);
+        if (action.payload) {
+          state.notes.push(action.payload);
+        }
         state.loading = false;
         state.error = null;
       })
@@ -61,4 +70,4 @@ const noteSlice = createSlice({
 });
 
 export const { setNotes, clearNotes, clearError } = noteSlice.actions;
-export default noteSlice.reducer; 
+export default noteSlice.reducer;
