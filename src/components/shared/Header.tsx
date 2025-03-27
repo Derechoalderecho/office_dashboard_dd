@@ -118,7 +118,9 @@ export default function Header() {
             </DropdownTrigger>
             <DropdownMenu aria-label="User Actions" variant="flat">
               <DropdownItem key="profile" className="h-14 gap-2">
-                <p className="font-bold">Ingresaste como</p>
+                <Chip size="sm" className="text-sm text-gray-500 my-2">
+                  {role}
+                </Chip>
                 <p className="font-bold">
                   {user && (user.displayName || user.email)}
                 </p>
