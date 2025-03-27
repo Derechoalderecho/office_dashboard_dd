@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   Modal, 
   ModalContent, 
@@ -12,7 +12,8 @@ import {
   Chip, 
   Input,
   Select,
-  SelectItem
+  SelectItem,
+  addToast
 } from "@heroui/react";
 import { 
   DocumentTextIcon, 
@@ -22,7 +23,7 @@ import {
   MagnifyingGlassIcon,
   ArrowsUpDownIcon
 } from "@heroicons/react/24/outline";
-import { DocumentResponse } from "@/actions/uploadDocsActions";
+import { DocumentResponse, downloadDocument } from "@/actions/uploadDocsActions";
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setDocuments } from '@/store/slices/documentSlice';
 import { fetchCase } from '@/store/slices/caseSlice';
@@ -44,10 +45,11 @@ export default function DocumentsModal({ isOpen, onClose, caseId }: DocumentsMod
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const dataFetchedRef = useRef(false);
 
   useEffect(() => {
     const loadDocuments = async () => {
-      if (!isOpen) return;
+      if (!isOpen || dataFetchedRef.current) return;
       
       try {
         // Convertir caseId a número y obtener documentos a través de Redux
@@ -55,19 +57,30 @@ export default function DocumentsModal({ isOpen, onClose, caseId }: DocumentsMod
         if (isNaN(numericCaseId)) {
           throw new Error('ID de caso inválido');
         }
-        await dispatch(fetchCase(numericCaseId));
         
-        if (currentCase?.documentos) {
-          dispatch(setDocuments(currentCase.documentos));
-          setFilteredDocuments(sortDocuments(currentCase.documentos, "newest"));
-        }
+        dataFetchedRef.current = true;
+        await dispatch(fetchCase(numericCaseId));
       } catch (error: any) {
         console.error("Error obteniendo documentos:", error.message);
       }
     };
 
     loadDocuments();
-  }, [isOpen, caseId, dispatch, currentCase]);
+    
+    // Reset the ref when modal is closed or component unmounts
+    return () => {
+      if (!isOpen) {
+        dataFetchedRef.current = false;
+      }
+    };
+  }, [isOpen, caseId, dispatch]);
+
+  useEffect(() => {
+    if (currentCase?.documentos && isOpen) {
+      dispatch(setDocuments(currentCase.documentos));
+      setFilteredDocuments(sortDocuments(currentCase.documentos, "newest"));
+    }
+  }, [currentCase, isOpen, dispatch]);
 
   useEffect(() => {
     if (documents.length > 0) {
@@ -114,10 +127,37 @@ export default function DocumentsModal({ isOpen, onClose, caseId }: DocumentsMod
     setDownloadingId(document.id_documento);
     
     try {
-      window.open(document.enlace, '_blank');
+      const response = await downloadDocument(document.id_documento);
+      
+      if (response.success && response.data && response.fileName) {
+        // Crear URL para el blob y descargar
+        const url = window.URL.createObjectURL(response.data);
+        const a = window.document.createElement('a');
+        a.href = url;
+        a.download = response.fileName;
+        window.document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        window.document.body.removeChild(a);
+        
+        addToast({
+          title: "Descarga iniciada",
+          description: `${response.fileName} se está descargando`,
+          color: "success"
+        });
+      } else {
+        throw new Error(response.error || 'Error al descargar el documento');
+      }
+      
       setDownloadingId(null);
     } catch (error: any) {
       console.error("Error en la descarga:", error);
+      // Mostrar mensaje de error usando toast
+      addToast({
+        title: "Error de descarga",
+        description: error.message || "No se pudo descargar el documento",
+        color: "danger"
+      });
       setDownloadingId(null);
     }
   };
@@ -135,6 +175,9 @@ export default function DocumentsModal({ isOpen, onClose, caseId }: DocumentsMod
       isOpen={isOpen} 
       onClose={onClose}
       size="3xl"
+      classNames={{
+        footer: "border-t-[1px] border-gray-200",
+      }}
     >
       <ModalContent>
         <ModalHeader className="flex flex-col gap-1">
@@ -146,7 +189,7 @@ export default function DocumentsModal({ isOpen, onClose, caseId }: DocumentsMod
           </div>
         </ModalHeader>
         
-        <ModalBody>
+        <ModalBody className="overflow-y-auto max-h-[500px]">
           {!loading && !error && documents.length > 0 && (
             <div className="flex flex-col sm:flex-row gap-3 mb-4">
               <Input

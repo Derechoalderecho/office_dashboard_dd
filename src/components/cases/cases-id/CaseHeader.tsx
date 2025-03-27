@@ -44,6 +44,7 @@ export default function CaseHeader({ caseData }: CaseHeaderProps) {
       <div className="flex flex-col gap-2 items-center">
         <Button
           color="primary"
+          isDisabled
           startContent={<DocumentArrowUpIcon className="w-6" />}
         >
           Elevar Instancia
@@ -52,6 +53,7 @@ export default function CaseHeader({ caseData }: CaseHeaderProps) {
           <Button
             color="secondary"
             variant="bordered"
+            isDisabled
             startContent={<PencilSquareIcon className="w-6" />}
           >
             Editar documento
