@@ -8,7 +8,7 @@ import {
   Avatar,
   Divider,
 } from "@heroui/react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from '@/hooks/useAuth';
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useMemo } from "react";
 import Link from "next/link";

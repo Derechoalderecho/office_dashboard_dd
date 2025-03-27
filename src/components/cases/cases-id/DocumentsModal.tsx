@@ -10,7 +10,6 @@ import {
   Button, 
   Spinner,
   Chip, 
-  addToast,
   Input,
   Select,
   SelectItem
@@ -23,74 +22,57 @@ import {
   MagnifyingGlassIcon,
   ArrowsUpDownIcon
 } from "@heroicons/react/24/outline";
-import { DocumentResponse, downloadDocument } from "@/actions/uploadDocsActions";
-import { fetchCaseById } from "@/services/caseService";
+import { DocumentResponse } from "@/actions/uploadDocsActions";
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { setDocuments } from '@/store/slices/documentSlice';
+import { fetchCase } from '@/store/slices/caseSlice';
 import { parseDateToLocal } from "@/utils/date";
+
+type SortOption = "newest" | "oldest" | "name" | "type";
 
 interface DocumentsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  caseId: number;
+  caseId: string;
 }
 
-type SortOption = "newest" | "oldest" | "name" | "type";
-
 export default function DocumentsModal({ isOpen, onClose, caseId }: DocumentsModalProps) {
-  const [documents, setDocuments] = useState<DocumentResponse[]>([]);
+  const dispatch = useAppDispatch();
+  const { documents, loading, error } = useAppSelector((state) => state.document);
+  const { currentCase } = useAppSelector((state) => state.case);
   const [filteredDocuments, setFilteredDocuments] = useState<DocumentResponse[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
 
   useEffect(() => {
-    const fetchDocuments = async () => {
+    const loadDocuments = async () => {
       if (!isOpen) return;
       
       try {
-        setIsLoading(true);
-        setError(null);
+        // Convertir caseId a número y obtener documentos a través de Redux
+        const numericCaseId = parseInt(caseId, 10);
+        if (isNaN(numericCaseId)) {
+          throw new Error('ID de caso inválido');
+        }
+        await dispatch(fetchCase(numericCaseId));
         
-        // Obtener documentos directamente del fetchCaseById
-        console.log(`Obteniendo documentos para el caso ${caseId} desde fetchCaseById...`);
-        const caseData = await fetchCaseById(caseId);
-        
-        if (caseData && caseData.documentos) {
-          // Mapear los documentos de la respuesta a DocumentResponse si es necesario
-          const docsFromCase = caseData.documentos as DocumentResponse[];
-          console.log(`Se encontraron ${docsFromCase.length} documentos en el caso`);
-          
-          setDocuments(docsFromCase);
-          setFilteredDocuments(sortDocuments(docsFromCase, "newest"));
-        } else {
-          console.log('No se encontraron documentos en la respuesta del caso');
-          setDocuments([]);
-          setFilteredDocuments([]);
+        if (currentCase?.documentos) {
+          dispatch(setDocuments(currentCase.documentos));
+          setFilteredDocuments(sortDocuments(currentCase.documentos, "newest"));
         }
       } catch (error: any) {
-        const errorMsg = error.message || "Error al cargar documentos";
-        console.error("Error obteniendo documentos:", errorMsg);
-        setError(errorMsg);
-        addToast({
-          title: "Error",
-          description: errorMsg,
-          color: "danger",
-        });
-      } finally {
-        setIsLoading(false);
+        console.error("Error obteniendo documentos:", error.message);
       }
     };
 
-    fetchDocuments();
-  }, [isOpen, caseId]);
+    loadDocuments();
+  }, [isOpen, caseId, dispatch, currentCase]);
 
   useEffect(() => {
-    // Filter and sort documents when search term or sort option changes
     if (documents.length > 0) {
       let filtered = documents;
       
-      // Apply search filter
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
         filtered = documents.filter(doc => 
@@ -99,7 +81,6 @@ export default function DocumentsModal({ isOpen, onClose, caseId }: DocumentsMod
         );
       }
       
-      // Apply sorting
       setFilteredDocuments(sortDocuments(filtered, sortBy));
     }
   }, [searchTerm, sortBy, documents]);
@@ -133,40 +114,10 @@ export default function DocumentsModal({ isOpen, onClose, caseId }: DocumentsMod
     setDownloadingId(document.id_documento);
     
     try {
-      console.log(`Iniciando descarga del documento ${document.id_documento}`);
-      
-      const result = await downloadDocument(document.id_documento);
-      
-      if (result.success && result.data && result.fileName) {
-        // Crear un enlace temporal para la descarga
-        const url = window.URL.createObjectURL(result.data);
-        const link = window.document.createElement('a');
-        link.href = url;
-        link.download = result.fileName;
-        
-        // Añadir el enlace al DOM, hacer clic y limpiar
-        window.document.body.appendChild(link);
-        link.click();
-        window.document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        
-        // Mostrar toast de éxito
-        addToast({
-          title: "Descarga iniciada",
-          description: `La descarga de ${result.fileName} ha comenzado`,
-          color: "success",
-        });
-      } else {
-        throw new Error(result.error || "Error al descargar el documento");
-      }
+      window.open(document.enlace, '_blank');
+      setDownloadingId(null);
     } catch (error: any) {
       console.error("Error en la descarga:", error);
-      addToast({
-        title: "Error al descargar",
-        description: error.message || "Ha ocurrido un error al intentar descargar el documento",
-        color: "danger",
-      });
-    } finally {
       setDownloadingId(null);
     }
   };
@@ -176,14 +127,7 @@ export default function DocumentsModal({ isOpen, onClose, caseId }: DocumentsMod
   };
 
   const handleSortChange = (value: string) => {
-    // Mapea el índice seleccionado a una opción de ordenamiento
-    const sortOptions: SortOption[] = ["newest", "oldest", "name", "type"];
-    if (sortOptions.includes(value as SortOption)) {
-      setSortBy(value as SortOption);
-    } else {
-      console.warn(`Opción de ordenamiento no reconocida: ${value}`);
-      setSortBy("newest"); // Valor por defecto
-    }
+    setSortBy(value as SortOption);
   };
 
   return (
@@ -203,7 +147,7 @@ export default function DocumentsModal({ isOpen, onClose, caseId }: DocumentsMod
         </ModalHeader>
         
         <ModalBody>
-          {!isLoading && !error && documents.length > 0 && (
+          {!loading && !error && documents.length > 0 && (
             <div className="flex flex-col sm:flex-row gap-3 mb-4">
               <Input
                 placeholder="Buscar documentos..."
@@ -227,7 +171,7 @@ export default function DocumentsModal({ isOpen, onClose, caseId }: DocumentsMod
             </div>
           )}
           
-          {isLoading ? (
+          {loading ? (
             <div className="flex justify-center items-center py-12">
               <Spinner size="lg" color="primary" />
             </div>

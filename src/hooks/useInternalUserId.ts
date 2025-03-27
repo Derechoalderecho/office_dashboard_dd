@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { getUserIdFromFirebase } from '@/services/userService';
 
-export function useInternalUserId() {
+export const useInternalUserId = () => {
   const { user } = useAuth();
   const [internalUserId, setInternalUserId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);

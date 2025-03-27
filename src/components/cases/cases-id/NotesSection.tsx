@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { createNote } from "@/services/noteService";
 import { Nota } from "@/types/cases";
 import { parseDateToLocal } from "@/utils/date";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from '@/hooks/useAuth';
 import { getUserIdFromFirebase } from "@/services/userService";
 import { useInternalUserId } from "@/hooks/useInternalUserId";
 
@@ -70,15 +70,15 @@ export default function NotesSection({ caseId, initialNotes }: NotesSectionProps
     try {
       console.log(`Preparando para crear nota: Case ID=${caseId}, User ID=${internalUserId}, Mensaje="${noteText.trim().substring(0, 30)}..."`);
       
-      if (!caseId || isNaN(caseId)) {
+      if (!caseId) {
         throw new Error(`ID de caso inválido: ${caseId}`);
       }
       
-      const newNote = await createNote({
-        id_caso: caseId,
-        id_usuario: internalUserId,
-        mensaje: noteText.trim()
-      });
+      const newNote = await createNote(
+        caseId,
+        noteText.trim(),
+        internalUserId
+      );
       
       if (newNote) {
         console.log('Nota creada exitosamente:', newNote);

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { Button, Input, Card, CardBody, CardHeader, CardFooter } from '@heroui/react';
 
 export default function RegisterPage() {
