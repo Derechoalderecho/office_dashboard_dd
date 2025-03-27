@@ -296,38 +296,7 @@ export const fetchUsersByCaseId = async (caseId: number) => {
   }
 };
 
-/**
- * Obtiene todos los casos asignados a un usuario específico
- * @param userId ID del usuario
- * @returns Promise con array de casos asignados al usuario
- */
-export const fetchCasesByUserId = async (userId: number): CasesPromise => {
-  try {
-    // Obtener casos por usuario (sin caché, ya que cambia con frecuencia)
-    const userCases = await get<Cases[]>(`usuarios/${userId}/casos/`);
 
-    // Obtener datos de ciudadano para cada caso en paralelo
-    const casesWithCitizens = await Promise.all(
-      userCases.map(async (caseItem) => {
-        const ciudadano = await getWithCache<Citizen>(
-          CITIZEN_CACHE,
-          caseItem.id_ciudadano,
-          async () => {
-            logger.debug(`Obteniendo ciudadano ${caseItem.id_ciudadano} para caso ${caseItem.id_caso}`);
-            return await get<Citizen>(`ciudadanos/${caseItem.id_ciudadano}`);
-          },
-          CITIZENS_TTL
-        );
-        return { ...caseItem, ciudadano };
-      })
-    );
-
-    return casesWithCitizens;
-  } catch (error) {
-    logger.error(`Error al obtener casos para el usuario ${userId}:`, error);
-    return [];
-  }
-};
 
 /**
  * Actualiza el estado de un caso específico
@@ -468,5 +437,41 @@ export const assignUserToCase = async (
   } catch (error) {
     logger.error(`Error al asignar usuario ${userId} al caso ${caseId}:`, error);
     return false;
+  }
+};
+
+
+/* USER SERVICES BY USER ROLE */
+
+/**
+ * Obtiene todos los casos asignados a un usuario específico
+ * @param userId ID del usuario
+ * @returns Promise con array de casos asignados al usuario
+ */
+export const fetchCasesByUserId = async (userId: number): CasesPromise => {
+  try {
+    // Obtener casos por usuario (sin caché, ya que cambia con frecuencia)
+    const userCases = await get<Cases[]>(`usuario/${userId}`);
+
+    // Obtener datos de ciudadano para cada caso en paralelo
+    const casesWithCitizens = await Promise.all(
+      userCases.map(async (caseItem) => {
+        const ciudadano = await getWithCache<Citizen>(
+          CITIZEN_CACHE,
+          caseItem.id_ciudadano,
+          async () => {
+            logger.debug(`Obteniendo ciudadano ${caseItem.id_ciudadano} para caso ${caseItem.id_caso}`);
+            return await get<Citizen>(`ciudadanos/${caseItem.id_ciudadano}`);
+          },
+          CITIZENS_TTL
+        );
+        return { ...caseItem, ciudadano };
+      })
+    );
+
+    return casesWithCitizens;
+  } catch (error) {
+    logger.error(`Error al obtener casos para el usuario ${userId}:`, error);
+    return [];
   }
 };
