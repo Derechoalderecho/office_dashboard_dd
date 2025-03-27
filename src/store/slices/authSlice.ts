@@ -27,14 +27,18 @@ interface SerializableUser {
   }[];
 }
 
+export type UserRole = 'Estudiante' | 'Monitor' | 'Docente' | 'Director' | null;
+
 interface AuthState {
   user: SerializableUser | null;
+  role: UserRole;
   loading: boolean;
   error: string | null;
 }
 
 const initialState: AuthState = {
   user: null,
+  role: null,
   loading: true,
   error: null,
 };
@@ -121,6 +125,9 @@ const authSlice = createSlice({
       state.loading = false;
       state.error = null;
     },
+    setUserRole: (state, action) => {
+      state.role = action.payload;
+    },
     setLoading: (state, action) => {
       state.loading = action.payload;
     },
@@ -191,5 +198,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser, setLoading, setError, clearError } = authSlice.actions;
+export const { setUser, setUserRole, setLoading, setError, clearError } = authSlice.actions;
 export default authSlice.reducer; 

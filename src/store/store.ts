@@ -6,7 +6,7 @@ import { authReducer, caseReducer, noteReducer, documentReducer } from './slices
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['auth'] // Solo persistir el estado de autenticación
+  whitelist: ['auth'] // Persistir el estado de autenticación, que incluye el rol
 };
 
 const persistedAuthReducer = persistReducer(persistConfig, authReducer);
@@ -25,7 +25,8 @@ export const store = configureStore({
         ignoredActions: [
           'persist/PERSIST', 
           'persist/REHYDRATE', 
-          'auth/setUser'
+          'auth/setUser',
+          'auth/setUserRole'
         ],
         // Ignorar paths específicos en el state
         ignoredPaths: ['auth.user'],

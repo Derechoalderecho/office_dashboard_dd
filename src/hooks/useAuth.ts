@@ -1,8 +1,9 @@
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { signUp, signIn, logout, resetPassword, setUser } from '@/store/slices/authSlice';
+import { signUp, signIn, logout, resetPassword, setUser, setUserRole, UserRole } from '@/store/slices/authSlice';
 import { useEffect } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { getUserRoleFromFirebase } from '@/services/userService';
 
 // Función para extraer solo las propiedades serializables del usuario
 const serializeUser = (user: User | null) => {
@@ -29,12 +30,24 @@ const serializeUser = (user: User | null) => {
 
 export const useAuth = () => {
   const dispatch = useAppDispatch();
-  const { user, loading, error } = useAppSelector((state) => state.auth);
+  const { user, role, loading, error } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       const serializedUser = serializeUser(firebaseUser);
       dispatch(setUser(serializedUser));
+      
+      // Si hay un usuario autenticado, obtener su rol
+      if (firebaseUser) {
+        try {
+          const userRole = await getUserRoleFromFirebase(firebaseUser.uid);
+          dispatch(setUserRole(userRole as UserRole));
+        } catch (error) {
+          console.error('Error al obtener el rol del usuario:', error);
+        }
+      } else {
+        dispatch(setUserRole(null));
+      }
     });
 
     return () => unsubscribe();
@@ -61,6 +74,7 @@ export const useAuth = () => {
   const handleLogout = async () => {
     try {
       await dispatch(logout()).unwrap();
+      dispatch(setUserRole(null));
     } catch (error) {
       console.error('Error signing out:', error);
       throw error;
@@ -78,6 +92,7 @@ export const useAuth = () => {
 
   return {
     user,
+    role,
     loading,
     error,
     signUp: handleSignUp,
