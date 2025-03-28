@@ -51,7 +51,7 @@ export const fetchAllCasesDashboard = async (): Promise<CaseWithCitizen[]> => {
  */
 export const fetchAllCases = async (): Promise<CaseWithCitizen[]> => {
   try {
-    // Primero obtenemos los casos
+    // Primero obtenemos los casos desde la caché o la API
     const cases = await getCollectionWithCache<Cases>(
       CASES_CACHE,
       async () => {
@@ -62,34 +62,43 @@ export const fetchAllCases = async (): Promise<CaseWithCitizen[]> => {
       CASES_TTL
     );
 
-    // Luego usamos Promise.all para obtener los datos relacionados en paralelo
-    const casesWithData = await Promise.all(
-      cases.map(async (caseItem) => {
-        // Obtener datos del ciudadano con caché
-        const ciudadano = await getWithCache<Citizen>(
-          CITIZEN_CACHE,
-          caseItem.id_ciudadano,
-          async () => {
-            logger.debug(`Obteniendo ciudadano ${caseItem.id_ciudadano}`);
-            return await get<Citizen>(`ciudadanos/${caseItem.id_ciudadano}`);
-          },
-          CITIZENS_TTL
-        );
+    // Si no hay casos, devolvemos un array vacío
+    if (!cases || cases.length === 0) {
+      return [];
+    }
 
-        // Obtener usuarios asignados con caché
-        const usuarios = await getWithCache<any[]>(
-          `${CASES_CACHE}_usuarios_${caseItem.id_caso}`,
-          caseItem.id_caso,
-          async () => {
-            logger.debug(`Obteniendo usuarios para caso ${caseItem.id_caso}`);
-            return await get<any[]>(`casos/${caseItem.id_caso}/usuarios/`);
-          },
-          CASES_TTL
-        );
-
-        return { ...caseItem, ciudadano, usuarios };
-      })
+    // Creamos un Map para agrupar los IDs únicos de ciudadanos
+    const uniqueCitizenIds = new Set(cases.map(c => c.id_ciudadano));
+    
+    // Obtenemos todos los ciudadanos únicos en una sola operación
+    const citizensPromises = Array.from(uniqueCitizenIds).map(id => 
+      getWithCache<Citizen>(
+        CITIZEN_CACHE,
+        id,
+        async () => {
+          logger.debug(`Obteniendo ciudadano ${id}`);
+          return await get<Citizen>(`ciudadanos/${id}`);
+        },
+        CITIZENS_TTL
+      )
     );
+    
+    // Obtenemos todos los ciudadanos en paralelo
+    const citizens = await Promise.all(citizensPromises);
+    
+    // Creamos un Map de ciudadanos para acceso rápido
+    const citizenMap = new Map();
+    citizens.forEach(citizen => {
+      if (citizen) {
+        citizenMap.set(citizen.id_ciudadano, citizen);
+      }
+    });
+
+    // Combinamos los casos con sus ciudadanos
+    const casesWithData = cases.map(caseItem => {
+      const ciudadano = citizenMap.get(caseItem.id_ciudadano);
+      return { ...caseItem, ciudadano };
+    });
 
     return casesWithData;
   } catch (error) {
@@ -303,24 +312,46 @@ export const fetchUsersByCaseId = async (caseId: number) => {
  */
 export const fetchCasesByUserId = async (userId: number): CasesPromise => {
   try {
-    // Obtener casos por usuario (sin caché, ya que cambia con frecuencia)
+    // Obtener casos por usuario
     const userCases = await get<Cases[]>(`usuarios/${userId}/casos/`);
 
-    // Obtener datos de ciudadano para cada caso en paralelo
-    const casesWithCitizens = await Promise.all(
-      userCases.map(async (caseItem) => {
-        const ciudadano = await getWithCache<Citizen>(
-          CITIZEN_CACHE,
-          caseItem.id_ciudadano,
-          async () => {
-            logger.debug(`Obteniendo ciudadano ${caseItem.id_ciudadano} para caso ${caseItem.id_caso}`);
-            return await get<Citizen>(`ciudadanos/${caseItem.id_ciudadano}`);
-          },
-          CITIZENS_TTL
-        );
-        return { ...caseItem, ciudadano };
-      })
+    // Si no hay casos, devolvemos un array vacío
+    if (!userCases || userCases.length === 0) {
+      return [];
+    }
+
+    // Crear un Set con los IDs únicos de ciudadanos
+    const uniqueCitizenIds = new Set(userCases.map(c => c.id_ciudadano));
+    
+    // Obtener todos los ciudadanos únicos en paralelo
+    const citizensPromises = Array.from(uniqueCitizenIds).map(id => 
+      getWithCache<Citizen>(
+        CITIZEN_CACHE,
+        id,
+        async () => {
+          logger.debug(`Obteniendo ciudadano ${id} para casos de usuario ${userId}`);
+          return await get<Citizen>(`ciudadanos/${id}`);
+        },
+        CITIZENS_TTL
+      )
     );
+    
+    // Esperar a que todas las solicitudes de ciudadanos se completen
+    const citizens = await Promise.all(citizensPromises);
+    
+    // Crear un mapa de ciudadanos para acceso rápido
+    const citizenMap = new Map();
+    citizens.forEach(citizen => {
+      if (citizen) {
+        citizenMap.set(citizen.id_ciudadano, citizen);
+      }
+    });
+
+    // Combinar los casos con sus ciudadanos
+    const casesWithCitizens = userCases.map(caseItem => {
+      const ciudadano = citizenMap.get(caseItem.id_ciudadano);
+      return { ...caseItem, ciudadano };
+    });
 
     return casesWithCitizens;
   } catch (error) {
