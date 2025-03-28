@@ -41,7 +41,7 @@ export default function DocumentDownloader({
       <DocumentsModal 
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        caseId={caseId}
+        caseId={caseId.toString()}
       />
     </div>
   );
