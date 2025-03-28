@@ -84,11 +84,7 @@ export default async function CasePage({
               <CaseInfo caseData={caseData} />
 
               <hr className="my-4" />
-              <h6 className="font-medium text-lg mb-4">
-                Previsualización de la tutela
-              </h6>
-
-              <CasePreview />
+              <CasePreview caseId={caseData.id_caso} />
 
               <DocumentsSection caseId={caseData.id_caso} />
             </div>
