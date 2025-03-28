@@ -21,7 +21,7 @@ export default function CasePreview({
   previewText,
   caseId,
   canUpload = true, // Por defecto permitimos la carga si no se especifica
-  onTutelaUploaded
+  onTutelaUploaded,
 }: CasePreviewProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -147,7 +147,7 @@ export default function CasePreview({
           description: "Documento cargado correctamente",
           color: "success",
         });
-        
+
         // Notificar al componente padre que se ha subido una tutela
         if (onTutelaUploaded) {
           onTutelaUploaded();
@@ -192,6 +192,7 @@ export default function CasePreview({
         title="Confirmar carga"
         description={`¿Está seguro que desea cargar el documento "${selectedFile?.name}"? Este documento se procesará y mostrará como tutela.`}
         confirmText="Cargar"
+        type="info"
         isLoading={isLoading}
       />
 
@@ -201,7 +202,7 @@ export default function CasePreview({
             isDragging
               ? "border-primary bg-blue-50"
               : "border-gray-300 bg-white"
-          } ${!canUpload ? 'opacity-50 pointer-events-none' : ''}`}
+          } ${!canUpload ? "opacity-50 pointer-events-none" : ""}`}
           onDragEnter={canUpload ? handleDragEnter : undefined}
           onDragLeave={canUpload ? handleDragLeave : undefined}
           onDragOver={canUpload ? handleDragOver : undefined}
@@ -214,12 +215,11 @@ export default function CasePreview({
               }`}
             />
             <h5 className="text-lg font-medium mb-2">
-              {!canUpload 
-                ? "No se permite cargar tutela en este momento" 
+              {!canUpload
+                ? "No se permite cargar tutela en este momento"
                 : isDragging
-                  ? "Suelta para cargar"
-                  : "Carga tu documento de tutela"
-              }
+                ? "Suelta para cargar"
+                : "Carga tu documento de tutela"}
             </h5>
             {canUpload ? (
               <>
@@ -242,7 +242,8 @@ export default function CasePreview({
               </>
             ) : (
               <p className="text-sm text-gray-500 mb-4">
-                El estado actual del caso no permite cargar tutelas o su rol no tiene permisos
+                El estado actual del caso no permite cargar tutelas o su rol no
+                tiene permisos
               </p>
             )}
 
@@ -267,13 +268,14 @@ export default function CasePreview({
           <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
             <div>
               <p className="text-sm font-medium text-gray-700">
-                {tutelaData.nombre_documento}{tutelaData.ext_documento}
+                {tutelaData.nombre_documento}
+                {tutelaData.ext_documento}
               </p>
               <p className="text-xs text-gray-500">
-                {new Date(tutelaData.fecha_asigna).toLocaleDateString('es-CO', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
+                {new Date(tutelaData.fecha_asigna).toLocaleDateString("es-CO", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
                 })}
               </p>
             </div>
@@ -298,7 +300,7 @@ export default function CasePreview({
           </div>
         </div>
       )}
-      
+
       {/* El input file debe estar fuera de las condiciones, para que siempre esté disponible */}
       <input
         type="file"
