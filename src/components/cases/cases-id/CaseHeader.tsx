@@ -24,20 +24,46 @@ export default function CaseHeader({ caseData }: CaseHeaderProps) {
       <div>
         <div className="flex gap-4 items-center mb-1">
           <h1 className="text-4xl font-medium">INV4257-09-011</h1>
-          <div className={`w-fit flex gap-2 items-center rounded-full py-1 px-3 
+          <div
+            className={`w-fit flex gap-2 items-center rounded-full py-1 px-3 
             ${
               displayState === "Aprobado"
                 ? "bg-[#12A150]/10 text-[#12A150]"
                 : displayState === "Seguimiento"
                 ? "bg-[#006FEE]/10 text-[#006FEE]"
+                : displayState === "Pendiente"
+                ? "bg-[#f43f5e]/10 text-[#f43f5e]"
+                : displayState === "Revisar tutela"
+                ? "bg-[#f59e0b]/10 text-[#f59e0b]"
+                : displayState === "Radicar"
+                ? "bg-[#10b981]/10 text-[#10b981]"
+                : displayState === "Espera del juez"
+                ? "bg-[#0ea5e9]/10 text-[#0ea5e9]"
+                : displayState === "Acción necesaria"
+                ? "bg-[#C4841D]/10 text-[#C4841D]"
+                : displayState === "No aprobado"
+                ? "bg-[#f43f5e]/10 text-[#f43f5e]"
                 : "bg-[#C4841D]/10 text-[#C4841D]"
-            }`}>
+            }`}
+          >
             <div
               className={`w-2 h-2 rounded-full ${
                 displayState === "Aprobado"
                   ? "bg-[#12A150]"
                   : displayState === "Seguimiento"
                   ? "bg-[#006FEE]"
+                  : displayState === "Pendiente"
+                  ? "bg-[#f43f5e]"
+                  : displayState === "Revisar tutela"
+                  ? "bg-[#f59e0b]"
+                  : displayState === "Radicar"
+                  ? "bg-[#10b981]"
+                  : displayState === "Espera del juez"
+                  ? "bg-[#0ea5e9]"
+                  : displayState === "Acción necesaria"
+                  ? "bg-[#C4841D]"
+                  : displayState === "No aprobado"
+                  ? "bg-[#f43f5e]"
                   : "bg-[#C4841D]"
               }`}
             ></div>
