@@ -23,6 +23,7 @@ import { useDeleteRows } from "@/hooks/useDeleteRows";
 import { getDeleteAlertMessage } from "@/utils/alertMessage";
 import { updateCaseStatus } from "@/services/caseService";
 import { UserAssignmentModal } from "./UserAssignmentModal";
+import { useUserRole } from "@/hooks/useUserRole";
 
 interface BulkActionsBarProps {
   selectedKeys: Selection;
@@ -61,6 +62,7 @@ export const BulkActionsBar = ({
   const [isStatusLoading, setIsStatusLoading] = useState(false);
   const [isUserAssignmentModalOpen, setIsUserAssignmentModalOpen] = useState(false);
   const { handleDelete, isLoading: isDeleteLoading } = useDeleteRows(onDeleteCases);
+  const { role } = useUserRole();
 
   const convertSelection = (selection: Selection): Set<number> | "all" => {
     if (selection === "all") return "all";
@@ -289,25 +291,33 @@ export const BulkActionsBar = ({
                   </DropdownSection>
                 </DropdownMenu>
               </Dropdown>
+              {role !== 'Estudiante' && (
+                <>
               <div className="border-l border-white h-6 mx-2"></div>
               <div className="flex items-center gap-1 cursor-pointer" onClick={handleOpenUserAssignmentModal}>
                 <UserCircleIcon className="w-6 text-white" />
                 <p className="text-white">Asignado</p>
               </div>
+              </>
+              )}
               <div className="border-l border-white h-6 mx-2"></div>
               <div className="flex items-center gap-1">
                 <TagIcon className="w-6 text-white" />
                 <p className="text-white">Tags</p>
               </div>
-              <div className="border-l border-white h-6 mx-2"></div>
-              <Button
-                isIconOnly
-                color="danger"
-                variant="light"
-                onPress={() => setIsDeleteAlertOpen(true)}
-              >
-                <TrashIcon className="w-6 text-white" />
-              </Button>
+              {role !== 'Estudiante' && (
+                <>
+                  <div className="border-l border-white h-6 mx-2"></div>
+                  <Button
+                    isIconOnly
+                    color="danger"
+                    variant="light"
+                    onPress={() => setIsDeleteAlertOpen(true)}
+                  >
+                    <TrashIcon className="w-6 text-white" />
+                  </Button>
+                </>
+              )}
             </div>
           </CardBody>
         </Card>
