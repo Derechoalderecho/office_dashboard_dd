@@ -35,52 +35,104 @@ interface DocumentsModalProps {
   isOpen: boolean;
   onClose: () => void;
   caseId: string;
+  refreshFlag?: boolean;
+  onRefreshed?: () => void;
 }
 
-export default function DocumentsModal({ isOpen, onClose, caseId }: DocumentsModalProps) {
+export default function DocumentsModal({ 
+  isOpen, 
+  onClose, 
+  caseId,
+  refreshFlag = false,
+  onRefreshed
+}: DocumentsModalProps) {
   const dispatch = useAppDispatch();
   const { documents, loading, error } = useAppSelector((state) => state.document);
-  const { currentCase } = useAppSelector((state) => state.case);
+  const { currentCase, loading: caseLoading } = useAppSelector((state) => state.case);
   const [filteredDocuments, setFilteredDocuments] = useState<DocumentResponse[]>([]);
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
-  const dataFetchedRef = useRef(false);
 
   useEffect(() => {
-    const loadDocuments = async () => {
-      if (!isOpen || dataFetchedRef.current) return;
-      
-      try {
-        // Convertir caseId a número y obtener documentos a través de Redux
-        const numericCaseId = parseInt(caseId, 10);
-        if (isNaN(numericCaseId)) {
-          throw new Error('ID de caso inválido');
-        }
-        
-        dataFetchedRef.current = true;
-        await dispatch(fetchCase(numericCaseId));
-      } catch (error: any) {
-        console.error("Error obteniendo documentos:", error.message);
-      }
-    };
-
-    loadDocuments();
+    if (!isOpen) return;
     
-    // Reset the ref when modal is closed or component unmounts
-    return () => {
-      if (!isOpen) {
-        dataFetchedRef.current = false;
+    try {
+      // Convertir caseId a número y obtener documentos a través de Redux
+      const numericCaseId = parseInt(caseId, 10);
+      if (isNaN(numericCaseId)) {
+        throw new Error('ID de caso inválido');
       }
-    };
+      
+      // Cargar el caso y sus documentos sin usar caché
+      (async () => {
+        try {
+          // Importar dinámicamente para evitar problemas de circular import
+          const { fetchCaseByIdFresh } = await import('@/services/caseService');
+          const freshCase = await fetchCaseByIdFresh(numericCaseId);
+          
+          if (freshCase?.documentos) {
+            // Actualizar documentos en Redux
+            dispatch(setDocuments(freshCase.documentos));
+            console.log("Documentos cargados (fresh):", freshCase.documentos.length);
+          }
+        } catch (error) {
+          console.error("Error al cargar caso:", error);
+        }
+      })();
+    } catch (error: any) {
+      console.error("Error obteniendo documentos:", error.message);
+    }
   }, [isOpen, caseId, dispatch]);
+
+  useEffect(() => {
+    if (isOpen && refreshFlag) {
+      try {
+        console.log("Refrescando documentos del caso...");
+        
+        // Recargar el caso para obtener los documentos actualizados
+        const numericCaseId = parseInt(caseId, 10);
+        if (!isNaN(numericCaseId)) {
+          // Forzar refresco ignorando la caché
+          (async () => {
+            try {
+              // Usar fetchCaseByIdFresh para obtener datos sin caché
+              const updatedCase = await import('@/services/caseService')
+                .then(module => module.fetchCaseByIdFresh(numericCaseId));
+              
+              if (updatedCase?.documentos) {
+                console.log("Caso actualizado con éxito:", 
+                  updatedCase.documentos.length, "documentos");
+                  
+                // Actualizamos directamente los documentos sin esperar otro efecto
+                dispatch(setDocuments(updatedCase.documentos));
+                setFilteredDocuments(sortDocuments(updatedCase.documentos, sortBy));
+              }
+            } catch (error) {
+              console.error("Error al actualizar caso:", error);
+            } finally {
+              // Notificar que se ha completado el refresco
+              if (onRefreshed) {
+                onRefreshed();
+              }
+            }
+          })();
+        } else {
+          if (onRefreshed) onRefreshed();
+        }
+      } catch (error) {
+        console.error("Error al refrescar documentos:", error);
+        if (onRefreshed) onRefreshed();
+      }
+    }
+  }, [isOpen, refreshFlag, caseId, dispatch, onRefreshed, sortBy]);
 
   useEffect(() => {
     if (currentCase?.documentos && isOpen) {
       dispatch(setDocuments(currentCase.documentos));
-      setFilteredDocuments(sortDocuments(currentCase.documentos, "newest"));
+      setFilteredDocuments(sortDocuments(currentCase.documentos, sortBy));
     }
-  }, [currentCase, isOpen, dispatch]);
+  }, [currentCase, isOpen, dispatch, sortBy]);
 
   useEffect(() => {
     if (documents.length > 0) {
