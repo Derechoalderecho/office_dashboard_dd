@@ -54,6 +54,20 @@ export const TableCellRendererCases = ({
               ? "bg-warning text-[#C4841D]"
               : cellValue === "No aprobado"
               ? "bg-error text-[#F31260]"
+              : cellValue === "Viabilidad"
+              ? "bg-purple-100 text-purple-600"
+              : cellValue === "Elaboración tutela"
+              ? "bg-indigo-100 text-indigo-600"
+              : cellValue === "Valoración del asesor"
+              ? "bg-teal-100 text-teal-600"
+              : cellValue === "Revisar tutela"
+              ? "bg-amber-100 text-amber-600"
+              : cellValue === "Radicar"
+              ? "bg-emerald-100 text-emerald-600"
+              : cellValue === "Pediente"
+              ? "bg-rose-100 text-rose-600"
+              : cellValue === "Espera del juez"
+              ? "bg-sky-100 text-sky-600"
               : ""
           }`}
           size="sm"
@@ -80,6 +94,7 @@ export const TableCellRendererCases = ({
       const getColor = () => {
         if (tiempo <= 24) return "text-[#F31260]";
         if (tiempo <= 48) return "text-[#C4841D]";
+        if (tiempo <= 72) return "text-[#006FEE]";
         return "text-[#12A150]";
       };
       return (
