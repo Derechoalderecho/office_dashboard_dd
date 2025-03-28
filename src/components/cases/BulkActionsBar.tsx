@@ -38,14 +38,22 @@ interface BulkActionsBarProps {
 const STATUS_MAP = {
   action_required: "Acción necesaria",
   followed: "Seguimiento",
-  no_approved: "No aprobado"
+  no_approved: "No aprobado",
+  pending: "Pendiente",
+  review_tutela: "Revisar tutela",
+  file: "Radicar",
+  judge_wait: "Espera del juez"
 };
 
 // Mapeo de estados a colores para UI
 const STATUS_COLORS = {
   "Acción necesaria": "#C4841D",
   "Seguimiento": "#006FEE",
-  "No aprobado": "#F31260"
+  "No aprobado": "#F31260",
+  "Pendiente": "#f43f5e",
+  "Revisar tutela": "#f59e0b",
+  "Radicar": "#10b981",
+  "Espera del juez": "#0ea5e9"
 };
 
 export const BulkActionsBar = ({
@@ -286,6 +294,42 @@ export const BulkActionsBar = ({
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 bg-[#F31260] rounded-full"></div>
                         No aprobado
+                      </div>
+                    </DropdownItem>
+                    <DropdownItem 
+                      key="pending"
+                      onPress={() => handleStatusChange("pending")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-[#f43f5e] rounded-full"></div>
+                        Pendiente
+                      </div>
+                    </DropdownItem>
+                    <DropdownItem 
+                      key="review_tutela"
+                      onPress={() => handleStatusChange("review_tutela")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-[#f59e0b] rounded-full"></div>
+                        Revisar tutela
+                      </div>
+                    </DropdownItem>
+                    <DropdownItem 
+                      key="file"
+                      onPress={() => handleStatusChange("file")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-[#10b981] rounded-full"></div>
+                        Radicar
+                      </div>
+                    </DropdownItem>
+                    <DropdownItem 
+                      key="judge_wait"
+                      onPress={() => handleStatusChange("judge_wait")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-[#0ea5e9] rounded-full"></div>
+                        Espera del juez
                       </div>
                     </DropdownItem>
                   </DropdownSection>
