@@ -25,11 +25,13 @@ import { useInternalUserId } from "@/hooks/useInternalUserId";
 interface NotesSectionProps {
   caseId: number;
   initialNotes?: Nota[];
+  onNoteAdded?: () => void;
 }
 
 export default function NotesSection({
   caseId,
   initialNotes,
+  onNoteAdded,
 }: NotesSectionProps) {
   const { user } = useAuth();
   const {
@@ -111,6 +113,10 @@ export default function NotesSection({
           description: "La nota ha sido agregada correctamente",
           color: "success",
         });
+
+        if (onNoteAdded) {
+          onNoteAdded();
+        }
       } else {
         console.error("La función createNote devolvió null");
         throw new Error(

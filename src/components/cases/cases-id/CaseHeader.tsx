@@ -5,6 +5,8 @@ import {
   PencilSquareIcon,
   ClipboardDocumentCheckIcon,
   DocumentArrowUpIcon,
+  XCircleIcon,
+  CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 import { parseDateToLocal } from "@/utils/date";
 import { Cases } from "@/types/cases";
@@ -13,9 +15,17 @@ import { useUserRole } from "@/hooks/useUserRole";
 
 interface CaseHeaderProps {
   caseData: Cases;
+  onApproveSubmission?: () => Promise<void>;
+  onRejectSubmission?: () => Promise<void>;
+  isStatusChangeLoading?: boolean;
 }
 
-export default function CaseHeader({ caseData }: CaseHeaderProps) {
+export default function CaseHeader({
+  caseData,
+  onApproveSubmission,
+  onRejectSubmission,
+  isStatusChangeLoading = false,
+}: CaseHeaderProps) {
   const { role } = useUserRole();
   const displayState = transformStateByRole(caseData.estado, role);
 
@@ -31,18 +41,6 @@ export default function CaseHeader({ caseData }: CaseHeaderProps) {
                 ? "bg-[#12A150]/10 text-[#12A150]"
                 : displayState === "Seguimiento"
                 ? "bg-[#006FEE]/10 text-[#006FEE]"
-                : displayState === "Pendiente"
-                ? "bg-[#f43f5e]/10 text-[#f43f5e]"
-                : displayState === "Revisar tutela"
-                ? "bg-[#f59e0b]/10 text-[#f59e0b]"
-                : displayState === "Radicar"
-                ? "bg-[#10b981]/10 text-[#10b981]"
-                : displayState === "Espera del juez"
-                ? "bg-[#0ea5e9]/10 text-[#0ea5e9]"
-                : displayState === "Acción necesaria"
-                ? "bg-[#C4841D]/10 text-[#C4841D]"
-                : displayState === "No aprobado"
-                ? "bg-[#f43f5e]/10 text-[#f43f5e]"
                 : "bg-[#C4841D]/10 text-[#C4841D]"
             }`}
           >
@@ -52,18 +50,6 @@ export default function CaseHeader({ caseData }: CaseHeaderProps) {
                   ? "bg-[#12A150]"
                   : displayState === "Seguimiento"
                   ? "bg-[#006FEE]"
-                  : displayState === "Pendiente"
-                  ? "bg-[#f43f5e]"
-                  : displayState === "Revisar tutela"
-                  ? "bg-[#f59e0b]"
-                  : displayState === "Radicar"
-                  ? "bg-[#10b981]"
-                  : displayState === "Espera del juez"
-                  ? "bg-[#0ea5e9]"
-                  : displayState === "Acción necesaria"
-                  ? "bg-[#C4841D]"
-                  : displayState === "No aprobado"
-                  ? "bg-[#f43f5e]"
                   : "bg-[#C4841D]"
               }`}
             ></div>
@@ -77,12 +63,27 @@ export default function CaseHeader({ caseData }: CaseHeaderProps) {
       <div className="flex gap-2 items-center">
         <Button
           className="text-white bg-[#12A150]"
+          isDisabled={!onApproveSubmission || isStatusChangeLoading || caseData.estado !== "Radicar"}
+          isLoading={isStatusChangeLoading}
+          onPress={onApproveSubmission}
           startContent={
             <ClipboardDocumentCheckIcon className="w-6 text-white" />
           }
         >
           Aprobar envío
         </Button>
+        {caseData.estado === "Radicar" && onRejectSubmission && (
+          <Button
+            variant="bordered"
+            color="danger"
+            isDisabled={isStatusChangeLoading}
+            onPress={onRejectSubmission}
+            isLoading={isStatusChangeLoading}
+            startContent={<XCircleIcon className="w-6 text-danger" />}
+          >
+            Rechazar envío
+          </Button>
+        )}
         <Button
           variant="bordered"
           color="primary"

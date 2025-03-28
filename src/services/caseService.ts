@@ -4,12 +4,12 @@ import { Citizen } from "@/types/citizens";
 import { Cases, CaseHistoryLog } from "@/types/cases";
 import { enrichNotesWithUserInfo } from "@/services/noteService";
 import { get, del, batchRequests, put, post } from "@/utils/apiUtils";
-import {
-  getWithCache,
+import { 
+  getWithCache, 
   getCollectionWithCache,
   invalidateCacheItem,
   invalidateCache,
-  setCachedItem,
+  setCachedItem
 } from "@/utils/cacheUtils";
 import { logger } from "@/utils/logUtils";
 
@@ -17,9 +17,9 @@ type CaseWithCitizen = Cases & { ciudadano: Citizen };
 type CasesPromise = Promise<CaseWithCitizen[]>;
 
 // Constantes para las cachés
-const CASES_CACHE = "cases";
-const HISTORY_CACHE = "caseHistory";
-const CITIZEN_CACHE = "citizens";
+const CASES_CACHE = 'cases';
+const HISTORY_CACHE = 'caseHistory';
+const CITIZEN_CACHE = 'citizens';
 
 // Tiempo de vida para cada tipo de caché
 const CASES_TTL = 5 * 60 * 1000; // 5 minutos
@@ -35,9 +35,9 @@ export const fetchAllCasesDashboard = async (): Promise<CaseWithCitizen[]> => {
       CASES_CACHE,
       async () => {
         logger.debug("Obteniendo todos los casos del dashboard");
-        return await get<Cases[]>("casos");
+        return await get<Cases[]>('casos');
       },
-      (caseItem) => caseItem.id_caso,
+      caseItem => caseItem.id_caso,
       CASES_TTL
     );
   } catch (error) {
@@ -56,9 +56,9 @@ export const fetchAllCases = async (): Promise<CaseWithCitizen[]> => {
       CASES_CACHE,
       async () => {
         logger.debug("Obteniendo todos los casos");
-        return await get<Cases[]>("casos");
+        return await get<Cases[]>('casos');
       },
-      (caseItem) => caseItem.id_caso,
+      caseItem => caseItem.id_caso,
       CASES_TTL
     );
 
@@ -68,10 +68,10 @@ export const fetchAllCases = async (): Promise<CaseWithCitizen[]> => {
     }
 
     // Creamos un Map para agrupar los IDs únicos de ciudadanos
-    const uniqueCitizenIds = new Set(cases.map((c) => c.id_ciudadano));
-
+    const uniqueCitizenIds = new Set(cases.map(c => c.id_ciudadano));
+    
     // Obtenemos todos los ciudadanos únicos en una sola operación
-    const citizensPromises = Array.from(uniqueCitizenIds).map((id) =>
+    const citizensPromises = Array.from(uniqueCitizenIds).map(id => 
       getWithCache<Citizen>(
         CITIZEN_CACHE,
         id,
@@ -82,20 +82,20 @@ export const fetchAllCases = async (): Promise<CaseWithCitizen[]> => {
         CITIZENS_TTL
       )
     );
-
+    
     // Obtenemos todos los ciudadanos en paralelo
     const citizens = await Promise.all(citizensPromises);
-
+    
     // Creamos un Map de ciudadanos para acceso rápido
     const citizenMap = new Map();
-    citizens.forEach((citizen) => {
+    citizens.forEach(citizen => {
       if (citizen) {
         citizenMap.set(citizen.id_ciudadano, citizen);
       }
     });
 
     // Combinamos los casos con sus ciudadanos
-    const casesWithData = cases.map((caseItem) => {
+    const casesWithData = cases.map(caseItem => {
       const ciudadano = citizenMap.get(caseItem.id_ciudadano);
       return { ...caseItem, ciudadano };
     });
@@ -137,14 +137,12 @@ export const fetchCaseById = async (
       CITIZEN_CACHE,
       caseData.id_ciudadano,
       async () => {
-        logger.debug(
-          `Obteniendo ciudadano ${caseData.id_ciudadano} para caso ${id}`
-        );
+        logger.debug(`Obteniendo ciudadano ${caseData.id_ciudadano} para caso ${id}`);
         return await get<Citizen>(`ciudadanos/${caseData.id_ciudadano}`);
       },
       CITIZENS_TTL
     );
-
+    
     // Inicializar notas_list si no existe
     if (!caseData.notas_list) {
       caseData.notas_list = [];
@@ -152,7 +150,7 @@ export const fetchCaseById = async (
       // Enriquecer las notas con información de usuario
       caseData.notas_list = await enrichNotesWithUserInfo(caseData.notas_list);
     }
-
+    
     // Inicializar documentos si no existe
     if (!caseData.documentos) {
       caseData.documentos = [];
@@ -176,21 +174,19 @@ export const fetchCaseByIdFresh = async (
 ): Promise<CaseWithCitizen | null> => {
   try {
     logger.debug(`Obteniendo caso ${id} (fresh)`);
-
+    
     // Obtener el caso directamente, sin usar caché
     const caseData = await get<Cases>(`casos/${id}`);
-
+    
     if (!caseData) {
       logger.warn(`Caso con ID ${id} no encontrado`);
       return null;
     }
-
+    
     // Obtener el ciudadano relacionado directamente
-    logger.debug(
-      `Obteniendo ciudadano ${caseData.id_ciudadano} para caso ${id} (fresh)`
-    );
+    logger.debug(`Obteniendo ciudadano ${caseData.id_ciudadano} para caso ${id} (fresh)`);
     const ciudadano = await get<Citizen>(`ciudadanos/${caseData.id_ciudadano}`);
-
+    
     // Inicializar notas_list si no existe
     if (!caseData.notas_list) {
       caseData.notas_list = [];
@@ -198,15 +194,15 @@ export const fetchCaseByIdFresh = async (
       // Enriquecer las notas con información de usuario
       caseData.notas_list = await enrichNotesWithUserInfo(caseData.notas_list);
     }
-
+    
     // Inicializar documentos si no existe
     if (!caseData.documentos) {
       caseData.documentos = [];
     }
-
+    
     // Actualizar la caché con los datos nuevos
     setCachedItem(CASES_CACHE, id, caseData);
-
+    
     // Combinar el caso con los datos del ciudadano
     return { ...caseData, ciudadano };
   } catch (error) {
@@ -246,10 +242,7 @@ export const fetchCasesByCitizenId = async (
     // Añadir los datos del ciudadano a cada caso
     return citizenCases.map((caseItem) => ({ ...caseItem, ciudadano }));
   } catch (error) {
-    logger.error(
-      `Error al obtener casos para el ciudadano ${citizenId}:`,
-      error
-    );
+    logger.error(`Error al obtener casos para el ciudadano ${citizenId}:`, error);
     return [];
   }
 };
@@ -268,9 +261,9 @@ export const fetchCaseHistory = async (
       HISTORY_CACHE,
       async () => {
         logger.debug("Obteniendo todos los registros de historial");
-        return await get<CaseHistoryLog[]>("historial");
+        return await get<CaseHistoryLog[]>('historial');
       },
-      (log) => log.id_historial,
+      log => log.id_historial,
       HISTORY_TTL
     );
 
@@ -328,36 +321,34 @@ export const fetchCasesByUserId = async (userId: number): CasesPromise => {
     }
 
     // Crear un Set con los IDs únicos de ciudadanos
-    const uniqueCitizenIds = new Set(userCases.map((c) => c.id_ciudadano));
-
+    const uniqueCitizenIds = new Set(userCases.map(c => c.id_ciudadano));
+    
     // Obtener todos los ciudadanos únicos en paralelo
-    const citizensPromises = Array.from(uniqueCitizenIds).map((id) =>
+    const citizensPromises = Array.from(uniqueCitizenIds).map(id => 
       getWithCache<Citizen>(
         CITIZEN_CACHE,
         id,
         async () => {
-          logger.debug(
-            `Obteniendo ciudadano ${id} para casos de usuario ${userId}`
-          );
+          logger.debug(`Obteniendo ciudadano ${id} para casos de usuario ${userId}`);
           return await get<Citizen>(`ciudadanos/${id}`);
         },
         CITIZENS_TTL
       )
     );
-
+    
     // Esperar a que todas las solicitudes de ciudadanos se completen
     const citizens = await Promise.all(citizensPromises);
-
+    
     // Crear un mapa de ciudadanos para acceso rápido
     const citizenMap = new Map();
-    citizens.forEach((citizen) => {
+    citizens.forEach(citizen => {
       if (citizen) {
         citizenMap.set(citizen.id_ciudadano, citizen);
       }
     });
 
     // Combinar los casos con sus ciudadanos
-    const casesWithCitizens = userCases.map((caseItem) => {
+    const casesWithCitizens = userCases.map(caseItem => {
       const ciudadano = citizenMap.get(caseItem.id_ciudadano);
       return { ...caseItem, ciudadano };
     });
@@ -372,7 +363,7 @@ export const fetchCasesByUserId = async (userId: number): CasesPromise => {
 /**
  * Actualiza el estado de un caso específico
  * @param id ID del caso a actualizar
- * @param estado Nuevo estado del caso (Acción necesaria, No aprobado, Seguimiento)
+ * @param estado Nuevo estado del caso
  * @returns true si el caso se actualizó correctamente, false en caso contrario
  */
 export const updateCaseStatus = async (
@@ -381,33 +372,32 @@ export const updateCaseStatus = async (
 ): Promise<boolean> => {
   try {
     logger.info(`Actualizando estado del caso ${id} a "${estado}"`);
-
+    
     // Validar que el estado sea válido
     const validStatuses = [
-      "Acción necesaria",
-      "No aprobado",
+      "Acción necesaria", 
+      "No aprobado", 
       "Seguimiento",
       "Pendiente",
       "Revisar tutela",
       "Radicar",
-      "Espera del juez",
+      "Espera del juez"
     ];
+    
     if (!validStatuses.includes(estado)) {
       logger.warn(`Estado "${estado}" no válido para el caso ${id}`);
       return false;
     }
-
+    
     // Realizar la solicitud PUT con solo el estado
     await put<Cases>(`casos/${id}`, { estado });
-
+    
     // Invalidar cachés de forma más agresiva
     invalidateCacheItem(CASES_CACHE, id);
     invalidateCache(CASES_CACHE); // Invalidar colección completa
     invalidateCache(`${CASES_CACHE}_usuarios_${id}`);
-
-    logger.info(
-      `Estado del caso ${id} actualizado correctamente a "${estado}"`
-    );
+    
+    logger.info(`Estado del caso ${id} actualizado correctamente a "${estado}"`);
     return true;
   } catch (error) {
     logger.error(`Error al actualizar estado del caso ${id}:`, error);
@@ -424,11 +414,11 @@ export const deleteCaseById = async (id: number): Promise<boolean> => {
   try {
     // Eliminar el caso
     await del<any>(`casos/${id}`);
-
+    
     // Invalidar cachés relacionadas con el caso
     invalidateCacheItem(CASES_CACHE, id);
     invalidateCache(`${CASES_CACHE}_usuarios_${id}`);
-
+    
     logger.info(`Caso ${id} eliminado correctamente`);
     return true;
   } catch (error) {
@@ -450,22 +440,20 @@ export const deleteCasesByIds = async (ids: number[]): Promise<boolean> => {
 
   try {
     // Crear un array de promesas para eliminar cada caso
-    const deletePromises = ids.map((id) => deleteCaseById(id));
-
+    const deletePromises = ids.map(id => deleteCaseById(id));
+    
     // Ejecutar todas las eliminaciones y obtener resultados
     const results = await batchRequests(deletePromises, false);
-
+    
     // Verificar si hay errores
     const success = results.length === ids.length && results.every(Boolean);
-
+    
     if (!success) {
-      logger.warn(
-        `No se pudieron eliminar todos los casos: ${results.length} de ${ids.length} exitosos`
-      );
+      logger.warn(`No se pudieron eliminar todos los casos: ${results.length} de ${ids.length} exitosos`);
     } else {
       logger.info(`${ids.length} casos eliminados correctamente`);
     }
-
+    
     return success;
   } catch (error) {
     logger.error("Error inesperado al eliminar casos:", error);
@@ -487,17 +475,15 @@ export const assignUserToCase = async (
 ): Promise<boolean> => {
   try {
     logger.info(`Asignando usuario ${userId} como ${role} al caso ${caseId}`);
-
+    
     // Primero obtenemos las asignaciones actuales para verificar si ya existe alguien con este rol
     const currentUsers = await fetchUsersByCaseId(caseId);
-    const existingAssignment = currentUsers.find((user) => user.rol === role);
-
+    const existingAssignment = currentUsers.find(user => user.rol === role);
+    
     // Si existe una asignación con el mismo rol, la eliminamos primero
     if (existingAssignment) {
-      logger.info(
-        `Eliminando asignación existente: caso ${caseId}, usuario ${existingAssignment.id_usuario}, rol ${role}`
-      );
-
+      logger.info(`Eliminando asignación existente: caso ${caseId}, usuario ${existingAssignment.id_usuario}, rol ${role}`);
+      
       try {
         await del(`casos-usuarios/${existingAssignment.id_usuario}/${caseId}`);
       } catch (deleteError) {
@@ -505,27 +491,22 @@ export const assignUserToCase = async (
         // Continuamos con la nueva asignación incluso si la eliminación falla
       }
     }
-
+    
     // Realizar la solicitud POST para la asignación
-    await post<any>("casos-usuarios", {
-      id_caso: caseId,
+    await post<any>('casos-usuarios', { 
+      id_caso: caseId, 
       id_usuario: userId,
-      rol: role,
+      rol: role 
     });
-
+    
     // Invalidar cachés relacionadas
     invalidateCacheItem(CASES_CACHE, caseId);
     invalidateCache(`${CASES_CACHE}_usuarios_${caseId}`);
-
-    logger.info(
-      `Usuario ${userId} asignado correctamente como ${role} al caso ${caseId}`
-    );
+    
+    logger.info(`Usuario ${userId} asignado correctamente como ${role} al caso ${caseId}`);
     return true;
   } catch (error) {
-    logger.error(
-      `Error al asignar usuario ${userId} al caso ${caseId}:`,
-      error
-    );
+    logger.error(`Error al asignar usuario ${userId} al caso ${caseId}:`, error);
     return false;
   }
 };
