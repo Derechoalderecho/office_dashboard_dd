@@ -66,6 +66,7 @@ export default function TableCases() {
   const { user } = useAuth();
   const { role } = useUserRole();
   const [userId, setUserId] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState("all");
 
   // Función para obtener el ID del usuario desde Firebase
   const fetchUserId = async () => {
@@ -122,8 +123,9 @@ export default function TableCases() {
       
       let casesList: CaseWithKey[] = [];
       
-      // Si el usuario es un estudiante, obtener solo sus casos
+      // Lógica de obtención de casos según el rol y la pestaña activa
       if (role === 'Estudiante' && userId) {
+        // Para estudiantes, siempre mostrar sus casos
         const studentCases = await fetchCasesByUserId(userId);
         casesList = studentCases.map(caseItem => ({
           ...caseItem,
@@ -131,6 +133,25 @@ export default function TableCases() {
           assignedUsers: caseItem.usuarios,
           usuarios: caseItem.usuarios
         }));
+      } else if (role === 'Docente') {
+        // Para docentes, mostrar casos según la pestaña activa
+        if (activeTab === 'my' && userId) {
+          const teacherCases = await fetchCasesByUserId(userId);
+          casesList = teacherCases.map(caseItem => ({
+            ...caseItem,
+            key: caseItem.id_caso.toString(),
+            assignedUsers: caseItem.usuarios,
+            usuarios: caseItem.usuarios
+          }));
+        } else {
+          const allCases = await fetchAllCases();
+          casesList = allCases.map(caseItem => ({
+            ...caseItem,
+            key: caseItem.id_caso.toString(),
+            assignedUsers: caseItem.usuarios,
+            usuarios: caseItem.usuarios
+          }));
+        }
       } else {
         // Para otros roles, obtener todos los casos
         const allCases = await fetchAllCases();
@@ -175,13 +196,13 @@ export default function TableCases() {
     }
   };
 
-  // Fetch cases from API when component mounts or when user/role changes
+  // Fetch cases from API when component mounts or when user/role/tab changes
   useEffect(() => {
-    if (role === 'Estudiante' && !userId) {
-      return; // No hacer nada si es estudiante y no tenemos el ID
+    if ((role === 'Estudiante' || (role === 'Docente' && activeTab === 'my')) && !userId) {
+      return; // No hacer nada si es estudiante o docente en pestaña "mis casos" y no tenemos el ID
     }
     fetchCases();
-  }, [role, userId]);
+  }, [role, userId, activeTab]);
 
   // Handle delete cases
   const handleDeleteCases = async (ids: number[]): Promise<boolean> => {
@@ -238,12 +259,20 @@ export default function TableCases() {
     );
   }, [visibleColumns]);
 
+  // Handle tab change
+  const handleTabChange = useCallback((key: string) => {
+    setActiveTab(key);
+    setPage(1); // Reset pagination when changing tabs
+  }, []);
+
   // Filters
   const { filteredItems, hasSearchFilter } = useFilteredItems({
     cases,
     filterValue,
     statusFilter: statusFilter as string | Set<string>,
     dateRange,
+    activeTab,
+    userId,
     onResetFilters: handleResetAllFilters,
   });
 
@@ -297,6 +326,9 @@ export default function TableCases() {
         dateRange={dateRange as DateRange}
         onSearchChange={onSearchChange}
         onResetFilters={handleResetAllFilters}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        showTabs={role === 'Docente'}
       />
     );
   }, [
@@ -309,6 +341,9 @@ export default function TableCases() {
     cases.length,
     hasSearchFilter,
     handleResetAllFilters,
+    activeTab,
+    handleTabChange,
+    role
   ]);
 
   const bottomContent = useMemo(() => {
