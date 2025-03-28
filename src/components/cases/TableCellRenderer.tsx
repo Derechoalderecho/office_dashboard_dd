@@ -4,6 +4,8 @@ import { ClockIcon, EyeIcon, PencilIcon } from "@heroicons/react/24/outline";
 import { Chip, Tooltip, Button, Avatar, AvatarGroup } from "@heroui/react";
 import { parseDateToLocal } from "@/utils/date";
 import { CaseWithKey } from "@/types/cases";
+import { transformStateByRole } from "@/utils/stateTransformer";
+import { useUserRole } from "@/hooks/useUserRole";
 import Link from "next/link";
 
 interface TableCellRendererProps {
@@ -18,6 +20,8 @@ export const TableCellRendererCases = ({
   onPreviewCase,
 }: TableCellRendererProps) => {
   const cellValue = user[columnKey as keyof CaseWithKey];
+  // Obtenemos el rol del usuario
+  const { role } = useUserRole();
 
   switch (columnKey) {
     case "fecha_crea":
@@ -43,37 +47,41 @@ export const TableCellRendererCases = ({
         </div>
       );
     case "estado":
+      // Transformamos el estado según el rol del usuario
+      const originalState = String(cellValue);
+      const displayState = transformStateByRole(originalState, role);
+      
       return (
         <Chip
           className={`capitalize ${
-            cellValue === "Aprobado"
+            displayState === "Aprobado"
               ? "bg-success text-[#12A150]"
-              : cellValue === "Seguimiento"
+              : displayState === "Seguimiento"
               ? "bg-followed text-[#006FEE]"
-              : cellValue === "Acción necesaria"
+              : displayState === "Acción necesaria"
               ? "bg-warning text-[#C4841D]"
-              : cellValue === "No aprobado"
+              : displayState === "No aprobado"
               ? "bg-error text-[#F31260]"
-              : cellValue === "Viabilidad"
+              : displayState === "Viabilidad"
               ? "bg-purple-100 text-purple-600"
-              : cellValue === "Elaboración tutela"
+              : displayState === "Elaboración tutela"
               ? "bg-indigo-100 text-indigo-600"
-              : cellValue === "Valoración del asesor"
+              : displayState === "Valoración del asesor"
               ? "bg-teal-100 text-teal-600"
-              : cellValue === "Revisar tutela"
+              : displayState === "Revisar tutela"
               ? "bg-amber-100 text-amber-600"
-              : cellValue === "Radicar"
+              : displayState === "Radicar"
               ? "bg-emerald-100 text-emerald-600"
-              : cellValue === "Pediente"
+              : displayState === "Pendiente"
               ? "bg-rose-100 text-rose-600"
-              : cellValue === "Espera del juez"
+              : displayState === "Espera del juez"
               ? "bg-sky-100 text-sky-600"
               : ""
           }`}
           size="sm"
           variant="flat"
         >
-          {String(cellValue)}
+          {displayState}
         </Chip>
       );
     case "ciudadano":
