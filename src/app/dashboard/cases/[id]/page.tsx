@@ -25,6 +25,12 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { Cases } from "@/types/cases";
 import { useParams } from "next/navigation";
 
+interface CasePageProps {
+  params: {
+    id: string;
+  };
+}
+
 export default function CasePage() {
   const { id } = useParams<{ id: string }>();
   const caseId = parseInt(id as string, 10);

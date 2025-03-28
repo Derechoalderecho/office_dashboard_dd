@@ -8,7 +8,12 @@ import {
   ArrowUpTrayIcon,
 } from "@heroicons/react/24/outline";
 import { AlertDialog } from "@/components/ui/alert-dialog";
-import { uploadTutelaDocument, TutelaResponse } from "@/services/tutelaService";
+import { 
+  uploadTutelaDocument, 
+  TutelaResponse, 
+  getLatestTutelaFromDocuments,
+  getTutelaDocumentById
+} from "@/services/tutelaService";
 
 interface CasePreviewProps {
   previewText?: string;
@@ -24,13 +29,96 @@ export default function CasePreview({
   onTutelaUploaded,
 }: CasePreviewProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [isReplaceAlertOpen, setIsReplaceAlertOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tutelaData, setTutelaData] = useState<TutelaResponse | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragCounter = useRef(0);
+
+  // Cargar la tutela existente al montar el componente
+  useEffect(() => {
+    const loadExistingTutela = async () => {
+      if (!caseId) return;
+      
+      setIsInitialLoading(true);
+      setError(null);
+      
+      try {
+        console.log("Intentando cargar tutela existente para caso:", caseId);
+        
+        // Intentar recuperar el ID del documento de tutela desde localStorage
+        const savedTutelaDocId = localStorage.getItem(`case_${caseId}_tutela_doc_id`);
+        
+        if (savedTutelaDocId) {
+          console.log("📋 ID de tutela encontrado en localStorage:", savedTutelaDocId);
+          // Si tenemos un ID guardado, intentamos cargar ese documento específico
+          const { getTutelaDocumentById } = await import('@/services/tutelaService');
+          const result = await getTutelaDocumentById(parseInt(savedTutelaDocId, 10));
+          
+          if (result.success && result.data) {
+            setTutelaData(result.data);
+            console.log("✅ Tutela cargada exitosamente desde ID guardado");
+            setIsInitialLoading(false);
+            return;
+          } else {
+            console.log("⚠️ No se pudo cargar la tutela desde ID guardado:", result.error);
+            // Si falla, continuamos con el método alternativo
+          }
+        }
+        
+        // Si no hay ID guardado o falló la carga, intentamos obtener la tutela más reciente
+        const result = await getLatestTutelaFromDocuments(caseId);
+        
+        if (result.success && result.data) {
+          setTutelaData(result.data);
+          console.log("✅ Tutela cargada exitosamente:", result.data.nombre_documento);
+          
+          // Guardar el ID del documento para futuras cargas
+          if (result.data.id_documento) {
+            localStorage.setItem(`case_${caseId}_tutela_doc_id`, result.data.id_documento.toString());
+            console.log("💾 ID de tutela guardado en localStorage:", result.data.id_documento);
+          }
+        } else {
+          console.log("❌ No se encontró tutela existente:", result.error);
+          // No mostramos error al usuario ya que es normal que no haya tutela aún
+        }
+      } catch (err) {
+        console.error("⚠️ Error al cargar tutela existente:", err);
+      } finally {
+        setIsInitialLoading(false);
+      }
+    };
+    
+    loadExistingTutela();
+  }, [caseId]);
+
+  // Este useEffect se ejecuta cuando el componente se monta y cuando cambia canUpload
+  // para asegurar que la tutela permanezca visible independientemente de cambios en el estado del caso
+  useEffect(() => {
+    // Si ya tenemos la tutela cargada o estamos en carga inicial, no hacemos nada
+    if (tutelaData || isInitialLoading) return;
+    
+    // Si no tenemos tutela cargada y no estamos en carga inicial, intentamos cargarla
+    const reloadTutelaIfNeeded = async () => {
+      try {
+        console.log("Recargando tutela después de cambio de estado para caso:", caseId);
+        const result = await getLatestTutelaFromDocuments(caseId);
+        
+        if (result.success && result.data) {
+          setTutelaData(result.data);
+          console.log("✅ Tutela recargada exitosamente después de cambio de estado");
+        }
+      } catch (err) {
+        console.error("⚠️ Error al recargar tutela después de cambio de estado:", err);
+      }
+    };
+    
+    reloadTutelaIfNeeded();
+  }, [canUpload, caseId, tutelaData, isInitialLoading]);
 
   // Función para validar archivo
   const validateFile = (file: File): boolean => {
@@ -121,6 +209,33 @@ export default function CasePreview({
     fileInputRef.current?.click();
   };
 
+  // Manejar el cambio de tutela existente
+  const handleChangeTutela = () => {
+    // Abrir diálogo de confirmación para cambiar tutela
+    setIsReplaceAlertOpen(true);
+  };
+
+  // Confirmación para reemplazar tutela existente
+  const confirmReplaceTutela = () => {
+    // Limpiar estado para cambiar la tutela
+    setTutelaData(null);
+    setSelectedFile(null);
+    setError(null);
+    setIsReplaceAlertOpen(false);
+    
+    // Mostrar indicación visual de que se está cambiando la tutela
+    addToast({
+      title: "Cambio de tutela",
+      description: "Seleccione el nuevo documento para reemplazar la tutela actual",
+      color: "primary",
+    });
+    
+    // Abrir selector de archivos con un pequeño retraso para permitir la actualización del estado
+    setTimeout(() => {
+      fileInputRef.current?.click();
+    }, 100);
+  };
+
   const handleUpload = async () => {
     if (!selectedFile) return;
 
@@ -142,6 +257,13 @@ export default function CasePreview({
 
       if (result.success && result.data) {
         setTutelaData(result.data);
+        
+        // Guardar el ID del documento para futuras cargas
+        if (result.data.id_documento) {
+          localStorage.setItem(`case_${caseId}_tutela_doc_id`, result.data.id_documento.toString());
+          console.log("💾 ID de tutela guardado en localStorage:", result.data.id_documento);
+        }
+        
         addToast({
           title: "Éxito",
           description: "Documento cargado correctamente",
@@ -179,6 +301,22 @@ export default function CasePreview({
     }
   };
 
+  if (isInitialLoading) {
+    return (
+      <>
+        <h6 className="font-medium text-lg mb-4">
+          Previsualización de la tutela
+        </h6>
+        <div className="rounded-xl border-1 bg-white mb-6 p-5 flex justify-center items-center" style={{ height: "200px" }}>
+          <div className="flex flex-col items-center">
+            <Spinner color="primary" size="lg" className="mb-2" />
+            <p className="text-sm text-gray-600">Cargando tutela existente...</p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <h6 className="font-medium text-lg mb-4">
@@ -193,6 +331,17 @@ export default function CasePreview({
         description={`¿Está seguro que desea cargar el documento "${selectedFile?.name}"? Este documento se procesará y mostrará como tutela.`}
         confirmText="Cargar"
         type="info"
+        isLoading={isLoading}
+      />
+
+      <AlertDialog
+        isOpen={isReplaceAlertOpen}
+        onClose={() => setIsReplaceAlertOpen(false)}
+        onConfirm={confirmReplaceTutela}
+        title="Reemplazar tutela"
+        description="¿Está seguro que desea reemplazar la tutela actual? La tutela anterior seguirá en el historial de documentos pero ya no será la principal."
+        confirmText="Reemplazar"
+        type="warning"
         isLoading={isLoading}
       />
 
@@ -279,18 +428,15 @@ export default function CasePreview({
                 })}
               </p>
             </div>
-            {canUpload && (
               <Button
                 color="primary"
                 variant="light"
                 size="sm"
                 startContent={<CloudArrowUpIcon className="w-4 h-4" />}
-                onPress={handleChange}
-                isDisabled={!canUpload}
+                onPress={handleChangeTutela}
               >
                 Cambiar
               </Button>
-            )}
           </div>
 
           <div className="prose prose-sm max-w-none overflow-y-auto h-[500px]">
