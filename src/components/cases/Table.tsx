@@ -25,9 +25,12 @@ import { paginateItems } from "@/utils/paginateItems";
 import { CaseWithKey } from "@/types/cases";
 import { TableCellRendererCases } from "./TableCellRenderer";
 import { BulkActionsBar } from "./BulkActionsBar";
-import { fetchAllCases, deleteCasesByIds } from "@/services/caseService";
+import { fetchAllCases, deleteCasesByIds, fetchCasesByUserId } from "@/services/caseService";
 import { ModalCase } from "../ui/modal-table";
 import { invalidateCache } from "@/utils/cacheUtils";
+import { useAuth } from "@/hooks/useAuth";
+import { useUserRole } from "@/hooks/useUserRole";
+import { getUserIdFromFirebase } from "@/services/userService";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "fecha_crea",
@@ -60,6 +63,24 @@ export default function TableCases() {
   const [isLoading, setIsLoading] = useState(true);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [selectedCase, setSelectedCase] = useState<CaseWithKey | null>(null);
+  const { user } = useAuth();
+  const { role } = useUserRole();
+  const [userId, setUserId] = useState<number | null>(null);
+
+  // Función para obtener el ID del usuario desde Firebase
+  const fetchUserId = async () => {
+    if (user?.uid) {
+      const id = await getUserIdFromFirebase(user.uid);
+      setUserId(id);
+    }
+  };
+
+  // Efecto para obtener el ID del usuario cuando cambia el usuario o el rol
+  useEffect(() => {
+    if (user?.uid) {
+      fetchUserId();
+    }
+  }, [user?.uid]);
 
   // Función para reiniciar todos los filtros
   const handleResetAllFilters = useCallback(() => {
@@ -99,8 +120,27 @@ export default function TableCases() {
       // Simulamos una demora mínima para asegurar que el usuario siempre vea el indicador de carga
       const minimumLoadTime = 800; // milisegundos
       
-      // Obtener datos frescos
-      const casesList = await fetchAllCases();
+      let casesList: CaseWithKey[] = [];
+      
+      // Si el usuario es un estudiante, obtener solo sus casos
+      if (role === 'Estudiante' && userId) {
+        const studentCases = await fetchCasesByUserId(userId);
+        casesList = studentCases.map(caseItem => ({
+          ...caseItem,
+          key: caseItem.id_caso.toString(),
+          assignedUsers: caseItem.usuarios,
+          usuarios: caseItem.usuarios
+        }));
+      } else {
+        // Para otros roles, obtener todos los casos
+        const allCases = await fetchAllCases();
+        casesList = allCases.map(caseItem => ({
+          ...caseItem,
+          key: caseItem.id_caso.toString(),
+          assignedUsers: caseItem.usuarios,
+          usuarios: caseItem.usuarios
+        }));
+      }
       
       // Calcular tiempo transcurrido
       const elapsedTime = Date.now() - startTime;
@@ -111,7 +151,7 @@ export default function TableCases() {
       }
       
       // Actualizar el estado con los nuevos datos
-      setCases(casesList as CaseWithKey[]);
+      setCases(casesList);
       
       if (showToast) {
         addToast({
@@ -135,10 +175,13 @@ export default function TableCases() {
     }
   };
 
-  // Fetch cases from API
+  // Fetch cases from API when component mounts or when user/role changes
   useEffect(() => {
+    if (role === 'Estudiante' && !userId) {
+      return; // No hacer nada si es estudiante y no tenemos el ID
+    }
     fetchCases();
-  }, []);
+  }, [role, userId]);
 
   // Handle delete cases
   const handleDeleteCases = async (ids: number[]): Promise<boolean> => {
