@@ -10,6 +10,8 @@ import {
   DropdownTrigger,
   Button,
   Input,
+  Tabs,
+  Tab,
 } from "@heroui/react";
 import { I18nProvider } from "@react-aria/i18n";
 import { statusOptions } from "@/constants/casesConstants";
@@ -30,6 +32,9 @@ interface TopContentProps {
   setShowAll: (value: boolean) => void;
   setStatusFilter: (value: Set<string>) => void;
   onResetFilters: () => void;
+  activeTab?: string;
+  onTabChange?: (key: string) => void;
+  showTabs?: boolean;
 }
 
 export default function TopContent({
@@ -45,6 +50,9 @@ export default function TopContent({
   handleDateRangeChange,
   setStatusFilter,
   onResetFilters,
+  activeTab,
+  onTabChange,
+  showTabs = false,
 }: TopContentProps) {
   // Convert dateRange to RangeValue<CalendarDate>
   const convertToDateValue = (
@@ -69,8 +77,8 @@ export default function TopContent({
   // Verificar si hay filtros activos
   const hasActiveFilters = Boolean(
     filterValue || // Filtro de búsqueda
-    (statusFilter instanceof Set && statusFilter.size > 0) || // Filtro de estado
-    (dateRange && dateRange.start && dateRange.end) // Filtro de fecha
+      (statusFilter instanceof Set && statusFilter.size > 0) || // Filtro de estado
+      (dateRange && dateRange.start && dateRange.end) // Filtro de fecha
   );
 
   return (
@@ -133,6 +141,17 @@ export default function TopContent({
           </Button>
         </div>
       </div>
+      {showTabs && onTabChange && (
+        <Tabs
+          aria-label="Filtros de casos"
+          selectedKey={activeTab}
+          onSelectionChange={(key) => onTabChange(key as string)}
+          className="mt-6"
+        >
+          <Tab key="all" title="Todos los casos" />
+          <Tab key="my" title="Mis casos" />
+        </Tabs>
+      )}
       <div className="flex justify-between items-center mt-6">
         <span className="text-default-400 text-small">
           Total {usersLength} casos

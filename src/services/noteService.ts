@@ -75,44 +75,56 @@ export async function enrichNotesWithUserInfo(notes: Nota[]): Promise<Nota[]> {
 
 /**
  * Crea una nueva nota para un caso
- * @param nota Los datos de la nota a crear
+ * @param caseId ID del caso
+ * @param content Mensaje de la nota
+ * @param userIdParam ID del usuario
  * @returns La nota creada o null si ocurrió un error
  */
 export const createNote = async (
-  nota: { id_caso: number; id_usuario: number; mensaje: string }
+  caseId: number | string,
+  content: string,
+  userIdParam: number | string
 ): Promise<Nota | null> => {
   try {
+    // Convertir a números si son strings
+    const numericCaseId: number = typeof caseId === 'string' ? parseInt(caseId, 10) : caseId;
+    const numericUserId: number = typeof userIdParam === 'string' ? parseInt(userIdParam, 10) : userIdParam;
+    
     // Validar datos
-    if (!nota.id_caso || typeof nota.id_caso !== 'number') {
+    if (!numericCaseId || isNaN(numericCaseId)) {
       throw new Error("id_caso es obligatorio y debe ser un número");
     }
     
-    if (!nota.id_usuario || typeof nota.id_usuario !== 'number') {
+    if (!numericUserId || isNaN(numericUserId)) {
       throw new Error("id_usuario es obligatorio y debe ser un número");
     }
     
-    if (!nota.mensaje || typeof nota.mensaje !== 'string' || nota.mensaje.trim() === '') {
+    if (!content || typeof content !== 'string' || content.trim() === '') {
       throw new Error("mensaje es obligatorio y no puede estar vacío");
     }
     
     // Mapear al nombre de campo correcto para la API
-    const noteData = {
-      id_caso: nota.id_caso,
-      id_usuario_crea: nota.id_usuario,
-      mensaje: nota.mensaje
+    const noteData: {
+      id_caso: number;
+      id_usuario_crea: number;
+      mensaje: string;
+    } = {
+      id_caso: numericCaseId,
+      id_usuario_crea: numericUserId,
+      mensaje: content.trim()
     };
     
     logger.debug('Enviando datos al endpoint /notas', { noteData });
     
     // Enviar la nota a la API
-    const createdNote = await post<Nota>('notas', noteData);
+    const createdNote: Nota = await post<Nota>('notas', noteData);
     
     if (!createdNote) {
       throw new Error("No se recibió respuesta del servidor al crear la nota");
     }
     
     // Obtener detalles del usuario para incluir en la respuesta
-    const userId = createdNote.id_usuario || createdNote.id_usuario_crea;
+    const userId: number | undefined = createdNote.id_usuario || createdNote.id_usuario_crea;
     let user = undefined;
     
     if (userId) {

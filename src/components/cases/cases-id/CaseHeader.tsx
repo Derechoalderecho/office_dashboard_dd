@@ -1,6 +1,6 @@
 "use client";
 
-import { Chip, Button } from "@heroui/react";
+import { Chip, Button, Tooltip } from "@heroui/react";
 import {
   PencilSquareIcon,
   ClipboardDocumentCheckIcon,
@@ -41,32 +41,33 @@ export default function CaseHeader({ caseData }: CaseHeaderProps) {
           {parseDateToLocal(caseData.fecha_crea)}
         </p>
       </div>
-      <div className="flex flex-col gap-2 items-center">
+      <div className="flex gap-2 items-center">
         <Button
+          className="text-white bg-[#12A150]"
+          startContent={
+            <ClipboardDocumentCheckIcon className="w-6 text-white" />
+          }
+        >
+          Aprobar envío
+        </Button>
+        <Button
+          variant="bordered"
           color="primary"
+          isDisabled
           startContent={<DocumentArrowUpIcon className="w-6" />}
         >
           Elevar Instancia
         </Button>
-        <div className="flex items-center gap-2">
+        <Tooltip content="Editar documento">
           <Button
+            variant="bordered"
             color="secondary"
-            variant="bordered"
+            isDisabled
+            isIconOnly
             startContent={<PencilSquareIcon className="w-6" />}
-          >
-            Editar documento
-          </Button>
-          <Button
-            className="border-[#12A150] text-[#12A150]"
-            variant="bordered"
-            startContent={
-              <ClipboardDocumentCheckIcon className="w-6 text-[#12A150]" />
-            }
-          >
-            Aprobar envío
-          </Button>
-        </div>
+          />
+        </Tooltip>
       </div>
     </section>
   );
-} 
+}

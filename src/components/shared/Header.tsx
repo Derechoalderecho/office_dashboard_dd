@@ -7,8 +7,9 @@ import {
   BreadcrumbItem,
   Avatar,
   Divider,
+  Chip,
 } from "@heroui/react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useMemo } from "react";
 import Link from "next/link";
@@ -28,7 +29,7 @@ const pathTranslations: { [key: string]: string } = {
 };
 
 export default function Header() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const [loading, setLoading] = useState(false);
   const { logout } = useAuth();
   const router = useRouter();
@@ -91,8 +92,8 @@ export default function Header() {
           separator="/"
         >
           {breadcrumbItems.map((item, index) => (
-            <BreadcrumbItem 
-              key={item.href} 
+            <BreadcrumbItem
+              key={item.href}
               isCurrent={item.isCurrent}
               className={item.isCurrent ? "text-primary font-medium" : ""}
             >
@@ -117,13 +118,17 @@ export default function Header() {
             </DropdownTrigger>
             <DropdownMenu aria-label="User Actions" variant="flat">
               <DropdownItem key="profile" className="h-14 gap-2">
-                <p className="font-bold">Ingresaste como</p>
+                <Chip size="sm" className="text-sm text-gray-500 my-2">
+                  {role}
+                </Chip>
                 <p className="font-bold">
                   {user && (user.displayName || user.email)}
                 </p>
               </DropdownItem>
               <DropdownItem key="settings">Configuración</DropdownItem>
-              <DropdownItem key="help_and_feedback">Ayuda y mejora</DropdownItem>
+              <DropdownItem key="help_and_feedback">
+                Ayuda y mejora
+              </DropdownItem>
               <DropdownItem key="logout" color="danger" onPress={handleLogout}>
                 {loading ? "Cerrando sesión..." : "Cerrar sesión"}
               </DropdownItem>
