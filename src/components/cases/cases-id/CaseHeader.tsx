@@ -7,17 +7,21 @@ import {
   DocumentArrowUpIcon,
   XCircleIcon,
   CheckCircleIcon,
+  ArrowUpTrayIcon,
 } from "@heroicons/react/24/outline";
 import { parseDateToLocal } from "@/utils/date";
 import { Cases } from "@/types/cases";
 import { transformStateByRole } from "@/utils/stateTransformer";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useState } from "react";
+import { AlertDialog } from "@/components/ui/alert-dialog";
 
 interface CaseHeaderProps {
   caseData: Cases;
   onApproveSubmission?: () => Promise<void>;
   onRejectSubmission?: () => Promise<void>;
   isStatusChangeLoading?: boolean;
+  onRadicarClick?: () => void;
 }
 
 export default function CaseHeader({
@@ -25,9 +29,36 @@ export default function CaseHeader({
   onApproveSubmission,
   onRejectSubmission,
   isStatusChangeLoading = false,
+  onRadicarClick,
 }: CaseHeaderProps) {
   const { role } = useUserRole();
   const displayState = transformStateByRole(caseData.estado, role);
+  const [isRadicarInfoOpen, setIsRadicarInfoOpen] = useState(false);
+
+  const handleRadicarClick = () => {
+    if (onRadicarClick) {
+      onRadicarClick();
+    } else {
+      // Mostrar información sobre la radicación
+      setIsRadicarInfoOpen(true);
+    }
+  };
+
+  // Determinar si se debe mostrar el botón de "Aprobar Envío"
+  const showApproveButton = caseData.estado === "Revisar tutela";
+  
+  // Determinar si se debe mostrar el botón de "Rechazar Envío"
+  const showRejectButton = caseData.estado === "Revisar tutela" || 
+                          caseData.estado === "Radicar" || 
+                          caseData.estado === "Valoración del asesor";
+  
+  // Determinar el texto del botón de aprobar según el estado
+  const getApproveButtonText = () => {
+    if (caseData.estado === "Revisar tutela") {
+      return "Aprobar Tutela";
+    }
+    return "Aprobar Envío";
+  };
 
   return (
     <section className="flex items-center justify-between pb-4 mb-7 border-b-1">
@@ -61,18 +92,36 @@ export default function CaseHeader({
         </p>
       </div>
       <div className="flex gap-2 items-center">
-        <Button
-          className="text-white bg-[#12A150]"
-          isDisabled={!onApproveSubmission || isStatusChangeLoading || caseData.estado !== "Radicar"}
-          isLoading={isStatusChangeLoading}
-          onPress={onApproveSubmission}
-          startContent={
-            <ClipboardDocumentCheckIcon className="w-6 text-white" />
-          }
-        >
-          Aprobar envío
-        </Button>
-        {caseData.estado === "Radicar" && onRejectSubmission && (
+        {/* Botón de Radicar (solo para estado "Radicar") */}
+        {caseData.estado === "Radicar" && (
+          <Button
+            className="text-white bg-[#006FEE]"
+            isDisabled={isStatusChangeLoading}
+            isLoading={isStatusChangeLoading}
+            onPress={handleRadicarClick}
+            startContent={<ArrowUpTrayIcon className="w-6 text-white" />}
+          >
+            Radicar Tutela
+          </Button>
+        )}
+
+        {/* Botón de Aprobar (para estados "Revisar tutela" y "Radicar") */}
+        {showApproveButton && (
+          <Button
+            className="text-white bg-[#12A150]"
+            isDisabled={!onApproveSubmission || isStatusChangeLoading}
+            isLoading={isStatusChangeLoading}
+            onPress={onApproveSubmission}
+            startContent={
+              <CheckCircleIcon className="w-6 text-white" />
+            }
+          >
+            {getApproveButtonText()}
+          </Button>
+        )}
+
+        {/* Botón de Rechazar (para varios estados) */}
+        {showRejectButton && onRejectSubmission && (
           <Button
             variant="bordered"
             color="danger"
@@ -81,9 +130,10 @@ export default function CaseHeader({
             isLoading={isStatusChangeLoading}
             startContent={<XCircleIcon className="w-6 text-danger" />}
           >
-            Rechazar envío
+            Rechazar Envío
           </Button>
         )}
+        
         <Button
           variant="bordered"
           color="primary"
@@ -102,6 +152,16 @@ export default function CaseHeader({
           />
         </Tooltip>
       </div>
+
+      <AlertDialog
+        isOpen={isRadicarInfoOpen}
+        onClose={() => setIsRadicarInfoOpen(false)}
+        onConfirm={() => setIsRadicarInfoOpen(false)}
+        title="Información sobre radicación"
+        description="Para avanzar este caso, es obligatorio radicar la tutela. Desplácese hacia abajo hasta la sección 'Previsualización de la tutela' y cargue el documento. Una vez cargado, el estado cambiará automáticamente a 'Espera del juez'. Esta es la única forma de avanzar el caso en este estado."
+        confirmText="Entendido"
+        type="info"
+      />
     </section>
   );
 }

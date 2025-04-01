@@ -18,17 +18,24 @@ export function transformStateByRole(estado: string, role: UserRole): string {
       break;
       
     case "Revisar tutela":
-      if (role === "Estudiante") return "Elaboración tutela";
+      if (role === "Estudiante") return "En revisión";
       if (role === "Docente" || role === "Monitor") return "Revisar tutela";
       break;
       
     case "Radicar":
-      // Todos los roles ven el mismo estado
+      // Para estudiantes mostrar un texto más descriptivo
+      if (role === "Estudiante") return "Pendiente de radicación";
+      // Docentes y monitores ven el nombre técnico
       return "Radicar";
       
     case "Espera del juez":
       // Todos los roles ven el mismo estado
       return "Espera del juez";
+      
+    case "Valoración del asesor":
+      if (role === "Estudiante") return "En valoración";
+      if (role === "Docente" || role === "Monitor") return "Valoración del asesor";
+      break;
   }
 
   // Si no hay transformación específica, devolvemos el estado original

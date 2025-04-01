@@ -12,7 +12,7 @@ import {
   CheckCircleIcon,
   XCircleIcon
 } from "@heroicons/react/24/outline";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { parseDateToLocal } from "@/utils/date";
 import { fetchCaseById, fetchCaseHistory, updateCaseStatus } from "@/services/caseService";
 import CaseHeader from "@/components/cases/cases-id/CaseHeader";
@@ -42,6 +42,9 @@ export default function CasePage() {
   const [notasList, setNotasList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusChangeLoading, setStatusChangeLoading] = useState(false);
+  
+  // Referencia para hacer scroll a la sección de tutela
+  const tutelaPreviewRef = useRef<HTMLDivElement>(null);
 
   // Cargar datos del caso
   const loadCaseData = async () => {
@@ -86,19 +89,56 @@ export default function CasePage() {
     loadCaseData();
   }, [caseId, id]);
 
+  // Manejador para el botón de radicar tutela
+  const handleRadicarClick = () => {
+    // Hacer scroll a la sección de tutela
+    if (tutelaPreviewRef.current) {
+      tutelaPreviewRef.current.scrollIntoView({ behavior: 'smooth' });
+      
+      // Resaltar la sección con un efecto visual
+      tutelaPreviewRef.current.classList.add('highlight-section');
+      setTimeout(() => {
+        tutelaPreviewRef.current?.classList.remove('highlight-section');
+      }, 2000);
+      
+      addToast({
+        title: "Radicar tutela",
+        description: "Por favor, cargue o actualice el documento de tutela para radicar el caso",
+        color: "primary",
+      });
+    }
+  };
+
   // Manejador para aprobar envío
   const handleApproveSubmission = async () => {
     if (!caseData) return;
     
+    // Si el estado es "Radicar", no permitir cambio directo a "Espera del juez"
+    // Solo debe cambiar cuando se sube la tutela desde el botón de radicar
+    if (caseData.estado === "Radicar") {
+      addToast({
+        title: "Acción requerida",
+        description: "Para completar este caso debe radicar la tutela usando el botón 'Radicar Tutela'",
+        color: "primary",
+      });
+      
+      // Hacer scroll hacia la sección de tutela para facilitar la acción
+      handleRadicarClick();
+      return;
+    }
+    
     setStatusChangeLoading(true);
     try {
-      const newStatus = "Espera del juez";
+      // Ahora solo aplica al estado "Revisar tutela"
+      const newStatus = caseData.estado === "Revisar tutela" ? "Radicar" : "Espera del juez";
       const success = await updateCaseStatus(caseId, newStatus);
       
       if (success) {
         addToast({
           title: "Acción exitosa",
-          description: "El caso ha sido aprobado y enviado al juez",
+          description: newStatus === "Radicar" 
+            ? "La tutela ha sido aprobada y está lista para radicar" 
+            : "El caso ha sido aprobado y enviado al juez",
           color: "success",
         });
         
@@ -129,6 +169,7 @@ export default function CasePage() {
     
     setStatusChangeLoading(true);
     try {
+      // Siempre vuelve a "Pendiente" al rechazar
       const newStatus = "Pendiente";
       const success = await updateCaseStatus(caseId, newStatus);
       
@@ -164,28 +205,63 @@ export default function CasePage() {
   const handleTutelaUploaded = async () => {
     if (!caseData) return;
     
-    // Si la tutela se subió con éxito, cambiar el estado a "Radicar"
     setStatusChangeLoading(true);
     
     try {
-      const newStatus = "Radicar";
-      const success = await updateCaseStatus(caseId, newStatus);
+      // Determinar el nuevo estado según el estado actual
+      let newStatus = "";
       
-      if (success) {
+      switch (caseData.estado) {
+        case "Pendiente":
+          newStatus = "Revisar tutela";
+          break;
+        case "Radicar":
+          newStatus = "Espera del juez";
+          break;
+        default:
+          // Si no es ninguno de los casos específicos, mantener el estado actual
+          newStatus = caseData.estado;
+          break;
+      }
+      
+      // Solo actualizar si hay un cambio de estado
+      if (newStatus !== caseData.estado) {
+        const success = await updateCaseStatus(caseId, newStatus);
+        
+        if (success) {
+          let message = "";
+          
+          if (newStatus === "Revisar tutela") {
+            message = "La tutela ha sido cargada y está lista para revisión";
+          } else if (newStatus === "Espera del juez") {
+            message = "La tutela ha sido radicada y el caso ha pasado a espera del juez";
+          }
+          
+          addToast({
+            title: "Estado actualizado",
+            description: message,
+            color: "success",
+          });
+          
+          // Actualizar datos del caso
+          await loadCaseData();
+        } else {
+          addToast({
+            title: "Error",
+            description: "No se pudo actualizar el estado del caso",
+            color: "danger",
+          });
+        }
+      } else {
+        // Si no hay cambio de estado, sólo mostrar mensaje de éxito por la carga
         addToast({
-          title: "Estado actualizado",
-          description: "Se ha cargado la tutela y el caso está listo para radicar",
+          title: "Documento cargado",
+          description: "La tutela ha sido cargada correctamente",
           color: "success",
         });
         
-        // Actualizar datos del caso
+        // Actualizar datos del caso para refrescar la tutela
         await loadCaseData();
-      } else {
-        addToast({
-          title: "Error",
-          description: "No se pudo actualizar el estado del caso",
-          color: "danger",
-        });
       }
     } catch (error) {
       console.error("Error al actualizar estado después de subir tutela:", error);
@@ -205,12 +281,20 @@ export default function CasePage() {
     
     const estado = caseData.estado;
     
-    // Tanto estudiante como docente pueden subir tutela en estado "Pendiente"
-    if (estado === "Pendiente") {
-      return role === "Estudiante" || role === "Docente" || role === "Monitor";
+    // Permitir subir tutelas en varios estados
+    switch (estado) {
+      case "Pendiente":
+        // En pendiente, sólo estudiantes, docentes o monitores pueden subir
+        return role === "Estudiante" || role === "Docente" || role === "Monitor";
+      case "Revisar tutela":
+        // En revisión, cualquier rol puede ver pero no modificar
+        return false;
+      case "Radicar":
+        // En radicar, cualquier rol puede subir la tutela final
+        return true;
+      default:
+        return false;
     }
-    
-    return false;
   };
 
   // Si no hay datos o hay un error, mostrar un mensaje
@@ -355,6 +439,7 @@ export default function CasePage() {
           onApproveSubmission={handleApproveSubmission}
           onRejectSubmission={handleRejectSubmission}
           isStatusChangeLoading={statusChangeLoading}
+          onRadicarClick={handleRadicarClick}
         />
        
         <section className="flex gap-6">
@@ -370,11 +455,15 @@ export default function CasePage() {
               <CaseInfo caseData={caseData!} />
 
               <hr className="my-4" />
-             <CasePreview 
-                caseId={caseData?.id_caso || caseId} 
-                onTutelaUploaded={handleTutelaUploaded}
-                canUpload={canUploadTutela()}
-             />
+              
+              {/* Añadir la ref para poder hacer scroll a esta sección */}
+              <div ref={tutelaPreviewRef} className="transition-all duration-300">
+                <CasePreview 
+                  caseId={caseData?.id_caso || caseId} 
+                  onTutelaUploaded={handleTutelaUploaded}
+                  canUpload={canUploadTutela()}
+               />
+              </div>
            
               <DocumentsSection caseId={caseData?.id_caso || caseId} />
            </div>
