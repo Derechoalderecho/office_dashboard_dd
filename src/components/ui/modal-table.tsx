@@ -11,6 +11,7 @@ import { CitizenWithKey } from "@/types/citizens";
 import { UserWithKey } from "@/types/users";
 import { transformStateByRole } from "@/utils/stateTransformer";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useState } from "react";
 
 interface ModalTableProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ interface ModalTableProps {
 
 export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
   const { role } = useUserRole();
+  const [showMore, setShowMore] = useState(false);
   
   if (!caseData) return null;
 
@@ -82,9 +84,37 @@ export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
                   <strong>Notas</strong>
                   <p className="text-right">{caseData.notas}</p>
                 </div>
+
+                {showMore && (
+                  <>
+                    <div className="flex items-center justify-between border-b pb-3">
+                      <strong>Fecha de Actualización</strong>
+                      <p>{new Date(caseData.fecha_actualiza).toLocaleDateString()}</p>
+                    </div>
+                    {caseData.documentos && caseData.documentos.length > 0 && (
+                      <div className="flex items-center justify-between border-b pb-3">
+                        <strong>Documentos</strong>
+                        <p>{caseData.documentos.length} documentos adjuntos</p>
+                      </div>
+                    )}
+                    {caseData.usuarios && caseData.usuarios.length > 0 && (
+                      <div className="flex items-center justify-between border-b pb-3">
+                        <strong>Usuarios Asignados</strong>
+                        <p>{caseData.usuarios.length} usuarios</p>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </ModalBody>
-            <ModalFooter>
+            <ModalFooter className="flex justify-between">
+              <Button 
+                variant="light" 
+                onPress={() => setShowMore(!showMore)}
+                className="text-primary"
+              >
+                {showMore ? "Mostrar menos" : "Mostrar más"}
+              </Button>
               <Button color="danger" variant="light" onPress={onClose}>
                 Cerrar
               </Button>
@@ -107,6 +137,8 @@ export function ModalCitizen({
   onClose,
   citizenData,
 }: ModalCitizenProps) {
+  const [showMore, setShowMore] = useState(false);
+  
   if (!citizenData) return null;
 
   return (
@@ -147,15 +179,43 @@ export function ModalCitizen({
                   <strong>Fecha de Creación</strong>
                   <p>{new Date(citizenData.fecha_crea).toLocaleDateString()}</p>
                 </div>
-                <div className="flex items-center justify-between border-b pb-3">
-                  <strong>Fecha de Actualización</strong>
-                  <p>
-                    {new Date(citizenData.fecha_actualiza).toLocaleDateString()}
-                  </p>
-                </div>
+
+                {showMore && (
+                  <>
+                    <div className="flex items-center justify-between border-b pb-3">
+                      <strong>Segundo Nombre</strong>
+                      <p>{citizenData.segundo_nombre || "No especificado"}</p>
+                    </div>
+                    <div className="flex items-center justify-between border-b pb-3">
+                      <strong>Segundo Apellido</strong>
+                      <p>{citizenData.segundo_apellido || "No especificado"}</p>
+                    </div>
+                    <div className="flex items-center justify-between border-b pb-3">
+                      <strong>Teléfono Fijo</strong>
+                      <p>{citizenData.num_fijo || "No especificado"}</p>
+                    </div>
+                    <div className="flex items-center justify-between border-b pb-3">
+                      <strong>Persona que Modifica</strong>
+                      <p>{citizenData.persona_modifica}</p>
+                    </div>
+                    <div className="flex items-center justify-between border-b pb-3">
+                      <strong>Fecha de Actualización</strong>
+                      <p>
+                        {new Date(citizenData.fecha_actualiza).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
             </ModalBody>
-            <ModalFooter>
+            <ModalFooter className="flex justify-between">
+              <Button 
+                variant="light" 
+                onPress={() => setShowMore(!showMore)}
+                className="text-primary"
+              >
+                {showMore ? "Mostrar menos" : "Mostrar más"}
+              </Button>
               <Button color="danger" variant="light" onPress={onClose}>
                 Cerrar
               </Button>
@@ -174,6 +234,8 @@ interface ModalUserProps {
 }
 
 export function ModalUser({ isOpen, onClose, userData }: ModalUserProps) {
+  const [showMore, setShowMore] = useState(false);
+  
   if (!userData) return null;
 
   return (
@@ -212,17 +274,43 @@ export function ModalUser({ isOpen, onClose, userData }: ModalUserProps) {
                     {new Date(userData.fecha_creacion).toLocaleDateString()}
                   </p>
                 </div>
-                <div className="flex items-center justify-between border-b pb-3">
-                  <strong>Fecha de Actualización</strong>
-                  <p>
-                    {new Date(
-                      userData.fecha_actualizacion
-                    ).toLocaleDateString()}
-                  </p>
-                </div>
+
+                {showMore && (
+                  <>
+                    <div className="flex items-center justify-between border-b pb-3">
+                      <strong>Segundo Nombre</strong>
+                      <p>{userData.segundo_nombre || "No especificado"}</p>
+                    </div>
+                    <div className="flex items-center justify-between border-b pb-3">
+                      <strong>Segundo Apellido</strong>
+                      <p>{userData.segundo_apellido || "No especificado"}</p>
+                    </div>
+                    <div className="flex items-center justify-between border-b pb-3">
+                      <strong>Rama de Derecho</strong>
+                      <p>{userData.rama_derecho || "No especificada"}</p>
+                    </div>
+                    <div className="flex items-center justify-between border-b pb-3">
+                      <strong>Nivel de Consultorio</strong>
+                      <p>{userData.nivel_consultorio || "No especificado"}</p>
+                    </div>
+                    <div className="flex items-center justify-between border-b pb-3">
+                      <strong>Fecha de Actualización</strong>
+                      <p>
+                        {new Date(userData.fecha_actualizacion).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
             </ModalBody>
-            <ModalFooter>
+            <ModalFooter className="flex justify-between">
+              <Button 
+                variant="light" 
+                onPress={() => setShowMore(!showMore)}
+                className="text-primary"
+              >
+                {showMore ? "Mostrar menos" : "Mostrar más"}
+              </Button>
               <Button color="danger" variant="light" onPress={onClose}>
                 Cerrar
               </Button>
