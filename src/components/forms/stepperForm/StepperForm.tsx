@@ -118,7 +118,6 @@ export default function StepperForm() {
       if (!data.genero) errors.genero = "El género es requerido";
       if (!data.orient_sexual) errors.orient_sexual = "La orientación sexual es requerida";
       if (!data.num_movil) errors.num_movil = "El número móvil es requerido";
-      if (!data.email) errors.email = "El correo electrónico es requerido";
       if (!data.nacionalidad) errors.nacionalidad = "La nacionalidad es requerida";
       if (!data.estado_civil) errors.estado_civil = "El estado civil es requerido";
       if (!data.escolaridad) errors.escolaridad = "La escolaridad es requerida";

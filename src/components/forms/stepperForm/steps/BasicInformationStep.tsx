@@ -77,10 +77,13 @@ export default function BasicInformationStep({
   const [citizens, setCitizens] = useState<Citizen[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showNewCitizenForm, setShowNewCitizenForm] = useState(false);
-  const [nacionalidadPersonalizada, setNacionalidadPersonalizada] = useState("");
+  const [nacionalidadPersonalizada, setNacionalidadPersonalizada] =
+    useState("");
   const [showNacionalidadInput, setShowNacionalidadInput] = useState(false);
 
-  const handleNacionalidadChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleNacionalidadChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     const value = e.target.value;
     if (value === "Otro") {
       setShowNacionalidadInput(true);
@@ -92,7 +95,9 @@ export default function BasicInformationStep({
     }
   };
 
-  const handleNacionalidadPersonalizadaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNacionalidadPersonalizadaChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const value = e.target.value;
     setNacionalidadPersonalizada(value);
     updateFormData({ nacionalidad: value });
@@ -205,10 +210,12 @@ export default function BasicInformationStep({
               ))}
             </Autocomplete>
             {isLoading && (
-              <p className="text-sm text-gray-500 mt-1">Cargando ciudadanos...</p>
+              <p className="text-sm text-gray-500 mt-1">
+                Cargando ciudadanos...
+              </p>
             )}
           </div>
-          <Button 
+          <Button
             color="primary"
             startContent={<PlusIcon size={16} />}
             onClick={handleCreateNewCitizen}
@@ -220,9 +227,9 @@ export default function BasicInformationStep({
         <>
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-medium">Crear nuevo ciudadano</h3>
-            <Button 
-              variant="light" 
-              color="danger" 
+            <Button
+              variant="light"
+              color="danger"
               startContent={<XIcon size={16} />}
               onClick={handleCancelNewCitizen}
             >
@@ -239,12 +246,17 @@ export default function BasicInformationStep({
               labelPlacement="outside"
               placeholder="Seleccione su tipo de documento"
               value={formData.tipo_documento}
-              onChange={(e) => updateFormData({ tipo_documento: e.target.value })}
+              onChange={(e) =>
+                updateFormData({ tipo_documento: e.target.value })
+              }
               isRequired
             >
-              <SelectItem key="CC">Cédula de ciudadanía</SelectItem>
               <SelectItem key="TI">Tarjeta de identidad</SelectItem>
+              <SelectItem key="CC">Cédula de ciudadanía</SelectItem>
               <SelectItem key="CE">Cédula de extranjería</SelectItem>
+              <SelectItem key="P">Pasaporte</SelectItem>
+              <SelectItem key="PPT">Permiso por protección temporal</SelectItem>
+              <SelectItem key="SD">Sin documento</SelectItem>
             </Select>
 
             <Input
@@ -254,7 +266,9 @@ export default function BasicInformationStep({
               label="Número de documento"
               labelPlacement="outside"
               value={formData.num_documento}
-              onChange={(e) => updateFormData({ num_documento: e.target.value })}
+              onChange={(e) =>
+                updateFormData({ num_documento: e.target.value })
+              }
               placeholder="Ingrese su número de documento"
               isRequired
             />
@@ -266,7 +280,9 @@ export default function BasicInformationStep({
               label="Primer nombre"
               labelPlacement="outside"
               value={formData.primer_nombre}
-              onChange={(e) => updateFormData({ primer_nombre: e.target.value })}
+              onChange={(e) =>
+                updateFormData({ primer_nombre: e.target.value })
+              }
               placeholder="Ingrese su primer nombre"
               isRequired
             />
@@ -278,7 +294,9 @@ export default function BasicInformationStep({
               label="Segundo nombre"
               labelPlacement="outside"
               value={formData.segundo_nombre}
-              onChange={(e) => updateFormData({ segundo_nombre: e.target.value })}
+              onChange={(e) =>
+                updateFormData({ segundo_nombre: e.target.value })
+              }
               placeholder="Ingrese su segundo nombre"
             />
           </div>
@@ -291,7 +309,9 @@ export default function BasicInformationStep({
               label="Primer apellido"
               labelPlacement="outside"
               value={formData.primer_apellido}
-              onChange={(e) => updateFormData({ primer_apellido: e.target.value })}
+              onChange={(e) =>
+                updateFormData({ primer_apellido: e.target.value })
+              }
               placeholder="Ingrese su primer apellido"
               isRequired
             />
@@ -323,6 +343,8 @@ export default function BasicInformationStep({
               <SelectItem key="Hombre">Hombre</SelectItem>
               <SelectItem key="Mujer">Mujer</SelectItem>
               <SelectItem key="Intersexual">Intersexual</SelectItem>
+              <SelectItem key="Prefiere no decirlo">Prefiere no decirlo</SelectItem>
+              <SelectItem key="Otro">Otro</SelectItem>
             </Select>
 
             <Select
@@ -352,7 +374,9 @@ export default function BasicInformationStep({
               labelPlacement="outside"
               placeholder="Seleccione su orientación sexual"
               value={formData.orient_sexual}
-              onChange={(e) => updateFormData({ orient_sexual: e.target.value })}
+              onChange={(e) =>
+                updateFormData({ orient_sexual: e.target.value })
+              }
               isRequired
             >
               <SelectItem key="HE">Heterosexual</SelectItem>
@@ -394,7 +418,6 @@ export default function BasicInformationStep({
               value={formData.email}
               onChange={(e) => updateFormData({ email: e.target.value })}
               placeholder="Ingrese su correo electrónico"
-              isRequired
             />
           </div>
 
@@ -445,6 +468,7 @@ export default function BasicInformationStep({
               <SelectItem key="UL">Unión libre</SelectItem>
               <SelectItem key="DI">Divorciado/a</SelectItem>
               <SelectItem key="VI">Viudo/a</SelectItem>
+              <SelectItem key="NI">No informa</SelectItem>
             </Select>
 
             <Select
@@ -461,7 +485,9 @@ export default function BasicInformationStep({
               <SelectItem key="Ninguna">Ninguna</SelectItem>
               <SelectItem key="Preescolar">Preescolar</SelectItem>
               <SelectItem key="Primaria">Primaria (1.º a 5.º grado)</SelectItem>
-              <SelectItem key="Secundaria">Secundaria (6.º a 9.º grado)</SelectItem>
+              <SelectItem key="Secundaria">
+                Secundaria (6.º a 9.º grado)
+              </SelectItem>
               <SelectItem key="Media">Media (10.º a 11.º grado)</SelectItem>
               <SelectItem key="Técnica">Técnica o tecnológica</SelectItem>
               <SelectItem key="Pregrado">Pregrado</SelectItem>
@@ -480,12 +506,14 @@ export default function BasicInformationStep({
               onChange={(e) => updateFormData({ etnia: e.target.value })}
               isRequired
             >
-              <SelectItem key="NI">Ninguna</SelectItem>
               <SelectItem key="IN">Indígena</SelectItem>
               <SelectItem key="AF">Afrocolombiano</SelectItem>
-              <SelectItem key="PA">Palenquero</SelectItem>
+              <SelectItem key="ME">Mestizo</SelectItem>
               <SelectItem key="RA">Raizal</SelectItem>
               <SelectItem key="RO">Rom/Gitano</SelectItem>
+              <SelectItem key="Ninguna">Ninguna</SelectItem>
+              <SelectItem key="Otro">Otro</SelectItem>
+              <SelectItem key="Prefiero no decirlo">Prefiero no decirlo</SelectItem>
             </Select>
 
             <Select
