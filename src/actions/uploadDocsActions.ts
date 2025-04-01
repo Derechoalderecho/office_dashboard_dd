@@ -18,7 +18,7 @@ export async function uploadDocument(
 ): Promise<{ success: boolean; data?: DocumentResponse; error?: string }> {
   try {
     const response = await axios.post(
-      `${API_BASE_URL}/upload/${caseId}/`,
+      `${API_BASE_URL}/upload/${caseId}/?folder=documentos_casos`,
       formData,
       {
         headers: {
