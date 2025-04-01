@@ -181,10 +181,10 @@ export async function getTutelaDocumentById(
     
     // Formatear el documento como TutelaResponse
     const tutelaResponse: TutelaResponse = {
-      nombre_documento: document.nombre_documento || document.nombre || 'documento',
+      nombre_documento: document.nombre_documento || 'documento',
       enlace: document.enlace || '',
-      contenido_documento: document.contenido_documento || document.contenido || '',
-      ext_documento: document.ext_documento || document.extension || '',
+      contenido_documento: document.contenido_documento || '',
+      ext_documento: document.ext_documento || '',
       id_caso: document.id_caso || 0,
       id_documento: document.id_documento,
       fecha_asigna: document.fecha_asigna || document.fecha_crea || new Date().toISOString()
