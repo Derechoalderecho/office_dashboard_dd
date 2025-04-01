@@ -111,15 +111,9 @@ export default function TableCases() {
       // Limpiar las selecciones actuales
       setSelectedKeys(new Set([]));
       
-      // Invalidar todas las cachés relacionadas con casos
-      invalidateCache('cases');
-      invalidateCache('caseHistory');
-      
-      // Registrar el tiempo de inicio para asegurar un tiempo mínimo de carga
-      const startTime = Date.now();
-      
-      // Simulamos una demora mínima para asegurar que el usuario siempre vea el indicador de carga
-      const minimumLoadTime = 800; // milisegundos
+      // No invalidar cachés agresivamente, solo cuando sea necesario
+      // invalidateCache('cases');
+      // invalidateCache('caseHistory');
       
       let casesList: CaseWithKey[] = [];
       
@@ -161,14 +155,6 @@ export default function TableCases() {
           assignedUsers: caseItem.usuarios,
           usuarios: caseItem.usuarios
         }));
-      }
-      
-      // Calcular tiempo transcurrido
-      const elapsedTime = Date.now() - startTime;
-      
-      // Si el tiempo transcurrido es menor que el tiempo mínimo, esperamos la diferencia
-      if (elapsedTime < minimumLoadTime) {
-        await new Promise(resolve => setTimeout(resolve, minimumLoadTime - elapsedTime));
       }
       
       // Actualizar el estado con los nuevos datos

@@ -1,19 +1,60 @@
 "use client";
 
+import { useState, useCallback, useEffect } from "react";
 import DocumentUploader from "./DocumentUploader";
 import DocumentDownloader from "./DocumentDownloader";
 import { DocumentResponse } from "@/actions/uploadDocsActions";
+import { useAppDispatch } from "@/store/hooks";
+import { fetchCaseByIdFresh } from "@/services/caseService";
+import { setDocuments } from "@/store/slices/documentSlice";
+import { invalidateCache } from "@/utils/cacheUtils";
 
 interface DocumentsSectionProps {
   caseId: number;
-  documents?: DocumentResponse[];
 }
 
-export default function DocumentsSection({ caseId, documents = [] }: DocumentsSectionProps) {
-  const handleDocumentUploaded = (doc: DocumentResponse) => {
-    console.log("Document uploaded:", doc.id_documento);
-    // En una implementación más completa, podríamos añadir el documento a la lista existente
-  };
+export default function DocumentsSection({ caseId }: DocumentsSectionProps) {
+  const dispatch = useAppDispatch();
+  // Usamos estado para los documentos recién subidos
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Callback para cuando se sube un documento nuevo
+  const handleDocumentUploaded = useCallback(
+    async (document: DocumentResponse) => {
+      console.log("Documento subido, actualizando...", document.id_documento);
+
+      try {
+        // 1. Invalidar la caché de casos
+        invalidateCache("cases");
+
+        // 2. Obtener datos frescos directamente de la API
+        const freshCase = await fetchCaseByIdFresh(caseId);
+
+        // 3. Si se obtuvieron documentos actualizados, actualizarlos en Redux
+        if (freshCase?.documentos) {
+          // Actualizar los documentos en el estado global
+          dispatch(setDocuments(freshCase.documentos));
+          console.log("Documentos actualizados:", freshCase.documentos.length);
+        }
+
+        // 4. Incrementar el trigger para forzar actualización
+        setRefreshTrigger((prev) => prev + 1);
+
+        // 5. Si el modal no está abierto, abrirlo para mostrar el documento
+        if (!isModalOpen) {
+          setIsModalOpen(true);
+        }
+      } catch (error) {
+        console.error("Error al actualizar documentos:", error);
+      }
+    },
+    [caseId, dispatch, isModalOpen]
+  );
+
+  const handleModalOpenChange = useCallback((isOpen: boolean) => {
+    setIsModalOpen(isOpen);
+  }, []);
 
   return (
     <section>
@@ -22,25 +63,23 @@ export default function DocumentsSection({ caseId, documents = [] }: DocumentsSe
         <span className="text-sm text-secondary">
           Puede cargar o visualizar documentos relacionados con este caso
         </span>
-        {documents.length > 0 && (
-          <span className="text-xs text-primary mt-1">
-            {documents.length} documento{documents.length !== 1 ? 's' : ''} disponible{documents.length !== 1 ? 's' : ''}
-          </span>
-        )}
       </div>
       <div className="flex gap-5 flex-col md:flex-row">
         <div className="md:w-[35%] w-full">
-          <DocumentDownloader 
+          <DocumentDownloader
             caseId={caseId}
+            refreshTrigger={refreshTrigger}
+            isModalOpen={isModalOpen}
+            onModalOpenChange={handleModalOpenChange}
           />
         </div>
         <div className="md:w-[65%] w-full">
-          <DocumentUploader 
-            caseId={caseId} 
+          <DocumentUploader
+            caseId={caseId}
             onDocumentUploaded={handleDocumentUploaded}
           />
         </div>
       </div>
     </section>
   );
-} 
+}

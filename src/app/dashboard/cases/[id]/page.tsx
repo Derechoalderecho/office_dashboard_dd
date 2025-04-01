@@ -1,5 +1,7 @@
-import { Chip, Button, Textarea } from "@heroui/react";
+"use client";
 
+import { Chip, Button, Textarea, addToast } from "@heroui/react";
+import { useRouter } from "next/navigation";
 import {
   PencilSquareIcon,
   ClipboardDocumentCheckIcon,
@@ -7,102 +9,479 @@ import {
   CloudArrowUpIcon,
   CloudArrowDownIcon,
   LinkIcon,
+  CheckCircleIcon,
+  XCircleIcon
 } from "@heroicons/react/24/outline";
+import { useEffect, useState, useRef } from "react";
 import { parseDateToLocal } from "@/utils/date";
-import { fetchCaseById, fetchCaseHistory } from "@/services/caseService";
+import { fetchCaseById, fetchCaseHistory, updateCaseStatus } from "@/services/caseService";
 import CaseHeader from "@/components/cases/cases-id/CaseHeader";
 import CaseInfo from "@/components/cases/cases-id/CaseInfo";
 import CasePreview from "@/components/cases/cases-id/CasePreview";
 import DocumentsSection from "@/components/cases/cases-id/DocumentsSection";
 import NotesSection from "@/components/cases/cases-id/NotesSection";
 import CaseHistoryLogs from "@/components/cases/cases-id/CaseHistoryLogs";
+import { useUserRole } from "@/hooks/useUserRole";
+import { Cases } from "@/types/cases";
+import { useParams } from "next/navigation";
 
 interface CasePageProps {
   params: {
     id: string;
   };
-  searchParams: { [key: string]: string | string[] | undefined };
 }
 
-export default async function CasePage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const caseId = parseInt(id);
+export default function CasePage() {
+  const { id } = useParams<{ id: string }>();
+  const caseId = parseInt(id as string, 10);
+  const router = useRouter();
+  const { role } = useUserRole();
+  
+  const [caseData, setCaseData] = useState<Cases | null>(null);
+  const [historyLogs, setHistoryLogs] = useState<any[]>([]);
+  const [notasList, setNotasList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [statusChangeLoading, setStatusChangeLoading] = useState(false);
+  
+  // Referencia para hacer scroll a la sección de tutela
+  const tutelaPreviewRef = useRef<HTMLDivElement>(null);
 
-  // Verificar que el ID del caso sea válido
-  if (isNaN(caseId)) {
-    console.error(`ID de caso no válido: ${id}`);
-    return <div>ID de caso no válido</div>;
-  }
-
-  console.log(`Cargando caso ID: ${caseId}`);
-
-  const caseData = await fetchCaseById(caseId);
-  const historyLogs = await fetchCaseHistory(caseId);
-
-  if (!caseData) {
-    console.error(`Caso con ID ${caseId} no encontrado`);
-    return <div>Caso no encontrado</div>;
-  }
-
-  // Log detallado para verificar notas en el caso
-  if (caseData.notas_list) {
-    console.log(
-      `El caso tiene ${caseData.notas_list.length} notas precargadas`
-    );
-    if (caseData.notas_list.length > 0) {
-      console.log(
-        `Primera nota: ID=${
-          caseData.notas_list[0].id_nota
-        }, Mensaje="${caseData.notas_list[0].mensaje.substring(0, 30)}..."`
-      );
+  // Cargar datos del caso
+  const loadCaseData = async () => {
+    setLoading(true);
+    try {
+      const caseData = await fetchCaseById(caseId);
+      const historyLogs = await fetchCaseHistory(caseId);
+      
+      if (!caseData) {
+        console.error(`Caso con ID ${caseId} no encontrado`);
+        addToast({
+          title: "Error",
+          description: "No se pudo cargar el caso",
+          color: "danger",
+        });
+        return;
+      }
+      
+      setCaseData(caseData);
+      setHistoryLogs(historyLogs || []);
+      setNotasList(caseData.notas_list || []);
+      
+    } catch (error) {
+      console.error("Error al cargar datos del caso:", error);
+      addToast({
+        title: "Error",
+        description: "Ocurrió un error al cargar los datos del caso",
+        color: "danger",
+      });
+    } finally {
+      setLoading(false);
     }
-  } else {
-    console.log("El caso no tiene notas precargadas (notas_list es undefined)");
+  };
+
+  // Efecto para cargar datos iniciales
+  useEffect(() => {
+    if (isNaN(caseId)) {
+      console.error(`ID de caso no válido: ${id}`);
+      return;
+    }
+    
+    loadCaseData();
+  }, [caseId, id]);
+
+  // Manejador para el botón de radicar tutela
+  const handleRadicarClick = () => {
+    // Hacer scroll a la sección de tutela
+    if (tutelaPreviewRef.current) {
+      tutelaPreviewRef.current.scrollIntoView({ behavior: 'smooth' });
+      
+      // Resaltar la sección con un efecto visual
+      tutelaPreviewRef.current.classList.add('highlight-section');
+      setTimeout(() => {
+        tutelaPreviewRef.current?.classList.remove('highlight-section');
+      }, 2000);
+      
+      addToast({
+        title: "Radicar tutela",
+        description: "Por favor, cargue o actualice el documento de tutela para radicar el caso",
+        color: "primary",
+      });
+    }
+  };
+
+  // Manejador para aprobar envío
+  const handleApproveSubmission = async () => {
+    if (!caseData) return;
+    
+    // Si el estado es "Radicar", no permitir cambio directo a "Espera del juez"
+    // Solo debe cambiar cuando se sube la tutela desde el botón de radicar
+    if (caseData.estado === "Radicar") {
+      addToast({
+        title: "Acción requerida",
+        description: "Para completar este caso debe radicar la tutela usando el botón 'Radicar Tutela'",
+        color: "primary",
+      });
+      
+      // Hacer scroll hacia la sección de tutela para facilitar la acción
+      handleRadicarClick();
+      return;
+    }
+    
+    setStatusChangeLoading(true);
+    try {
+      // Ahora solo aplica al estado "Revisar tutela"
+      const newStatus = caseData.estado === "Revisar tutela" ? "Radicar" : "Espera del juez";
+      const success = await updateCaseStatus(caseId, newStatus);
+      
+      if (success) {
+        addToast({
+          title: "Acción exitosa",
+          description: newStatus === "Radicar" 
+            ? "La tutela ha sido aprobada y está lista para radicar" 
+            : "El caso ha sido aprobado y enviado al juez",
+          color: "success",
+        });
+        
+        // Actualizar datos del caso
+        await loadCaseData();
+      } else {
+        addToast({
+          title: "Error",
+          description: "No se pudo cambiar el estado del caso",
+          color: "danger",
+        });
+      }
+    } catch (error) {
+      console.error("Error al aprobar envío:", error);
+      addToast({
+        title: "Error",
+        description: "Ocurrió un error al procesar la acción",
+        color: "danger",
+      });
+    } finally {
+      setStatusChangeLoading(false);
+    }
+  };
+
+  // Manejador para rechazar envío
+  const handleRejectSubmission = async () => {
+    if (!caseData) return;
+    
+    setStatusChangeLoading(true);
+    try {
+      // Siempre vuelve a "Pendiente" al rechazar
+      const newStatus = "Pendiente";
+      const success = await updateCaseStatus(caseId, newStatus);
+      
+      if (success) {
+        addToast({
+          title: "Acción exitosa",
+          description: "El caso ha sido rechazado y devuelto a estado pendiente",
+          color: "warning",
+        });
+        
+        // Actualizar datos del caso
+        await loadCaseData();
+      } else {
+        addToast({
+          title: "Error",
+          description: "No se pudo cambiar el estado del caso",
+          color: "danger",
+        });
+      }
+    } catch (error) {
+      console.error("Error al rechazar envío:", error);
+      addToast({
+        title: "Error",
+        description: "Ocurrió un error al procesar la acción",
+        color: "danger",
+      });
+    } finally {
+      setStatusChangeLoading(false);
+    }
+  };
+
+  // Manejador para cuando se sube una tutela
+  const handleTutelaUploaded = async () => {
+    if (!caseData) return;
+    
+    setStatusChangeLoading(true);
+    
+    try {
+      // Determinar el nuevo estado según el estado actual
+      let newStatus = "";
+      
+      switch (caseData.estado) {
+        case "Pendiente":
+          newStatus = "Revisar tutela";
+          break;
+        case "Radicar":
+          newStatus = "Espera del juez";
+          break;
+        default:
+          // Si no es ninguno de los casos específicos, mantener el estado actual
+          newStatus = caseData.estado;
+          break;
+      }
+      
+      // Solo actualizar si hay un cambio de estado
+      if (newStatus !== caseData.estado) {
+        const success = await updateCaseStatus(caseId, newStatus);
+        
+        if (success) {
+          let message = "";
+          
+          if (newStatus === "Revisar tutela") {
+            message = "La tutela ha sido cargada y está lista para revisión";
+          } else if (newStatus === "Espera del juez") {
+            message = "La tutela ha sido radicada y el caso ha pasado a espera del juez";
+          }
+          
+          addToast({
+            title: "Estado actualizado",
+            description: message,
+            color: "success",
+          });
+          
+          // Actualizar datos del caso
+          await loadCaseData();
+        } else {
+          addToast({
+            title: "Error",
+            description: "No se pudo actualizar el estado del caso",
+            color: "danger",
+          });
+        }
+      } else {
+        // Si no hay cambio de estado, sólo mostrar mensaje de éxito por la carga
+        addToast({
+          title: "Documento cargado",
+          description: "La tutela ha sido cargada correctamente",
+          color: "success",
+        });
+        
+        // Actualizar datos del caso para refrescar la tutela
+        await loadCaseData();
+      }
+    } catch (error) {
+      console.error("Error al actualizar estado después de subir tutela:", error);
+      addToast({
+        title: "Error",
+        description: "Ocurrió un error al procesar la acción",
+        color: "danger",
+      });
+    } finally {
+      setStatusChangeLoading(false);
+    }
+  };
+  
+  // Determinar si se puede subir tutela basado en el rol y estado del caso
+  const canUploadTutela = () => {
+    if (!caseData) return false;
+    
+    const estado = caseData.estado;
+    
+    // Permitir subir tutelas en varios estados
+    switch (estado) {
+      case "Pendiente":
+        // En pendiente, sólo estudiantes, docentes o monitores pueden subir
+        return role === "Estudiante" || role === "Docente" || role === "Monitor";
+      case "Revisar tutela":
+        // En revisión, cualquier rol puede ver pero no modificar
+        return false;
+      case "Radicar":
+        // En radicar, cualquier rol puede subir la tutela final
+        return true;
+      default:
+        return false;
+    }
+  };
+
+  // Si no hay datos o hay un error, mostrar un mensaje
+  if (!caseData && !loading) {
+    return <div className="p-8 text-center">No se encontró el caso o hubo un error al cargarlo</div>;
   }
 
-  // Asegurarse de que notas_list siempre sea un array, incluso si es undefined
-  const notasList = caseData.notas_list || [];
-  console.log(`Pasando ${notasList.length} notas al componente NotesSection`);
+  // UI cuando está cargando
+  if (loading) {
+    return (
+      <main>
+        <div className="space-y-6">
+          {/* Skeleton para el encabezado */}
+          <div className="animate-pulse mb-7 pb-4 border-b-1">
+            <div className="flex justify-between items-center">
+              <div>
+                <div className="h-10 bg-gray-200 rounded w-48 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-24"></div>
+              </div>
+              <div className="flex gap-2">
+                <div className="h-10 bg-gray-200 rounded-lg w-32"></div>
+                <div className="h-10 bg-gray-200 rounded-lg w-32"></div>
+                <div className="h-10 bg-gray-200 rounded-lg w-10"></div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Skeleton para el contenido */}
+          <section className="flex gap-6">
+            {/* Columna principal */}
+            <div className="w-[70%] shadow-custom bg-[#F9FAFB] rounded-lg">
+              <div className="p-5">
+                {/* Título */}
+                <div className="flex justify-between items-center">
+                  <div className="h-6 bg-gray-200 rounded w-32"></div>
+                </div>
+                <hr className="my-4" />
+                
+                {/* Info del caso */}
+                <div className="animate-pulse flex justify-between mb-4">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-4">
+                      <div className="w-20 h-4 bg-gray-200 rounded"></div>
+                      <div className="w-32 h-4 bg-gray-200 rounded"></div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="w-20 h-4 bg-gray-200 rounded"></div>
+                      <div className="w-40 h-4 bg-gray-200 rounded"></div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="w-20 h-4 bg-gray-200 rounded"></div>
+                      <div className="w-36 h-4 bg-gray-200 rounded"></div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-4">
+                      <div className="w-24 h-4 bg-gray-200 rounded"></div>
+                      <div className="w-16 h-4 bg-gray-200 rounded"></div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="w-24 h-4 bg-gray-200 rounded"></div>
+                      <div className="w-28 h-4 bg-gray-200 rounded"></div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="w-24 h-4 bg-gray-200 rounded"></div>
+                      <div className="w-32 h-4 bg-gray-200 rounded"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <hr className="my-4" />
+                
+                {/* Skeleton de previsualización de tutela */}
+                <div className="mb-6">
+                  <div className="h-6 bg-gray-200 rounded w-48 mb-4"></div>
+                  <div className="rounded-xl border-2 border-dashed border-gray-300 p-8">
+                    <div className="flex flex-col items-center">
+                      <div className="w-16 h-16 bg-gray-200 rounded-full mb-4"></div>
+                      <div className="h-6 bg-gray-200 rounded w-56 mb-4"></div>
+                      <div className="h-4 bg-gray-200 rounded w-72 mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-40 mb-4"></div>
+                      <div className="h-8 bg-gray-200 rounded-lg w-40"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Skeleton de documentos */}
+                <div className="mb-6">
+                  <div className="h-6 bg-gray-200 rounded w-32 mb-4"></div>
+                  <div className="flex justify-between items-center mb-4">
+                    <div className="h-6 bg-gray-200 rounded w-48"></div>
+                    <div className="h-8 bg-gray-200 rounded-lg w-32"></div>
+                  </div>
+                  <div className="rounded-lg border border-gray-200 p-4">
+                    <div className="animate-pulse space-y-4">
+                      <div className="h-16 bg-gray-200 rounded-lg"></div>
+                      <div className="h-16 bg-gray-200 rounded-lg"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Panel lateral */}
+            <aside className="w-[30%]">
+              {/* Skeleton de notas */}
+              <div className="animate-pulse mb-5">
+                <div className="h-6 bg-gray-200 rounded w-24 mb-4"></div>
+                <div className="mb-4 border rounded-lg">
+                  <div className="h-24 bg-gray-100 rounded-t-lg"></div>
+                  <div className="h-10 bg-gray-50 rounded-b-lg flex items-center justify-end p-2">
+                    <div className="h-8 bg-gray-200 rounded-lg w-32"></div>
+                  </div>
+                </div>
+                <div className="h-6 bg-gray-200 rounded w-40 mb-4"></div>
+                <div className="space-y-3">
+                  <div className="h-16 bg-gray-200 rounded-lg"></div>
+                  <div className="h-16 bg-gray-200 rounded-lg"></div>
+                </div>
+              </div>
+              
+              <hr className="my-5" />
+              
+              {/* Skeleton de registro de cambios */}
+              <div className="h-6 bg-gray-200 rounded w-56 mb-8"></div>
+              <div className="space-y-4">
+                <div className="h-20 bg-gray-200 rounded-lg"></div>
+                <div className="h-20 bg-gray-200 rounded-lg"></div>
+              </div>
+            </aside>
+          </section>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main>
-      <div key={caseData.id_caso}>
-        <CaseHeader caseData={caseData} />
-
+      <div key={caseData?.id_caso}>
+        <CaseHeader 
+          caseData={caseData!} 
+          onApproveSubmission={handleApproveSubmission}
+          onRejectSubmission={handleRejectSubmission}
+          isStatusChangeLoading={statusChangeLoading}
+          onRadicarClick={handleRadicarClick}
+        />
+       
         <section className="flex gap-6">
           <div className="w-[70%] shadow-custom bg-[#F9FAFB] rounded-lg">
             <div className="p-5">
-              <h2 className="text-xl font-medium">
-                Caso n# - {caseData.id_caso}
-              </h2>
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-medium">
+                  Caso n# - {caseData?.id_caso}
+                </h2>
+              </div>
               <hr className="my-4" />
-
-              <CaseInfo caseData={caseData} />
+         
+              <CaseInfo caseData={caseData!} />
 
               <hr className="my-4" />
-              <h6 className="font-medium text-lg mb-4">
-                Previsualización de la tutela
-              </h6>
-
-              <CasePreview />
-
-              <DocumentsSection caseId={caseData.id_caso} />
-            </div>
-          </div>
+              
+              {/* Añadir la ref para poder hacer scroll a esta sección */}
+              <div ref={tutelaPreviewRef} className="transition-all duration-300">
+                <CasePreview 
+                  caseId={caseData?.id_caso || caseId} 
+                  onTutelaUploaded={handleTutelaUploaded}
+                  canUpload={canUploadTutela()}
+               />
+              </div>
+           
+              <DocumentsSection caseId={caseData?.id_caso || caseId} />
+           </div>
+           </div>
           <aside className="w-[30%]">
-            <NotesSection caseId={caseData.id_caso} initialNotes={notasList} />
+            <NotesSection 
+              caseId={caseData?.id_caso || caseId} 
+              initialNotes={notasList}
+              onNoteAdded={() => loadCaseData()}
+            />
 
             <hr className="my-5" />
             <p className="font-medium mb-8">Registro de cambios de estado</p>
 
-            <CaseHistoryLogs historyLogs={historyLogs || []} />
+            <CaseHistoryLogs historyLogs={historyLogs} />
           </aside>
         </section>
-      </div>
+       </div>
     </main>
   );
 }

@@ -9,6 +9,8 @@ import {
 import { CaseWithKey } from "@/types/cases";
 import { CitizenWithKey } from "@/types/citizens";
 import { UserWithKey } from "@/types/users";
+import { transformStateByRole } from "@/utils/stateTransformer";
+import { useUserRole } from "@/hooks/useUserRole";
 
 interface ModalTableProps {
   isOpen: boolean;
@@ -17,7 +19,11 @@ interface ModalTableProps {
 }
 
 export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
+  const { role } = useUserRole();
+  
   if (!caseData) return null;
+
+  const displayState = transformStateByRole(caseData.estado, role);
 
   return (
     <Modal isOpen={isOpen} onOpenChange={onClose}>
@@ -50,7 +56,19 @@ export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
                 </div>
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Estado</strong>
-                  <p>{caseData.estado}</p>
+                  <p className={`
+                    ${displayState === "Aprobado" ? "text-[#12A150]" : 
+                      displayState === "Seguimiento" ? "text-[#006FEE]" : 
+                      displayState === "Acción necesaria" ? "text-[#C4841D]" : 
+                      displayState === "No aprobado" ? "text-[#F31260]" : 
+                      displayState === "Elaboración tutela" ? "text-indigo-600" : 
+                      displayState === "Revisar tutela" ? "text-amber-600" : 
+                      displayState === "Radicar" ? "text-emerald-600" : 
+                      displayState === "Espera del juez" ? "text-sky-600" : ""
+                    } font-medium`}
+                  >
+                    {displayState}
+                  </p>
                 </div>
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Tiempo de Respuesta</strong>

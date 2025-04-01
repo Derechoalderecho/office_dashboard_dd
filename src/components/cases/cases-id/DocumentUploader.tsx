@@ -11,6 +11,9 @@ import {
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import { uploadDocument, getDocumentById, DocumentResponse } from "@/actions/uploadDocsActions";
 import { parseDateToLocal } from "@/utils/date";
+import { useAppDispatch } from "@/store/hooks";
+import { fetchCase } from "@/store/slices/caseSlice";
+import { invalidateCache } from "@/utils/cacheUtils";
 
 interface DocumentUploaderProps {
   caseId: number;
@@ -29,6 +32,7 @@ export default function DocumentUploader({
   const [isDragging, setIsDragging] = useState(false);
   const dragCounter = useRef(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dispatch = useAppDispatch();
 
   // Max file size in bytes (5MB)
   const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -134,22 +138,28 @@ export default function DocumentUploader({
       const uploadResult = await uploadDocument(formData, caseId);
       
       if (uploadResult.success && uploadResult.data) {
+        // Invalidar caché inmediatamente
+        invalidateCache('cases');
+        
         const documentId = uploadResult.data.id_documento;
         const documentResult = await getDocumentById(documentId);
         
         if (documentResult.success && documentResult.data) {
           setUploadedDocument(documentResult.data);
           
-          // Call the callback if provided
-          if (onDocumentUploaded && documentResult.data) {
-            onDocumentUploaded(documentResult.data);
-          }
-          
+          // Mostrar toast de éxito primero
           addToast({
             title: "Archivo subido correctamente",
             description: "El documento ha sido cargado con éxito",
             color: "success",
           });
+          
+          // Luego notificar al componente padre para actualizar la lista
+          console.log("Documento subido correctamente. ID:", documentResult.data.id_documento, "Nombre:", documentResult.data.nombre_documento);
+          if (onDocumentUploaded) {
+            // Sin retraso para permitir actualización inmediata
+            onDocumentUploaded(documentResult.data);
+          }
         } else {
           const errorMsg = documentResult.error || "Error al obtener detalles del documento";
           setError(errorMsg);

@@ -23,6 +23,7 @@ import { useDeleteRows } from "@/hooks/useDeleteRows";
 import { getDeleteAlertMessage } from "@/utils/alertMessage";
 import { updateCaseStatus } from "@/services/caseService";
 import { UserAssignmentModal } from "./UserAssignmentModal";
+import { useUserRole } from "@/hooks/useUserRole";
 
 interface BulkActionsBarProps {
   selectedKeys: Selection;
@@ -37,14 +38,22 @@ interface BulkActionsBarProps {
 const STATUS_MAP = {
   action_required: "Acción necesaria",
   followed: "Seguimiento",
-  no_approved: "No aprobado"
+  no_approved: "No aprobado",
+  pending: "Pendiente",
+  review_tutela: "Revisar tutela",
+  file: "Radicar",
+  judge_wait: "Espera del juez"
 };
 
 // Mapeo de estados a colores para UI
 const STATUS_COLORS = {
   "Acción necesaria": "#C4841D",
   "Seguimiento": "#006FEE",
-  "No aprobado": "#F31260"
+  "No aprobado": "#F31260",
+  "Pendiente": "#f43f5e",
+  "Revisar tutela": "#f59e0b",
+  "Radicar": "#10b981",
+  "Espera del juez": "#0ea5e9"
 };
 
 export const BulkActionsBar = ({
@@ -61,6 +70,7 @@ export const BulkActionsBar = ({
   const [isStatusLoading, setIsStatusLoading] = useState(false);
   const [isUserAssignmentModalOpen, setIsUserAssignmentModalOpen] = useState(false);
   const { handleDelete, isLoading: isDeleteLoading } = useDeleteRows(onDeleteCases);
+  const { role } = useUserRole();
 
   const convertSelection = (selection: Selection): Set<number> | "all" => {
     if (selection === "all") return "all";
@@ -286,28 +296,72 @@ export const BulkActionsBar = ({
                         No aprobado
                       </div>
                     </DropdownItem>
+                    <DropdownItem 
+                      key="pending"
+                      onPress={() => handleStatusChange("pending")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-[#f43f5e] rounded-full"></div>
+                        Pendiente
+                      </div>
+                    </DropdownItem>
+                    <DropdownItem 
+                      key="review_tutela"
+                      onPress={() => handleStatusChange("review_tutela")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-[#f59e0b] rounded-full"></div>
+                        Revisar tutela
+                      </div>
+                    </DropdownItem>
+                    <DropdownItem 
+                      key="file"
+                      onPress={() => handleStatusChange("file")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-[#10b981] rounded-full"></div>
+                        Radicar
+                      </div>
+                    </DropdownItem>
+                    <DropdownItem 
+                      key="judge_wait"
+                      onPress={() => handleStatusChange("judge_wait")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-[#0ea5e9] rounded-full"></div>
+                        Espera del juez
+                      </div>
+                    </DropdownItem>
                   </DropdownSection>
                 </DropdownMenu>
               </Dropdown>
+              {role !== 'Estudiante' && (
+                <>
               <div className="border-l border-white h-6 mx-2"></div>
               <div className="flex items-center gap-1 cursor-pointer" onClick={handleOpenUserAssignmentModal}>
                 <UserCircleIcon className="w-6 text-white" />
                 <p className="text-white">Asignado</p>
               </div>
+              </>
+              )}
               <div className="border-l border-white h-6 mx-2"></div>
               <div className="flex items-center gap-1">
                 <TagIcon className="w-6 text-white" />
                 <p className="text-white">Tags</p>
               </div>
-              <div className="border-l border-white h-6 mx-2"></div>
-              <Button
-                isIconOnly
-                color="danger"
-                variant="light"
-                onPress={() => setIsDeleteAlertOpen(true)}
-              >
-                <TrashIcon className="w-6 text-white" />
-              </Button>
+              {role !== 'Estudiante' && (
+                <>
+                  <div className="border-l border-white h-6 mx-2"></div>
+                  <Button
+                    isIconOnly
+                    color="danger"
+                    variant="light"
+                    onPress={() => setIsDeleteAlertOpen(true)}
+                  >
+                    <TrashIcon className="w-6 text-white" />
+                  </Button>
+                </>
+              )}
             </div>
           </CardBody>
         </Card>

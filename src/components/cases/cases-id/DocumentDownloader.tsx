@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CloudArrowDownIcon } from "@heroicons/react/24/outline";
 import DocumentsModal from "./DocumentsModal";
 
@@ -8,14 +8,52 @@ interface DocumentDownloaderProps {
   caseId: number;
   documentId?: number;
   documentUrl?: string;
+  refreshTrigger?: number;
+  isModalOpen?: boolean;
+  onModalOpenChange?: (isOpen: boolean) => void;
 }
 
 export default function DocumentDownloader({ 
-  caseId
+  caseId,
+  refreshTrigger = 0,
+  isModalOpen: externalIsModalOpen,
+  onModalOpenChange
 }: DocumentDownloaderProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // Si externalIsModalOpen existe (está controlado externamente), lo usamos
+  // de lo contrario, usamos el estado local
+  const [internalIsModalOpen, setInternalIsModalOpen] = useState(false);
+  const isModalOpen = externalIsModalOpen !== undefined ? externalIsModalOpen : internalIsModalOpen;
+  const prevRefreshTrigger = useRef(refreshTrigger);
+  const refreshRequested = useRef(false);
+  
+  // Actualizar el estado del modal controlado externamente
+  const setIsModalOpen = (open: boolean) => {
+    if (onModalOpenChange) {
+      onModalOpenChange(open);
+    } else {
+      setInternalIsModalOpen(open);
+    }
+  };
+  
+  // Efecto para detectar cambios en refreshTrigger sin crear un ciclo infinito
+  useEffect(() => {
+    // Solo actuamos si refreshTrigger ha cambiado
+    if (prevRefreshTrigger.current !== refreshTrigger) {
+      prevRefreshTrigger.current = refreshTrigger;
+      
+      // Si el modal está abierto, marcar que necesitamos refrescar
+      // Si no está abierto, abrir el modal para mostrar los documentos actualizados
+      if (isModalOpen) {
+        refreshRequested.current = true;
+      } else {
+        setIsModalOpen(true);
+      }
+    }
+  }, [refreshTrigger, isModalOpen, setIsModalOpen]);
   
   const handleOpenModal = () => {
+    // Resetear el flag de refresco al abrir el modal
+    refreshRequested.current = false;
     setIsModalOpen(true);
   };
 
@@ -42,6 +80,10 @@ export default function DocumentDownloader({
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         caseId={caseId.toString()}
+        refreshFlag={refreshRequested.current}
+        onRefreshed={() => {
+          refreshRequested.current = false;
+        }}
       />
     </div>
   );
