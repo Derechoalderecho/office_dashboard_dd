@@ -71,15 +71,23 @@ export default function BasicInformationStep({
   formData,
   updateFormData,
 }: BasicInformationProps) {
-  const [fechaNacimiento, setFechaNacimiento] = useState<DateValue | null>(
-    null
-  );
+  const [fechaNacimiento, setFechaNacimiento] = useState<DateValue | null>(null);
   const [citizens, setCitizens] = useState<Citizen[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showNewCitizenForm, setShowNewCitizenForm] = useState(false);
-  const [nacionalidadPersonalizada, setNacionalidadPersonalizada] =
-    useState("");
-  const [showNacionalidadInput, setShowNacionalidadInput] = useState(false);
+  const [showNewCitizenForm, setShowNewCitizenForm] = useState<boolean>(
+    Boolean(formData.is_existing_citizen === "false" || 
+    (formData.primer_nombre && formData.primer_apellido))
+  );
+  const [nacionalidadPersonalizada, setNacionalidadPersonalizada] = useState<string>(
+    formData.nacionalidad && 
+    !["Colombia", "Venezuela"].includes(formData.nacionalidad) 
+      ? formData.nacionalidad 
+      : ""
+  );
+  const [showNacionalidadInput, setShowNacionalidadInput] = useState<boolean>(
+    Boolean(formData.nacionalidad && 
+    !["Colombia", "Venezuela"].includes(formData.nacionalidad))
+  );
 
   const handleNacionalidadChange = (
     e: React.ChangeEvent<HTMLSelectElement>
@@ -124,6 +132,7 @@ export default function BasicInformationStep({
         is_existing_citizen: "false",
         citizen_id: "",
       });
+      setShowNewCitizenForm(true);
       return;
     }
 
@@ -147,43 +156,16 @@ export default function BasicInformationStep({
         citizen_id: selectedId,
         is_existing_citizen: "true",
       });
+      setShowNewCitizenForm(false);
     }
   };
 
   const handleCreateNewCitizen = () => {
-    // Reset form data and show the new citizen form
-    updateFormData({
-      num_documento: "",
-      tipo_documento: "",
-      primer_nombre: "",
-      segundo_nombre: "",
-      primer_apellido: "",
-      segundo_apellido: "",
-      sexo: "",
-      genero: "",
-      orient_sexual: "",
-      num_movil: "",
-      num_fijo: "",
-      email: "",
-      nacionalidad: "",
-      estado_civil: "",
-      escolaridad: "",
-      etnia: "",
-      discapacidad: "",
-      sabe_leer_escribir: "",
-      citizen_id: "",
-      is_existing_citizen: "false",
-    });
     setShowNewCitizenForm(true);
   };
 
   const handleCancelNewCitizen = () => {
-    // Hide the form and reset
     setShowNewCitizenForm(false);
-    updateFormData({
-      citizen_id: "",
-      is_existing_citizen: "false",
-    });
   };
 
   return (
@@ -245,10 +227,8 @@ export default function BasicInformationStep({
               label="Tipo de documento"
               labelPlacement="outside"
               placeholder="Seleccione su tipo de documento"
-              value={formData.tipo_documento}
-              onChange={(e) =>
-                updateFormData({ tipo_documento: e.target.value })
-              }
+              selectedKeys={formData.tipo_documento ? [formData.tipo_documento] : []}
+              onChange={(e) => updateFormData({ tipo_documento: e.target.value })}
               isRequired
             >
               <SelectItem key="TI">Tarjeta de identidad</SelectItem>
@@ -336,7 +316,7 @@ export default function BasicInformationStep({
               label="Sexo"
               labelPlacement="outside"
               placeholder="Seleccione su sexo"
-              value={formData.sexo}
+              selectedKeys={formData.sexo ? [formData.sexo] : []}
               onChange={(e) => updateFormData({ sexo: e.target.value })}
               isRequired
             >
@@ -354,7 +334,7 @@ export default function BasicInformationStep({
               label="Género"
               labelPlacement="outside"
               placeholder="Seleccione su género"
-              value={formData.genero}
+              selectedKeys={formData.genero ? [formData.genero] : []}
               onChange={(e) => updateFormData({ genero: e.target.value })}
               isRequired
             >
@@ -373,10 +353,8 @@ export default function BasicInformationStep({
               label="Orientación sexual"
               labelPlacement="outside"
               placeholder="Seleccione su orientación sexual"
-              value={formData.orient_sexual}
-              onChange={(e) =>
-                updateFormData({ orient_sexual: e.target.value })
-              }
+              selectedKeys={formData.orient_sexual ? [formData.orient_sexual] : []}
+              onChange={(e) => updateFormData({ orient_sexual: e.target.value })}
               isRequired
             >
               <SelectItem key="HE">Heterosexual</SelectItem>
@@ -429,7 +407,7 @@ export default function BasicInformationStep({
               label="Nacionalidad"
               labelPlacement="outside"
               placeholder="Seleccione su nacionalidad"
-              value={showNacionalidadInput ? "Otro" : formData.nacionalidad}
+              selectedKeys={showNacionalidadInput ? ["Otro"] : (formData.nacionalidad ? [formData.nacionalidad] : [])}
               onChange={handleNacionalidadChange}
               isRequired
             >
@@ -459,7 +437,7 @@ export default function BasicInformationStep({
               label="Estado civil"
               labelPlacement="outside"
               placeholder="Seleccione su estado civil"
-              value={formData.estado_civil}
+              selectedKeys={formData.estado_civil ? [formData.estado_civil] : []}
               onChange={(e) => updateFormData({ estado_civil: e.target.value })}
               isRequired
             >
@@ -478,16 +456,14 @@ export default function BasicInformationStep({
               label="Escolaridad"
               labelPlacement="outside"
               placeholder="Seleccione su nivel de escolaridad"
-              value={formData.escolaridad}
+              selectedKeys={formData.escolaridad ? [formData.escolaridad] : []}
               onChange={(e) => updateFormData({ escolaridad: e.target.value })}
               isRequired
             >
               <SelectItem key="Ninguna">Ninguna</SelectItem>
               <SelectItem key="Preescolar">Preescolar</SelectItem>
               <SelectItem key="Primaria">Primaria (1.º a 5.º grado)</SelectItem>
-              <SelectItem key="Secundaria">
-                Secundaria (6.º a 9.º grado)
-              </SelectItem>
+              <SelectItem key="Secundaria">Secundaria (6.º a 9.º grado)</SelectItem>
               <SelectItem key="Media">Media (10.º a 11.º grado)</SelectItem>
               <SelectItem key="Técnica">Técnica o tecnológica</SelectItem>
               <SelectItem key="Pregrado">Pregrado</SelectItem>
@@ -502,7 +478,7 @@ export default function BasicInformationStep({
               label="Etnia"
               labelPlacement="outside"
               placeholder="Seleccione su etnia"
-              value={formData.etnia}
+              selectedKeys={formData.etnia ? [formData.etnia] : []}
               onChange={(e) => updateFormData({ etnia: e.target.value })}
               isRequired
             >
@@ -523,7 +499,7 @@ export default function BasicInformationStep({
               label="¿Tiene alguna discapacidad?"
               labelPlacement="outside"
               placeholder="Seleccione una opción"
-              value={formData.discapacidad}
+              selectedKeys={formData.discapacidad ? [formData.discapacidad] : []}
               onChange={(e) => updateFormData({ discapacidad: e.target.value })}
               isRequired
             >
@@ -538,10 +514,8 @@ export default function BasicInformationStep({
               label="¿Sabe leer y escribir?"
               labelPlacement="outside"
               placeholder="Seleccione una opción"
-              value={formData.sabe_leer_escribir}
-              onChange={(e) =>
-                updateFormData({ sabe_leer_escribir: e.target.value })
-              }
+              selectedKeys={formData.sabe_leer_escribir ? [formData.sabe_leer_escribir] : []}
+              onChange={(e) => updateFormData({ sabe_leer_escribir: e.target.value })}
               isRequired
             >
               <SelectItem key="SI">Sí</SelectItem>
