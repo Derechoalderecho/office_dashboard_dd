@@ -57,6 +57,8 @@ export default function StepperForm() {
       calle: "",
       carrera: "",
     },
+    estrato: "",
+    zona: "",
 
     // Case information
     notas: "",

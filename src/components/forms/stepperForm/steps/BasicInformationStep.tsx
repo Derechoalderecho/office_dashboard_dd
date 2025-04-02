@@ -13,6 +13,7 @@ import {
   Popover,
   PopoverTrigger,
   PopoverContent,
+  NumberInput,
 } from "@heroui/react";
 import { useState, useEffect, Key } from "react";
 import { fetchAllCitizens } from "@/services/citizenService";
@@ -49,6 +50,8 @@ type BasicInformationProps = {
       calle: string;
       carrera: string;
     };
+    estrato: string;
+    zona: string;
   };
   updateFormData: (
     data: Partial<{
@@ -79,13 +82,17 @@ type BasicInformationProps = {
         calle: string;
         carrera: string;
       };
+      estrato: string;
+      zona: string;
     }>
   ) => void;
+  validationErrors?: { [key: string]: string };
 };
 
 export default function BasicInformationStep({
   formData,
   updateFormData,
+  validationErrors = {},
 }: BasicInformationProps) {
   const [fechaNacimiento, setFechaNacimiento] = useState<DateValue | null>(
     null
@@ -457,26 +464,33 @@ export default function BasicInformationStep({
               <SelectItem key="PA">Pansexual</SelectItem>
             </Select>
 
-            <Input
+            <NumberInput
+              hideStepper
               id="num_movil"
               name="num_movil"
               variant="bordered"
               label="Número móvil"
               labelPlacement="outside"
-              value={formData.num_movil}
-              onChange={(e) => updateFormData({ num_movil: e.target.value })}
+              hideStepper
               placeholder="Ingrese su número móvil"
+              value={Number(formData.num_movil)}
+              onValueChange={(value) =>
+                updateFormData({ num_movil: value.toString() })
+              }
               isRequired
             />
 
-            <Input
+            <NumberInput
               id="num_fijo"
               name="num_fijo"
               variant="bordered"
               label="Número fijo"
               labelPlacement="outside"
-              value={formData.num_fijo}
-              onChange={(e) => updateFormData({ num_fijo: e.target.value })}
+              hideStepper
+              value={Number(formData.num_fijo)}
+              onValueChange={(value) =>
+                updateFormData({ num_fijo: value.toString() })
+              }
               placeholder="Ingrese su número fijo"
             />
 
@@ -614,6 +628,39 @@ export default function BasicInformationStep({
               </SelectItem>
             </Select>
 
+            <NumberInput
+              id="estrato"
+              name="estrato"
+              label="Estrato"
+              variant="bordered"
+              labelPlacement="outside"
+              hideStepper
+              value={Number(formData.estrato) || 0}
+              onValueChange={(value) =>
+                updateFormData({ estrato: value.toString() })
+              }
+              minValue={1}
+              maxValue={6}
+              errorMessage={validationErrors?.estrato}
+            />
+            <Select
+              id="zona"
+              name="zona"
+              label="Zona"
+              variant="bordered"
+              labelPlacement="outside"
+              placeholder="Seleccione su zona"
+              selectedKeys={formData.zona ? [formData.zona] : []}
+              onSelectionChange={(keys) => {
+                const selectedKey = Array.from(keys)[0]?.toString() || "";
+                updateFormData({ zona: selectedKey });
+              }}
+              errorMessage={validationErrors?.zona}
+            >
+              <SelectItem key="urbana">Urbana</SelectItem>
+              <SelectItem key="rural">Rural</SelectItem>
+            </Select>
+
             <Select
               id="discapacidad"
               name="discapacidad"
@@ -655,9 +702,7 @@ export default function BasicInformationStep({
               onOpenChange={setIsAddressPopoverOpen}
             >
               <PopoverTrigger>
-                <Button variant="bordered" color="primary">
-                  Dirección de residencia
-                </Button>
+                <Button variant="bordered">Dirección de residencia</Button>
               </PopoverTrigger>
               <PopoverContent>
                 <div className="space-y-4 p-4">
