@@ -15,6 +15,7 @@ import { useState, useEffect, Key } from "react";
 import { fetchAllCitizens } from "@/services/citizenService";
 import { Citizen } from "@/types/citizens";
 import { PlusIcon, XIcon } from "lucide-react";
+import { I18nProvider } from "@react-aria/i18n";
 
 type BasicInformationProps = {
   formData: {
@@ -27,7 +28,7 @@ type BasicInformationProps = {
     sexo: string;
     genero: string;
     orient_sexual: string;
-    //fecha_nacimiento: Date;
+    fecha_nacimiento: string;
     num_movil: string;
     num_fijo: string;
     email: string;
@@ -51,7 +52,7 @@ type BasicInformationProps = {
       sexo: string;
       genero: string;
       orient_sexual: string;
-      //fecha_nacimiento: Date;
+      fecha_nacimiento: string;
       num_movil: string;
       num_fijo: string;
       email: string;
@@ -71,22 +72,29 @@ export default function BasicInformationStep({
   formData,
   updateFormData,
 }: BasicInformationProps) {
-  const [fechaNacimiento, setFechaNacimiento] = useState<DateValue | null>(null);
+  const [fechaNacimiento, setFechaNacimiento] = useState<DateValue | null>(
+    null
+  );
   const [citizens, setCitizens] = useState<Citizen[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showNewCitizenForm, setShowNewCitizenForm] = useState<boolean>(
-    Boolean(formData.is_existing_citizen === "false" || 
-    (formData.primer_nombre && formData.primer_apellido))
+    Boolean(
+      formData.is_existing_citizen === "false" ||
+        (formData.primer_nombre && formData.primer_apellido)
+    )
   );
-  const [nacionalidadPersonalizada, setNacionalidadPersonalizada] = useState<string>(
-    formData.nacionalidad && 
-    !["Colombia", "Venezuela"].includes(formData.nacionalidad) 
-      ? formData.nacionalidad 
-      : ""
-  );
+  const [nacionalidadPersonalizada, setNacionalidadPersonalizada] =
+    useState<string>(
+      formData.nacionalidad &&
+        !["Colombia", "Venezuela"].includes(formData.nacionalidad)
+        ? formData.nacionalidad
+        : ""
+    );
   const [showNacionalidadInput, setShowNacionalidadInput] = useState<boolean>(
-    Boolean(formData.nacionalidad && 
-    !["Colombia", "Venezuela"].includes(formData.nacionalidad))
+    Boolean(
+      formData.nacionalidad &&
+        !["Colombia", "Venezuela"].includes(formData.nacionalidad)
+    )
   );
 
   const handleNacionalidadChange = (
@@ -109,6 +117,17 @@ export default function BasicInformationStep({
     const value = e.target.value;
     setNacionalidadPersonalizada(value);
     updateFormData({ nacionalidad: value });
+  };
+
+  const handleTipoDocumentoChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const value = e.target.value;
+    updateFormData({
+      tipo_documento: value,
+      // Si es "Sin documento", limpiamos el número de documento
+      num_documento: value === "SD" ? "" : formData.num_documento,
+    });
   };
 
   // Fetch all citizens for the dropdown
@@ -227,8 +246,10 @@ export default function BasicInformationStep({
               label="Tipo de documento"
               labelPlacement="outside"
               placeholder="Seleccione su tipo de documento"
-              selectedKeys={formData.tipo_documento ? [formData.tipo_documento] : []}
-              onChange={(e) => updateFormData({ tipo_documento: e.target.value })}
+              selectedKeys={
+                formData.tipo_documento ? [formData.tipo_documento] : []
+              }
+              onChange={handleTipoDocumentoChange}
               isRequired
             >
               <SelectItem key="TI">Tarjeta de identidad</SelectItem>
@@ -239,19 +260,21 @@ export default function BasicInformationStep({
               <SelectItem key="SD">Sin documento</SelectItem>
             </Select>
 
-            <Input
-              id="num_documento"
-              name="num_documento"
-              variant="bordered"
-              label="Número de documento"
-              labelPlacement="outside"
-              value={formData.num_documento}
-              onChange={(e) =>
-                updateFormData({ num_documento: e.target.value })
-              }
-              placeholder="Ingrese su número de documento"
-              isRequired
-            />
+            {formData.tipo_documento !== "SD" && (
+              <Input
+                id="num_documento"
+                name="num_documento"
+                variant="bordered"
+                label="Número de documento"
+                labelPlacement="outside"
+                value={formData.num_documento}
+                onChange={(e) =>
+                  updateFormData({ num_documento: e.target.value })
+                }
+                placeholder="Ingrese su número de documento"
+                isRequired
+              />
+            )}
 
             <Input
               id="primer_nombre"
@@ -279,9 +302,25 @@ export default function BasicInformationStep({
               }
               placeholder="Ingrese su segundo nombre"
             />
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <I18nProvider locale="es">
+              <DateInput
+                id="fecha_nacimiento"
+                name="fecha_nacimiento"
+                variant="bordered"
+                label="Fecha de nacimiento"
+                labelPlacement="outside"
+                value={fechaNacimiento}
+                onChange={(date) => {
+                  setFechaNacimiento(date);
+                  if (date) {
+                    const formattedDate = date.toString().split("T")[0];
+                    updateFormData({ fecha_nacimiento: formattedDate });
+                  }
+                }}
+                isRequired
+              />
+            </I18nProvider>
             <Input
               id="primer_apellido"
               name="primer_apellido"
@@ -323,7 +362,9 @@ export default function BasicInformationStep({
               <SelectItem key="Hombre">Hombre</SelectItem>
               <SelectItem key="Mujer">Mujer</SelectItem>
               <SelectItem key="Intersexual">Intersexual</SelectItem>
-              <SelectItem key="Prefiere no decirlo">Prefiere no decirlo</SelectItem>
+              <SelectItem key="Prefiere no decirlo">
+                Prefiere no decirlo
+              </SelectItem>
               <SelectItem key="Otro">Otro</SelectItem>
             </Select>
 
@@ -343,9 +384,7 @@ export default function BasicInformationStep({
               <SelectItem key="T">Transgénero</SelectItem>
               <SelectItem key="N">No binario</SelectItem>
             </Select>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Select
               id="orient_sexual"
               name="orient_sexual"
@@ -353,8 +392,12 @@ export default function BasicInformationStep({
               label="Orientación sexual"
               labelPlacement="outside"
               placeholder="Seleccione su orientación sexual"
-              selectedKeys={formData.orient_sexual ? [formData.orient_sexual] : []}
-              onChange={(e) => updateFormData({ orient_sexual: e.target.value })}
+              selectedKeys={
+                formData.orient_sexual ? [formData.orient_sexual] : []
+              }
+              onChange={(e) =>
+                updateFormData({ orient_sexual: e.target.value })
+              }
               isRequired
             >
               <SelectItem key="HE">Heterosexual</SelectItem>
@@ -397,9 +440,7 @@ export default function BasicInformationStep({
               onChange={(e) => updateFormData({ email: e.target.value })}
               placeholder="Ingrese su correo electrónico"
             />
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Select
               id="nacionalidad"
               name="nacionalidad"
@@ -407,11 +448,34 @@ export default function BasicInformationStep({
               label="Nacionalidad"
               labelPlacement="outside"
               placeholder="Seleccione su nacionalidad"
-              selectedKeys={showNacionalidadInput ? ["Otro"] : (formData.nacionalidad ? [formData.nacionalidad] : [])}
+              selectedKeys={
+                showNacionalidadInput
+                  ? ["Otro"]
+                  : formData.nacionalidad
+                  ? [formData.nacionalidad]
+                  : []
+              }
               onChange={handleNacionalidadChange}
               isRequired
             >
+              <SelectItem key="Argentina">Argentina</SelectItem>
+              <SelectItem key="Bolivia">Bolivia</SelectItem>
+              <SelectItem key="Chile">Chile</SelectItem>
               <SelectItem key="Colombia">Colombia</SelectItem>
+              <SelectItem key="Costa Rica">Costa Rica</SelectItem>
+              <SelectItem key="Cuba">Cuba</SelectItem>
+              <SelectItem key="Ecuador">Ecuador</SelectItem>
+              <SelectItem key="El Salvador">El Salvador</SelectItem>
+              <SelectItem key="España">España</SelectItem>
+              <SelectItem key="Guatemala">Guatemala</SelectItem>
+              <SelectItem key="Honduras">Honduras</SelectItem>
+              <SelectItem key="México">México</SelectItem>
+              <SelectItem key="Nicaragua">Nicaragua</SelectItem>
+              <SelectItem key="Panamá">Panamá</SelectItem>
+              <SelectItem key="Paraguay">Paraguay</SelectItem>
+              <SelectItem key="Perú">Perú</SelectItem>
+              <SelectItem key="República Dominicana">República Dominicana</SelectItem>
+              <SelectItem key="Uruguay">Uruguay</SelectItem>
               <SelectItem key="Venezuela">Venezuela</SelectItem>
               <SelectItem key="Otro">Otro</SelectItem>
             </Select>
@@ -437,7 +501,9 @@ export default function BasicInformationStep({
               label="Estado civil"
               labelPlacement="outside"
               placeholder="Seleccione su estado civil"
-              selectedKeys={formData.estado_civil ? [formData.estado_civil] : []}
+              selectedKeys={
+                formData.estado_civil ? [formData.estado_civil] : []
+              }
               onChange={(e) => updateFormData({ estado_civil: e.target.value })}
               isRequired
             >
@@ -463,7 +529,9 @@ export default function BasicInformationStep({
               <SelectItem key="Ninguna">Ninguna</SelectItem>
               <SelectItem key="Preescolar">Preescolar</SelectItem>
               <SelectItem key="Primaria">Primaria (1.º a 5.º grado)</SelectItem>
-              <SelectItem key="Secundaria">Secundaria (6.º a 9.º grado)</SelectItem>
+              <SelectItem key="Secundaria">
+                Secundaria (6.º a 9.º grado)
+              </SelectItem>
               <SelectItem key="Media">Media (10.º a 11.º grado)</SelectItem>
               <SelectItem key="Técnica">Técnica o tecnológica</SelectItem>
               <SelectItem key="Pregrado">Pregrado</SelectItem>
@@ -489,7 +557,9 @@ export default function BasicInformationStep({
               <SelectItem key="RO">Rom/Gitano</SelectItem>
               <SelectItem key="Ninguna">Ninguna</SelectItem>
               <SelectItem key="Otro">Otro</SelectItem>
-              <SelectItem key="Prefiero no decirlo">Prefiero no decirlo</SelectItem>
+              <SelectItem key="Prefiero no decirlo">
+                Prefiero no decirlo
+              </SelectItem>
             </Select>
 
             <Select
@@ -499,7 +569,9 @@ export default function BasicInformationStep({
               label="¿Tiene alguna discapacidad?"
               labelPlacement="outside"
               placeholder="Seleccione una opción"
-              selectedKeys={formData.discapacidad ? [formData.discapacidad] : []}
+              selectedKeys={
+                formData.discapacidad ? [formData.discapacidad] : []
+              }
               onChange={(e) => updateFormData({ discapacidad: e.target.value })}
               isRequired
             >
@@ -514,8 +586,12 @@ export default function BasicInformationStep({
               label="¿Sabe leer y escribir?"
               labelPlacement="outside"
               placeholder="Seleccione una opción"
-              selectedKeys={formData.sabe_leer_escribir ? [formData.sabe_leer_escribir] : []}
-              onChange={(e) => updateFormData({ sabe_leer_escribir: e.target.value })}
+              selectedKeys={
+                formData.sabe_leer_escribir ? [formData.sabe_leer_escribir] : []
+              }
+              onChange={(e) =>
+                updateFormData({ sabe_leer_escribir: e.target.value })
+              }
               isRequired
             >
               <SelectItem key="SI">Sí</SelectItem>
