@@ -697,64 +697,67 @@ export default function BasicInformationStep({
               <SelectItem key="NO">No</SelectItem>
             </Select>
 
-            <Popover
-              isOpen={isAddressPopoverOpen}
-              onOpenChange={setIsAddressPopoverOpen}
-            >
-              <PopoverTrigger>
-                <Button variant="bordered">Dirección de residencia</Button>
-              </PopoverTrigger>
-              <PopoverContent>
-                <div className="space-y-4 p-4">
-                  <h3 className="text-lg font-semibold mb-4">
-                    Dirección de residencia
-                  </h3>
-                  <div className="space-y-4">
-                    <Input
-                      label="Calle"
-                      placeholder="Número de calle"
-                      value={formData.direccion?.calle || ""}
-                      onChange={(e) =>
-                        handleAddressChange("calle", e.target.value)
-                      }
-                    />
-                    <Input
-                      label="Carrera"
-                      placeholder="Número de carrera"
-                      value={formData.direccion?.carrera || ""}
-                      onChange={(e) =>
-                        handleAddressChange("carrera", e.target.value)
-                      }
-                    />
-                    <Input
-                      label="Número de casa"
-                      placeholder="Número de casa o apartamento"
-                      value={formData.direccion?.numero_casa || ""}
-                      onChange={(e) =>
-                        handleAddressChange("numero_casa", e.target.value)
-                      }
-                    />
-                    <Input
-                      label="Barrio"
-                      placeholder="Nombre del barrio"
-                      value={formData.direccion?.barrio || ""}
-                      onChange={(e) =>
-                        handleAddressChange("barrio", e.target.value)
-                      }
-                    />
+            <div className="flex flex-col justify-end">
+              <Popover
+                isOpen={isAddressPopoverOpen}
+                onOpenChange={setIsAddressPopoverOpen}
+                placement="bottom-end"
+              >
+                <PopoverTrigger>
+                  <Button variant="bordered">Dirección de residencia</Button>
+                </PopoverTrigger>
+                <PopoverContent>
+                  <div className="space-y-4 p-4">
+                    <h3 className="text-lg font-semibold mb-4">
+                      Dirección de residencia
+                    </h3>
+                    <div className="space-y-4">
+                      <Input
+                        label="Calle"
+                        placeholder="Número de calle"
+                        value={formData.direccion?.calle || ""}
+                        onChange={(e) =>
+                          handleAddressChange("calle", e.target.value)
+                        }
+                      />
+                      <Input
+                        label="Carrera"
+                        placeholder="Número de carrera"
+                        value={formData.direccion?.carrera || ""}
+                        onChange={(e) =>
+                          handleAddressChange("carrera", e.target.value)
+                        }
+                      />
+                      <Input
+                        label="Número de casa"
+                        placeholder="Número de casa o apartamento"
+                        value={formData.direccion?.numero_casa || ""}
+                        onChange={(e) =>
+                          handleAddressChange("numero_casa", e.target.value)
+                        }
+                      />
+                      <Input
+                        label="Barrio"
+                        placeholder="Nombre del barrio"
+                        value={formData.direccion?.barrio || ""}
+                        onChange={(e) =>
+                          handleAddressChange("barrio", e.target.value)
+                        }
+                      />
+                    </div>
+                    <div className="mt-8">
+                      <Button
+                        color="primary"
+                        fullWidth
+                        onPress={() => setIsAddressPopoverOpen(false)}
+                      >
+                        Guardar
+                      </Button>
+                    </div>
                   </div>
-                  <div className="mt-8">
-                    <Button
-                      color="primary"
-                      fullWidth
-                      onPress={() => setIsAddressPopoverOpen(false)}
-                    >
-                      Guardar
-                    </Button>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
         </>
       )}
