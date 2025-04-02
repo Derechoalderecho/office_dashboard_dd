@@ -18,8 +18,14 @@ import {
 import { useState, useEffect, Key } from "react";
 import { fetchAllCitizens } from "@/services/citizenService";
 import { Citizen } from "@/types/citizens";
-import { PlusIcon, XIcon } from "lucide-react";
+import { PlusIcon, UserIcon, XIcon } from "lucide-react";
 import { I18nProvider } from "@react-aria/i18n";
+import {
+  fetchLocations,
+  getUniqueDepartments,
+  getMunicipalitiesByDepartment,
+  Location,
+} from "@/services/locationService";
 
 type BasicInformationProps = {
   formData: {
@@ -52,6 +58,8 @@ type BasicInformationProps = {
     };
     estrato: string;
     zona: string;
+    departamento: string;
+    municipio: string;
   };
   updateFormData: (
     data: Partial<{
@@ -84,6 +92,8 @@ type BasicInformationProps = {
       };
       estrato: string;
       zona: string;
+      departamento: string;
+      municipio: string;
     }>
   ) => void;
   validationErrors?: { [key: string]: string };
@@ -119,6 +129,9 @@ export default function BasicInformationStep({
     )
   );
   const [isAddressPopoverOpen, setIsAddressPopoverOpen] = useState(false);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [departments, setDepartments] = useState<string[]>([]);
+  const [municipalities, setMunicipalities] = useState<string[]>([]);
 
   const handleNacionalidadChange = (
     e: React.ChangeEvent<HTMLSelectElement>
@@ -163,6 +176,34 @@ export default function BasicInformationStep({
     };
     loadCitizens();
   }, []);
+
+  // Fetch locations data
+  useEffect(() => {
+    const loadLocations = async () => {
+      const data = await fetchLocations();
+      setLocations(data);
+      setDepartments(getUniqueDepartments(data));
+    };
+    loadLocations();
+  }, []);
+
+  // Update municipalities when department changes
+  useEffect(() => {
+    if (formData.departamento) {
+      const filteredMunicipalities = getMunicipalitiesByDepartment(
+        locations,
+        formData.departamento
+      );
+      setMunicipalities(filteredMunicipalities);
+      // Reset municipio if it's not in the new list
+      if (!filteredMunicipalities.includes(formData.municipio)) {
+        updateFormData({ municipio: "" });
+      }
+    } else {
+      setMunicipalities([]);
+      updateFormData({ municipio: "" });
+    }
+  }, [formData.departamento, locations]);
 
   // Handle citizen selection and auto-populate form fields
   const handleCitizenSelect = (selectedKey: Key | null) => {
@@ -254,10 +295,14 @@ export default function BasicInformationStep({
               name="citizen_id"
               variant="bordered"
               label="Seleccionar ciudadano existente"
+              listboxProps={{
+                emptyContent: "No hay resultados",
+              }}
               labelPlacement="outside"
               placeholder="Seleccione o escriba el nombre del ciudadano o su cédula"
               value={formData.citizen_id}
               onSelectionChange={handleCitizenSelect}
+              isLoading={isLoading}
               disabled={isLoading}
               className="w-full"
             >
@@ -267,11 +312,6 @@ export default function BasicInformationStep({
                 </AutocompleteItem>
               ))}
             </Autocomplete>
-            {isLoading && (
-              <p className="text-sm text-gray-500 mt-1">
-                Cargando ciudadanos...
-              </p>
-            )}
           </div>
           <Button
             color="primary"
@@ -287,11 +327,11 @@ export default function BasicInformationStep({
             <h3 className="text-lg font-medium">Crear nuevo ciudadano</h3>
             <Button
               variant="light"
-              color="danger"
-              startContent={<XIcon size={16} />}
+              color="primary"
+              startContent={<UserIcon size={16} />}
               onClick={handleCancelNewCitizen}
             >
-              Cancelar
+              Usar ciudadano existente
             </Button>
           </div>
 
@@ -471,7 +511,6 @@ export default function BasicInformationStep({
               variant="bordered"
               label="Número móvil"
               labelPlacement="outside"
-              hideStepper
               placeholder="Ingrese su número móvil"
               value={Number(formData.num_movil)}
               onValueChange={(value) =>
@@ -659,6 +698,45 @@ export default function BasicInformationStep({
             >
               <SelectItem key="urbana">Urbana</SelectItem>
               <SelectItem key="rural">Rural</SelectItem>
+            </Select>
+
+            <Select
+              id="departamento"
+              name="departamento"
+              label="Departamento"
+              variant="bordered"
+              labelPlacement="outside"
+              placeholder="Seleccione su departamento"
+              selectedKeys={
+                formData.departamento ? [formData.departamento] : []
+              }
+              onChange={(e) => updateFormData({ departamento: e.target.value })}
+              isRequired
+            >
+              {departments.map((dept) => (
+                <SelectItem key={dept}>{dept}</SelectItem>
+              ))}
+            </Select>
+
+            <Select
+              id="municipio"
+              name="municipio"
+              label="Municipio"
+              variant="bordered"
+              labelPlacement="outside"
+              placeholder="Seleccione su municipio"
+              isRequired
+              selectedKeys={formData.municipio ? [formData.municipio] : []}
+              onSelectionChange={(keys) => {
+                const selectedKey = Array.from(keys)[0]?.toString() || "";
+                updateFormData({ municipio: selectedKey });
+              }}
+              isDisabled={!formData.departamento}
+              errorMessage={validationErrors?.municipio}
+            >
+              {municipalities.map((mun) => (
+                <SelectItem key={mun}>{mun}</SelectItem>
+              ))}
             </Select>
 
             <Select

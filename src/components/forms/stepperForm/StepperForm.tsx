@@ -59,6 +59,8 @@ export default function StepperForm() {
     },
     estrato: "",
     zona: "",
+    departamento: "",
+    municipio: "",
 
     // Case information
     notas: "",
@@ -132,6 +134,8 @@ export default function StepperForm() {
       if (!data.etnia) errors.etnia = "La etnia es requerida";
       if (!data.discapacidad) errors.discapacidad = "Debe indicar si tiene discapacidad";
       if (!data.sabe_leer_escribir) errors.sabe_leer_escribir = "Debe indicar si sabe leer y escribir";
+      if (!data.departamento) errors.departamento = "El departamento es requerido";
+      if (!data.municipio) errors.municipio = "El municipio es requerido";
 
       return errors;
     },
@@ -151,7 +155,6 @@ export default function StepperForm() {
       // Administration validation
       if (!data.persona_modifica) errors.persona_modifica = "Debe seleccionar un usuario encargado";
       if (!data.profesor_id) errors.profesor_id = "Debe seleccionar un profesor";
-      if (!data.monitor_id) errors.monitor_id = "Debe seleccionar un monitor";
       if (!data.alumno_id) errors.alumno_id = "Debe seleccionar un alumno";
 
       return errors;
