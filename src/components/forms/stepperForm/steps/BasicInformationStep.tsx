@@ -10,6 +10,9 @@ import {
   Autocomplete,
   AutocompleteItem,
   Button,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
 } from "@heroui/react";
 import { useState, useEffect, Key } from "react";
 import { fetchAllCitizens } from "@/services/citizenService";
@@ -40,6 +43,12 @@ type BasicInformationProps = {
     sabe_leer_escribir: string;
     citizen_id: string;
     is_existing_citizen: string;
+    direccion: {
+      barrio: string;
+      numero_casa: string;
+      calle: string;
+      carrera: string;
+    };
   };
   updateFormData: (
     data: Partial<{
@@ -64,6 +73,12 @@ type BasicInformationProps = {
       sabe_leer_escribir: string;
       citizen_id: string;
       is_existing_citizen: string;
+      direccion: {
+        barrio: string;
+        numero_casa: string;
+        calle: string;
+        carrera: string;
+      };
     }>
   ) => void;
 };
@@ -96,6 +111,7 @@ export default function BasicInformationStep({
         !["Colombia", "Venezuela"].includes(formData.nacionalidad)
     )
   );
+  const [isAddressPopoverOpen, setIsAddressPopoverOpen] = useState(false);
 
   const handleNacionalidadChange = (
     e: React.ChangeEvent<HTMLSelectElement>
@@ -150,6 +166,12 @@ export default function BasicInformationStep({
       updateFormData({
         is_existing_citizen: "false",
         citizen_id: "",
+        direccion: {
+          barrio: "",
+          numero_casa: "",
+          calle: "",
+          carrera: "",
+        },
       });
       setShowNewCitizenForm(true);
       return;
@@ -174,6 +196,12 @@ export default function BasicInformationStep({
         num_fijo: citizen.num_fijo || "",
         citizen_id: selectedId,
         is_existing_citizen: "true",
+        direccion: {
+          barrio: citizen.direccion?.barrio || "",
+          numero_casa: citizen.direccion?.numero_casa || "",
+          calle: citizen.direccion?.calle || "",
+          carrera: citizen.direccion?.carrera || "",
+        },
       });
       setShowNewCitizenForm(false);
     }
@@ -185,6 +213,28 @@ export default function BasicInformationStep({
 
   const handleCancelNewCitizen = () => {
     setShowNewCitizenForm(false);
+  };
+
+  const handleAddressChange = (field: string, value: string) => {
+    updateFormData({
+      direccion: {
+        ...formData.direccion,
+        [field]: value,
+      },
+    });
+  };
+
+  const getAddressSummary = () => {
+    const { direccion } = formData;
+    if (!direccion) return "No especificada";
+
+    const parts = [];
+    if (direccion.calle) parts.push(`Calle ${direccion.calle}`);
+    if (direccion.carrera) parts.push(`Carrera ${direccion.carrera}`);
+    if (direccion.numero_casa) parts.push(`#${direccion.numero_casa}`);
+    if (direccion.barrio) parts.push(`Barrio ${direccion.barrio}`);
+
+    return parts.length > 0 ? parts.join(", ") : "No especificada";
   };
 
   return (
@@ -474,7 +524,9 @@ export default function BasicInformationStep({
               <SelectItem key="Panamá">Panamá</SelectItem>
               <SelectItem key="Paraguay">Paraguay</SelectItem>
               <SelectItem key="Perú">Perú</SelectItem>
-              <SelectItem key="República Dominicana">República Dominicana</SelectItem>
+              <SelectItem key="República Dominicana">
+                República Dominicana
+              </SelectItem>
               <SelectItem key="Uruguay">Uruguay</SelectItem>
               <SelectItem key="Venezuela">Venezuela</SelectItem>
               <SelectItem key="Otro">Otro</SelectItem>
@@ -597,6 +649,67 @@ export default function BasicInformationStep({
               <SelectItem key="SI">Sí</SelectItem>
               <SelectItem key="NO">No</SelectItem>
             </Select>
+
+            <Popover
+              isOpen={isAddressPopoverOpen}
+              onOpenChange={setIsAddressPopoverOpen}
+            >
+              <PopoverTrigger>
+                <Button variant="bordered" color="primary">
+                  Dirección de residencia
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent>
+                <div className="space-y-4 p-4">
+                  <h3 className="text-lg font-semibold mb-4">
+                    Dirección de residencia
+                  </h3>
+                  <div className="space-y-4">
+                    <Input
+                      label="Calle"
+                      placeholder="Número de calle"
+                      value={formData.direccion?.calle || ""}
+                      onChange={(e) =>
+                        handleAddressChange("calle", e.target.value)
+                      }
+                    />
+                    <Input
+                      label="Carrera"
+                      placeholder="Número de carrera"
+                      value={formData.direccion?.carrera || ""}
+                      onChange={(e) =>
+                        handleAddressChange("carrera", e.target.value)
+                      }
+                    />
+                    <Input
+                      label="Número de casa"
+                      placeholder="Número de casa o apartamento"
+                      value={formData.direccion?.numero_casa || ""}
+                      onChange={(e) =>
+                        handleAddressChange("numero_casa", e.target.value)
+                      }
+                    />
+                    <Input
+                      label="Barrio"
+                      placeholder="Nombre del barrio"
+                      value={formData.direccion?.barrio || ""}
+                      onChange={(e) =>
+                        handleAddressChange("barrio", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div className="mt-8">
+                    <Button
+                      color="primary"
+                      fullWidth
+                      onPress={() => setIsAddressPopoverOpen(false)}
+                    >
+                      Guardar
+                    </Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </>
       )}

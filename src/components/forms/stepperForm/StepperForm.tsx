@@ -41,7 +41,7 @@ export default function StepperForm() {
     sexo: "",
     genero: "",
     orient_sexual: "",
-    //fecha_nacimiento: "",
+    fecha_nacimiento: "",
     num_movil: "",
     num_fijo: "",
     email: "",
@@ -51,6 +51,12 @@ export default function StepperForm() {
     etnia: "",
     discapacidad: "",
     sabe_leer_escribir: "",
+    direccion: {
+      barrio: "",
+      numero_casa: "",
+      calle: "",
+      carrera: "",
+    },
 
     // Case information
     notas: "",

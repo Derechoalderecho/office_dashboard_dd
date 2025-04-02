@@ -66,7 +66,13 @@ export async function submitFormData(formData: FormData, mockMode = false): Prom
         sabe_leer_escribir: formData.get('sabe_leer_escribir') || "",
         dane_municipio: formData.get('dane_municipio') || "05001",
         persona_modifica: formData.get('persona_modifica') || "",
-        // Don't include fields that aren't in the citizen table
+        fecha_nacimiento: formData.get('fecha_nacimiento') || "",
+        direccion: {
+          barrio: formData.get('direccion.barrio') || "",
+          numero_casa: formData.get('direccion.numero_casa') || "",
+          calle: formData.get('direccion.calle') || "",
+          carrera: formData.get('direccion.carrera') || "",
+        },
       };
 
       // Log the exact data we're sending
