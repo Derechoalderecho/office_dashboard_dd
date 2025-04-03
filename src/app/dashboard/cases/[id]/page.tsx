@@ -514,6 +514,7 @@ export default function CasePage() {
           onNotViableSubmission={handleNotViableSubmission}
           isStatusChangeLoading={statusChangeLoading}
           onRadicarClick={handleRadicarClick}
+          role={role}
         />
        
         <section className="flex gap-6">

@@ -12,7 +12,7 @@ import {
 import { parseDateToLocal } from "@/utils/date";
 import { Cases } from "@/types/cases";
 import { transformStateByRole } from "@/utils/stateTransformer";
-import { useUserRole } from "@/hooks/useUserRole";
+import { UserRole } from "@/store/slices/authSlice";
 import { useState } from "react";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 
@@ -24,6 +24,7 @@ interface CaseHeaderProps {
   onNotViableSubmission?: () => Promise<void>;
   isStatusChangeLoading?: boolean;
   onRadicarClick?: () => void;
+  role: UserRole;
 }
 
 export default function CaseHeader({
@@ -34,8 +35,8 @@ export default function CaseHeader({
   onNotViableSubmission,
   isStatusChangeLoading = false,
   onRadicarClick,
+  role,
 }: CaseHeaderProps) {
-  const { role } = useUserRole();
   const displayState = transformStateByRole(caseData.estado, role);
   const [isRadicarInfoOpen, setIsRadicarInfoOpen] = useState(false);
 
