@@ -1,6 +1,7 @@
 "use server";
 
 import { API_BASE_URL } from "@/config/api";
+import { assignUserToCase } from "@/services/caseService";
 
 interface ApiResponse {
   success: boolean;
@@ -155,16 +156,29 @@ export async function submitFormData(
     }
 
     // Step 2: Create case with the citizen ID
+    const profesorId = formData.get("profesor_id")?.toString() || "0";
     const caseData = {
-      id_ciudadano: citizenId,
-      tipo_proceso: formData.get("tipo_proceso") || "Tutela",
-      estado: formData.get("estado") || "Nuevo",
-      tiempo_respuesta: parseInt(
-        formData.get("tiempo_respuesta")?.toString() || "48"
-      ),
+      id_ciudadano: citizenId.toString(),
+      tipo_proceso: formData.get("tipo_proceso")?.toString() || "Tutela",
+      estado: formData.get("estado")?.toString() || "Nuevo",
+      tiempo_respuesta: formData.get("tiempo_respuesta")?.toString() || "48",
       notas: formData.get("notas")?.toString() || "",
-      persona_modifica: formData.get("persona_modifica") || "",
-      // Only include fields that are in the case table
+      persona_modifica: profesorId,
+      fecha_crea: new Date().toISOString(),
+      fecha_actualiza: new Date().toISOString(),
+      fecha_elimina: "",
+      eliminado: "false",
+      usuarios: [],
+      ciudadano: null,
+      id_caso: "0",
+      pretenciones: "Pendiente de revisión",
+      concepto_estudiante: "Pendiente de revisión",
+      hechos: "Pendiente de revisión",
+      rama_derecho: "Derecho Constitucional",
+      tramite: "En proceso",
+      antecedentes: "Pendiente de revisión",
+      tutela: "Pendiente de revisión",
+      calificacion: "0.0"
     };
 
     console.log("Sending case data:", JSON.stringify(caseData, null, 2));
@@ -187,6 +201,14 @@ export async function submitFormData(
       }
 
       console.error("Case API error response:", errorData);
+
+      // Print detailed error information
+      if (errorData.detail && Array.isArray(errorData.detail)) {
+        console.error("Missing fields:", errorData.detail.map((err: any) => ({
+          field: err.loc[1],
+          message: err.msg
+        })));
+      }
 
       // Check for specific error types
       const errorDetail =
@@ -213,9 +235,36 @@ export async function submitFormData(
     }
 
     const caseResult = await caseResponse.json();
+    const caseId = caseResult.id_caso;
 
-    // We're no longer making the third post to the users table
-    // Just return success with the citizen and case data
+    // Step 3: Assign users to the case
+    const userAssignments = [
+      {
+        userId: Number(formData.get("profesor_id")),
+        role: "Docente"
+      },
+      {
+        userId: Number(formData.get("monitor_id")),
+        role: "Monitor"
+      },
+      {
+        userId: Number(formData.get("alumno_id")),
+        role: "Estudiante"
+      }
+    ];
+
+    // Assign each user to the case
+    const assignmentPromises = userAssignments.map(({ userId, role }) => 
+      assignUserToCase(caseId, userId, role)
+    );
+
+    const assignmentResults = await Promise.all(assignmentPromises);
+    const allAssignmentsSuccessful = assignmentResults.every(Boolean);
+
+    if (!allAssignmentsSuccessful) {
+      console.warn("Some user assignments failed");
+      // Continue anyway as the case was created successfully
+    }
 
     return {
       success: true,

@@ -153,7 +153,6 @@ export default function StepperForm() {
       const errors: { [key: string]: string } = {};
       
       // Administration validation
-      if (!data.persona_modifica) errors.persona_modifica = "Debe seleccionar un usuario encargado";
       if (!data.profesor_id) errors.profesor_id = "Debe seleccionar un profesor";
       if (!data.alumno_id) errors.alumno_id = "Debe seleccionar un alumno";
 
