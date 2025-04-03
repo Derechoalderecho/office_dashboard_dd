@@ -20,6 +20,8 @@ interface CaseHeaderProps {
   caseData: Cases;
   onApproveSubmission?: () => Promise<void>;
   onRejectSubmission?: () => Promise<void>;
+  onViableSubmission?: () => Promise<void>;
+  onNotViableSubmission?: () => Promise<void>;
   isStatusChangeLoading?: boolean;
   onRadicarClick?: () => void;
 }
@@ -28,6 +30,8 @@ export default function CaseHeader({
   caseData,
   onApproveSubmission,
   onRejectSubmission,
+  onViableSubmission,
+  onNotViableSubmission,
   isStatusChangeLoading = false,
   onRadicarClick,
 }: CaseHeaderProps) {
@@ -44,6 +48,9 @@ export default function CaseHeader({
     }
   };
 
+  // Determinar si se debe mostrar los botones de viabilidad
+  const showViabilityButtons = caseData.estado === "Viabilidad";
+  
   // Determinar si se debe mostrar el botón de "Aprobar Envío"
   const showApproveButton = caseData.estado === "Revisar tutela";
   
@@ -72,6 +79,8 @@ export default function CaseHeader({
                 ? "bg-[#12A150]/10 text-[#12A150]"
                 : displayState === "Seguimiento"
                 ? "bg-[#006FEE]/10 text-[#006FEE]"
+                : displayState === "No aprobado"
+                ? "bg-[#FF0000]/10 text-[#FF0000]"
                 : "bg-[#C4841D]/10 text-[#C4841D]"
             }`}
           >
@@ -81,6 +90,8 @@ export default function CaseHeader({
                   ? "bg-[#12A150]"
                   : displayState === "Seguimiento"
                   ? "bg-[#006FEE]"
+                  : displayState === "No aprobado"
+                  ? "bg-[#FF0000]"
                   : "bg-[#C4841D]"
               }`}
             ></div>
@@ -92,6 +103,31 @@ export default function CaseHeader({
         </p>
       </div>
       <div className="flex gap-2 items-center">
+        {/* Botones de Viabilidad */}
+        {showViabilityButtons && (
+          <>
+            <Button
+              className="text-white bg-[#12A150]"
+              isDisabled={!onViableSubmission || isStatusChangeLoading}
+              isLoading={isStatusChangeLoading}
+              onPress={onViableSubmission}
+              startContent={<CheckCircleIcon className="w-6 text-white" />}
+            >
+              Es Viable
+            </Button>
+            <Button
+              variant="bordered"
+              color="danger"
+              isDisabled={!onNotViableSubmission || isStatusChangeLoading}
+              isLoading={isStatusChangeLoading}
+              onPress={onNotViableSubmission}
+              startContent={<XCircleIcon className="w-6 text-danger" />}
+            >
+              No es Viable
+            </Button>
+          </>
+        )}
+
         {/* Botón de Radicar (solo para estado "Radicar") */}
         {caseData.estado === "Radicar" && (
           <Button
@@ -112,9 +148,7 @@ export default function CaseHeader({
             isDisabled={!onApproveSubmission || isStatusChangeLoading}
             isLoading={isStatusChangeLoading}
             onPress={onApproveSubmission}
-            startContent={
-              <CheckCircleIcon className="w-6 text-white" />
-            }
+            startContent={<CheckCircleIcon className="w-6 text-white" />}
           >
             {getApproveButtonText()}
           </Button>
