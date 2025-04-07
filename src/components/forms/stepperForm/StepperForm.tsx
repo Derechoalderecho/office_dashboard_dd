@@ -41,7 +41,7 @@ export default function StepperForm() {
     sexo: "",
     genero: "",
     orient_sexual: "",
-    //fecha_nacimiento: "",
+    fecha_nacimiento: "",
     num_movil: "",
     num_fijo: "",
     email: "",
@@ -51,6 +51,16 @@ export default function StepperForm() {
     etnia: "",
     discapacidad: "",
     sabe_leer_escribir: "",
+    direccion: {
+      barrio: "",
+      numero_casa: "",
+      calle: "",
+      carrera: "",
+    },
+    estrato: "",
+    zona: "",
+    departamento: "",
+    municipio: "",
 
     // Case information
     notas: "",
@@ -124,6 +134,8 @@ export default function StepperForm() {
       if (!data.etnia) errors.etnia = "La etnia es requerida";
       if (!data.discapacidad) errors.discapacidad = "Debe indicar si tiene discapacidad";
       if (!data.sabe_leer_escribir) errors.sabe_leer_escribir = "Debe indicar si sabe leer y escribir";
+      if (!data.departamento) errors.departamento = "El departamento es requerido";
+      if (!data.municipio) errors.municipio = "El municipio es requerido";
 
       return errors;
     },
@@ -141,9 +153,7 @@ export default function StepperForm() {
       const errors: { [key: string]: string } = {};
       
       // Administration validation
-      if (!data.persona_modifica) errors.persona_modifica = "Debe seleccionar un usuario encargado";
       if (!data.profesor_id) errors.profesor_id = "Debe seleccionar un profesor";
-      if (!data.monitor_id) errors.monitor_id = "Debe seleccionar un monitor";
       if (!data.alumno_id) errors.alumno_id = "Debe seleccionar un alumno";
 
       return errors;

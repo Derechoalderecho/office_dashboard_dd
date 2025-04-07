@@ -24,7 +24,7 @@ export interface Nota {
 export interface Cases {
   id_caso: number;
   id_ciudadano: number;
-  persona_modifica: number;
+  persona_modifica: string;
   tipo_proceso: string;
   estado: string;
   tiempo_respuesta: number;
@@ -37,8 +37,15 @@ export interface Cases {
   usuarios: Users[];
   actions?: string;
   key?: string;
-  notas_list?: Nota[]; // List of notes related to this case
-  documentos?: DocumentResponse[]; // List of documents related to this case
+  notas_list?: Nota[];
+  documentos?: DocumentResponse[];
+  pretensiones?: string;
+  concepto_estudiante?: string;
+  hechos?: string;
+  tramite?: string;
+  antecedentes?: string;
+  tutela?: string;
+  calificacion?: string;
 }
 
 export type Column = {

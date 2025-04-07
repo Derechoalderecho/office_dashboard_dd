@@ -12,7 +12,7 @@ import {
 import { parseDateToLocal } from "@/utils/date";
 import { Cases } from "@/types/cases";
 import { transformStateByRole } from "@/utils/stateTransformer";
-import { useUserRole } from "@/hooks/useUserRole";
+import { UserRole } from "@/store/slices/authSlice";
 import { useState } from "react";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 
@@ -20,18 +20,23 @@ interface CaseHeaderProps {
   caseData: Cases;
   onApproveSubmission?: () => Promise<void>;
   onRejectSubmission?: () => Promise<void>;
+  onViableSubmission?: () => Promise<void>;
+  onNotViableSubmission?: () => Promise<void>;
   isStatusChangeLoading?: boolean;
   onRadicarClick?: () => void;
+  role: UserRole;
 }
 
 export default function CaseHeader({
   caseData,
   onApproveSubmission,
   onRejectSubmission,
+  onViableSubmission,
+  onNotViableSubmission,
   isStatusChangeLoading = false,
   onRadicarClick,
+  role,
 }: CaseHeaderProps) {
-  const { role } = useUserRole();
   const displayState = transformStateByRole(caseData.estado, role);
   const [isRadicarInfoOpen, setIsRadicarInfoOpen] = useState(false);
 
@@ -44,14 +49,18 @@ export default function CaseHeader({
     }
   };
 
+  // Determinar si se debe mostrar los botones de viabilidad
+  const showViabilityButtons = caseData.estado === "Viabilidad";
+
   // Determinar si se debe mostrar el botón de "Aprobar Envío"
   const showApproveButton = caseData.estado === "Revisar tutela";
-  
+
   // Determinar si se debe mostrar el botón de "Rechazar Envío"
-  const showRejectButton = caseData.estado === "Revisar tutela" || 
-                          caseData.estado === "Radicar" || 
-                          caseData.estado === "Valoración del asesor";
-  
+  const showRejectButton =
+    caseData.estado === "Revisar tutela" ||
+    caseData.estado === "Radicar" ||
+    caseData.estado === "Valoración del asesor";
+
   // Determinar el texto del botón de aprobar según el estado
   const getApproveButtonText = () => {
     if (caseData.estado === "Revisar tutela") {
@@ -69,10 +78,28 @@ export default function CaseHeader({
             className={`w-fit flex gap-2 items-center rounded-full py-1 px-3 
             ${
               displayState === "Aprobado"
-                ? "bg-[#12A150]/10 text-[#12A150]"
+                ? "bg-success text-[#12A150]"
                 : displayState === "Seguimiento"
-                ? "bg-[#006FEE]/10 text-[#006FEE]"
-                : "bg-[#C4841D]/10 text-[#C4841D]"
+                ? "bg-followed text-[#006FEE]"
+                : displayState === "Acción necesaria"
+                ? "bg-warning text-[#C4841D]"
+                : displayState === "No aprobado"
+                ? "bg-error text-[#F31260]"
+                : displayState === "Viabilidad"
+                ? "bg-purple-100 text-purple-600"
+                : displayState === "Elaboración tutela"
+                ? "bg-indigo-100 text-indigo-600"
+                : displayState === "Valoración del asesor"
+                ? "bg-teal-100 text-teal-600"
+                : displayState === "Revisar tutela"
+                ? "bg-amber-100 text-amber-600"
+                : displayState === "Radicar"
+                ? "bg-emerald-100 text-emerald-600"
+                : displayState === "Pendiente"
+                ? "bg-rose-100 text-rose-600"
+                : displayState === "Espera del juez"
+                ? "bg-sky-100 text-sky-600"
+                : ""
             }`}
           >
             <div
@@ -81,10 +108,28 @@ export default function CaseHeader({
                   ? "bg-[#12A150]"
                   : displayState === "Seguimiento"
                   ? "bg-[#006FEE]"
+                  : displayState === "No aprobado"
+                  ? "bg-[#F31260]"
+                  : displayState === "Viabilidad"
+                  ? "bg-purple-600"
+                  : displayState === "Elaboración tutela"
+                  ? "bg-indigo-600"
+                  : displayState === "Valoración del asesor"
+                  ? "bg-teal-600"
+                  : displayState === "Revisar tutela"
+                  ? "bg-amber-600"
+                  : displayState === "Radicar"
+                  ? "bg-emerald-600"
+                  : displayState === "Pendiente"
+                  ? "bg-rose-600"
+                  : displayState === "Espera del juez"
+                  ? "bg-sky-600"
                   : "bg-[#C4841D]"
               }`}
             ></div>
-            <span className="text-sm font-medium">{displayState}</span>
+            <span className="text-sm font-medium capitalize">
+              {displayState}
+            </span>
           </div>
         </div>
         <p className="text-sm text-secondary">
@@ -92,6 +137,31 @@ export default function CaseHeader({
         </p>
       </div>
       <div className="flex gap-2 items-center">
+        {/* Botones de Viabilidad */}
+        {showViabilityButtons && (
+          <>
+            <Button
+              className="text-white bg-[#12A150]"
+              isDisabled={!onViableSubmission || isStatusChangeLoading}
+              isLoading={isStatusChangeLoading}
+              onPress={onViableSubmission}
+              startContent={<CheckCircleIcon className="w-6 text-white" />}
+            >
+              Es Viable
+            </Button>
+            <Button
+              variant="bordered"
+              color="danger"
+              isDisabled={!onNotViableSubmission || isStatusChangeLoading}
+              isLoading={isStatusChangeLoading}
+              onPress={onNotViableSubmission}
+              startContent={<XCircleIcon className="w-6 text-danger" />}
+            >
+              No es Viable
+            </Button>
+          </>
+        )}
+
         {/* Botón de Radicar (solo para estado "Radicar") */}
         {caseData.estado === "Radicar" && (
           <Button
@@ -112,9 +182,7 @@ export default function CaseHeader({
             isDisabled={!onApproveSubmission || isStatusChangeLoading}
             isLoading={isStatusChangeLoading}
             onPress={onApproveSubmission}
-            startContent={
-              <CheckCircleIcon className="w-6 text-white" />
-            }
+            startContent={<CheckCircleIcon className="w-6 text-white" />}
           >
             {getApproveButtonText()}
           </Button>
@@ -133,7 +201,7 @@ export default function CaseHeader({
             Rechazar Envío
           </Button>
         )}
-        
+
         <Button
           variant="bordered"
           color="primary"

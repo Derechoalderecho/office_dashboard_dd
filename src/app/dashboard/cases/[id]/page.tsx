@@ -297,6 +297,78 @@ export default function CasePage() {
     }
   };
 
+  // Manejador para aprobar viabilidad
+  const handleViableSubmission = async () => {
+    if (!caseData) return;
+    
+    setStatusChangeLoading(true);
+    try {
+      const success = await updateCaseStatus(caseId, "Pendiente");
+      
+      if (success) {
+        addToast({
+          title: "Acción exitosa",
+          description: "El caso ha sido marcado como viable y está pendiente de revisión",
+          color: "success",
+        });
+        
+        // Actualizar datos del caso
+        await loadCaseData();
+      } else {
+        addToast({
+          title: "Error",
+          description: "No se pudo cambiar el estado del caso",
+          color: "danger",
+        });
+      }
+    } catch (error) {
+      console.error("Error al marcar como viable:", error);
+      addToast({
+        title: "Error",
+        description: "Ocurrió un error al procesar la acción",
+        color: "danger",
+      });
+    } finally {
+      setStatusChangeLoading(false);
+    }
+  };
+
+  // Manejador para rechazar viabilidad
+  const handleNotViableSubmission = async () => {
+    if (!caseData) return;
+    
+    setStatusChangeLoading(true);
+    try {
+      const success = await updateCaseStatus(caseId, "No aprobado");
+      
+      if (success) {
+        addToast({
+          title: "Acción exitosa",
+          description: "El caso ha sido marcado como no viable",
+          color: "warning",
+        });
+        
+        // Actualizar datos del caso
+        await loadCaseData();
+      } else {
+        addToast({
+          title: "Error",
+          description: "No se pudo cambiar el estado del caso",
+          color: "danger",
+        });
+      }
+    } catch (error) {
+      console.error("Error al marcar como no viable:", error);
+      addToast({
+        title: "Error",
+        description: "Ocurrió un error al procesar la acción",
+        color: "danger",
+      });
+    } finally {
+      setStatusChangeLoading(false);
+    }
+  };
+
   // Si no hay datos o hay un error, mostrar un mensaje
   if (!caseData && !loading) {
     return <div className="p-8 text-center">No se encontró el caso o hubo un error al cargarlo</div>;
@@ -438,8 +510,11 @@ export default function CasePage() {
           caseData={caseData!} 
           onApproveSubmission={handleApproveSubmission}
           onRejectSubmission={handleRejectSubmission}
+          onViableSubmission={handleViableSubmission}
+          onNotViableSubmission={handleNotViableSubmission}
           isStatusChangeLoading={statusChangeLoading}
           onRadicarClick={handleRadicarClick}
+          role={role}
         />
        
         <section className="flex gap-6">

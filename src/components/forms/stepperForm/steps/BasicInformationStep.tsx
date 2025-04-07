@@ -10,11 +10,22 @@ import {
   Autocomplete,
   AutocompleteItem,
   Button,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  NumberInput,
 } from "@heroui/react";
 import { useState, useEffect, Key } from "react";
 import { fetchAllCitizens } from "@/services/citizenService";
 import { Citizen } from "@/types/citizens";
-import { PlusIcon, XIcon } from "lucide-react";
+import { PlusIcon, UserIcon, XIcon } from "lucide-react";
+import { I18nProvider } from "@react-aria/i18n";
+import {
+  fetchLocations,
+  getUniqueDepartments,
+  getMunicipalitiesByDepartment,
+  Location,
+} from "@/services/locationService";
 
 type BasicInformationProps = {
   formData: {
@@ -27,7 +38,7 @@ type BasicInformationProps = {
     sexo: string;
     genero: string;
     orient_sexual: string;
-    //fecha_nacimiento: Date;
+    fecha_nacimiento: string;
     num_movil: string;
     num_fijo: string;
     email: string;
@@ -39,6 +50,16 @@ type BasicInformationProps = {
     sabe_leer_escribir: string;
     citizen_id: string;
     is_existing_citizen: string;
+    direccion: {
+      barrio: string;
+      numero_casa: string;
+      calle: string;
+      carrera: string;
+    };
+    estrato: string;
+    zona: string;
+    departamento: string;
+    municipio: string;
   };
   updateFormData: (
     data: Partial<{
@@ -51,7 +72,7 @@ type BasicInformationProps = {
       sexo: string;
       genero: string;
       orient_sexual: string;
-      //fecha_nacimiento: Date;
+      fecha_nacimiento: string;
       num_movil: string;
       num_fijo: string;
       email: string;
@@ -63,31 +84,54 @@ type BasicInformationProps = {
       sabe_leer_escribir: string;
       citizen_id: string;
       is_existing_citizen: string;
+      direccion: {
+        barrio: string;
+        numero_casa: string;
+        calle: string;
+        carrera: string;
+      };
+      estrato: string;
+      zona: string;
+      departamento: string;
+      municipio: string;
     }>
   ) => void;
+  validationErrors?: { [key: string]: string };
 };
 
 export default function BasicInformationStep({
   formData,
   updateFormData,
+  validationErrors = {},
 }: BasicInformationProps) {
-  const [fechaNacimiento, setFechaNacimiento] = useState<DateValue | null>(null);
+  const [fechaNacimiento, setFechaNacimiento] = useState<DateValue | null>(
+    null
+  );
   const [citizens, setCitizens] = useState<Citizen[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showNewCitizenForm, setShowNewCitizenForm] = useState<boolean>(
-    Boolean(formData.is_existing_citizen === "false" || 
-    (formData.primer_nombre && formData.primer_apellido))
+    Boolean(
+      formData.is_existing_citizen === "false" ||
+        (formData.primer_nombre && formData.primer_apellido)
+    )
   );
-  const [nacionalidadPersonalizada, setNacionalidadPersonalizada] = useState<string>(
-    formData.nacionalidad && 
-    !["Colombia", "Venezuela"].includes(formData.nacionalidad) 
-      ? formData.nacionalidad 
-      : ""
-  );
+  const [nacionalidadPersonalizada, setNacionalidadPersonalizada] =
+    useState<string>(
+      formData.nacionalidad &&
+        !["Colombia", "Venezuela"].includes(formData.nacionalidad)
+        ? formData.nacionalidad
+        : ""
+    );
   const [showNacionalidadInput, setShowNacionalidadInput] = useState<boolean>(
-    Boolean(formData.nacionalidad && 
-    !["Colombia", "Venezuela"].includes(formData.nacionalidad))
+    Boolean(
+      formData.nacionalidad &&
+        !["Colombia", "Venezuela"].includes(formData.nacionalidad)
+    )
   );
+  const [isAddressPopoverOpen, setIsAddressPopoverOpen] = useState(false);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [departments, setDepartments] = useState<string[]>([]);
+  const [municipalities, setMunicipalities] = useState<string[]>([]);
 
   const handleNacionalidadChange = (
     e: React.ChangeEvent<HTMLSelectElement>
@@ -111,6 +155,17 @@ export default function BasicInformationStep({
     updateFormData({ nacionalidad: value });
   };
 
+  const handleTipoDocumentoChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const value = e.target.value;
+    updateFormData({
+      tipo_documento: value,
+      // Si es "Sin documento", limpiamos el número de documento
+      num_documento: value === "SD" ? "" : formData.num_documento,
+    });
+  };
+
   // Fetch all citizens for the dropdown
   useEffect(() => {
     const loadCitizens = async () => {
@@ -122,6 +177,34 @@ export default function BasicInformationStep({
     loadCitizens();
   }, []);
 
+  // Fetch locations data
+  useEffect(() => {
+    const loadLocations = async () => {
+      const data = await fetchLocations();
+      setLocations(data);
+      setDepartments(getUniqueDepartments(data));
+    };
+    loadLocations();
+  }, []);
+
+  // Update municipalities when department changes
+  useEffect(() => {
+    if (formData.departamento) {
+      const filteredMunicipalities = getMunicipalitiesByDepartment(
+        locations,
+        formData.departamento
+      );
+      setMunicipalities(filteredMunicipalities);
+      // Reset municipio if it's not in the new list
+      if (!filteredMunicipalities.includes(formData.municipio)) {
+        updateFormData({ municipio: "" });
+      }
+    } else {
+      setMunicipalities([]);
+      updateFormData({ municipio: "" });
+    }
+  }, [formData.departamento, locations]);
+
   // Handle citizen selection and auto-populate form fields
   const handleCitizenSelect = (selectedKey: Key | null) => {
     const selectedId = selectedKey?.toString();
@@ -131,6 +214,12 @@ export default function BasicInformationStep({
       updateFormData({
         is_existing_citizen: "false",
         citizen_id: "",
+        direccion: {
+          barrio: "",
+          numero_casa: "",
+          calle: "",
+          carrera: "",
+        },
       });
       setShowNewCitizenForm(true);
       return;
@@ -155,6 +244,12 @@ export default function BasicInformationStep({
         num_fijo: citizen.num_fijo || "",
         citizen_id: selectedId,
         is_existing_citizen: "true",
+        direccion: {
+          barrio: citizen.direccion?.barrio || "",
+          numero_casa: citizen.direccion?.numero_casa || "",
+          calle: citizen.direccion?.calle || "",
+          carrera: citizen.direccion?.carrera || "",
+        },
       });
       setShowNewCitizenForm(false);
     }
@@ -168,6 +263,28 @@ export default function BasicInformationStep({
     setShowNewCitizenForm(false);
   };
 
+  const handleAddressChange = (field: string, value: string) => {
+    updateFormData({
+      direccion: {
+        ...formData.direccion,
+        [field]: value,
+      },
+    });
+  };
+
+  const getAddressSummary = () => {
+    const { direccion } = formData;
+    if (!direccion) return "No especificada";
+
+    const parts = [];
+    if (direccion.calle) parts.push(`Calle ${direccion.calle}`);
+    if (direccion.carrera) parts.push(`Carrera ${direccion.carrera}`);
+    if (direccion.numero_casa) parts.push(`#${direccion.numero_casa}`);
+    if (direccion.barrio) parts.push(`Barrio ${direccion.barrio}`);
+
+    return parts.length > 0 ? parts.join(", ") : "No especificada";
+  };
+
   return (
     <div className="space-y-8">
       {!showNewCitizenForm ? (
@@ -178,10 +295,14 @@ export default function BasicInformationStep({
               name="citizen_id"
               variant="bordered"
               label="Seleccionar ciudadano existente"
+              listboxProps={{
+                emptyContent: "No hay resultados",
+              }}
               labelPlacement="outside"
               placeholder="Seleccione o escriba el nombre del ciudadano o su cédula"
               value={formData.citizen_id}
               onSelectionChange={handleCitizenSelect}
+              isLoading={isLoading}
               disabled={isLoading}
               className="w-full"
             >
@@ -191,11 +312,6 @@ export default function BasicInformationStep({
                 </AutocompleteItem>
               ))}
             </Autocomplete>
-            {isLoading && (
-              <p className="text-sm text-gray-500 mt-1">
-                Cargando ciudadanos...
-              </p>
-            )}
           </div>
           <Button
             color="primary"
@@ -211,11 +327,11 @@ export default function BasicInformationStep({
             <h3 className="text-lg font-medium">Crear nuevo ciudadano</h3>
             <Button
               variant="light"
-              color="danger"
-              startContent={<XIcon size={16} />}
+              color="primary"
+              startContent={<UserIcon size={16} />}
               onClick={handleCancelNewCitizen}
             >
-              Cancelar
+              Usar ciudadano existente
             </Button>
           </div>
 
@@ -227,8 +343,10 @@ export default function BasicInformationStep({
               label="Tipo de documento"
               labelPlacement="outside"
               placeholder="Seleccione su tipo de documento"
-              selectedKeys={formData.tipo_documento ? [formData.tipo_documento] : []}
-              onChange={(e) => updateFormData({ tipo_documento: e.target.value })}
+              selectedKeys={
+                formData.tipo_documento ? [formData.tipo_documento] : []
+              }
+              onChange={handleTipoDocumentoChange}
               isRequired
             >
               <SelectItem key="TI">Tarjeta de identidad</SelectItem>
@@ -239,19 +357,21 @@ export default function BasicInformationStep({
               <SelectItem key="SD">Sin documento</SelectItem>
             </Select>
 
-            <Input
-              id="num_documento"
-              name="num_documento"
-              variant="bordered"
-              label="Número de documento"
-              labelPlacement="outside"
-              value={formData.num_documento}
-              onChange={(e) =>
-                updateFormData({ num_documento: e.target.value })
-              }
-              placeholder="Ingrese su número de documento"
-              isRequired
-            />
+            {formData.tipo_documento !== "SD" && (
+              <Input
+                id="num_documento"
+                name="num_documento"
+                variant="bordered"
+                label="Número de documento"
+                labelPlacement="outside"
+                value={formData.num_documento}
+                onChange={(e) =>
+                  updateFormData({ num_documento: e.target.value })
+                }
+                placeholder="Ingrese su número de documento"
+                isRequired
+              />
+            )}
 
             <Input
               id="primer_nombre"
@@ -279,9 +399,25 @@ export default function BasicInformationStep({
               }
               placeholder="Ingrese su segundo nombre"
             />
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <I18nProvider locale="es">
+              <DateInput
+                id="fecha_nacimiento"
+                name="fecha_nacimiento"
+                variant="bordered"
+                label="Fecha de nacimiento"
+                labelPlacement="outside"
+                value={fechaNacimiento}
+                onChange={(date) => {
+                  setFechaNacimiento(date);
+                  if (date) {
+                    const formattedDate = date.toString().split("T")[0];
+                    updateFormData({ fecha_nacimiento: formattedDate });
+                  }
+                }}
+                isRequired
+              />
+            </I18nProvider>
             <Input
               id="primer_apellido"
               name="primer_apellido"
@@ -323,7 +459,9 @@ export default function BasicInformationStep({
               <SelectItem key="Hombre">Hombre</SelectItem>
               <SelectItem key="Mujer">Mujer</SelectItem>
               <SelectItem key="Intersexual">Intersexual</SelectItem>
-              <SelectItem key="Prefiere no decirlo">Prefiere no decirlo</SelectItem>
+              <SelectItem key="Prefiere no decirlo">
+                Prefiere no decirlo
+              </SelectItem>
               <SelectItem key="Otro">Otro</SelectItem>
             </Select>
 
@@ -343,9 +481,7 @@ export default function BasicInformationStep({
               <SelectItem key="T">Transgénero</SelectItem>
               <SelectItem key="N">No binario</SelectItem>
             </Select>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Select
               id="orient_sexual"
               name="orient_sexual"
@@ -353,8 +489,12 @@ export default function BasicInformationStep({
               label="Orientación sexual"
               labelPlacement="outside"
               placeholder="Seleccione su orientación sexual"
-              selectedKeys={formData.orient_sexual ? [formData.orient_sexual] : []}
-              onChange={(e) => updateFormData({ orient_sexual: e.target.value })}
+              selectedKeys={
+                formData.orient_sexual ? [formData.orient_sexual] : []
+              }
+              onChange={(e) =>
+                updateFormData({ orient_sexual: e.target.value })
+              }
               isRequired
             >
               <SelectItem key="HE">Heterosexual</SelectItem>
@@ -364,26 +504,32 @@ export default function BasicInformationStep({
               <SelectItem key="PA">Pansexual</SelectItem>
             </Select>
 
-            <Input
+            <NumberInput
+              hideStepper
               id="num_movil"
               name="num_movil"
               variant="bordered"
               label="Número móvil"
               labelPlacement="outside"
-              value={formData.num_movil}
-              onChange={(e) => updateFormData({ num_movil: e.target.value })}
               placeholder="Ingrese su número móvil"
+              value={Number(formData.num_movil)}
+              onValueChange={(value) =>
+                updateFormData({ num_movil: value.toString() })
+              }
               isRequired
             />
 
-            <Input
+            <NumberInput
               id="num_fijo"
               name="num_fijo"
               variant="bordered"
               label="Número fijo"
               labelPlacement="outside"
-              value={formData.num_fijo}
-              onChange={(e) => updateFormData({ num_fijo: e.target.value })}
+              hideStepper
+              value={Number(formData.num_fijo)}
+              onValueChange={(value) =>
+                updateFormData({ num_fijo: value.toString() })
+              }
               placeholder="Ingrese su número fijo"
             />
 
@@ -397,9 +543,7 @@ export default function BasicInformationStep({
               onChange={(e) => updateFormData({ email: e.target.value })}
               placeholder="Ingrese su correo electrónico"
             />
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Select
               id="nacionalidad"
               name="nacionalidad"
@@ -407,11 +551,36 @@ export default function BasicInformationStep({
               label="Nacionalidad"
               labelPlacement="outside"
               placeholder="Seleccione su nacionalidad"
-              selectedKeys={showNacionalidadInput ? ["Otro"] : (formData.nacionalidad ? [formData.nacionalidad] : [])}
+              selectedKeys={
+                showNacionalidadInput
+                  ? ["Otro"]
+                  : formData.nacionalidad
+                  ? [formData.nacionalidad]
+                  : []
+              }
               onChange={handleNacionalidadChange}
               isRequired
             >
+              <SelectItem key="Argentina">Argentina</SelectItem>
+              <SelectItem key="Bolivia">Bolivia</SelectItem>
+              <SelectItem key="Chile">Chile</SelectItem>
               <SelectItem key="Colombia">Colombia</SelectItem>
+              <SelectItem key="Costa Rica">Costa Rica</SelectItem>
+              <SelectItem key="Cuba">Cuba</SelectItem>
+              <SelectItem key="Ecuador">Ecuador</SelectItem>
+              <SelectItem key="El Salvador">El Salvador</SelectItem>
+              <SelectItem key="España">España</SelectItem>
+              <SelectItem key="Guatemala">Guatemala</SelectItem>
+              <SelectItem key="Honduras">Honduras</SelectItem>
+              <SelectItem key="México">México</SelectItem>
+              <SelectItem key="Nicaragua">Nicaragua</SelectItem>
+              <SelectItem key="Panamá">Panamá</SelectItem>
+              <SelectItem key="Paraguay">Paraguay</SelectItem>
+              <SelectItem key="Perú">Perú</SelectItem>
+              <SelectItem key="República Dominicana">
+                República Dominicana
+              </SelectItem>
+              <SelectItem key="Uruguay">Uruguay</SelectItem>
               <SelectItem key="Venezuela">Venezuela</SelectItem>
               <SelectItem key="Otro">Otro</SelectItem>
             </Select>
@@ -437,7 +606,9 @@ export default function BasicInformationStep({
               label="Estado civil"
               labelPlacement="outside"
               placeholder="Seleccione su estado civil"
-              selectedKeys={formData.estado_civil ? [formData.estado_civil] : []}
+              selectedKeys={
+                formData.estado_civil ? [formData.estado_civil] : []
+              }
               onChange={(e) => updateFormData({ estado_civil: e.target.value })}
               isRequired
             >
@@ -463,7 +634,9 @@ export default function BasicInformationStep({
               <SelectItem key="Ninguna">Ninguna</SelectItem>
               <SelectItem key="Preescolar">Preescolar</SelectItem>
               <SelectItem key="Primaria">Primaria (1.º a 5.º grado)</SelectItem>
-              <SelectItem key="Secundaria">Secundaria (6.º a 9.º grado)</SelectItem>
+              <SelectItem key="Secundaria">
+                Secundaria (6.º a 9.º grado)
+              </SelectItem>
               <SelectItem key="Media">Media (10.º a 11.º grado)</SelectItem>
               <SelectItem key="Técnica">Técnica o tecnológica</SelectItem>
               <SelectItem key="Pregrado">Pregrado</SelectItem>
@@ -489,7 +662,81 @@ export default function BasicInformationStep({
               <SelectItem key="RO">Rom/Gitano</SelectItem>
               <SelectItem key="Ninguna">Ninguna</SelectItem>
               <SelectItem key="Otro">Otro</SelectItem>
-              <SelectItem key="Prefiero no decirlo">Prefiero no decirlo</SelectItem>
+              <SelectItem key="Prefiero no decirlo">
+                Prefiero no decirlo
+              </SelectItem>
+            </Select>
+
+            <NumberInput
+              id="estrato"
+              name="estrato"
+              label="Estrato"
+              variant="bordered"
+              labelPlacement="outside"
+              hideStepper
+              value={Number(formData.estrato) || 0}
+              onValueChange={(value) =>
+                updateFormData({ estrato: value.toString() })
+              }
+              minValue={1}
+              maxValue={6}
+              errorMessage={validationErrors?.estrato}
+            />
+            <Select
+              id="zona"
+              name="zona"
+              label="Zona"
+              variant="bordered"
+              labelPlacement="outside"
+              placeholder="Seleccione su zona"
+              selectedKeys={formData.zona ? [formData.zona] : []}
+              onSelectionChange={(keys) => {
+                const selectedKey = Array.from(keys)[0]?.toString() || "";
+                updateFormData({ zona: selectedKey });
+              }}
+              errorMessage={validationErrors?.zona}
+            >
+              <SelectItem key="urbana">Urbana</SelectItem>
+              <SelectItem key="rural">Rural</SelectItem>
+            </Select>
+
+            <Select
+              id="departamento"
+              name="departamento"
+              label="Departamento"
+              variant="bordered"
+              labelPlacement="outside"
+              placeholder="Seleccione su departamento"
+              selectedKeys={
+                formData.departamento ? [formData.departamento] : []
+              }
+              onChange={(e) => updateFormData({ departamento: e.target.value })}
+              isRequired
+            >
+              {departments.map((dept) => (
+                <SelectItem key={dept}>{dept}</SelectItem>
+              ))}
+            </Select>
+
+            <Select
+              id="municipio"
+              name="municipio"
+              label="Municipio"
+              variant="bordered"
+              labelPlacement="outside"
+              placeholder="Seleccione su municipio"
+              isRequired
+              selectedKeys={formData.municipio ? [formData.municipio] : []}
+              onSelectionChange={(keys) => {
+                const selectedKey = Array.from(keys)[0]?.toString() || "";
+                updateFormData({ municipio: selectedKey });
+              }}
+              isDisabled={!formData.departamento}
+              errorMessage={validationErrors?.municipio}
+            >
+              {municipalities.map((mun) => (
+                <SelectItem key={mun}>{mun}</SelectItem>
+              ))}
             </Select>
 
             <Select
@@ -499,7 +746,9 @@ export default function BasicInformationStep({
               label="¿Tiene alguna discapacidad?"
               labelPlacement="outside"
               placeholder="Seleccione una opción"
-              selectedKeys={formData.discapacidad ? [formData.discapacidad] : []}
+              selectedKeys={
+                formData.discapacidad ? [formData.discapacidad] : []
+              }
               onChange={(e) => updateFormData({ discapacidad: e.target.value })}
               isRequired
             >
@@ -514,13 +763,79 @@ export default function BasicInformationStep({
               label="¿Sabe leer y escribir?"
               labelPlacement="outside"
               placeholder="Seleccione una opción"
-              selectedKeys={formData.sabe_leer_escribir ? [formData.sabe_leer_escribir] : []}
-              onChange={(e) => updateFormData({ sabe_leer_escribir: e.target.value })}
+              selectedKeys={
+                formData.sabe_leer_escribir ? [formData.sabe_leer_escribir] : []
+              }
+              onChange={(e) =>
+                updateFormData({ sabe_leer_escribir: e.target.value })
+              }
               isRequired
             >
               <SelectItem key="SI">Sí</SelectItem>
               <SelectItem key="NO">No</SelectItem>
             </Select>
+
+            <div className="flex flex-col justify-end">
+              <Popover
+                isOpen={isAddressPopoverOpen}
+                onOpenChange={setIsAddressPopoverOpen}
+                placement="bottom-end"
+              >
+                <PopoverTrigger>
+                  <Button variant="bordered">Dirección de residencia</Button>
+                </PopoverTrigger>
+                <PopoverContent>
+                  <div className="space-y-4 p-4">
+                    <h3 className="text-lg font-semibold mb-4">
+                      Dirección de residencia
+                    </h3>
+                    <div className="space-y-4">
+                      <Input
+                        label="Calle"
+                        placeholder="Número de calle"
+                        value={formData.direccion?.calle || ""}
+                        onChange={(e) =>
+                          handleAddressChange("calle", e.target.value)
+                        }
+                      />
+                      <Input
+                        label="Carrera"
+                        placeholder="Número de carrera"
+                        value={formData.direccion?.carrera || ""}
+                        onChange={(e) =>
+                          handleAddressChange("carrera", e.target.value)
+                        }
+                      />
+                      <Input
+                        label="Número de casa"
+                        placeholder="Número de casa o apartamento"
+                        value={formData.direccion?.numero_casa || ""}
+                        onChange={(e) =>
+                          handleAddressChange("numero_casa", e.target.value)
+                        }
+                      />
+                      <Input
+                        label="Barrio"
+                        placeholder="Nombre del barrio"
+                        value={formData.direccion?.barrio || ""}
+                        onChange={(e) =>
+                          handleAddressChange("barrio", e.target.value)
+                        }
+                      />
+                    </div>
+                    <div className="mt-8">
+                      <Button
+                        color="primary"
+                        fullWidth
+                        onPress={() => setIsAddressPopoverOpen(false)}
+                      >
+                        Guardar
+                      </Button>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
         </>
       )}

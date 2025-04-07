@@ -12,6 +12,11 @@ export function transformStateByRole(estado: string, role: UserRole): string {
 
   // Transformaciones específicas según el estado y rol
   switch (estado) {
+    case "Viabilidad":
+      if (role === "Estudiante") return "Revisión de viabilidad";
+      if (role === "Docente" || role === "Monitor") return "Viabilidad";
+      break;
+
     case "Pendiente":
       if (role === "Estudiante") return "Elaboración tutela";
       if (role === "Docente" || role === "Monitor") return "Pendiente";
@@ -35,6 +40,11 @@ export function transformStateByRole(estado: string, role: UserRole): string {
     case "Valoración del asesor":
       if (role === "Estudiante") return "En valoración";
       if (role === "Docente" || role === "Monitor") return "Valoración del asesor";
+      break;
+
+    case "No aprobado":
+      // Todos los roles ven el mismo estado
+      return "No aprobado";
       break;
   }
 

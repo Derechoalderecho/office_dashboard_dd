@@ -14,6 +14,12 @@ export interface Citizen {
   dane_municipio: string;
   fecha_crea: string;
   fecha_actualiza: string;
+  direccion?: {
+    barrio: string;
+    numero_casa: string;
+    calle: string;
+    carrera: string;
+  };
   actions?: string;
   key?: string;
 }
