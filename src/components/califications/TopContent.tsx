@@ -43,7 +43,7 @@ import {
             <Input
               isClearable
               className="w-full sm:max-w-[100%]"
-              placeholder="Buscar por nombre..."
+              placeholder="Buscar por nombre completo o tipo de proceso..."
               startContent={<MagnifyingGlassIcon className="w-6" />}
               value={filterValue}
               onClear={() => onClear()}

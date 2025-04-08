@@ -21,6 +21,7 @@ import { paginateItems } from "@/utils/paginateItems";
 import { CaseWithKey } from "@/types/cases";
 import { TableCellRendererCalifications } from "./TableCellRenderer";
 import { fetchAllCases } from "@/services/caseService";
+import { useFilteredCalifications } from "@/hooks/useFilteredCalifications";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "tipo_proceso",
@@ -81,33 +82,13 @@ export default function TableCalifications() {
     setShowAll(false);
   }, []);
 
-  // Filters
-  const filteredItems = useMemo(() => {
-    let filteredCases = [...cases];
-
-    // Apply search filter
-    if (filterValue.trim()) {
-      const lowerCaseFilter = filterValue.toLowerCase();
-      filteredCases = filteredCases.filter(caseItem => {
-        // Check if the ciudadano exists and has the required properties
-        return (
-          caseItem.ciudadano?.primer_nombre?.toLowerCase().includes(lowerCaseFilter) ||
-          caseItem.ciudadano?.primer_apellido?.toLowerCase().includes(lowerCaseFilter) ||
-          caseItem.tipo_proceso?.toLowerCase().includes(lowerCaseFilter) ||
-          caseItem.calificacion?.toLowerCase().includes(lowerCaseFilter)
-        );
-      });
-    }
-
-    // Apply status filter if it's not "all"
-    if (statusFilter !== "all" && statusFilter.size > 0) {
-      filteredCases = filteredCases.filter(caseItem => 
-        Array.from(statusFilter as Set<string>).includes(caseItem.estado)
-      );
-    }
-
-    return filteredCases;
-  }, [cases, filterValue, statusFilter]);
+  // Use the custom hook for filtering
+  const { filteredItems, hasSearchFilter } = useFilteredCalifications({
+    cases,
+    filterValue,
+    statusFilter,
+    onResetFilters: handleResetAllFilters
+  });
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
