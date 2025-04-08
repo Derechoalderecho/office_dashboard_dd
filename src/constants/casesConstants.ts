@@ -7,6 +7,8 @@ export const columns: Column[] = [
   { name: "Estado", uid: "estado", sortable: true },
   { name: "Ciudadano", uid: "ciudadano" },
   { name: "Asignados", uid: "usuarios" },
+  { name: "Estudiante Asignado", uid: "estudiante_asignado" },
+  { name: "Calificación", uid: "calificacion" },
   { name: "Tiempo de respuesta", uid: "tiempo_respuesta", sortable: true },
   { name: "Acciones", uid: "actions" },
 ];
