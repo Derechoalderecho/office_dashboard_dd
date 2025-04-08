@@ -46,6 +46,7 @@ export interface Cases {
   antecedentes?: string;
   tutela?: string;
   calificacion?: string;
+  estudiante_asignado?: string;
 }
 
 export type Column = {
