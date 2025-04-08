@@ -21,6 +21,7 @@ const pathTranslations: { [key: string]: string } = {
   create: "Crear Ciudadano",
   users: "Usuarios",
   new: "Nuevo",
+  califications: "Calificaciones",
   edit: "Editar",
   view: "Ver",
   reports: "Reportes",
