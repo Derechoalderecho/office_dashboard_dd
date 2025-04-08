@@ -11,6 +11,7 @@ import {
   SortDescriptor,
   Spinner,
   useDisclosure,
+  addToast,
 } from "@heroui/react";
 import { useState, useCallback, useMemo, useEffect, ChangeEvent } from "react";
 import { columns } from "@/constants/casesConstants";
@@ -22,6 +23,7 @@ import { CaseWithKey } from "@/types/cases";
 import { TableCellRendererCalifications } from "./TableCellRenderer";
 import { fetchAllCases } from "@/services/caseService";
 import { useFilteredCalifications } from "@/hooks/useFilteredCalifications";
+import { ModalCalification } from "../ui/modal-calification";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "tipo_proceso",
@@ -48,18 +50,22 @@ export default function TableCalifications() {
   const [showAll, setShowAll] = useState(false);
   const [cases, setCases] = useState<CaseWithKey[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [selectedCase, setSelectedCase] = useState<CaseWithKey | null>(null);
+  
+  // Modal controls
+  const previewModal = useDisclosure();
+  const calificationModal = useDisclosure();
 
   // Fetch cases from API
+  const fetchCasesData = async () => {
+    setIsLoading(true);
+    const casesList = await fetchAllCases();
+    setCases(casesList as CaseWithKey[]);
+    setIsLoading(false);
+  };
+
   useEffect(() => {
-    const fetchCases = async () => {
-      const casesList = await fetchAllCases();
-      // Show all cases instead of filtering by calificacion
-      setCases(casesList as CaseWithKey[]);
-      setIsLoading(false);
-    };
-    fetchCases();
+    fetchCasesData();
   }, []);
 
   // Handle Bulk Actions Bar selection change
@@ -167,11 +173,33 @@ export default function TableCalifications() {
 
   const handlePreviewCase = (caseData: CaseWithKey) => {
     setSelectedCase(caseData);
-    onOpen();
+    previewModal.onOpen();
+  };
+
+  const handleCalificateCase = (caseData: CaseWithKey) => {
+    setSelectedCase(caseData);
+    calificationModal.onOpen();
+  };
+
+  const handleCalificationSuccess = () => {
+    addToast({
+      title: "Calificación guardada",
+      description: "La calificación ha sido guardada correctamente",
+      color: "success",
+    });
+    // Refresh the data
+    fetchCasesData();
   };
 
   return (
     <>
+      <ModalCalification
+        isOpen={calificationModal.isOpen}
+        onClose={calificationModal.onClose}
+        caseData={selectedCase}
+        onSuccess={handleCalificationSuccess}
+      />
+
       <Table
         suppressHydrationWarning
         isHeaderSticky
@@ -215,6 +243,7 @@ export default function TableCalifications() {
                     case={item as CaseWithKey}
                     columnKey={columnKey as keyof CaseWithKey}
                     onPreviewCase={handlePreviewCase}
+                    onCalificateCase={handleCalificateCase}
                   />
                 </TableCell>
               )}

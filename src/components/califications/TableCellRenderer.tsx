@@ -1,6 +1,6 @@
 "use client";
 
-import { EyeIcon } from "@heroicons/react/24/outline";
+import { EyeIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
 import { Chip, Tooltip, Button } from "@heroui/react";
 import { CaseWithKey } from "@/types/cases";
 
@@ -8,12 +8,14 @@ interface TableCellRendererProps {
   case: CaseWithKey;
   columnKey: keyof CaseWithKey;
   onPreviewCase?: (caseData: CaseWithKey) => void;
+  onCalificateCase?: (caseData: CaseWithKey) => void;
 }
 
 export const TableCellRendererCalifications = ({
   case: caseData,
   columnKey,
   onPreviewCase,
+  onCalificateCase,
 }: TableCellRendererProps) => {
   const cellValue = caseData[columnKey];
 
@@ -70,23 +72,41 @@ export const TableCellRendererCalifications = ({
         </div>
       );
     case "calificacion":
+      // Format the calificacion value
+      let displayValue = "-";
+      if (cellValue !== null && cellValue !== undefined) {
+        // If it's a numeric string, parse it
+        const numValue = Number(cellValue);
+        if (!isNaN(numValue)) {
+          // If it's in integer format (0-50), convert to decimal (0-5)
+          if (numValue > 5) {
+            displayValue = (numValue / 10).toFixed(1);
+          } else {
+            displayValue = numValue.toString();
+          }
+        } else {
+          displayValue = String(cellValue);
+        }
+      }
+      
       return (
         <div className="flex flex-col">
           <p className="text-base font-medium text-primary">
-            {String(cellValue) || "-"}
+            {displayValue}
           </p>
         </div>
       );
     case "actions":
       return (
         <div className="relative flex items-center gap-2">
-          <Tooltip content="Vista previa">
+          <Tooltip content="Calificar estudiante">
             <Button
               isIconOnly
               className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
-              onPress={() => onPreviewCase?.(caseData)}
+              onPress={() => onCalificateCase?.(caseData)}
+              isDisabled={!caseData.usuarios?.some(user => user.rol === "Estudiante")}
             >
-              <EyeIcon className="w-6" />
+              <PencilSquareIcon className="w-6" />
             </Button>
           </Tooltip>
         </div>

@@ -510,3 +510,42 @@ export const assignUserToCase = async (
     return false;
   }
 };
+
+/**
+ * Updates the calification of a case
+ * @param id ID of the case to update
+ * @param calification The calification value to set
+ * @returns true if the calification was updated successfully, false otherwise
+ */
+export const updateCaseCalification = async (
+  id: number,
+  calification: string
+): Promise<boolean> => {
+  try {
+    logger.info(`Actualizando calificación del caso ${id} a "${calification}"`);
+    
+    // Validate the calification
+    const calificationNumber = parseFloat(calification);
+    if (isNaN(calificationNumber) || calificationNumber < 0 || calificationNumber > 5) {
+      logger.warn(`Calificación "${calification}" no válida para el caso ${id}`);
+      return false;
+    }
+    
+    // Convert the floating-point number to an integer
+    // API expects an integer, so we'll convert the 0-5 scale to 0-50 to preserve one decimal place
+    const calificationAsInteger = Math.round(calificationNumber * 10);
+    
+    // Perform the PUT request with the integer calification
+    await put<Cases>(`casos/${id}`, { calificacion: calificationAsInteger });
+    
+    // Invalidate caches
+    invalidateCacheItem(CASES_CACHE, id);
+    invalidateCache(CASES_CACHE); // Invalidate entire collection
+    
+    logger.info(`Calificación del caso ${id} actualizada correctamente a "${calification}" (valor entero: ${calificationAsInteger})`);
+    return true;
+  } catch (error) {
+    logger.error(`Error al actualizar calificación del caso ${id}:`, error);
+    return false;
+  }
+};
