@@ -1,7 +1,7 @@
-# Especificaciones del Proyecto - Dashboard de Oficina
+# Especificaciones del Proyecto - Dashboard de Consultorios
 
 ## Descripción General
-Sistema de gestión de casos legales para una oficina de asesoría jurídica, permitiendo el seguimiento y administración de casos por diferentes roles de usuarios.
+Sistema de gestión de casos legales para una consultorios de asesoría jurídica, permitiendo el seguimiento y administración de casos por diferentes roles de usuarios.
 
 ## Tecnologías Principales
 
