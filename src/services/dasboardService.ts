@@ -10,6 +10,13 @@ interface ChartDataPoint {
   fullDate?: string;
 }
 
+interface ChartDataPointByStatus {
+  date: string;
+  viable: number;
+  noAprobado: number;
+  fullDate?: string;
+}
+
 /**
  * Fetches total cases data for the dashboard chart, grouped by day
  * @returns Array of data points with date and case count
@@ -71,6 +78,77 @@ export async function fetchCasesForAreaChart(): Promise<ChartDataPoint[]> {
     });
   } catch (error) {
     logger.error("Error fetching cases for area chart:", error);
+    return [];
+  }
+}
+
+/**
+ * Fetches cases data grouped by status (viable and not approved) for the dashboard chart
+ * @returns Array of data points with date and case counts by status
+ */
+export async function fetchCasesByStatusForAreaChart(): Promise<ChartDataPointByStatus[]> {
+  try {
+    logger.debug("Fetching cases by status for area chart");
+    
+    // Fetch all cases
+    const cases = await get<Cases[]>('casos');
+    
+    if (!cases || cases.length === 0) {
+      return [];
+    }
+    
+    // Group cases by day and status
+    const groupedByDayAndStatus = cases.reduce((acc, caseItem) => {
+      // Parse the creation date
+      const date = new Date(caseItem.fecha_crea);
+      
+      // Format as YYYY-MM-DD for grouping (one data point per day)
+      const dayKey = date.toISOString().split('T')[0];
+      
+      // If this day doesn't exist in our accumulator yet, initialize it
+      if (!acc[dayKey]) {
+        acc[dayKey] = {
+          date: dayKey,
+          fullDate: date.toISOString(),
+          viable: 0,
+          noAprobado: 0
+        };
+      }
+      
+      // Increment the count for this day based on status
+      if (caseItem.estado === "Viabilidad") {
+        acc[dayKey].viable += 1;
+      } else if (caseItem.estado === "No aprobado") {
+        acc[dayKey].noAprobado += 1;
+      }
+      
+      return acc;
+    }, {} as Record<string, ChartDataPointByStatus>);
+    
+    // Convert the grouped data to an array and sort by date
+    const chartData = Object.values(groupedByDayAndStatus).sort((a, b) => 
+      new Date(a.fullDate || a.date).getTime() - new Date(b.fullDate || b.date).getTime()
+    );
+    
+    // Format dates for display
+    return chartData.map(point => {
+      const date = new Date(point.fullDate || point.date);
+      
+      // Format date as "DD MMM" (e.g., "15 ene")
+      const formattedDate = date.toLocaleDateString('es-ES', { 
+        day: 'numeric',
+        month: 'short'
+      });
+      
+      return {
+        date: formattedDate,
+        viable: point.viable,
+        noAprobado: point.noAprobado,
+        fullDate: point.fullDate || point.date
+      };
+    });
+  } catch (error) {
+    logger.error("Error fetching cases by status for area chart:", error);
     return [];
   }
 }
