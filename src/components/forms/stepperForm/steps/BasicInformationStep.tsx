@@ -14,6 +14,7 @@ import {
   PopoverTrigger,
   PopoverContent,
   NumberInput,
+  Checkbox
 } from "@heroui/react";
 import { useState, useEffect, Key } from "react";
 import { fetchAllCitizens } from "@/services/citizenService";
@@ -50,12 +51,7 @@ type BasicInformationProps = {
     sabe_leer_escribir: string;
     citizen_id: string;
     is_existing_citizen: string;
-    direccion: {
-      barrio: string;
-      numero_casa: string;
-      calle: string;
-      carrera: string;
-    };
+    direccion: string;
     estrato: string;
     zona: string;
     departamento: string;
@@ -84,12 +80,7 @@ type BasicInformationProps = {
       sabe_leer_escribir: string;
       citizen_id: string;
       is_existing_citizen: string;
-      direccion: {
-        barrio: string;
-        numero_casa: string;
-        calle: string;
-        carrera: string;
-      };
+      direccion: string;
       estrato: string;
       zona: string;
       departamento: string;
@@ -132,6 +123,18 @@ export default function BasicInformationStep({
   const [locations, setLocations] = useState<Location[]>([]);
   const [departments, setDepartments] = useState<string[]>([]);
   const [municipalities, setMunicipalities] = useState<string[]>([]);
+
+  // Nuevos estados para los componentes de dirección
+  const [tipoVia, setTipoVia] = useState<string>("");
+  const [numeroVia, setNumeroVia] = useState<string>("");
+  const [letraVia, setLetraVia] = useState<string>("");
+  const [isBis, setIsBis] = useState<boolean>(false);
+  const [letraBis, setLetraBis] = useState<string>("");
+  const [orientacion, setOrientacion] = useState<string>("");
+  const [numeroCruce, setNumeroCruce] = useState<string>("");
+  const [letraCruce, setLetraCruce] = useState<string>("");
+  const [numeroPlaca, setNumeroPlaca] = useState<string>("");
+  const [complemento, setComplemento] = useState<string>("");
 
   const handleNacionalidadChange = (
     e: React.ChangeEvent<HTMLSelectElement>
@@ -214,12 +217,7 @@ export default function BasicInformationStep({
       updateFormData({
         is_existing_citizen: "false",
         citizen_id: "",
-        direccion: {
-          barrio: "",
-          numero_casa: "",
-          calle: "",
-          carrera: "",
-        },
+        direccion: "",
       });
       setShowNewCitizenForm(true);
       return;
@@ -244,12 +242,7 @@ export default function BasicInformationStep({
         num_fijo: citizen.num_fijo || "",
         citizen_id: selectedId,
         is_existing_citizen: "true",
-        direccion: {
-          barrio: citizen.direccion?.barrio || "",
-          numero_casa: citizen.direccion?.numero_casa || "",
-          calle: citizen.direccion?.calle || "",
-          carrera: citizen.direccion?.carrera || "",
-        },
+        direccion: typeof citizen.direccion === 'string' ? citizen.direccion : "",
       });
       setShowNewCitizenForm(false);
     }
@@ -263,26 +256,78 @@ export default function BasicInformationStep({
     setShowNewCitizenForm(false);
   };
 
-  const handleAddressChange = (field: string, value: string) => {
-    updateFormData({
-      direccion: {
-        ...formData.direccion,
-        [field]: value,
-      },
-    });
+  // Construir la dirección completa como string
+  const construirDireccion = () => {
+    const partes = [];
+    
+    // Solo añadir componentes que tengan valor
+    if (tipoVia) {
+      let parte = tipoVia;
+      
+      if (numeroVia) {
+        parte += " " + numeroVia;
+      }
+      
+      if (letraVia) {
+        parte += letraVia;
+      }
+      
+      if (isBis) {
+        parte += " BIS";
+        
+        if (letraBis) {
+          parte += " " + letraBis;
+        }
+      }
+      
+      if (orientacion) {
+        parte += " " + orientacion;
+      }
+      
+      partes.push(parte);
+    }
+    
+    // Añadir el cruce si existe
+    if (numeroCruce) {
+      let cruce = "# " + numeroCruce;
+      
+      if (letraCruce) {
+        cruce += letraCruce;
+      }
+      
+      partes.push(cruce);
+    }
+    
+    // Añadir el número de placa si existe
+    if (numeroPlaca) {
+      partes.push("- " + numeroPlaca);
+    }
+    
+    // Añadir el complemento si existe
+    if (complemento) {
+      partes.push(complemento);
+    }
+    
+    // Unir todas las partes con espacios, excepto el complemento que va con coma
+    let direccionCompleta = "";
+    if (partes.length > 0) {
+      // Si hay complemento (último elemento), separarlo con coma
+      if (complemento && partes.length > 1) {
+        const partesBasicas = partes.slice(0, -1).join(" ");
+        direccionCompleta = partesBasicas + ", " + partes[partes.length - 1];
+      } else {
+        direccionCompleta = partes.join(" ");
+      }
+    }
+    
+    return direccionCompleta.trim();
   };
 
-  const getAddressSummary = () => {
-    const { direccion } = formData;
-    if (!direccion) return "No especificada";
-
-    const parts = [];
-    if (direccion.calle) parts.push(`Calle ${direccion.calle}`);
-    if (direccion.carrera) parts.push(`Carrera ${direccion.carrera}`);
-    if (direccion.numero_casa) parts.push(`#${direccion.numero_casa}`);
-    if (direccion.barrio) parts.push(`Barrio ${direccion.barrio}`);
-
-    return parts.length > 0 ? parts.join(", ") : "No especificada";
+  // Guardar dirección
+  const guardarDireccion = () => {
+    const direccionCompleta = construirDireccion();
+    updateFormData({ direccion: direccionCompleta });
+    setIsAddressPopoverOpen(false);
   };
 
   return (
@@ -789,45 +834,110 @@ export default function BasicInformationStep({
                     <h3 className="text-lg font-semibold mb-4">
                       Dirección de residencia
                     </h3>
-                    <div className="space-y-4">
-                      <Input
-                        label="Calle"
-                        placeholder="Número de calle"
-                        value={formData.direccion?.calle || ""}
-                        onChange={(e) =>
-                          handleAddressChange("calle", e.target.value)
-                        }
+                    <div className="grid grid-cols-6 gap-4">
+                      <Select
+                        label="Vía"
+                        placeholder="Seleccione tipo de vía"
+                        value={tipoVia}
+                        onChange={(e) => setTipoVia(e.target.value)}
+                      >
+                        <SelectItem key="Anillo Vial">Anillo Vial</SelectItem>
+                        <SelectItem key="Autopista">Autopista</SelectItem>
+                        <SelectItem key="Avenida">Avenida</SelectItem>
+                        <SelectItem key="Avenida calle">Avenida calle</SelectItem>
+                        <SelectItem key="Avenida carrera">Avenida carrera</SelectItem>
+                        <SelectItem key="Calle">Calle</SelectItem>
+                        <SelectItem key="Callejón">Callejón</SelectItem>
+                        <SelectItem key="Carrera">Carrera</SelectItem>
+                        <SelectItem key="Circular">Circular</SelectItem>
+                        <SelectItem key="Diagonal">Diagonal</SelectItem>
+                        <SelectItem key="Transversal">Transversal</SelectItem>
+                      </Select>
+                      
+                      <NumberInput
+                        label="Número"
+                        placeholder="Número"
+                        hideStepper
+                        value={Number(numeroVia)}
+                        onValueChange={(value) => setNumeroVia(value.toString())}
                       />
-                      <Input
-                        label="Carrera"
-                        placeholder="Número de carrera"
-                        value={formData.direccion?.carrera || ""}
-                        onChange={(e) =>
-                          handleAddressChange("carrera", e.target.value)
-                        }
+                      
+                      <Select
+                        value={letraVia}
+                        onChange={(e) => setLetraVia(e.target.value)}
+                      >
+                        {Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i)).map(
+                          (letra) => (
+                            <SelectItem key={letra}>{letra}</SelectItem>
+                          )
+                        )}
+                      </Select>
+                      
+                        <Checkbox
+                          isSelected={isBis}
+                          onValueChange={setIsBis}
+                        >
+                          BIS
+                        </Checkbox>
+                        
+                        <Select
+                          value={letraBis}
+                          onChange={(e) => setLetraBis(e.target.value)}
+                        >
+                          {Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i)).map(
+                            (letra) => (
+                              <SelectItem key={letra}>{letra}</SelectItem>
+                            )
+                          )}
+                        </Select>
+                      
+                      <Select
+                        value={orientacion}
+                        onChange={(e) => setOrientacion(e.target.value)}
+                      >
+                        <SelectItem key="Este">Este</SelectItem>
+                        <SelectItem key="Norte">Norte</SelectItem>
+                        <SelectItem key="Oeste">Oeste</SelectItem>
+                        <SelectItem key="Sur">Sur</SelectItem>
+                      </Select>
+                      
+                      <NumberInput
+                        label="Número"
+                        placeholder="Número"
+                        hideStepper
+                        value={Number(numeroCruce)}
+                        onValueChange={(value) => setNumeroCruce(value.toString())}
                       />
-                      <Input
-                        label="Número de casa"
-                        placeholder="Número de casa o apartamento"
-                        value={formData.direccion?.numero_casa || ""}
-                        onChange={(e) =>
-                          handleAddressChange("numero_casa", e.target.value)
-                        }
+                      
+                      <Select
+                        value={letraCruce}
+                        onChange={(e) => setLetraCruce(e.target.value)}
+                      >
+                        {Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i)).map(
+                          (letra) => (
+                            <SelectItem key={letra}>{letra}</SelectItem>
+                          )
+                        )}
+                      </Select>
+                      
+                      <NumberInput
+                        hideStepper
+                        value={Number(numeroPlaca)}
+                        onValueChange={(value) => setNumeroPlaca(value.toString())}
                       />
+                      
                       <Input
-                        label="Barrio"
-                        placeholder="Nombre del barrio"
-                        value={formData.direccion?.barrio || ""}
-                        onChange={(e) =>
-                          handleAddressChange("barrio", e.target.value)
-                        }
+                        label="Complemento"
+                        placeholder="Complemento dirección (edificio, apartamento, etc.)"
+                        value={complemento}
+                        onChange={(e) => setComplemento(e.target.value)}
                       />
                     </div>
                     <div className="mt-8">
                       <Button
                         color="primary"
                         fullWidth
-                        onPress={() => setIsAddressPopoverOpen(false)}
+                        onPress={guardarDireccion}
                       >
                         Guardar
                       </Button>
@@ -835,6 +945,9 @@ export default function BasicInformationStep({
                   </div>
                 </PopoverContent>
               </Popover>
+              <p className="text-sm mt-2 text-gray-500">
+                {formData.direccion ? formData.direccion : "No especificada"}
+              </p>
             </div>
           </div>
         </>

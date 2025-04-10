@@ -71,12 +71,7 @@ export async function submitFormData(
         dane_municipio: formData.get("dane_municipio") || "05001",
         persona_modifica: formData.get("persona_modifica") || "",
         fecha_nacimiento: formData.get("fecha_nacimiento") || "",
-        direccion: {
-          barrio: formData.get("direccion.barrio") || "",
-          numero_casa: formData.get("direccion.numero_casa") || "",
-          calle: formData.get("direccion.calle") || "",
-          carrera: formData.get("direccion.carrera") || "",
-        },
+        direccion: formData.get("direccion") || "",
         estrato: formData.get("estrato") || "",
         zona: formData.get("zona") || "",
         departamento: formData.get("departamento") || "",

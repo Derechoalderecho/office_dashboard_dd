@@ -20,12 +20,7 @@ type ReviewStepProps = {
     etnia: string;
     discapacidad: string;
     sabe_leer_escribir: string;
-    direccion: {
-      barrio: string;
-      numero_casa: string;
-      calle: string;
-      carrera: string;
-    };
+    direccion: string;
     estrato: string;
     zona: string;
     departamento: string;
@@ -50,19 +45,6 @@ type ReviewStepProps = {
 
 export default function ReviewStep({ formData }: ReviewStepProps) {
   const isExistingCitizen = formData.is_existing_citizen === "true";
-
-  const getAddressSummary = () => {
-    const { direccion } = formData;
-    if (!direccion) return "No especificada";
-
-    const parts = [];
-    if (direccion.calle) parts.push(`Calle ${direccion.calle}`);
-    if (direccion.carrera) parts.push(`Carrera ${direccion.carrera}`);
-    if (direccion.numero_casa) parts.push(`#${direccion.numero_casa}`);
-    if (direccion.barrio) parts.push(`Barrio ${direccion.barrio}`);
-
-    return parts.length > 0 ? parts.join(", ") : "No especificada";
-  };
 
   return (
     <div className="space-y-8">
@@ -104,7 +86,7 @@ export default function ReviewStep({ formData }: ReviewStepProps) {
           </div>
           <div>
             <p className="text-sm text-gray-500">Dirección de residencia</p>
-            <p>{getAddressSummary()}</p>
+            <p>{formData.direccion || "No especificada"}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Estrato</p>
