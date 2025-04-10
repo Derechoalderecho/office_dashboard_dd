@@ -5,14 +5,12 @@ type GeneralInformationProps = {
   formData: {
     notas: string;
     tipo_proceso: string;
-    estado: string;
     tiempo_respuesta: string;
   };
   updateFormData: (
     data: Partial<{
       notas: string;
       tipo_proceso: string;
-      estado: string;
       tiempo_respuesta: string;
     }>
   ) => void;
@@ -24,7 +22,7 @@ export default function GeneralInformationStep({
 }: GeneralInformationProps) {
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <Select
           id="tipo_proceso"
           name="tipo_proceso"
@@ -41,22 +39,6 @@ export default function GeneralInformationStep({
           <SelectItem key="Habeas corpus">Habeas corpus</SelectItem>
           <SelectItem key="Acción popular">Acción popular</SelectItem>
           <SelectItem key="Acción de grupo">Acción de grupo</SelectItem>
-        </Select>
-
-        <Select
-          id="estado"
-          name="estado"
-          variant="bordered"
-          label="Estado"
-          labelPlacement="outside"
-          placeholder="Seleccione el estado"
-          value={formData.estado}
-          onChange={(e) => updateFormData({ estado: e.target.value })}
-          isRequired
-        >
-          <SelectItem key="Seguimiento">Seguimiento</SelectItem>
-          <SelectItem key="Acción necesaria">Acción necesaria</SelectItem>
-          <SelectItem key="No aprobado">No aprobado</SelectItem>
         </Select>
 
         <Input

@@ -53,6 +53,7 @@ export default function DocumentsModal({
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const [hasLoadingError, setHasLoadingError] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -75,13 +76,22 @@ export default function DocumentsModal({
             // Actualizar documentos en Redux
             dispatch(setDocuments(freshCase.documentos));
             console.log("Documentos cargados (fresh):", freshCase.documentos.length);
+            setHasLoadingError(false);
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error("Error al cargar caso:", error);
+          // Si el error es 404, simplemente establecemos una lista vacía de documentos
+          if (error.status === 404 || (error.message && error.message.includes("404"))) {
+            dispatch(setDocuments([]));
+            setHasLoadingError(false);
+          } else {
+            setHasLoadingError(true);
+          }
         }
       })();
     } catch (error: any) {
       console.error("Error obteniendo documentos:", error.message);
+      setHasLoadingError(true);
     }
   }, [isOpen, caseId, dispatch]);
 
@@ -97,19 +107,30 @@ export default function DocumentsModal({
           (async () => {
             try {
               // Usar fetchCaseByIdFresh para obtener datos sin caché
-              const updatedCase = await import('@/services/caseService')
-                .then(module => module.fetchCaseByIdFresh(numericCaseId));
-              
-              if (updatedCase?.documentos) {
-                console.log("Caso actualizado con éxito:", 
-                  updatedCase.documentos.length, "documentos");
-                  
-                // Actualizamos directamente los documentos sin esperar otro efecto
-                dispatch(setDocuments(updatedCase.documentos));
-                setFilteredDocuments(sortDocuments(updatedCase.documentos, sortBy));
+              const { fetchCaseByIdFresh } = await import('@/services/caseService');
+              try {
+                const updatedCase = await fetchCaseByIdFresh(numericCaseId);
+                
+                if (updatedCase?.documentos) {
+                  console.log("Caso actualizado con éxito:", 
+                    updatedCase.documentos.length, "documentos");
+                    
+                  // Actualizamos directamente los documentos sin esperar otro efecto
+                  dispatch(setDocuments(updatedCase.documentos));
+                  setFilteredDocuments(sortDocuments(updatedCase.documentos, sortBy));
+                  setHasLoadingError(false);
+                }
+              } catch (error: any) {
+                console.error("Error al actualizar caso:", error);
+                // Si el error es 404, simplemente establecemos una lista vacía de documentos
+                if (error.status === 404 || (error.message && error.message.includes("404"))) {
+                  dispatch(setDocuments([]));
+                  setFilteredDocuments([]);
+                  setHasLoadingError(false);
+                } else {
+                  setHasLoadingError(true);
+                }
               }
-            } catch (error) {
-              console.error("Error al actualizar caso:", error);
             } finally {
               // Notificar que se ha completado el refresco
               if (onRefreshed) {
@@ -122,6 +143,7 @@ export default function DocumentsModal({
         }
       } catch (error) {
         console.error("Error al refrescar documentos:", error);
+        setHasLoadingError(true);
         if (onRefreshed) onRefreshed();
       }
     }
@@ -131,6 +153,7 @@ export default function DocumentsModal({
     if (currentCase?.documentos && isOpen) {
       dispatch(setDocuments(currentCase.documentos));
       setFilteredDocuments(sortDocuments(currentCase.documentos, sortBy));
+      setHasLoadingError(false);
     }
   }, [currentCase, isOpen, dispatch, sortBy]);
 
@@ -147,6 +170,8 @@ export default function DocumentsModal({
       }
       
       setFilteredDocuments(sortDocuments(filtered, sortBy));
+    } else {
+      setFilteredDocuments([]);
     }
   }, [searchTerm, sortBy, documents]);
 
@@ -242,7 +267,7 @@ export default function DocumentsModal({
         </ModalHeader>
         
         <ModalBody className="overflow-y-auto max-h-[500px]">
-          {!loading && !error && documents.length > 0 && (
+          {!loading && !hasLoadingError && documents.length > 0 && (
             <div className="flex flex-col sm:flex-row gap-3 mb-4">
               <Input
                 placeholder="Buscar documentos..."
@@ -270,10 +295,10 @@ export default function DocumentsModal({
             <div className="flex justify-center items-center py-12">
               <Spinner size="lg" color="primary" />
             </div>
-          ) : error ? (
+          ) : hasLoadingError ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <ExclamationCircleIcon className="w-12 h-12 text-danger mb-4" />
-              <p className="text-danger">{error}</p>
+              <p className="text-danger">Error al cargar los documentos. Intente nuevamente.</p>
             </div>
           ) : filteredDocuments.length === 0 ? (
             <div className="text-center py-8">

@@ -33,7 +33,6 @@ type ReviewStepProps = {
     // Case information
     notas: string;
     tipo_proceso: string;
-    estado: string;
     tiempo_respuesta: string;
 
     // Administration information
@@ -175,7 +174,7 @@ export default function ReviewStep({ formData }: ReviewStepProps) {
           </div>
           <div>
             <p className="text-sm text-gray-500">Estado</p>
-            <p>{formData.estado}</p>
+            <p>Viabilidad</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Tiempo de respuesta (horas)</p>

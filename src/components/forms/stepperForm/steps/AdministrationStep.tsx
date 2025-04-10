@@ -96,7 +96,6 @@ export default function AdministrationStep({
           }}
           isLoading={isLoading}
           errorMessage={validationErrors?.monitor_id}
-          isRequired
         >
           {users
             .filter(user => user.rol === "Monitor")

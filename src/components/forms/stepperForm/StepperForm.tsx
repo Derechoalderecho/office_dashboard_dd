@@ -65,7 +65,6 @@ export default function StepperForm() {
     // Case information
     notas: "",
     tipo_proceso: "Tutela",
-    estado: "Nuevo",
     tiempo_respuesta: "48",
 
     // Administration information
@@ -144,7 +143,6 @@ export default function StepperForm() {
       
       // General Information validation
       if (!data.tipo_proceso) errors.tipo_proceso = "El tipo de proceso es requerido";
-      if (!data.estado) errors.estado = "El estado es requerido";
       if (!data.tiempo_respuesta) errors.tiempo_respuesta = "El tiempo de respuesta es requerido";
 
       return errors;
