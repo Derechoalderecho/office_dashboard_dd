@@ -160,7 +160,7 @@ export async function submitFormData(
     const caseData = {
       id_ciudadano: citizenId.toString(),
       tipo_proceso: formData.get("tipo_proceso")?.toString() || "Tutela",
-      estado: formData.get("estado")?.toString() || "Nuevo",
+      estado: "Viabilidad",
       tiempo_respuesta: formData.get("tiempo_respuesta")?.toString() || "48",
       notas: formData.get("notas")?.toString() || "",
       persona_modifica: profesorId,
