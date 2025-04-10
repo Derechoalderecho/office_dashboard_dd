@@ -9,6 +9,7 @@ interface TableCellRendererProps {
   columnKey: keyof CaseWithKey;
   onPreviewCase?: (caseData: CaseWithKey) => void;
   onCalificateCase?: (caseData: CaseWithKey) => void;
+  canGradeStudents?: boolean;
 }
 
 export const TableCellRendererCalifications = ({
@@ -16,6 +17,7 @@ export const TableCellRendererCalifications = ({
   columnKey,
   onPreviewCase,
   onCalificateCase,
+  canGradeStudents = true, // Por defecto permitir calificar para compatibilidad
 }: TableCellRendererProps) => {
   const cellValue = caseData[columnKey];
 
@@ -103,6 +105,11 @@ export const TableCellRendererCalifications = ({
         </div>
       );
     case "actions":
+      // Si el usuario no puede calificar (estudiante), no mostramos el botón
+      if (!canGradeStudents) {
+        return <div className="text-sm text-gray-400">-</div>;
+      }
+      
       return (
         <div className="relative flex items-center gap-2">
           <Tooltip content="Calificar estudiante">
