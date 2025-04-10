@@ -26,6 +26,7 @@ import { useFilteredCalifications } from "@/hooks/useFilteredCalifications";
 import { ModalCalification } from "../ui/modal-calification";
 
 const INITIAL_VISIBLE_COLUMNS = [
+  "id_caso",
   "tipo_proceso",
   "estado",
   "ciudadano",
