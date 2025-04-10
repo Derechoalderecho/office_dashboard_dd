@@ -23,7 +23,7 @@ export default function WelcomePage() {
         {/* Botones de acceso */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
-            href="/dashboard"
+            href="/dashboard/cases"
             className="px-8 py-3 bg-primary text-white rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
           >
             Ingresar al Dashboard

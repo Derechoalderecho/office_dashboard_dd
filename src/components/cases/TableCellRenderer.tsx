@@ -24,6 +24,12 @@ export const TableCellRendererCases = ({
   const { role } = useUserRole();
 
   switch (columnKey) {
+    case "id_caso":
+      return (
+        <div className="flex flex-col">
+          <p className="font-medium text-sm text-blue-600">#{String(cellValue)}</p>
+        </div>
+      );
     case "fecha_crea":
       return (
         <div className="flex flex-col">

@@ -21,7 +21,7 @@ export default function LoginPage() {
 
     try {
       await signIn(email, password);
-      router.push("/dashboard"); // Redirect to dashboard after login
+      router.push("/dashboard/cases"); // Redirect to cases page after login
     } catch (error: any) {
       setError(error.message || "Failed to sign in");
     } finally {

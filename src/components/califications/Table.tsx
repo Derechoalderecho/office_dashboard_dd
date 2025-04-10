@@ -21,11 +21,15 @@ import { sortItems } from "@/utils/sortItems";
 import { paginateItems } from "@/utils/paginateItems";
 import { CaseWithKey } from "@/types/cases";
 import { TableCellRendererCalifications } from "./TableCellRenderer";
-import { fetchAllCases } from "@/services/caseService";
+import { fetchAllCases, fetchCasesByUserId } from "@/services/caseService";
 import { useFilteredCalifications } from "@/hooks/useFilteredCalifications";
 import { ModalCalification } from "../ui/modal-calification";
+import { useUserRole } from "@/hooks/useUserRole";
+import { useAuth } from "@/hooks/useAuth";
+import { getUserIdFromFirebase } from "@/services/userService";
 
 const INITIAL_VISIBLE_COLUMNS = [
+  "id_caso",
   "tipo_proceso",
   "estado",
   "ciudadano",
@@ -56,17 +60,63 @@ export default function TableCalifications() {
   const previewModal = useDisclosure();
   const calificationModal = useDisclosure();
 
+  // Role y auth
+  const { role } = useUserRole();
+  const { user } = useAuth();
+  const [userId, setUserId] = useState<number | null>(null);
+
+  // Función para obtener el ID del usuario desde Firebase
+  const fetchUserId = async () => {
+    if (user?.uid) {
+      const id = await getUserIdFromFirebase(user.uid);
+      setUserId(id);
+    }
+  };
+
+  // Efecto para obtener el ID del usuario cuando cambia el usuario o el rol
+  useEffect(() => {
+    if (user?.uid) {
+      fetchUserId();
+    }
+  }, [user?.uid]);
+
+  // Determinar si el usuario actual puede calificar
+  const canGradeStudents = role === 'Docente' || role === 'Director' || role === 'Monitor';
+
   // Fetch cases from API
   const fetchCasesData = async () => {
     setIsLoading(true);
-    const casesList = await fetchAllCases();
-    setCases(casesList as CaseWithKey[]);
-    setIsLoading(false);
+    try {
+      let casesList;
+      
+      // Si es estudiante, solo mostrar sus casos asignados
+      if (role === 'Estudiante' && userId) {
+        casesList = await fetchCasesByUserId(userId);
+      } else {
+        // Para docentes y otros roles, mostrar todos los casos
+        casesList = await fetchAllCases();
+      }
+      
+      setCases(casesList as CaseWithKey[]);
+    } catch (error) {
+      console.error("Error al obtener casos:", error);
+      addToast({
+        title: "Error",
+        description: "No se pudieron cargar los casos",
+        color: "danger",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
+    // Solo cargar casos si ya tenemos el ID para estudiantes
+    if (role === 'Estudiante' && !userId) {
+      return;
+    }
     fetchCasesData();
-  }, []);
+  }, [role, userId]);
 
   // Handle Bulk Actions Bar selection change
   const onSelectionChangeMasiveMenu = (keys: Selection) => {
@@ -177,6 +227,16 @@ export default function TableCalifications() {
   };
 
   const handleCalificateCase = (caseData: CaseWithKey) => {
+    // Solo permitir calificar a usuarios con permiso
+    if (!canGradeStudents) {
+      addToast({
+        title: "Acceso denegado",
+        description: "No tienes permisos para calificar estudiantes",
+        color: "danger",
+      });
+      return;
+    }
+    
     setSelectedCase(caseData);
     calificationModal.onOpen();
   };
@@ -233,7 +293,13 @@ export default function TableCalifications() {
           emptyContent={"Calificaciones no encontradas"}
           items={sortedItems}
           isLoading={isLoading}
-          loadingContent={<Spinner label="Cargando..." />}
+          loadingContent={
+            <div className="flex flex-col items-center justify-center py-8">
+              <Spinner size="lg" color="primary" className="mb-4" />
+              <p className="text-lg font-medium">Cargando datos...</p>
+              <p className="text-sm text-gray-500">Por favor espere mientras se actualiza la información</p>
+            </div>
+          }
         >
           {(item) => (
             <TableRow key={item.id_caso}>
@@ -244,6 +310,7 @@ export default function TableCalifications() {
                     columnKey={columnKey as keyof CaseWithKey}
                     onPreviewCase={handlePreviewCase}
                     onCalificateCase={handleCalificateCase}
+                    canGradeStudents={canGradeStudents}
                   />
                 </TableCell>
               )}

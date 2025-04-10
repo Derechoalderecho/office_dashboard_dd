@@ -1,6 +1,7 @@
 import { Column, StatusOption } from "@/types/sharedTypes";
 
 export const columns: Column[] = [
+  { name: "ID", uid: "id_caso" },
   { name: "Estudiante Asignado", uid: "estudiante_asignado" },
   { name: "Fecha de creación", uid: "fecha_crea" },
   { name: "Fecha de actualización", uid: "fecha_actualiza" },

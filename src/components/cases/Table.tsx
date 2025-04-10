@@ -33,6 +33,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { getUserIdFromFirebase } from "@/services/userService";
 
 const INITIAL_VISIBLE_COLUMNS = [
+  "id_caso",
   "fecha_crea",
   "fecha_actualiza",
   "tipo_proceso",
