@@ -36,7 +36,7 @@ export default function RegisterPage() {
 
     try {
       await signUp(email, password, name);
-      router.push('/dashboard'); // Redirect to dashboard after registration
+      router.push('/dashboard/cases'); // Redirect to cases page after registration
     } catch (error: any) {
       setError(error.message || 'Failed to create an account');
     } finally {
