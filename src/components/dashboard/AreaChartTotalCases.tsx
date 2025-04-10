@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
+import * as React from "react";
+import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 
 import {
   Card,
@@ -9,7 +9,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   ChartConfig,
   ChartContainer,
@@ -17,75 +17,79 @@ import {
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart"
+} from "@/components/ui/chart";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { fetchCasesForAreaChart } from "@/services/dasboardService"
+} from "@/components/ui/select";
+import { Tabs, Tab } from "@heroui/react";
+import { fetchCasesForAreaChart } from "@/services/dasboardService";
 
 const chartConfig = {
   count: {
     label: "Casos",
     color: "hsl(var(--chart-1))",
   },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
 export default function AreaChartTotalCases() {
-  const [timeRange, setTimeRange] = React.useState("90d")
-  const [chartData, setChartData] = React.useState<Array<{ date: string; count: number; fullDate?: string }>>([])
-  const [loading, setLoading] = React.useState(true)
+  const [timeRange, setTimeRange] = React.useState("90d");
+  const [chartData, setChartData] = React.useState<
+    Array<{ date: string; count: number; fullDate?: string }>
+  >([]);
+  const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
     async function loadData() {
-      setLoading(true)
+      setLoading(true);
       try {
-        const data = await fetchCasesForAreaChart()
-        setChartData(data)
+        const data = await fetchCasesForAreaChart();
+        setChartData(data);
       } catch (error) {
-        console.error("Error loading chart data:", error)
+        console.error("Error loading chart data:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
-    
-    loadData()
-  }, [])
+
+    loadData();
+  }, []);
 
   const filteredData = React.useMemo(() => {
-    if (chartData.length === 0) return []
-    
+    if (chartData.length === 0) return [];
+
     // Ordenar para encontrar la fecha más reciente como referencia
     const sortedData = [...chartData].sort((a, b) => {
-      const dateA = new Date(a.fullDate || a.date)
-      const dateB = new Date(b.fullDate || b.date)
-      return dateB.getTime() - dateA.getTime()
-    })
-    
+      const dateA = new Date(a.fullDate || a.date);
+      const dateB = new Date(b.fullDate || b.date);
+      return dateB.getTime() - dateA.getTime();
+    });
+
     // Usar la fecha más reciente como referencia (o la fecha actual si no hay datos)
-    const referenceDate = sortedData.length > 0 
-      ? new Date(sortedData[0].fullDate || sortedData[0].date)
-      : new Date()
-    
+    const referenceDate =
+      sortedData.length > 0
+        ? new Date(sortedData[0].fullDate || sortedData[0].date)
+        : new Date();
+
     return chartData.filter((item) => {
-      const date = new Date(item.fullDate || item.date)
-      let daysToSubtract = 90
-      
+      const date = new Date(item.fullDate || item.date);
+      let daysToSubtract = 90;
+
       if (timeRange === "30d") {
-        daysToSubtract = 30
+        daysToSubtract = 30;
       } else if (timeRange === "7d") {
-        daysToSubtract = 7
+        daysToSubtract = 7;
       }
-      
-      const startDate = new Date(referenceDate)
-      startDate.setDate(startDate.getDate() - daysToSubtract)
-      
-      return date >= startDate
-    })
-  }, [chartData, timeRange])
+
+      const startDate = new Date(referenceDate);
+      startDate.setDate(startDate.getDate() - daysToSubtract);
+
+      return date >= startDate;
+    });
+  }, [chartData, timeRange]);
 
   return (
     <Card>
@@ -98,6 +102,11 @@ export default function AreaChartTotalCases() {
             {timeRange === "7d" && "Mostrando casos de los últimos 7 días"}
           </CardDescription>
         </div>
+      <div className="flex gap-5">
+      <Tabs aria-label="Gráfia de área">
+          <Tab key="casos" title="Todos los casos" />
+          <Tab key="recibidos_aceptados" title="Casos recibidos y aceptados" />
+        </Tabs>
         <Select value={timeRange} onValueChange={setTimeRange}>
           <SelectTrigger
             className="w-[160px] rounded-lg sm:ml-auto"
@@ -117,6 +126,7 @@ export default function AreaChartTotalCases() {
             </SelectItem>
           </SelectContent>
         </Select>
+      </div>
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
         {loading ? (
@@ -177,5 +187,5 @@ export default function AreaChartTotalCases() {
         )}
       </CardContent>
     </Card>
-  )
+  );
 }
