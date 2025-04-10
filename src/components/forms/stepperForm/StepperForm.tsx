@@ -51,12 +51,7 @@ export default function StepperForm() {
     etnia: "",
     discapacidad: "",
     sabe_leer_escribir: "",
-    direccion: {
-      barrio: "",
-      numero_casa: "",
-      calle: "",
-      carrera: "",
-    },
+    direccion: "",
     estrato: "",
     zona: "",
     departamento: "",
