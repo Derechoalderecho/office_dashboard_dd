@@ -7,6 +7,7 @@ import { logger } from "@/utils/logUtils";
 interface ChartDataPoint {
   date: string;
   count: number;
+  fullDate?: string;
 }
 
 /**
@@ -34,7 +35,6 @@ export async function fetchCasesForAreaChart(): Promise<ChartDataPoint[]> {
       
       // If this day doesn't exist in our accumulator yet, initialize it
       if (!acc[dayKey]) {
-        // Store ISO date string for consistent parsing
         acc[dayKey] = {
           date: dayKey,
           fullDate: date.toISOString(),
@@ -46,16 +46,16 @@ export async function fetchCasesForAreaChart(): Promise<ChartDataPoint[]> {
       acc[dayKey].count += 1;
       
       return acc;
-    }, {} as Record<string, ChartDataPoint & { fullDate: string }>);
+    }, {} as Record<string, ChartDataPoint>);
     
     // Convert the grouped data to an array and sort by date
     const chartData = Object.values(groupedByDay).sort((a, b) => 
-      a.date.localeCompare(b.date)
+      new Date(a.fullDate || a.date).getTime() - new Date(b.fullDate || b.date).getTime()
     );
     
     // Format dates for display
     return chartData.map(point => {
-      const date = new Date(point.fullDate);
+      const date = new Date(point.fullDate || point.date);
       
       // Format date as "DD MMM" (e.g., "15 ene")
       const formattedDate = date.toLocaleDateString('es-ES', { 
@@ -66,9 +66,9 @@ export async function fetchCasesForAreaChart(): Promise<ChartDataPoint[]> {
       return {
         date: formattedDate,
         count: point.count,
-        fullDate: point.fullDate // Include the full date for better sorting
+        fullDate: point.fullDate || point.date
       };
-    }) as ChartDataPoint[];
+    });
   } catch (error) {
     logger.error("Error fetching cases for area chart:", error);
     return [];
