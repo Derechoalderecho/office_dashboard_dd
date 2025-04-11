@@ -21,6 +21,7 @@ import CasePreview from "@/components/cases/cases-id/CasePreview";
 import DocumentsSection from "@/components/cases/cases-id/DocumentsSection";
 import NotesSection from "@/components/cases/cases-id/NotesSection";
 import CaseHistoryLogs from "@/components/cases/cases-id/CaseHistoryLogs";
+import EditCaseModal from "@/components/cases/cases-id/EditCaseModal";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Cases } from "@/types/cases";
 import { useParams } from "next/navigation";
@@ -524,6 +525,7 @@ export default function CasePage() {
                 <h2 className="text-xl font-medium">
                   Caso n# - {caseData?.id_caso}
                 </h2>
+                <EditCaseModal caseData={caseData!} onSuccess={loadCaseData} />
               </div>
               <hr className="my-4" />
          
