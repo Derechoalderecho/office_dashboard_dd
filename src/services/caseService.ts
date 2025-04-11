@@ -549,3 +549,36 @@ export const updateCaseCalification = async (
     return false;
   }
 };
+
+/**
+ * Updates the details of a specific case (pretensiones, hechos, fundamentos, entidad)
+ * @param id ID of the case to update
+ * @param data Object containing the fields to update
+ * @returns true if the case was updated successfully, false otherwise
+ */
+export const updateCaseDetails = async (
+  id: number,
+  data: {
+    pretensiones?: string;
+    hechos?: string;
+    fundamentos?: string;
+    entidad?: string;
+  }
+): Promise<boolean> => {
+  try {
+    logger.info(`Actualizando detalles del caso ${id}`);
+    
+    // Perform the PUT request with the fields to update
+    await put<Cases>(`casos/${id}`, data);
+    
+    // Invalidate caches
+    invalidateCacheItem(CASES_CACHE, id);
+    invalidateCache(CASES_CACHE); // Invalidate entire collection
+    
+    logger.info(`Detalles del caso ${id} actualizados correctamente`);
+    return true;
+  } catch (error) {
+    logger.error(`Error al actualizar detalles del caso ${id}:`, error);
+    return false;
+  }
+};
