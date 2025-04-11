@@ -9,7 +9,7 @@ export interface Location {
 
 export const fetchLocations = async (): Promise<Location[]> => {
   try {
-    const data = await get<Divipola[]>('/divipola/');
+    const data = await get<Divipola[]>('divipola');
     
     return data.map(item => ({
       region: '',
