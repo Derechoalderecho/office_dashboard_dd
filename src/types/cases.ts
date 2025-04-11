@@ -46,6 +46,8 @@ export interface Cases {
   antecedentes?: string;
   tutela?: string;
   calificacion?: string;
+  entidad?: string;
+  fundamentos?: string;
   estudiante_asignado?: string;
 }
 

@@ -29,6 +29,10 @@ type ReviewStepProps = {
     notas: string;
     tipo_proceso: string;
     tiempo_respuesta: string;
+    hechos: string;
+    pretensiones: string;
+    fundamentos: string;
+    entidad: string;
 
     // Administration information
     persona_modifica: string;
@@ -167,6 +171,35 @@ export default function ReviewStep({ formData }: ReviewStepProps) {
             <p>{formData.persona_modifica}</p>
           </div>
         </div>
+        
+        {formData.hechos && (
+          <div className="mb-4">
+            <p className="text-sm text-gray-500">Hechos</p>
+            <p className="whitespace-pre-wrap">{formData.hechos}</p>
+          </div>
+        )}
+        
+        {formData.pretensiones && (
+          <div className="mb-4">
+            <p className="text-sm text-gray-500">Pretensiones</p>
+            <p className="whitespace-pre-wrap">{formData.pretensiones}</p>
+          </div>
+        )}
+        
+        {formData.fundamentos && (
+          <div className="mb-4">
+            <p className="text-sm text-gray-500">Fundamentos de derecho</p>
+            <p className="whitespace-pre-wrap">{formData.fundamentos}</p>
+          </div>
+        )}
+        
+        {formData.entidad && (
+          <div className="mb-4">
+            <p className="text-sm text-gray-500">Entidad</p>
+            <p className="whitespace-pre-wrap">{formData.entidad}</p>
+          </div>
+        )}
+        
         <div>
           <p className="text-sm text-gray-500">Notas</p>
           <p className="whitespace-pre-wrap">{formData.notas}</p>

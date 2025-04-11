@@ -1,130 +1,96 @@
 "use client";
 
-import { parseNumberToString } from "@/utils/string";
+import { useEffect, useState, Key } from "react";
+import { useRouter } from "next/navigation";
 import {
   Input,
   Select,
   SelectItem,
   DateInput,
   DateValue,
-  Autocomplete,
-  AutocompleteItem,
   Button,
   Popover,
   PopoverTrigger,
   PopoverContent,
   NumberInput,
   Checkbox,
+  Card,
+  CardHeader,
+  CardBody,
+  CardFooter,
+  Divider,
+  Spinner,
+  addToast,
 } from "@heroui/react";
-import { useState, useEffect, Key } from "react";
-import { fetchAllCitizens } from "@/services/citizenService";
-import { Citizen } from "@/types/citizens";
-import { PlusIcon, UserIcon, XIcon } from "lucide-react";
 import { I18nProvider } from "@react-aria/i18n";
+import { Citizen } from "@/types/citizens";
+import { updateCitizen, fetchCitizenDetails } from "@/services/citizenService";
 import {
   fetchLocations,
   getUniqueDepartments,
   getMunicipalitiesByDepartment,
   Location,
 } from "@/services/locationService";
+import { ArrowLeftIcon, CheckIcon, Loader2Icon } from "lucide-react";
+import { parseDate, CalendarDate } from "@internationalized/date";
 
-type BasicInformationProps = {
-  formData: {
-    num_documento: string;
-    tipo_documento: string;
-    primer_nombre: string;
-    segundo_nombre: string;
-    primer_apellido: string;
-    segundo_apellido: string;
-    sexo: string;
-    genero: string;
-    orient_sexual: string;
-    fecha_nacimiento: string;
-    num_movil: string;
-    num_fijo: string;
-    email: string;
-    nacionalidad: string;
-    estado_civil: string;
-    escolaridad: string;
-    etnia: string;
-    discapacidad: string;
-    sabe_leer_escribir: string;
-    citizen_id: string;
-    is_existing_citizen: string;
-    direccion: string;
-    estrato: string;
-    zona: string;
-    departamento: string;
-    municipio: string;
-  };
-  updateFormData: (
-    data: Partial<{
-      num_documento: string;
-      tipo_documento: string;
-      primer_nombre: string;
-      segundo_nombre: string;
-      primer_apellido: string;
-      segundo_apellido: string;
-      sexo: string;
-      genero: string;
-      orient_sexual: string;
-      fecha_nacimiento: string;
-      num_movil: string;
-      num_fijo: string;
-      email: string;
-      nacionalidad: string;
-      estado_civil: string;
-      escolaridad: string;
-      etnia: string;
-      discapacidad: string;
-      sabe_leer_escribir: string;
-      citizen_id: string;
-      is_existing_citizen: string;
-      direccion: string;
-      estrato: string;
-      zona: string;
-      departamento: string;
-      municipio: string;
-    }>
-  ) => void;
-  validationErrors?: { [key: string]: string };
-};
+interface CitizenEditFormProps {
+  citizenId: string;
+}
 
-export default function BasicInformationStep({
-  formData,
-  updateFormData,
-  validationErrors = {},
-}: BasicInformationProps) {
+export default function CitizenEditForm({ citizenId }: CitizenEditFormProps) {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [citizen, setCitizen] = useState<Citizen | null>(null);
+  const [formData, setFormData] = useState({
+    num_documento: "",
+    tipo_documento: "",
+    primer_nombre: "",
+    segundo_nombre: "",
+    primer_apellido: "",
+    segundo_apellido: "",
+    sexo: "",
+    genero: "",
+    orient_sexual: "",
+    fecha_nacimiento: "",
+    num_movil: "",
+    num_fijo: "",
+    email: "",
+    nacionalidad: "",
+    estado_civil: "",
+    escolaridad: "",
+    etnia: "",
+    discapacidad: "",
+    sabe_leer_escribir: "",
+    direccion: "",
+    estrato: "",
+    zona: "",
+    departamento: "",
+    municipio: "",
+  });
+  const [validationErrors, setValidationErrors] = useState<{
+    [key: string]: string;
+  }>({});
+
+  // Estados para el componente de fecha de nacimiento
   const [fechaNacimiento, setFechaNacimiento] = useState<DateValue | null>(
     null
   );
-  const [citizens, setCitizens] = useState<Citizen[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showNewCitizenForm, setShowNewCitizenForm] = useState<boolean>(
-    Boolean(
-      formData.is_existing_citizen === "false" ||
-        (formData.primer_nombre && formData.primer_apellido)
-    )
-  );
+
+  // Estado para nacionalidad personalizada
   const [nacionalidadPersonalizada, setNacionalidadPersonalizada] =
-    useState<string>(
-      formData.nacionalidad &&
-        !["Colombia", "Venezuela"].includes(formData.nacionalidad)
-        ? formData.nacionalidad
-        : ""
-    );
-  const [showNacionalidadInput, setShowNacionalidadInput] = useState<boolean>(
-    Boolean(
-      formData.nacionalidad &&
-        !["Colombia", "Venezuela"].includes(formData.nacionalidad)
-    )
-  );
+    useState<string>("");
+  const [showNacionalidadInput, setShowNacionalidadInput] =
+    useState<boolean>(false);
+
+  // Estados para dirección
   const [isAddressPopoverOpen, setIsAddressPopoverOpen] = useState(false);
   const [locations, setLocations] = useState<Location[]>([]);
   const [departments, setDepartments] = useState<string[]>([]);
   const [municipalities, setMunicipalities] = useState<string[]>([]);
 
-  // States for address components
+  // Estados para componentes de la dirección
   const [tipoVia, setTipoVia] = useState<string>("");
   const [numeroVia, setNumeroVia] = useState<string>("");
   const [letraVia, setLetraVia] = useState<string>("");
@@ -136,6 +102,142 @@ export default function BasicInformationStep({
   const [numeroPlaca, setNumeroPlaca] = useState<string>("");
   const [complemento, setComplemento] = useState<string>("");
 
+  // Cargar datos del ciudadano
+  useEffect(() => {
+    const loadCitizen = async () => {
+      setIsLoading(true);
+      try {
+        const citizenData = await fetchCitizenDetails(citizenId);
+        if (citizenData) {
+          setCitizen(citizenData);
+
+          // Actualizar formData con los datos del ciudadano
+          setFormData({
+            num_documento: citizenData.num_documento || "",
+            tipo_documento: citizenData.tipo_documento || "",
+            primer_nombre: citizenData.primer_nombre || "",
+            segundo_nombre: citizenData.segundo_nombre || "",
+            primer_apellido: citizenData.primer_apellido || "",
+            segundo_apellido: citizenData.segundo_apellido || "",
+            sexo: citizenData.sexo || "",
+            genero: citizenData.genero || "",
+            orient_sexual: citizenData.orient_sexual || "",
+            fecha_nacimiento: citizenData.fecha_nacimiento || "",
+            num_movil: citizenData.num_movil || "",
+            num_fijo: citizenData.num_fijo || "",
+            email: citizenData.email || "",
+            nacionalidad: citizenData.nacionalidad || "",
+            estado_civil: citizenData.estado_civil || "",
+            escolaridad: citizenData.escolaridad || "",
+            etnia: citizenData.etnia || "",
+            discapacidad: citizenData.discapacidad || "",
+            sabe_leer_escribir: citizenData.sabe_leer_escribir || "",
+            direccion:
+              typeof citizenData.direccion === "string"
+                ? citizenData.direccion
+                : "",
+            estrato: citizenData.estrato || "",
+            zona: citizenData.zona || "",
+            departamento: citizenData.departamento || "",
+            municipio: citizenData.municipio || "",
+          });
+
+          // Inicializar fechaNacimiento si existe
+          if (citizenData.fecha_nacimiento) {
+            try {
+              // Convertir formato yyyy-MM-dd a un objeto DateValue
+              const [year, month, day] = citizenData.fecha_nacimiento.split('-').map(Number);
+              if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+                const dateValue = parseDate(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
+                setFechaNacimiento(dateValue);
+              }
+            } catch (error) {
+              console.error("Error parsing date:", error);
+            }
+          }
+
+          // Comprobar si la nacionalidad es personalizada
+          if (
+            citizenData.nacionalidad &&
+            ![
+              "Colombia",
+              "Venezuela",
+              "Argentina",
+              "Bolivia",
+              "Chile",
+              "Costa Rica",
+              "Cuba",
+              "Ecuador",
+              "El Salvador",
+              "España",
+              "Guatemala",
+              "Honduras",
+              "México",
+              "Nicaragua",
+              "Panamá",
+              "Paraguay",
+              "Perú",
+              "República Dominicana",
+              "Uruguay",
+            ].includes(citizenData.nacionalidad)
+          ) {
+            setShowNacionalidadInput(true);
+            setNacionalidadPersonalizada(citizenData.nacionalidad);
+          }
+        } else {
+          addToast({
+            title: "Error",
+            description: "No se pudo encontrar al ciudadano",
+            color: "danger",
+          });
+          router.push("/dashboard/citizens");
+        }
+      } catch (error) {
+        console.error("Error loading citizen:", error);
+        addToast({
+          title: "Error",
+          description: "Error al cargar los datos del ciudadano",
+          color: "danger",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCitizen();
+  }, [citizenId, router]);
+
+  // Cargar datos de ubicaciones
+  useEffect(() => {
+    const loadLocations = async () => {
+      try {
+        const data = await fetchLocations();
+        setLocations(data);
+        setDepartments(getUniqueDepartments(data));
+      } catch (error) {
+        console.error("Error loading locations:", error);
+      }
+    };
+    loadLocations();
+  }, []);
+
+  // Actualizar municipios cuando cambia el departamento
+  useEffect(() => {
+    if (formData.departamento && locations.length > 0) {
+      const filteredMunicipalities = getMunicipalitiesByDepartment(
+        locations,
+        formData.departamento
+      );
+      setMunicipalities(filteredMunicipalities);
+    }
+  }, [formData.departamento, locations]);
+
+  // Función para actualizar el estado del formulario
+  const updateFormData = (data: Partial<typeof formData>) => {
+    setFormData((prev) => ({ ...prev, ...data }));
+  };
+
+  // Gestionar cambio de nacionalidad
   const handleNacionalidadChange = (
     e: React.ChangeEvent<HTMLSelectElement>
   ) => {
@@ -150,6 +252,7 @@ export default function BasicInformationStep({
     }
   };
 
+  // Gestionar cambio de nacionalidad personalizada
   const handleNacionalidadPersonalizadaChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -158,105 +261,18 @@ export default function BasicInformationStep({
     updateFormData({ nacionalidad: value });
   };
 
+  // Gestionar cambio de tipo de documento
   const handleTipoDocumentoChange = (
     e: React.ChangeEvent<HTMLSelectElement>
   ) => {
     const value = e.target.value;
     updateFormData({
       tipo_documento: value,
-      // If it's "Sin documento", clear the document number
       num_documento: value === "SD" ? "" : formData.num_documento,
     });
   };
 
-  // Fetch all citizens for the dropdown
-  useEffect(() => {
-    const loadCitizens = async () => {
-      setIsLoading(true);
-      const allCitizens = await fetchAllCitizens();
-      setCitizens(allCitizens);
-      setIsLoading(false);
-    };
-    loadCitizens();
-  }, []);
-
-  // Fetch locations data
-  useEffect(() => {
-    const loadLocations = async () => {
-      const data = await fetchLocations();
-      setLocations(data);
-      setDepartments(getUniqueDepartments(data));
-    };
-    loadLocations();
-  }, []);
-
-  // Update municipalities when department changes
-  useEffect(() => {
-    if (formData.departamento) {
-      const filteredMunicipalities = getMunicipalitiesByDepartment(
-        locations,
-        formData.departamento
-      );
-      setMunicipalities(filteredMunicipalities);
-      // Reset municipio if it's not in the new list
-      if (!filteredMunicipalities.includes(formData.municipio)) {
-        updateFormData({ municipio: "" });
-      }
-    } else {
-      setMunicipalities([]);
-      updateFormData({ municipio: "" });
-    }
-  }, [formData.departamento, locations]);
-
-  // Handle citizen selection and auto-populate form fields
-  const handleCitizenSelect = (selectedKey: Key | null) => {
-    const selectedId = selectedKey?.toString();
-
-    if (!selectedId) {
-      // No citizen selected, reset form
-      updateFormData({
-        is_existing_citizen: "false",
-        citizen_id: "",
-        direccion: "",
-      });
-      setShowNewCitizenForm(true);
-      return;
-    }
-
-    // Find the citizen by ID
-    const citizen = citizens.find(
-      (c) => c.id_ciudadano.toString() === selectedId
-    );
-
-    if (citizen) {
-      // Update form data with citizen information
-      updateFormData({
-        num_documento: citizen.num_documento || "",
-        tipo_documento: citizen.tipo_documento || "",
-        primer_nombre: citizen.primer_nombre || "",
-        segundo_nombre: citizen.segundo_nombre || "",
-        primer_apellido: citizen.primer_apellido || "",
-        segundo_apellido: citizen.segundo_apellido || "",
-        email: citizen.email || "",
-        num_movil: citizen.num_movil || "",
-        num_fijo: citizen.num_fijo || "",
-        citizen_id: selectedId,
-        is_existing_citizen: "true",
-        direccion:
-          typeof citizen.direccion === "string" ? citizen.direccion : "",
-      });
-      setShowNewCitizenForm(false);
-    }
-  };
-
-  const handleCreateNewCitizen = () => {
-    setShowNewCitizenForm(true);
-  };
-
-  const handleCancelNewCitizen = () => {
-    setShowNewCitizenForm(false);
-  };
-
+  // Construir la dirección completa
   const construirDireccion = () => {
     const partes = [];
 
@@ -286,7 +302,6 @@ export default function BasicInformationStep({
       partes.push(parte);
     }
 
-    // Añadir el cruce si existe
     if (numeroCruce) {
       let cruce = "# " + numeroCruce;
 
@@ -297,20 +312,16 @@ export default function BasicInformationStep({
       partes.push(cruce);
     }
 
-    // Añadir el número de placa si existe
     if (numeroPlaca) {
       partes.push("- " + numeroPlaca);
     }
 
-    // Añadir el complemento si existe
     if (complemento) {
       partes.push(complemento);
     }
 
-    // Unir todas las partes con espacios, excepto el complemento que va con coma
     let direccionCompleta = "";
     if (partes.length > 0) {
-      // Si hay complemento (último elemento), separarlo con coma
       if (complemento && partes.length > 1) {
         const partesBasicas = partes.slice(0, -1).join(" ");
         direccionCompleta = partesBasicas + ", " + partes[partes.length - 1];
@@ -322,64 +333,133 @@ export default function BasicInformationStep({
     return direccionCompleta.trim();
   };
 
-  // Save address
+  // Guardar la dirección
   const guardarDireccion = () => {
     const direccionCompleta = construirDireccion();
     updateFormData({ direccion: direccionCompleta });
     setIsAddressPopoverOpen(false);
   };
 
-  return (
-    <div className="space-y-8">
-      {!showNewCitizenForm ? (
-        <div className="flex flex-col">
-          <div className="flex-grow mb-4">
-            <Autocomplete
-              id="citizen_id"
-              name="citizen_id"
-              variant="bordered"
-              label="Seleccionar ciudadano existente"
-              listboxProps={{
-                emptyContent: "No hay resultados",
-              }}
-              labelPlacement="outside"
-              placeholder="Seleccione o escriba el nombre del ciudadano o su cédula"
-              value={formData.citizen_id}
-              onSelectionChange={handleCitizenSelect}
-              isLoading={isLoading}
-              disabled={isLoading}
-              className="w-full"
-            >
-              {citizens.map((citizen) => (
-                <AutocompleteItem key={citizen.id_ciudadano.toString()}>
-                  {`${citizen.primer_nombre} ${citizen.primer_apellido} - ${citizen.num_documento}`}
-                </AutocompleteItem>
-              ))}
-            </Autocomplete>
-          </div>
-          <Button
-            color="primary"
-            startContent={<PlusIcon size={16} />}
-            onClick={handleCreateNewCitizen}
-          >
-            Crear nuevo ciudadano
-          </Button>
-        </div>
-      ) : (
-        <>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium">Crear nuevo ciudadano</h3>
-            <Button
-              variant="light"
-              color="primary"
-              startContent={<UserIcon size={16} />}
-              onClick={handleCancelNewCitizen}
-            >
-              Usar ciudadano existente
-            </Button>
-          </div>
+  // Validar el formulario
+  const validateForm = () => {
+    const errors: { [key: string]: string } = {};
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    if (!formData.tipo_documento)
+      errors.tipo_documento = "El tipo de documento es requerido";
+    if (formData.tipo_documento !== "SD" && !formData.num_documento)
+      errors.num_documento = "El número de documento es requerido";
+    if (!formData.primer_nombre)
+      errors.primer_nombre = "El primer nombre es requerido";
+    if (!formData.primer_apellido)
+      errors.primer_apellido = "El primer apellido es requerido";
+    if (!formData.sexo) errors.sexo = "El sexo es requerido";
+    if (!formData.genero) errors.genero = "El género es requerido";
+    if (!formData.orient_sexual)
+      errors.orient_sexual = "La orientación sexual es requerida";
+    if (!formData.num_movil) errors.num_movil = "El número móvil es requerido";
+    if (!formData.nacionalidad)
+      errors.nacionalidad = "La nacionalidad es requerida";
+    if (!formData.estado_civil)
+      errors.estado_civil = "El estado civil es requerido";
+    if (!formData.escolaridad)
+      errors.escolaridad = "La escolaridad es requerida";
+    if (!formData.etnia) errors.etnia = "La etnia es requerida";
+    if (!formData.discapacidad)
+      errors.discapacidad = "Debe indicar si tiene discapacidad";
+    if (!formData.sabe_leer_escribir)
+      errors.sabe_leer_escribir = "Debe indicar si sabe leer y escribir";
+    if (!formData.departamento)
+      errors.departamento = "El departamento es requerido";
+    if (!formData.municipio) errors.municipio = "El municipio es requerido";
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Manejar envío del formulario
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      addToast({
+        title: "Error",
+        description: "Por favor complete todos los campos requeridos",
+        color: "danger",
+      });
+      return;
+    }
+
+    // Ensure date is in the right format for API
+    let formDataToSubmit = {...formData};
+    if (fechaNacimiento) {
+      formDataToSubmit.fecha_nacimiento = fechaNacimiento.toString();
+    }
+
+    setIsSaving(true);
+    try {
+      const updatedCitizen = await updateCitizen(Number(citizenId), formDataToSubmit);
+
+      if (updatedCitizen) {
+        addToast({
+          title: "Ciudadano actualizado	",
+          description: "Ciudadano actualizado exitosamente",
+          color: "success",
+        });
+        router.push("/dashboard/citizens");
+      } else {
+        addToast({
+          title: "Error",
+          description: "No se pudo actualizar el ciudadano",
+          color: "danger",
+        });
+      }
+    } catch (error) {
+      console.error("Error updating citizen:", error);
+      addToast({
+        title: "Error",
+        description: "Error al actualizar el ciudadano",
+        color: "danger",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Volver a la lista de ciudadanos
+  const handleCancel = () => {
+    router.push("/dashboard/citizens");
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  return (
+    <Card className="w-full">
+      <CardHeader className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold">Editar Ciudadano</h2>
+          <p className="text-default-500">
+            {formData.primer_nombre} {formData.primer_apellido} -{" "}
+            {formData.num_documento}
+          </p>
+        </div>
+        <Button
+          variant="light"
+          startContent={<ArrowLeftIcon />}
+          onPress={handleCancel}
+        >
+          Volver
+        </Button>
+      </CardHeader>
+      <Divider />
+      <CardBody>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Select
               id="tipo_documento"
               name="tipo_documento"
@@ -392,6 +472,7 @@ export default function BasicInformationStep({
               }
               onChange={handleTipoDocumentoChange}
               isRequired
+              errorMessage={validationErrors.tipo_documento}
             >
               <SelectItem key="TI">Tarjeta de identidad</SelectItem>
               <SelectItem key="CC">Cédula de ciudadanía</SelectItem>
@@ -414,6 +495,7 @@ export default function BasicInformationStep({
                 }
                 placeholder="Ingrese su número de documento"
                 isRequired
+                errorMessage={validationErrors.num_documento}
               />
             )}
 
@@ -429,6 +511,7 @@ export default function BasicInformationStep({
               }
               placeholder="Ingrese su primer nombre"
               isRequired
+              errorMessage={validationErrors.primer_nombre}
             />
 
             <Input
@@ -462,6 +545,7 @@ export default function BasicInformationStep({
                 isRequired
               />
             </I18nProvider>
+
             <Input
               id="primer_apellido"
               name="primer_apellido"
@@ -474,6 +558,7 @@ export default function BasicInformationStep({
               }
               placeholder="Ingrese su primer apellido"
               isRequired
+              errorMessage={validationErrors.primer_apellido}
             />
 
             <Input
@@ -499,6 +584,7 @@ export default function BasicInformationStep({
               selectedKeys={formData.sexo ? [formData.sexo] : []}
               onChange={(e) => updateFormData({ sexo: e.target.value })}
               isRequired
+              errorMessage={validationErrors.sexo}
             >
               <SelectItem key="Hombre">Hombre</SelectItem>
               <SelectItem key="Mujer">Mujer</SelectItem>
@@ -519,6 +605,7 @@ export default function BasicInformationStep({
               selectedKeys={formData.genero ? [formData.genero] : []}
               onChange={(e) => updateFormData({ genero: e.target.value })}
               isRequired
+              errorMessage={validationErrors.genero}
             >
               <SelectItem key="M">Masculino</SelectItem>
               <SelectItem key="F">Femenino</SelectItem>
@@ -540,6 +627,7 @@ export default function BasicInformationStep({
                 updateFormData({ orient_sexual: e.target.value })
               }
               isRequired
+              errorMessage={validationErrors.orient_sexual}
             >
               <SelectItem key="HE">Heterosexual</SelectItem>
               <SelectItem key="HO">Homosexual</SelectItem>
@@ -563,6 +651,7 @@ export default function BasicInformationStep({
                 updateFormData({ num_movil: value.toString() })
               }
               isRequired
+              errorMessage={validationErrors.num_movil}
             />
 
             <NumberInput
@@ -606,6 +695,7 @@ export default function BasicInformationStep({
               }
               onChange={handleNacionalidadChange}
               isRequired
+              errorMessage={validationErrors.nacionalidad}
             >
               <SelectItem key="Argentina">Argentina</SelectItem>
               <SelectItem key="Bolivia">Bolivia</SelectItem>
@@ -657,6 +747,7 @@ export default function BasicInformationStep({
               }
               onChange={(e) => updateFormData({ estado_civil: e.target.value })}
               isRequired
+              errorMessage={validationErrors.estado_civil}
             >
               <SelectItem key="SO">Soltero/a</SelectItem>
               <SelectItem key="CA">Casado/a</SelectItem>
@@ -676,6 +767,7 @@ export default function BasicInformationStep({
               selectedKeys={formData.escolaridad ? [formData.escolaridad] : []}
               onChange={(e) => updateFormData({ escolaridad: e.target.value })}
               isRequired
+              errorMessage={validationErrors.escolaridad}
             >
               <SelectItem key="Ninguna">Ninguna</SelectItem>
               <SelectItem key="Preescolar">Preescolar</SelectItem>
@@ -700,6 +792,7 @@ export default function BasicInformationStep({
               selectedKeys={formData.etnia ? [formData.etnia] : []}
               onChange={(e) => updateFormData({ etnia: e.target.value })}
               isRequired
+              errorMessage={validationErrors.etnia}
             >
               <SelectItem key="IN">Indígena</SelectItem>
               <SelectItem key="AF">Afrocolombiano</SelectItem>
@@ -727,8 +820,9 @@ export default function BasicInformationStep({
               }
               minValue={1}
               maxValue={6}
-              errorMessage={validationErrors?.estrato}
+              errorMessage={validationErrors.estrato}
             />
+
             <Select
               id="zona"
               name="zona"
@@ -741,7 +835,7 @@ export default function BasicInformationStep({
                 const selectedKey = Array.from(keys)[0]?.toString() || "";
                 updateFormData({ zona: selectedKey });
               }}
-              errorMessage={validationErrors?.zona}
+              errorMessage={validationErrors.zona}
             >
               <SelectItem key="urbana">Urbana</SelectItem>
               <SelectItem key="rural">Rural</SelectItem>
@@ -759,6 +853,7 @@ export default function BasicInformationStep({
               }
               onChange={(e) => updateFormData({ departamento: e.target.value })}
               isRequired
+              errorMessage={validationErrors.departamento}
             >
               {departments.map((dept) => (
                 <SelectItem key={dept}>{dept}</SelectItem>
@@ -779,7 +874,7 @@ export default function BasicInformationStep({
                 updateFormData({ municipio: selectedKey });
               }}
               isDisabled={!formData.departamento}
-              errorMessage={validationErrors?.municipio}
+              errorMessage={validationErrors.municipio}
             >
               {municipalities.map((mun) => (
                 <SelectItem key={mun}>{mun}</SelectItem>
@@ -798,6 +893,7 @@ export default function BasicInformationStep({
               }
               onChange={(e) => updateFormData({ discapacidad: e.target.value })}
               isRequired
+              errorMessage={validationErrors.discapacidad}
             >
               <SelectItem key="SI">Sí</SelectItem>
               <SelectItem key="NO">No</SelectItem>
@@ -817,6 +913,7 @@ export default function BasicInformationStep({
                 updateFormData({ sabe_leer_escribir: e.target.value })
               }
               isRequired
+              errorMessage={validationErrors.sabe_leer_escribir}
             >
               <SelectItem key="SI">Sí</SelectItem>
               <SelectItem key="NO">No</SelectItem>
@@ -959,8 +1056,22 @@ export default function BasicInformationStep({
               </Popover>
             </div>
           </div>
-        </>
-      )}
-    </div>
+        </form>
+      </CardBody>
+      <Divider />
+      <CardFooter className="flex justify-between">
+        <Button variant="flat" color="danger" onPress={handleCancel}>
+          Cancelar
+        </Button>
+        <Button
+          color="primary"
+          onClick={handleSubmit}
+          isLoading={isSaving}
+          startContent={!isSaving && <CheckIcon size={16} />}
+        >
+          {isSaving ? "Guardando..." : "Guardar cambios"}
+        </Button>
+      </CardFooter>
+    </Card>
   );
 }

@@ -12,14 +12,23 @@ export interface Citizen {
   num_fijo: string;
   num_movil: string;
   dane_municipio: string;
+  sexo: string;
+  genero: string;
+  orient_sexual: string;
+  fecha_nacimiento: string;
+  nacionalidad: string;
+  estado_civil: string;
+  escolaridad: string;
+  etnia: string;
+  discapacidad: string;
+  sabe_leer_escribir: string;
+  estrato: string;
+  zona: string;
+  departamento: string;
+  municipio: string;
   fecha_crea: string;
   fecha_actualiza: string;
-  direccion?: {
-    barrio: string;
-    numero_casa: string;
-    calle: string;
-    carrera: string;
-  };
+  direccion: string;
   actions?: string;
   key?: string;
 }

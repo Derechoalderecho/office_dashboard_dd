@@ -59,8 +59,12 @@ export default function StepperForm() {
 
     // Case information
     notas: "",
-    tipo_proceso: "Tutela",
+    tipo_proceso: "",
     tiempo_respuesta: "48",
+    hechos: "",
+    pretensiones: "",
+    fundamentos: "",
+    entidad: "",
 
     // Administration information
     persona_modifica: "",
