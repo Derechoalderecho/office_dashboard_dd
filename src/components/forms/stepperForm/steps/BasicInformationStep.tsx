@@ -183,9 +183,22 @@ export default function BasicInformationStep({
   // Fetch locations data
   useEffect(() => {
     const loadLocations = async () => {
-      const data = await fetchLocations();
-      setLocations(data);
-      setDepartments(getUniqueDepartments(data));
+      try {
+        console.log("Fetching locations data...");
+        const data = await fetchLocations();
+        console.log(`Locations data fetched: ${data.length} items`);
+        setLocations(data);
+        
+        if (data.length > 0) {
+          const depts = getUniqueDepartments(data);
+          console.log(`Unique departments: ${depts.length}`, depts);
+          setDepartments(depts);
+        } else {
+          console.error("No location data available");
+        }
+      } catch (error) {
+        console.error("Error loading locations:", error);
+      }
     };
     loadLocations();
   }, []);
@@ -193,13 +206,20 @@ export default function BasicInformationStep({
   // Update municipalities when department changes
   useEffect(() => {
     if (formData.departamento) {
+      console.log(`Selected department: "${formData.departamento}"`);
+      console.log(`Available locations:`, locations.length);
+      
       const filteredMunicipalities = getMunicipalitiesByDepartment(
         locations,
         formData.departamento
       );
+      
+      console.log(`Filtered municipalities: ${filteredMunicipalities.length}`, filteredMunicipalities);
+      
       setMunicipalities(filteredMunicipalities);
       // Reset municipio if it's not in the new list
       if (!filteredMunicipalities.includes(formData.municipio)) {
+        console.log(`Current municipio "${formData.municipio}" not found in filtered list, resetting`);
         updateFormData({ municipio: "" });
       }
     } else {
