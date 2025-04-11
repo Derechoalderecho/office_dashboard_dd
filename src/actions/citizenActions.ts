@@ -49,7 +49,6 @@ export async function submitFormData(
     } else {
       // Step 1: Create a new citizen to get the citizen ID
       const citizenData = {
-        // Only include required fields with proper types
         primer_nombre: formData.get("primer_nombre") || "",
         segundo_nombre: formData.get("segundo_nombre") || "",
         primer_apellido: formData.get("primer_apellido") || "",
@@ -78,7 +77,6 @@ export async function submitFormData(
         municipio: formData.get("municipio") || "",
       };
 
-      // Log the exact data we're sending
       console.log(
         "Sending citizen data:",
         JSON.stringify(citizenData, null, 2)
@@ -106,7 +104,6 @@ export async function submitFormData(
         body: JSON.stringify(citizenData),
       });
 
-      // Get the full error details
       if (!citizenResponse.ok) {
         const errorText = await citizenResponse.text();
         console.error("Raw error response:", errorText);
@@ -137,7 +134,6 @@ export async function submitFormData(
           errorMessage = "Faltan campos requeridos en el formulario.";
         }
 
-        // Return detailed error information
         return {
           success: false,
           error: errorMessage,
@@ -166,14 +162,16 @@ export async function submitFormData(
       usuarios: [],
       ciudadano: null,
       id_caso: "0",
-      pretenciones: "Pendiente de revisión",
+      pretensiones: formData.get("pretensiones")?.toString() || "Pendiente de revisión",
       concepto_estudiante: "Pendiente de revisión",
-      hechos: "Pendiente de revisión",
+      hechos: formData.get("hechos")?.toString() || "Pendiente de revisión",
       rama_derecho: "Derecho Constitucional",
       tramite: "En proceso",
       antecedentes: "Pendiente de revisión",
       tutela: "Pendiente de revisión",
-      calificacion: "0.0"
+      calificacion: "0.0",
+      fundamentos: formData.get("fundamentos")?.toString() || "",
+      entidad: formData.get("entidad")?.toString() || ""
     };
 
     console.log("Sending case data:", JSON.stringify(caseData, null, 2));
@@ -258,7 +256,6 @@ export async function submitFormData(
 
     if (!allAssignmentsSuccessful) {
       console.warn("Some user assignments failed");
-      // Continue anyway as the case was created successfully
     }
 
     return {
