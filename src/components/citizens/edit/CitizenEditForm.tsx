@@ -340,54 +340,9 @@ export default function CitizenEditForm({ citizenId }: CitizenEditFormProps) {
     setIsAddressPopoverOpen(false);
   };
 
-  // Validar el formulario
-  const validateForm = () => {
-    const errors: { [key: string]: string } = {};
-
-    if (!formData.tipo_documento)
-      errors.tipo_documento = "El tipo de documento es requerido";
-    if (formData.tipo_documento !== "SD" && !formData.num_documento)
-      errors.num_documento = "El número de documento es requerido";
-    if (!formData.primer_nombre)
-      errors.primer_nombre = "El primer nombre es requerido";
-    if (!formData.primer_apellido)
-      errors.primer_apellido = "El primer apellido es requerido";
-    if (!formData.sexo) errors.sexo = "El sexo es requerido";
-    if (!formData.genero) errors.genero = "El género es requerido";
-    if (!formData.orient_sexual)
-      errors.orient_sexual = "La orientación sexual es requerida";
-    if (!formData.num_movil) errors.num_movil = "El número móvil es requerido";
-    if (!formData.nacionalidad)
-      errors.nacionalidad = "La nacionalidad es requerida";
-    if (!formData.estado_civil)
-      errors.estado_civil = "El estado civil es requerido";
-    if (!formData.escolaridad)
-      errors.escolaridad = "La escolaridad es requerida";
-    if (!formData.etnia) errors.etnia = "La etnia es requerida";
-    if (!formData.discapacidad)
-      errors.discapacidad = "Debe indicar si tiene discapacidad";
-    if (!formData.sabe_leer_escribir)
-      errors.sabe_leer_escribir = "Debe indicar si sabe leer y escribir";
-    if (!formData.departamento)
-      errors.departamento = "El departamento es requerido";
-    if (!formData.municipio) errors.municipio = "El municipio es requerido";
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  // Manejar envío del formulario
+  // Send form data to API
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      addToast({
-        title: "Error",
-        description: "Por favor complete todos los campos requeridos",
-        color: "danger",
-      });
-      return;
-    }
 
     // Ensure date is in the right format for API
     let formDataToSubmit = {...formData};
@@ -395,13 +350,22 @@ export default function CitizenEditForm({ citizenId }: CitizenEditFormProps) {
       formDataToSubmit.fecha_nacimiento = fechaNacimiento.toString();
     }
 
+    // Filtrar campos vacíos o no seleccionados para no enviarlos
+    const filteredFormData: Record<string, string> = {};
+    Object.entries(formDataToSubmit).forEach(([key, value]) => {
+      // Solo incluye campos con valores (no vacíos)
+      if (value !== undefined && value !== null && value !== "") {
+        filteredFormData[key] = value;
+      }
+    });
+
     setIsSaving(true);
     try {
-      const updatedCitizen = await updateCitizen(Number(citizenId), formDataToSubmit);
+      const updatedCitizen = await updateCitizen(Number(citizenId), filteredFormData);
 
       if (updatedCitizen) {
         addToast({
-          title: "Ciudadano actualizado	",
+          title: "Ciudadano actualizado",
           description: "Ciudadano actualizado exitosamente",
           color: "success",
         });
@@ -425,7 +389,6 @@ export default function CitizenEditForm({ citizenId }: CitizenEditFormProps) {
     }
   };
 
-  // Volver a la lista de ciudadanos
   const handleCancel = () => {
     router.push("/dashboard/citizens");
   };
