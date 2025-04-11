@@ -1,9 +1,10 @@
 "use client";
 
 import { Tooltip, Button } from "@heroui/react";
-import { EyeIcon } from "@heroicons/react/24/outline";
+import { EyeIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
 import { CitizenWithKey } from "@/types/citizens";
 import { parseDateToLocal } from "@/utils/date";
+import { useRouter } from "next/navigation";
 
 interface TableCellRendererProps {
   user: CitizenWithKey;
@@ -16,7 +17,12 @@ export const TableCellRendererCitizens = ({
   columnKey,
   onPreviewCitizen,
 }: TableCellRendererProps) => {
+  const router = useRouter();
   const cellValue = user[columnKey];
+
+  const handleEditCitizen = (citizen: CitizenWithKey) => {
+    router.push(`/dashboard/citizens/edit/${citizen.id_ciudadano}`);
+  };
 
   switch (columnKey) {
     case "fecha_crea":
@@ -55,6 +61,15 @@ export const TableCellRendererCitizens = ({
               onPress={() => onPreviewCitizen?.(user)}
             >
               <EyeIcon className="w-6" />
+            </Button>
+          </Tooltip>
+          <Tooltip content="Editar">
+            <Button
+              isIconOnly
+              className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
+              onPress={() => handleEditCitizen(user)}
+            >
+              <PencilSquareIcon className="w-6" />
             </Button>
           </Tooltip>
         </div>
