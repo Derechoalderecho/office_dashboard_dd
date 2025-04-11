@@ -1,23 +1,23 @@
-import axios from 'axios';
+"use server";
+
+import { get } from '@/utils/apiUtils';
+import { Divipola } from '@/types/divipola';
 
 export interface Location {
   region: string;
-  c_digo_dane_del_departamento: string;
   departamento: string;
-  c_digo_dane_del_municipio: string;
   municipio: string;
 }
 
 export const fetchLocations = async (): Promise<Location[]> => {
   try {
-    const { data } = await axios.get<Location[]>('https://www.datos.gov.co/resource/xdk5-pm3f.json', {
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-    });
+    const data = await get<Divipola[]>('/divipola/');
     
-    return data;
+    return data.map(item => ({
+      region: '',
+      departamento: item.nombre_departamento,
+      municipio: item.nombre_municipio
+    }));
   } catch (error) {
     console.error('Error fetching locations:', error);
     return [];
