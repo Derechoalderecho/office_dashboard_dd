@@ -14,7 +14,7 @@ import {
   PopoverTrigger,
   PopoverContent,
   NumberInput,
-  Checkbox
+  Checkbox,
 } from "@heroui/react";
 import { useState, useEffect, Key } from "react";
 import { fetchAllCitizens } from "@/services/citizenService";
@@ -124,7 +124,7 @@ export default function BasicInformationStep({
   const [departments, setDepartments] = useState<string[]>([]);
   const [municipalities, setMunicipalities] = useState<string[]>([]);
 
-  // Nuevos estados para los componentes de dirección
+  // States for address components
   const [tipoVia, setTipoVia] = useState<string>("");
   const [numeroVia, setNumeroVia] = useState<string>("");
   const [letraVia, setLetraVia] = useState<string>("");
@@ -164,7 +164,7 @@ export default function BasicInformationStep({
     const value = e.target.value;
     updateFormData({
       tipo_documento: value,
-      // Si es "Sin documento", limpiamos el número de documento
+      // If it's "Sin documento", clear the document number
       num_documento: value === "SD" ? "" : formData.num_documento,
     });
   };
@@ -242,7 +242,8 @@ export default function BasicInformationStep({
         num_fijo: citizen.num_fijo || "",
         citizen_id: selectedId,
         is_existing_citizen: "true",
-        direccion: typeof citizen.direccion === 'string' ? citizen.direccion : "",
+        direccion:
+          typeof citizen.direccion === "string" ? citizen.direccion : "",
       });
       setShowNewCitizenForm(false);
     }
@@ -256,58 +257,56 @@ export default function BasicInformationStep({
     setShowNewCitizenForm(false);
   };
 
-  // Construir la dirección completa como string
   const construirDireccion = () => {
     const partes = [];
-    
-    // Solo añadir componentes que tengan valor
+
     if (tipoVia) {
       let parte = tipoVia;
-      
+
       if (numeroVia) {
         parte += " " + numeroVia;
       }
-      
+
       if (letraVia) {
         parte += letraVia;
       }
-      
+
       if (isBis) {
         parte += " BIS";
-        
+
         if (letraBis) {
           parte += " " + letraBis;
         }
       }
-      
+
       if (orientacion) {
         parte += " " + orientacion;
       }
-      
+
       partes.push(parte);
     }
-    
+
     // Añadir el cruce si existe
     if (numeroCruce) {
       let cruce = "# " + numeroCruce;
-      
+
       if (letraCruce) {
         cruce += letraCruce;
       }
-      
+
       partes.push(cruce);
     }
-    
+
     // Añadir el número de placa si existe
     if (numeroPlaca) {
       partes.push("- " + numeroPlaca);
     }
-    
+
     // Añadir el complemento si existe
     if (complemento) {
       partes.push(complemento);
     }
-    
+
     // Unir todas las partes con espacios, excepto el complemento que va con coma
     let direccionCompleta = "";
     if (partes.length > 0) {
@@ -319,11 +318,11 @@ export default function BasicInformationStep({
         direccionCompleta = partes.join(" ");
       }
     }
-    
+
     return direccionCompleta.trim();
   };
 
-  // Guardar dirección
+  // Save address
   const guardarDireccion = () => {
     const direccionCompleta = construirDireccion();
     updateFormData({ direccion: direccionCompleta });
@@ -557,7 +556,9 @@ export default function BasicInformationStep({
               label="Número móvil"
               labelPlacement="outside"
               placeholder="Ingrese su número móvil"
-              value={Number(formData.num_movil)}
+              value={
+                formData.num_movil ? Number(formData.num_movil) : undefined
+              }
               onValueChange={(value) =>
                 updateFormData({ num_movil: value.toString() })
               }
@@ -571,7 +572,7 @@ export default function BasicInformationStep({
               label="Número fijo"
               labelPlacement="outside"
               hideStepper
-              value={Number(formData.num_fijo)}
+              value={formData.num_fijo ? Number(formData.num_fijo) : undefined}
               onValueChange={(value) =>
                 updateFormData({ num_fijo: value.toString() })
               }
@@ -718,8 +719,9 @@ export default function BasicInformationStep({
               label="Estrato"
               variant="bordered"
               labelPlacement="outside"
+              placeholder="Ingrese su estrato"
               hideStepper
-              value={Number(formData.estrato) || 0}
+              value={formData.estrato ? Number(formData.estrato) : undefined}
               onValueChange={(value) =>
                 updateFormData({ estrato: value.toString() })
               }
@@ -820,7 +822,10 @@ export default function BasicInformationStep({
               <SelectItem key="NO">No</SelectItem>
             </Select>
 
-            <div className="flex flex-col justify-end">
+            <div className="flex flex-col gap-1 justify-end">
+              <p className="text-sm text-gray-500">
+                {formData.direccion ? formData.direccion : "No especificada"}
+              </p>
               <Popover
                 isOpen={isAddressPopoverOpen}
                 onOpenChange={setIsAddressPopoverOpen}
@@ -844,8 +849,12 @@ export default function BasicInformationStep({
                         <SelectItem key="Anillo Vial">Anillo Vial</SelectItem>
                         <SelectItem key="Autopista">Autopista</SelectItem>
                         <SelectItem key="Avenida">Avenida</SelectItem>
-                        <SelectItem key="Avenida calle">Avenida calle</SelectItem>
-                        <SelectItem key="Avenida carrera">Avenida carrera</SelectItem>
+                        <SelectItem key="Avenida calle">
+                          Avenida calle
+                        </SelectItem>
+                        <SelectItem key="Avenida carrera">
+                          Avenida carrera
+                        </SelectItem>
                         <SelectItem key="Calle">Calle</SelectItem>
                         <SelectItem key="Callejón">Callejón</SelectItem>
                         <SelectItem key="Carrera">Carrera</SelectItem>
@@ -853,44 +862,43 @@ export default function BasicInformationStep({
                         <SelectItem key="Diagonal">Diagonal</SelectItem>
                         <SelectItem key="Transversal">Transversal</SelectItem>
                       </Select>
-                      
+
                       <NumberInput
                         label="Número"
                         placeholder="Número"
                         hideStepper
-                        value={Number(numeroVia)}
-                        onValueChange={(value) => setNumeroVia(value.toString())}
+                        value={numeroVia ? Number(numeroVia) : undefined}
+                        onValueChange={(value) =>
+                          setNumeroVia(value.toString())
+                        }
                       />
-                      
+
                       <Select
                         value={letraVia}
                         onChange={(e) => setLetraVia(e.target.value)}
                       >
-                        {Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i)).map(
-                          (letra) => (
-                            <SelectItem key={letra}>{letra}</SelectItem>
-                          )
-                        )}
+                        {Array.from({ length: 26 }, (_, i) =>
+                          String.fromCharCode(65 + i)
+                        ).map((letra) => (
+                          <SelectItem key={letra}>{letra}</SelectItem>
+                        ))}
                       </Select>
-                      
-                        <Checkbox
-                          isSelected={isBis}
-                          onValueChange={setIsBis}
-                        >
-                          BIS
-                        </Checkbox>
-                        
-                        <Select
-                          value={letraBis}
-                          onChange={(e) => setLetraBis(e.target.value)}
-                        >
-                          {Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i)).map(
-                            (letra) => (
-                              <SelectItem key={letra}>{letra}</SelectItem>
-                            )
-                          )}
-                        </Select>
-                      
+
+                      <Checkbox isSelected={isBis} onValueChange={setIsBis}>
+                        BIS
+                      </Checkbox>
+
+                      <Select
+                        value={letraBis}
+                        onChange={(e) => setLetraBis(e.target.value)}
+                      >
+                        {Array.from({ length: 26 }, (_, i) =>
+                          String.fromCharCode(65 + i)
+                        ).map((letra) => (
+                          <SelectItem key={letra}>{letra}</SelectItem>
+                        ))}
+                      </Select>
+
                       <Select
                         value={orientacion}
                         onChange={(e) => setOrientacion(e.target.value)}
@@ -900,32 +908,36 @@ export default function BasicInformationStep({
                         <SelectItem key="Oeste">Oeste</SelectItem>
                         <SelectItem key="Sur">Sur</SelectItem>
                       </Select>
-                      
+
                       <NumberInput
                         label="Número"
                         placeholder="Número"
                         hideStepper
-                        value={Number(numeroCruce)}
-                        onValueChange={(value) => setNumeroCruce(value.toString())}
+                        value={numeroCruce ? Number(numeroCruce) : undefined}
+                        onValueChange={(value) =>
+                          setNumeroCruce(value.toString())
+                        }
                       />
-                      
+
                       <Select
                         value={letraCruce}
                         onChange={(e) => setLetraCruce(e.target.value)}
                       >
-                        {Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i)).map(
-                          (letra) => (
-                            <SelectItem key={letra}>{letra}</SelectItem>
-                          )
-                        )}
+                        {Array.from({ length: 26 }, (_, i) =>
+                          String.fromCharCode(65 + i)
+                        ).map((letra) => (
+                          <SelectItem key={letra}>{letra}</SelectItem>
+                        ))}
                       </Select>
-                      
+
                       <NumberInput
                         hideStepper
-                        value={Number(numeroPlaca)}
-                        onValueChange={(value) => setNumeroPlaca(value.toString())}
+                        value={numeroPlaca ? Number(numeroPlaca) : undefined}
+                        onValueChange={(value) =>
+                          setNumeroPlaca(value.toString())
+                        }
                       />
-                      
+
                       <Input
                         label="Complemento"
                         placeholder="Complemento dirección (edificio, apartamento, etc.)"
@@ -945,9 +957,6 @@ export default function BasicInformationStep({
                   </div>
                 </PopoverContent>
               </Popover>
-              <p className="text-sm mt-2 text-gray-500">
-                {formData.direccion ? formData.direccion : "No especificada"}
-              </p>
             </div>
           </div>
         </>
