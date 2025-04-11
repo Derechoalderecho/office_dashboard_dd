@@ -1,5 +1,3 @@
-"use server";
-
 import { get } from '@/utils/apiUtils';
 import { Divipola } from '@/types/divipola';
 
