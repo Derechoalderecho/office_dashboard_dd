@@ -2,6 +2,8 @@ import {
   UserPlusIcon,
   ChartBarSquareIcon,
   DocumentTextIcon,
+  ArrowTrendingDownIcon,
+  ArrowTrendingUpIcon,
 } from "@heroicons/react/24/solid";
 import { fetchAllUsers } from "@/services/userService";
 import { fetchAllCasesDashboard } from "@/services/caseService";
@@ -79,8 +81,10 @@ export function CardCounts({
             {Icon ? <Icon className="h-8 w-8 text-white" /> : null}
           </div>
         </article>
-        <div>
-          
+        <div className="flex items-center gap-2">
+          <ArrowTrendingUpIcon className="h-4 w-4 text-green-500" />
+          <p className="text-[#425166] text-base">10%</p>
+          <p className="text-[#425166] text-base">más que la semana pasada</p>
         </div>
       </CardContent>
     </Card>
