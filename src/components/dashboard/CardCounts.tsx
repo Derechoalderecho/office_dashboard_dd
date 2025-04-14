@@ -6,6 +6,7 @@ import {
 import { fetchAllUsers } from "@/services/userService";
 import { fetchAllCasesDashboard } from "@/services/caseService";
 import { fetchAllCitizens } from "@/services/citizenService";
+import { Card, CardContent } from "@/components/ui/card";
 
 const iconMap = {
   students: UserPlusIcon,
@@ -67,16 +68,21 @@ export function CardCounts({
   const Icon = iconMap[type];
 
   return (
-    <article
-      className={`relative w-full flex flex-col items-center justify-center py-16 rounded-xl ${backgroundColorMap[type]}`}
-    >
-      <div
-        className={`${colorIconMap[type]} absolute right-5 top-5 rounded-full p-2`}
-      >
-        {Icon ? <Icon className="h-6 w-6 text-white" /> : null}
-      </div>
-      <h3 className="text-[#151D48] text-5xl font-semibold">{value}</h3>
-      <p className="text-[#425166] text-base font-medium mt-2">{description}</p>
-    </article>
+    <Card>
+      <CardContent className="flex flex-col gap-4 px-2 pt-4 sm:px-6 sm:pt-6">
+        <article className="flex items-center justify-between">
+          <div className="flex flex-col gap-2">
+            <p className="text-[#425166] text-base">{description}</p>
+            <h3 className="text-[#202224] text-4xl font-semibold">{value}</h3>
+          </div>
+          <div className={`${colorIconMap[type]} rounded-xl p-4`}>
+            {Icon ? <Icon className="h-8 w-8 text-white" /> : null}
+          </div>
+        </article>
+        <div>
+          
+        </div>
+      </CardContent>
+    </Card>
   );
 }
