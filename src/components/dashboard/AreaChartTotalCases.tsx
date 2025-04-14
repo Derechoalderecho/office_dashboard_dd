@@ -56,21 +56,31 @@ export default function AreaChartTotalCases() {
     Array<{ date: string; viable: number; noAprobado: number; fullDate?: string }>
   >([]);
   const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     async function loadData() {
       setLoading(true);
+      setError(null);
       try {
+        console.log("Fetching chart data...");
         // Fetch data for both tabs simultaneously
         const [allCasesResult, statusCasesResult] = await Promise.all([
           fetchCasesForAreaChart(),
           fetchCasesByStatusForAreaChart()
         ]);
         
+        console.log(`Fetched ${allCasesResult.length} total cases and ${statusCasesResult.length} status cases`);
+        
+        if (allCasesResult.length === 0) {
+          console.warn("No data returned for all cases chart");
+        }
+        
         setAllCasesData(allCasesResult);
         setStatusCasesData(statusCasesResult);
       } catch (error) {
         console.error("Error loading chart data:", error);
+        setError("Error al cargar los datos del gráfico");
       } finally {
         setLoading(false);
       }
@@ -79,68 +89,60 @@ export default function AreaChartTotalCases() {
     loadData();
   }, []);
 
+  // Filtrado para todos los casos
   const filteredAllCasesData = React.useMemo(() => {
-    if (allCasesData.length === 0) return [];
-
-    // Ordenar para encontrar la fecha más reciente como referencia
-    const sortedData = [...allCasesData].sort((a, b) => {
-      const dateA = new Date(a.fullDate || a.date);
-      const dateB = new Date(b.fullDate || b.date);
-      return dateB.getTime() - dateA.getTime();
-    });
-
-    // Usar la fecha más reciente como referencia (o la fecha actual si no hay datos)
-    const referenceDate =
-      sortedData.length > 0
-        ? new Date(sortedData[0].fullDate || sortedData[0].date)
-        : new Date();
-
+    // Si no hay datos, retornamos array vacío
+    if (!allCasesData || allCasesData.length === 0) return [];
+    
+    // Usamos la fecha actual como referencia
+    const referenceDate = new Date();
+    
     return allCasesData.filter((item) => {
+      // Convertir la fecha del item a objeto Date
       const date = new Date(item.fullDate || item.date);
+      
+      // Determinar cuántos días restar basado en el rango seleccionado
       let daysToSubtract = 90;
-
       if (timeRange === "30d") {
         daysToSubtract = 30;
       } else if (timeRange === "7d") {
         daysToSubtract = 7;
       }
-
+      
+      // Calcular la fecha de inicio del filtro
       const startDate = new Date(referenceDate);
       startDate.setDate(startDate.getDate() - daysToSubtract);
-
+      
+      // Incluir el item si su fecha es mayor o igual a la fecha de inicio
       return date >= startDate;
     });
   }, [allCasesData, timeRange]);
 
+  // Filtrado para casos por estado
   const filteredStatusCasesData = React.useMemo(() => {
-    if (statusCasesData.length === 0) return [];
-
-    // Ordenar para encontrar la fecha más reciente como referencia
-    const sortedData = [...statusCasesData].sort((a, b) => {
-      const dateA = new Date(a.fullDate || a.date);
-      const dateB = new Date(b.fullDate || b.date);
-      return dateB.getTime() - dateA.getTime();
-    });
-
-    // Usar la fecha más reciente como referencia (o la fecha actual si no hay datos)
-    const referenceDate =
-      sortedData.length > 0
-        ? new Date(sortedData[0].fullDate || sortedData[0].date)
-        : new Date();
-
+    // Si no hay datos, retornamos array vacío
+    if (!statusCasesData || statusCasesData.length === 0) return [];
+    
+    // Usamos la fecha actual como referencia
+    const referenceDate = new Date();
+    
     return statusCasesData.filter((item) => {
+      // Convertir la fecha del item a objeto Date
       const date = new Date(item.fullDate || item.date);
+      
+      // Determinar cuántos días restar basado en el rango seleccionado
       let daysToSubtract = 90;
-
       if (timeRange === "30d") {
         daysToSubtract = 30;
       } else if (timeRange === "7d") {
         daysToSubtract = 7;
       }
-
+      
+      // Calcular la fecha de inicio del filtro
       const startDate = new Date(referenceDate);
       startDate.setDate(startDate.getDate() - daysToSubtract);
-
+      
+      // Incluir el item si su fecha es mayor o igual a la fecha de inicio
       return date >= startDate;
     });
   }, [statusCasesData, timeRange]);
@@ -190,6 +192,10 @@ export default function AreaChartTotalCases() {
         {loading ? (
           <div className="flex h-[250px] items-center justify-center">
             Cargando datos...
+          </div>
+        ) : error ? (
+          <div className="flex h-[250px] items-center justify-center text-red-500">
+            {error}
           </div>
         ) : activeTab === "casos" ? (
           // Gráfica para todos los casos

@@ -29,36 +29,56 @@ export async function fetchCasesForAreaChart(): Promise<ChartDataPoint[]> {
     const cases = await get<Cases[]>('casos');
     
     if (!cases || cases.length === 0) {
+      logger.warn("No cases found for area chart");
       return [];
     }
     
+    logger.info(`Fetched ${cases.length} cases for area chart`);
+    
     // Group cases by day
     const groupedByDay = cases.reduce((acc, caseItem) => {
-      // Parse the creation date
-      const date = new Date(caseItem.fecha_crea);
-      
-      // Format as YYYY-MM-DD for grouping (one data point per day)
-      const dayKey = date.toISOString().split('T')[0];
-      
-      // If this day doesn't exist in our accumulator yet, initialize it
-      if (!acc[dayKey]) {
-        acc[dayKey] = {
-          date: dayKey,
-          fullDate: date.toISOString(),
-          count: 0
-        };
+      // Skip invalid dates or missing fecha_crea
+      if (!caseItem.fecha_crea) {
+        return acc;
       }
       
-      // Increment the count for this day
-      acc[dayKey].count += 1;
-      
-      return acc;
+      try {
+        // Parse the creation date
+        const date = new Date(caseItem.fecha_crea);
+        
+        // Validate date is valid
+        if (isNaN(date.getTime())) {
+          return acc;
+        }
+        
+        // Format as YYYY-MM-DD for grouping (one data point per day)
+        const dayKey = date.toISOString().split('T')[0];
+        
+        // If this day doesn't exist in our accumulator yet, initialize it
+        if (!acc[dayKey]) {
+          acc[dayKey] = {
+            date: dayKey,
+            fullDate: date.toISOString(),
+            count: 0
+          };
+        }
+        
+        // Increment the count for this day
+        acc[dayKey].count += 1;
+        
+        return acc;
+      } catch (err) {
+        logger.error(`Error processing case ${caseItem.id_caso}:`, err);
+        return acc;
+      }
     }, {} as Record<string, ChartDataPoint>);
     
     // Convert the grouped data to an array and sort by date
     const chartData = Object.values(groupedByDay).sort((a, b) => 
       new Date(a.fullDate || a.date).getTime() - new Date(b.fullDate || b.date).getTime()
     );
+    
+    logger.info(`Processed ${chartData.length} data points for area chart`);
     
     // Format dates for display
     return chartData.map(point => {
@@ -94,41 +114,61 @@ export async function fetchCasesByStatusForAreaChart(): Promise<ChartDataPointBy
     const cases = await get<Cases[]>('casos');
     
     if (!cases || cases.length === 0) {
+      logger.warn("No cases found for area chart by status");
       return [];
     }
     
+    logger.info(`Fetched ${cases.length} cases for area chart by status`);
+    
     // Group cases by day and status
     const groupedByDayAndStatus = cases.reduce((acc, caseItem) => {
-      // Parse the creation date
-      const date = new Date(caseItem.fecha_crea);
-      
-      // Format as YYYY-MM-DD for grouping (one data point per day)
-      const dayKey = date.toISOString().split('T')[0];
-      
-      // If this day doesn't exist in our accumulator yet, initialize it
-      if (!acc[dayKey]) {
-        acc[dayKey] = {
-          date: dayKey,
-          fullDate: date.toISOString(),
-          viable: 0,
-          noAprobado: 0
-        };
+      // Skip invalid dates or missing fecha_crea
+      if (!caseItem.fecha_crea) {
+        return acc;
       }
       
-      // Increment the count for this day based on status
-      if (caseItem.estado === "Viabilidad") {
-        acc[dayKey].viable += 1;
-      } else if (caseItem.estado === "No aprobado") {
-        acc[dayKey].noAprobado += 1;
+      try {
+        // Parse the creation date
+        const date = new Date(caseItem.fecha_crea);
+        
+        // Validate date is valid
+        if (isNaN(date.getTime())) {
+          return acc;
+        }
+        
+        // Format as YYYY-MM-DD for grouping (one data point per day)
+        const dayKey = date.toISOString().split('T')[0];
+        
+        // If this day doesn't exist in our accumulator yet, initialize it
+        if (!acc[dayKey]) {
+          acc[dayKey] = {
+            date: dayKey,
+            fullDate: date.toISOString(),
+            viable: 0,
+            noAprobado: 0
+          };
+        }
+        
+        // Increment the count for this day based on status
+        if (caseItem.estado === "Viabilidad") {
+          acc[dayKey].viable += 1;
+        } else if (caseItem.estado === "No aprobado") {
+          acc[dayKey].noAprobado += 1;
+        }
+        
+        return acc;
+      } catch (err) {
+        logger.error(`Error processing case ${caseItem.id_caso} by status:`, err);
+        return acc;
       }
-      
-      return acc;
     }, {} as Record<string, ChartDataPointByStatus>);
     
     // Convert the grouped data to an array and sort by date
     const chartData = Object.values(groupedByDayAndStatus).sort((a, b) => 
       new Date(a.fullDate || a.date).getTime() - new Date(b.fullDate || b.date).getTime()
     );
+    
+    logger.info(`Processed ${chartData.length} data points for area chart by status`);
     
     // Format dates for display
     return chartData.map(point => {
