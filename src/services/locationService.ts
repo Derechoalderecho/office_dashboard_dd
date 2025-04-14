@@ -5,11 +5,16 @@ import {
 } from '@/utils/cacheUtils';
 import { Divipola } from '@/types/divipola';
 import { logger } from '@/utils/logUtils';
+import locationData from '@/data/locations.json';
 
 export interface Location {
-  region: string;
-  departamento: string;
-  municipio: string;
+  dane_departamento: string;
+  nombre_departamento: string;
+  dane_municipio: string;
+  nombre_municipio: string;
+  tipo: string;
+  longitud: number;
+  latitud: number;
 }
 
 const LOCATION_CACHE = 'locations';
@@ -18,34 +23,8 @@ const LOCATION_TTL = 30 * 60 * 1000;
 
 export const fetchLocations = async (): Promise<Location[]> => {
   try {
-    return await getCollectionWithCache<Location>(
-      LOCATION_CACHE,
-      async () => {
-        logger.debug('Obteniendo todas las ubicaciones');
-        const data = await get<Divipola[]>('divipola');
-        
-        if (!data || !Array.isArray(data)) {
-          logger.error('La API de divipola no retornó un array válido', data);
-          return [];
-        }
-        
-        logger.debug(`Recibidos ${data.length} registros de divipola`);
-        
-        const locations = data
-          .filter(item => item && item.nombre_departamento && item.nombre_municipio)
-          .map(item => ({
-            region: '',
-            departamento: item.nombre_departamento.trim(),
-            municipio: item.nombre_municipio.trim()
-          }));
-        
-        logger.debug(`Procesados ${locations.length} registros válidos de ubicaciones`);
-        
-        return locations;
-      },
-      location => `${location.departamento.toLowerCase()}-${location.municipio.toLowerCase()}`,
-      LOCATION_TTL
-    );
+    // Usar directamente los datos del archivo JSON
+    return locationData as Location[];
   } catch (error) {
     logger.error("Error al obtener ubicaciones:", error);
     return [];
@@ -53,7 +32,7 @@ export const fetchLocations = async (): Promise<Location[]> => {
 };
 
 export const getUniqueDepartments = (locations: Location[]): string[] => {
-  return [...new Set(locations.map(loc => loc.departamento))].sort();
+  return [...new Set(locations.map(loc => loc.nombre_departamento))].sort();
 };
 
 export const getMunicipalitiesByDepartment = (locations: Location[], department: string): string[] => {
@@ -66,8 +45,8 @@ export const getMunicipalitiesByDepartment = (locations: Location[], department:
   logger.debug(`Buscando municipios para departamento: "${trimmedDepartment}"`);
   
   const municipios = locations
-    .filter(loc => loc.departamento && loc.departamento.trim().toLowerCase() === trimmedDepartment.toLowerCase())
-    .map(loc => loc.municipio)
+    .filter(loc => loc.nombre_departamento && loc.nombre_departamento.trim().toLowerCase() === trimmedDepartment.toLowerCase())
+    .map(loc => loc.nombre_municipio)
     .filter(Boolean)
     .sort();
   
