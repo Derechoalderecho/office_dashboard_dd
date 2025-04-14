@@ -1,7 +1,6 @@
-// Sistema centralizado de caché para servicios
-// Permite reutilizar datos entre diferentes solicitudes y reducir llamadas a la API
+// Centralized cache system for services
+// Allows reusing data between different requests and reducing API calls
 
-// Tipo genérico para las caches
 export type CacheData<T> = {
   data: Map<string | number, T>;
   lastUpdated: number;
@@ -9,18 +8,16 @@ export type CacheData<T> = {
   bulkLastUpdated?: number;
 };
 
-// Cache global que puede ser compartida entre servicios
 const globalCache: Map<string, CacheData<any>> = new Map();
 
-// TTL por defecto: 5 minutos en milisegundos
 const DEFAULT_TTL = 5 * 60 * 1000;
 
 /**
- * Obtiene un valor de la caché por clave
- * @param cacheName Nombre de la caché (ej: 'users', 'cases')
- * @param key Clave del elemento
- * @param ttl Tiempo de vida en ms (por defecto 5 minutos)
- * @returns El valor almacenado o undefined si no existe o expiró
+ * Get a value from the cache by key
+ * @param cacheName
+ * @param key
+ * @param ttl
+ * @returns
  */
 export function getCachedItem<T>(
   cacheName: string,
@@ -31,7 +28,6 @@ export function getCachedItem<T>(
   
   if (!cache) return undefined;
   
-  // Verificar si la caché completa ha expirado
   if (Date.now() - cache.lastUpdated > ttl) {
     return undefined;
   }
@@ -40,10 +36,10 @@ export function getCachedItem<T>(
 }
 
 /**
- * Almacena un valor en la caché
- * @param cacheName Nombre de la caché
- * @param key Clave del elemento
- * @param value Valor a almacenar
+ * Store a value in the cache
+ * @param cacheName
+ * @param key
+ * @param value
  */
 export function setCachedItem<T>(
   cacheName: string,
@@ -63,10 +59,10 @@ export function setCachedItem<T>(
 }
 
 /**
- * Obtiene toda la colección de datos de una caché
- * @param cacheName Nombre de la caché
- * @param ttl Tiempo de vida en ms
- * @returns Array con todos los valores o undefined si expiró
+ * Get the entire collection of data from a cache
+ * @param cacheName
+ * @param ttl
+ * @returns
  */
 export function getCachedCollection<T>(
   cacheName: string,
@@ -76,7 +72,6 @@ export function getCachedCollection<T>(
   
   if (!cache || !cache.bulkData) return undefined;
   
-  // Verificar si la caché de colección ha expirado
   if (!cache.bulkLastUpdated || Date.now() - cache.bulkLastUpdated > ttl) {
     return undefined;
   }
@@ -85,10 +80,10 @@ export function getCachedCollection<T>(
 }
 
 /**
- * Almacena una colección completa en la caché
- * @param cacheName Nombre de la caché
- * @param items Array de elementos
- * @param keyExtractor Función para extraer la clave de cada elemento
+ * Store a complete collection in the cache
+ * @param cacheName
+ * @param items
+ * @param keyExtractor
  */
 export function setCachedCollection<T>(
   cacheName: string,
@@ -105,11 +100,9 @@ export function setCachedCollection<T>(
   } else {
     const cache = globalCache.get(cacheName)!;
     
-    // Actualizar la colección
     cache.bulkData = items;
     cache.bulkLastUpdated = Date.now();
     
-    // También actualizar el mapa de elementos individuales
     items.forEach(item => {
       const key = keyExtractor(item);
       cache.data.set(key, item);
@@ -118,9 +111,9 @@ export function setCachedCollection<T>(
 }
 
 /**
- * Invalida un elemento específico de una caché
- * @param cacheName Nombre de la caché
- * @param key Clave del elemento a invalidar
+ * Invalidate a specific element of a cache
+ * @param cacheName
+ * @param key
  */
 export function invalidateCacheItem(
   cacheName: string,
@@ -137,8 +130,8 @@ export function invalidateCacheItem(
 }
 
 /**
- * Invalida completamente una caché
- * @param cacheName Nombre de la caché a invalidar
+ * Invalidate a cache completely
+ * @param cacheName
  */
 export function invalidateCache(cacheName: string): void {
   if (globalCache.has(cacheName)) {
@@ -148,18 +141,18 @@ export function invalidateCache(cacheName: string): void {
 }
 
 /**
- * Invalida todas las cachés
+ * Invalidate all caches
  */
 export function invalidateAllCaches(): void {
   globalCache.clear();
 }
 
 /**
- * Función helper para implementar patrón de caché en servicios
- * @param cacheName Nombre de la caché
- * @param key Clave del elemento
- * @param fetchFn Función para obtener los datos si no están en caché
- * @param ttl Tiempo de vida (opcional)
+ * Helper function to implement cache pattern in services
+ * @param cacheName
+ * @param key
+ * @param fetchFn
+ * @param ttl
  */
 export async function getWithCache<T>(
   cacheName: string,
@@ -167,25 +160,23 @@ export async function getWithCache<T>(
   fetchFn: () => Promise<T>,
   ttl?: number
 ): Promise<T> {
-  // Intentar obtener de caché
   const cachedItem = getCachedItem<T>(cacheName, key, ttl);
   
   if (cachedItem !== undefined) {
     return cachedItem;
   }
   
-  // Si no está en caché, obtener y guardar
   const item = await fetchFn();
   setCachedItem(cacheName, key, item);
   return item;
 }
 
 /**
- * Función helper para implementar patrón de caché en colecciones
- * @param cacheName Nombre de la caché
- * @param fetchFn Función para obtener los datos si no están en caché
- * @param keyExtractor Función para extraer la clave de cada elemento
- * @param ttl Tiempo de vida (opcional)
+ * Helper function to implement cache pattern in collections
+ * @param cacheName
+ * @param fetchFn
+ * @param keyExtractor
+ * @param ttl
  */
 export async function getCollectionWithCache<T>(
   cacheName: string,
@@ -193,14 +184,12 @@ export async function getCollectionWithCache<T>(
   keyExtractor: (item: T) => string | number,
   ttl?: number
 ): Promise<T[]> {
-  // Intentar obtener de caché
   const cachedCollection = getCachedCollection<T>(cacheName, ttl);
   
   if (cachedCollection !== undefined) {
     return cachedCollection;
   }
   
-  // Si no está en caché, obtener y guardar
   const items = await fetchFn();
   setCachedCollection(cacheName, items, keyExtractor);
   return items;

@@ -1,16 +1,16 @@
 import { UserRole } from '@/store/slices/authSlice';
 
 /**
- * Transforma el texto del estado según el rol del usuario
- * @param estado Estado original del caso
- * @param role Rol del usuario
- * @returns Estado transformado según el rol
+ * Transforms the state text according to the user's role
+ * @param estado
+ * @param role
+ * @returns
  */
 export function transformStateByRole(estado: string, role: UserRole): string {
-  // Si no hay rol, devolvemos el estado original
+  // If there is no role, return the original state
   if (!role) return estado;
 
-  // Transformaciones específicas según el estado y rol
+  // Specific transformations according to the state and role
   switch (estado) {
     case "Viabilidad":
       if (role === "Estudiante") return "Revisión de viabilidad";
@@ -28,13 +28,13 @@ export function transformStateByRole(estado: string, role: UserRole): string {
       break;
       
     case "Radicar":
-      // Para estudiantes mostrar un texto más descriptivo
+      // For students, show a more descriptive text
       if (role === "Estudiante") return "Pendiente de radicación";
-      // Docentes y monitores ven el nombre técnico
+      // Docentes and monitors see the technical name
       return "Radicar";
       
     case "Espera del juez":
-      // Todos los roles ven el mismo estado
+      // All roles see the same state
       return "Espera del juez";
       
     case "Valoración del asesor":
@@ -43,11 +43,11 @@ export function transformStateByRole(estado: string, role: UserRole): string {
       break;
 
     case "No aprobado":
-      // Todos los roles ven el mismo estado
+      // All roles see the same state
       return "No aprobado";
       break;
   }
 
-  // Si no hay transformación específica, devolvemos el estado original
+  // If there is no specific transformation, return the original state
   return estado;
 } 

@@ -2,32 +2,30 @@
 
 import { Citizen } from "@/types/citizens";
 import { get, post, put, del } from "@/utils/apiUtils";
-import { 
-  getWithCache, 
+import {
+  getWithCache,
   getCollectionWithCache,
   invalidateCacheItem,
-  invalidateCache
+  invalidateCache,
 } from "@/utils/cacheUtils";
 import { logger } from "@/utils/logUtils";
 
-// Nombre de la caché para ciudadanos
-const CITIZEN_CACHE = 'citizens';
+const CITIZEN_CACHE = "citizens";
 
-// TTL para la caché de ciudadanos (15 minutos)
 const CITIZENS_TTL = 15 * 60 * 1000;
 
 /**
- * Obtiene todos los ciudadanos registrados en el sistema
+ * Gets all registered citizens in the system
  */
 export const fetchAllCitizens = async (): Promise<Citizen[]> => {
   try {
     return await getCollectionWithCache<Citizen>(
       CITIZEN_CACHE,
       async () => {
-        logger.debug('Obteniendo todos los ciudadanos');
-        return await get<Citizen[]>('ciudadanos');
+        logger.debug("Obteniendo todos los ciudadanos");
+        return await get<Citizen[]>("ciudadanos");
       },
-      citizen => citizen.id_ciudadano,
+      (citizen) => citizen.id_ciudadano,
       CITIZENS_TTL
     );
   } catch (error) {
@@ -37,9 +35,9 @@ export const fetchAllCitizens = async (): Promise<Citizen[]> => {
 };
 
 /**
- * Obtiene los detalles de un ciudadano específico
- * @param id ID del ciudadano
- * @returns Detalles del ciudadano o null si no se encuentra
+ * Gets the details of a specific citizen
+ * @param id
+ * @returns
  */
 export const fetchCitizenDetails = async (
   id: string
@@ -61,32 +59,35 @@ export const fetchCitizenDetails = async (
 };
 
 /**
- * Crea un nuevo ciudadano en el sistema
- * @param citizenData Datos del ciudadano a crear
- * @returns El ciudadano creado o null si ocurrió un error
+ * Creates a new citizen in the system
+ * @param citizenData
+ * @returns
  */
-export const createCitizen = async (citizenData: Omit<Citizen, 'id_ciudadano'>): Promise<Citizen | null> => {
+export const createCitizen = async (
+  citizenData: Omit<Citizen, "id_ciudadano">
+): Promise<Citizen | null> => {
   try {
-    logger.info('Creando nuevo ciudadano');
-    
-    const createdCitizen = await post<Citizen>('ciudadanos', citizenData);
-    
-    // Invalidar la caché de ciudadanos al crear uno nuevo
+    logger.info("Creando nuevo ciudadano");
+
+    const createdCitizen = await post<Citizen>("ciudadanos", citizenData);
+
     invalidateCache(CITIZEN_CACHE);
-    
-    logger.info(`Ciudadano creado exitosamente: ID=${createdCitizen.id_ciudadano}`);
+
+    logger.info(
+      `Ciudadano creado exitosamente: ID=${createdCitizen.id_ciudadano}`
+    );
     return createdCitizen;
   } catch (error) {
-    logger.error('Error al crear ciudadano:', error);
+    logger.error("Error al crear ciudadano:", error);
     return null;
   }
 };
 
 /**
- * Actualiza los datos de un ciudadano existente
- * @param id ID del ciudadano a actualizar
- * @param citizenData Datos actualizados del ciudadano
- * @returns El ciudadano actualizado o null si ocurrió un error
+ * Updates the data of an existing citizen
+ * @param id
+ * @param citizenData
+ * @returns
  */
 export const updateCitizen = async (
   id: number,
@@ -94,12 +95,11 @@ export const updateCitizen = async (
 ): Promise<Citizen | null> => {
   try {
     logger.info(`Actualizando ciudadano ${id}`);
-    
+
     const updatedCitizen = await put<Citizen>(`ciudadanos/${id}`, citizenData);
-    
-    // Invalidar solo este ciudadano en la caché
+
     invalidateCacheItem(CITIZEN_CACHE, id);
-    
+
     logger.info(`Ciudadano ${id} actualizado exitosamente`);
     return updatedCitizen;
   } catch (error) {
@@ -109,19 +109,18 @@ export const updateCitizen = async (
 };
 
 /**
- * Elimina un ciudadano del sistema
- * @param id ID del ciudadano a eliminar
- * @returns true si se eliminó correctamente, false en caso contrario
+ * Deletes a citizen from the system
+ * @param id
+ * @returns
  */
 export const deleteCitizen = async (id: number): Promise<boolean> => {
   try {
     logger.info(`Eliminando ciudadano ${id}`);
-    
+
     await del<any>(`ciudadanos/${id}`);
-    
-    // Invalidar este ciudadano en la caché
+
     invalidateCacheItem(CITIZEN_CACHE, id);
-    
+
     logger.info(`Ciudadano ${id} eliminado exitosamente`);
     return true;
   } catch (error) {

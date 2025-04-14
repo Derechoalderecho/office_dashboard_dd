@@ -11,17 +11,15 @@ import {
 } from "@/utils/cacheUtils";
 import { logger } from "@/utils/logUtils";
 
-// Nombre de la caché para usuarios
+// Cache name for users
 const CACHE_NAME = 'users';
-// TTL más largo para usuarios (30 minutos) ya que cambian con poca frecuencia
 const USERS_CACHE_TTL = 30 * 60 * 1000; 
 
 /**
- * Obtiene los detalles de un usuario por ID
+ * Gets the details of a user by ID
  */
 export const fetchUserDetails = async (id: string): Promise<Users | null> => {
   try {
-    // Usar caché para obtener usuarios
     return await getWithCache<Users | null>(
       CACHE_NAME,
       id,
@@ -38,11 +36,10 @@ export const fetchUserDetails = async (id: string): Promise<Users | null> => {
 };
 
 /**
- * Obtiene todos los usuarios de la aplicación
+ * Gets all users from the application
  */
 export const fetchAllUsers = async (): Promise<Users[]> => {
   try {
-    // Usar caché para la colección de usuarios
     return await getCollectionWithCache<Users>(
       CACHE_NAME,
       async () => {
@@ -59,7 +56,7 @@ export const fetchAllUsers = async (): Promise<Users[]> => {
 };
 
 /**
- * Obtiene un usuario por su Firebase UID
+ * Gets a user by their Firebase UID
  */
 export async function fetchUserByFirebaseUid(firebaseUid: string): Promise<Users | null> {
   try {
@@ -70,7 +67,6 @@ export async function fetchUserByFirebaseUid(firebaseUid: string): Promise<Users
     
     logger.debug(`Buscando usuario con Firebase UID: ${firebaseUid}`);
     
-    // Obtener todos los usuarios (usando caché)
     const allUsers = await fetchAllUsers();
     
     if (allUsers.length === 0) {
@@ -78,7 +74,6 @@ export async function fetchUserByFirebaseUid(firebaseUid: string): Promise<Users
       return null;
     }
     
-    // Buscar el usuario con el id_usuario_firebase correspondiente
     const user = allUsers.find(user => user.id_usuario_firebase === firebaseUid);
     
     if (user) {
@@ -95,7 +90,7 @@ export async function fetchUserByFirebaseUid(firebaseUid: string): Promise<Users
 }
 
 /**
- * Obtiene el ID interno de un usuario a partir de su Firebase UID
+ * Gets the internal ID of a user from their Firebase UID
  */
 export async function getUserIdFromFirebase(firebaseUid: string): Promise<number | null> {
   try {
@@ -121,7 +116,7 @@ export async function getUserIdFromFirebase(firebaseUid: string): Promise<number
 }
 
 /**
- * Crea un nuevo usuario con Firebase UID
+ * Creates a new user with Firebase UID
  */
 export async function createUserWithFirebaseUid(userData: {
   id_usuario_firebase: string;
@@ -139,7 +134,6 @@ export async function createUserWithFirebaseUid(userData: {
     
     const user = await post<Users>('usuarios', userData);
     
-    // Invalidar la caché de usuarios después de crear uno nuevo
     invalidateCache(CACHE_NAME);
     
     logger.info(`Usuario creado con éxito: ID=${user.id_usuario}`);
@@ -151,7 +145,7 @@ export async function createUserWithFirebaseUid(userData: {
 }
 
 /**
- * Actualiza los datos de un usuario existente
+ * Updates the data of an existing user
  */
 export async function updateUser(
   userId: number, 
@@ -160,10 +154,8 @@ export async function updateUser(
   try {
     logger.info(`Actualizando usuario ${userId}`);
     
-    // Usar 'put' para actualizar el usuario
     const updatedUser = await put<Users>(`usuarios/${userId}/actualizar`, userData);
     
-    // Invalidar solo este usuario en la caché
     invalidateCacheItem(CACHE_NAME, userId);
     
     logger.info(`Usuario ${userId} actualizado con éxito`);
@@ -175,7 +167,7 @@ export async function updateUser(
 }
 
 /**
- * Obtiene el rol de un usuario a partir de su Firebase UID
+ * Gets the role of a user from their Firebase UID
  */
 export async function getUserRoleFromFirebase(firebaseUid: string): Promise<string | null> {
   try {

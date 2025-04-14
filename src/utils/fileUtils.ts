@@ -1,22 +1,18 @@
 /**
  * Initiates a file download from a blob in the browser
- * @param blob The blob data to download
- * @param fileName The name to save the file as
+ * @param blob
+ * @param fileName
  */
 export function downloadBlobAsFile(blob: Blob, fileName: string): void {
-  // Create a URL for the blob
   const url = URL.createObjectURL(blob);
   
-  // Create a temporary anchor element
   const link = document.createElement('a');
   link.href = url;
   link.download = fileName;
   
-  // Append to the document, click, and clean up
   document.body.appendChild(link);
   link.click();
   
-  // Clean up
   setTimeout(() => {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
@@ -25,8 +21,8 @@ export function downloadBlobAsFile(blob: Blob, fileName: string): void {
 
 /**
  * Formats a file size in bytes to a human-readable string
- * @param bytes File size in bytes
- * @returns Formatted string (e.g., "2.5 MB")
+ * @param bytes
+ * @returns
  */
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 Bytes';

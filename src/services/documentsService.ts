@@ -10,17 +10,15 @@ import {
 import { logger } from "@/utils/logUtils";
 import { DocumentResponse } from "@/types/documents";
 
-// Nombre de las cachés
 const DOCUMENT_CACHE = 'documents';
 const CASE_DOCUMENTS_CACHE = 'case_documents';
 
-// TTL para las cachés (10 minutos para documentos)
 const DOCUMENT_TTL = 10 * 60 * 1000;
 
 /**
- * Obtiene todos los documentos asociados a un caso
- * @param caseId ID del caso
- * @returns Array de documentos o array vacío si hay error
+ * Gets all documents associated with a case
+ * @param caseId
+ * @returns
  */
 export const getDocumentsByCaseId = async (caseId: number): Promise<DocumentResponse[]> => {
   try {
@@ -40,9 +38,9 @@ export const getDocumentsByCaseId = async (caseId: number): Promise<DocumentResp
 };
 
 /**
- * Obtiene un documento específico por su ID
- * @param documentId ID del documento
- * @returns Datos del documento o null si hay error
+ * Gets a specific document by its ID
+ * @param documentId
+ * @returns
  */
 export const getDocumentById = async (documentId: number): Promise<DocumentResponse | null> => {
   try {
@@ -62,9 +60,9 @@ export const getDocumentById = async (documentId: number): Promise<DocumentRespo
 };
 
 /**
- * Descarga un documento
- * @param documentId ID del documento a descargar
- * @returns URL del documento o null si hay error
+ * Downloads a document
+ * @param documentId
+ * @returns
  */
 export const downloadDocument = async (documentId: number): Promise<string | null> => {
   try {
@@ -77,10 +75,10 @@ export const downloadDocument = async (documentId: number): Promise<string | nul
 };
 
 /**
- * Sube un nuevo documento para un caso
- * @param caseId ID del caso
- * @param fileData Datos del archivo (FormData)
- * @returns Datos del documento subido o null si hay error
+ * Uploads a new document for a case
+ * @param caseId
+ * @param fileData
+ * @returns
  */
 export const uploadDocument = async (
   caseId: number,
@@ -100,7 +98,6 @@ export const uploadDocument = async (
       }
     );
     
-    // Invalidar cachés afectadas
     invalidateCache(`${CASE_DOCUMENTS_CACHE}_${caseId}`);
     
     logger.info(`Documento subido exitosamente para el caso ${caseId}`);
@@ -112,11 +109,11 @@ export const uploadDocument = async (
 };
 
 /**
- * Actualiza metadatos de un documento
- * @param documentId ID del documento a actualizar
- * @param caseId ID del caso (para invalidar caché)
- * @param metadata Metadatos actualizados
- * @returns Documento actualizado o null si hay error
+ * Updates the metadata of a document
+ * @param documentId
+ * @param caseId
+ * @param metadata
+ * @returns
  */
 export const updateDocumentMetadata = async (
   documentId: number,
@@ -131,7 +128,6 @@ export const updateDocumentMetadata = async (
       metadata
     );
     
-    // Invalidar cachés afectadas
     invalidateCacheItem(DOCUMENT_CACHE, documentId.toString());
     invalidateCache(`${CASE_DOCUMENTS_CACHE}_${caseId}`);
     
@@ -144,10 +140,10 @@ export const updateDocumentMetadata = async (
 };
 
 /**
- * Elimina un documento
- * @param documentId ID del documento a eliminar
- * @param caseId ID del caso (para invalidar caché)
- * @returns true si se eliminó correctamente, false en caso contrario
+ * Deletes a document
+ * @param documentId
+ * @param caseId
+ * @returns
  */
 export const deleteDocument = async (
   documentId: number,
@@ -157,11 +153,10 @@ export const deleteDocument = async (
     logger.info(`Eliminando documento ${documentId} del caso ${caseId}`);
     
     await del<void>(`documentos/${documentId}`);
-    
-    // Invalidar cachés afectadas
+
     invalidateCacheItem(DOCUMENT_CACHE, documentId.toString());
     invalidateCache(`${CASE_DOCUMENTS_CACHE}_${caseId}`);
-    
+
     logger.info(`Documento ${documentId} eliminado exitosamente`);
     return true;
   } catch (error) {

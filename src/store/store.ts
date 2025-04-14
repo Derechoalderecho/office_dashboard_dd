@@ -6,7 +6,7 @@ import { authReducer, caseReducer, noteReducer, documentReducer } from './slices
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['auth'] // Persistir el estado de autenticación, que incluye el rol
+  whitelist: ['auth'] // Persist the authentication state, which includes the role
 };
 
 const persistedAuthReducer = persistReducer(persistConfig, authReducer);
@@ -21,14 +21,12 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        // Ignorar acciones específicas
         ignoredActions: [
           'persist/PERSIST', 
           'persist/REHYDRATE', 
           'auth/setUser',
           'auth/setUserRole'
         ],
-        // Ignorar paths específicos en el state
         ignoredPaths: ['auth.user'],
       },
     }),

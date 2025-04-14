@@ -1,30 +1,28 @@
 import axios, { AxiosRequestConfig, AxiosError, AxiosResponse } from "axios";
 import { API_BASE_URL } from "@/config/api";
 
-// Constantes para configuración
-const DEFAULT_TIMEOUT = 10000; // 10 segundos
+const DEFAULT_TIMEOUT = 10000;
 const MAX_RETRIES = 2;
-const RETRY_DELAY = 1000; // 1 segundo
+const RETRY_DELAY = 1000;
 
-// Configuración por defecto para las solicitudes
+const secureBaseURL = typeof window !== 'undefined' && window.location.protocol === 'https:' && API_BASE_URL
+  ? API_BASE_URL.replace('http:', 'https:')
+  : API_BASE_URL;
+
 const axiosInstance = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: secureBaseURL,
   timeout: DEFAULT_TIMEOUT,
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
-// Interfaz para opciones de retry
 interface RetryConfig {
   maxRetries?: number;
   retryDelay?: number;
   retryCondition?: (error: AxiosError) => boolean;
 }
 
-/**
- * Realiza una solicitud HTTP con manejo de errores y retry automático
- */
 export async function apiRequest<T>(
   method: 'get' | 'post' | 'put' | 'delete',
   url: string,
@@ -41,8 +39,11 @@ export async function apiRequest<T>(
   let retries = 0;
   let lastError: AxiosError | Error | null = null;
   
-  // Agregar el prefijo si no existe
   const fullUrl = url.startsWith('http') ? url : url.startsWith('/') ? `${API_BASE_URL}${url}` : `${API_BASE_URL}/${url}`;
+  
+  const secureUrl = typeof window !== 'undefined' && window.location.protocol === 'https:' 
+    ? fullUrl.replace('http:', 'https:') 
+    : fullUrl;
   
   while (retries <= maxRetries) {
     try {
@@ -50,16 +51,16 @@ export async function apiRequest<T>(
       
       switch (method) {
         case 'get':
-          response = await axiosInstance.get(fullUrl, axiosConfig);
+          response = await axiosInstance.get(secureUrl, axiosConfig);
           break;
         case 'post':
-          response = await axiosInstance.post(fullUrl, data, axiosConfig);
+          response = await axiosInstance.post(secureUrl, data, axiosConfig);
           break;
         case 'put':
-          response = await axiosInstance.put(fullUrl, data, axiosConfig);
+          response = await axiosInstance.put(secureUrl, data, axiosConfig);
           break;
         case 'delete':
-          response = await axiosInstance.delete(fullUrl, axiosConfig);
+          response = await axiosInstance.delete(secureUrl, axiosConfig);
           break;
         default:
           throw new Error(`Método HTTP no soportado: ${method}`);
@@ -70,7 +71,6 @@ export async function apiRequest<T>(
     } catch (error) {
       lastError = error as AxiosError | Error;
       
-      // Verificar si debemos intentar de nuevo
       if (
         retries < maxRetries && 
         error instanceof AxiosError && 
@@ -78,40 +78,35 @@ export async function apiRequest<T>(
       ) {
         retries++;
         
-        // Esperar antes de reintentar
         await new Promise(resolve => setTimeout(resolve, retryDelay));
         
-        // Aumentar el tiempo de espera para cada reintento
         axiosConfig.timeout = (axiosConfig.timeout || DEFAULT_TIMEOUT) * 1.5;
         
-        console.warn(`Reintentando solicitud (${retries}/${maxRetries}): ${fullUrl}`);
+        console.warn(`Reintentando solicitud (${retries}/${maxRetries}): ${secureUrl}`);
       } else {
         break;
       }
     }
   }
   
-  // Si llegamos aquí, todos los intentos fallaron
   handleApiError(lastError);
   
-  // Esto nunca debería ejecutarse porque handleApiError lanza una excepción
   throw lastError;
 }
 
 /**
- * Determina si una solicitud debe reintentarse basado en el tipo de error
+ * Determine if a request should be retried based on the type of error
  */
 function defaultRetryCondition(error: AxiosError): boolean {
-  // Reintentar en caso de errores de red o ciertos códigos HTTP
   return (
-    !error.response || // Error de red
+    !error.response || // Network error
     error.code === 'ECONNABORTED' || // Timeout
-    [408, 429, 500, 502, 503, 504].includes(error.response?.status || 0) // Ciertos errores HTTP
+    [408, 429, 500, 502, 503, 504].includes(error.response?.status || 0) // Certain HTTP errors
   );
 }
 
 /**
- * Maneja errores de API y los formatea para mejor diagnóstico
+ * Handle API errors and format them for better diagnosis
  */
 export function handleApiError(error: AxiosError | Error | null): never {
   if (!error) {
@@ -119,29 +114,24 @@ export function handleApiError(error: AxiosError | Error | null): never {
   }
   
   if (axios.isAxiosError(error)) {
-    // Error de Axios - formatear mejor el mensaje
     let message = "Error en la solicitud";
     let details = "";
     
     if (error.response) {
-      // El servidor respondió con un código de error
       message = `Error ${error.response.status}: ${error.response.statusText}`;
       details = JSON.stringify(error.response.data, null, 2);
     } else if (error.request) {
-      // La solicitud se realizó pero no se recibió respuesta
       message = "No se recibió respuesta del servidor";
       details = error.code === 'ECONNABORTED' 
         ? "La solicitud excedió el tiempo máximo de espera" 
         : error.message;
     } else {
-      // Error al configurar la solicitud
       message = "Error al configurar la solicitud";
       details = error.message;
     }
     
     console.error(`${message}\n${details}`);
     
-    // Crear un nuevo error con más información
     const enhancedError = new Error(message);
     enhancedError.name = "ApiError";
     (enhancedError as any).originalError = error;
@@ -150,30 +140,26 @@ export function handleApiError(error: AxiosError | Error | null): never {
     throw enhancedError;
   }
   
-  // Error genérico
   console.error(`Error: ${error.message}`);
   throw error;
 }
 
 /**
- * Realiza múltiples solicitudes en paralelo y controla los errores
+ * Realize multiple requests in parallel and control errors
  */
 export async function batchRequests<T>(
   requests: Promise<any>[],
   allOrNothing: boolean = false
 ): Promise<T[]> {
   if (allOrNothing) {
-    // Si se requieren todas las solicitudes exitosas
     return Promise.all(requests) as Promise<T[]>;
   } else {
-    // Procesar todas las que se puedan, ignorando errores individuales
     const results = await Promise.allSettled(requests);
     
     const successfulResults = results
       .filter((result): result is PromiseFulfilledResult<T> => result.status === 'fulfilled')
       .map(result => result.value);
     
-    // Loguear los errores pero no detener el proceso
     results
       .filter((result): result is PromiseRejectedResult => result.status === 'rejected')
       .forEach((result, index) => {
@@ -185,50 +171,52 @@ export async function batchRequests<T>(
 }
 
 /**
- * Descarga un archivo desde la API
- * @param url URL relativa para la descarga
- * @param config Configuración adicional para la solicitud
- * @returns Promise con la URL de descarga o null si ocurre un error
+ * Download a file from the API
+ * @param url Relative URL for the download
+ * @param config Additional configuration for the request
+ * @returns Promise with the download URL or null if an error occurs
  */
 export async function downloadFile(
   url: string,
   config?: AxiosRequestConfig & RetryConfig
 ): Promise<string> {
-  // Agregar el prefijo si no existe
   const fullUrl = url.startsWith('http') ? url : url.startsWith('/') ? `${API_BASE_URL}${url}` : `${API_BASE_URL}/${url}`;
   
+  const secureUrl = typeof window !== 'undefined' && window.location.protocol === 'https:' 
+    ? fullUrl.replace('http:', 'https:') 
+    : fullUrl;
+  
   try {
-    // Realizamos una solicitud GET para obtener la URL o datos del documento
-    const response = await axiosInstance.get(fullUrl, {
+    const response = await axiosInstance.get(secureUrl, {
       ...config,
-      // No transformar la respuesta automáticamente
       responseType: 'json',
     });
     
-    // Si la API devuelve una URL directa para el archivo
     if (response.data && typeof response.data === 'object' && response.data.enlace) {
       return response.data.enlace;
     } else if (response.data && typeof response.data === 'string') {
-      // Si la API devuelve directamente una URL como string
       return response.data;
     } else {
-      // Si no se puede obtener una URL clara, generamos un error
       throw new Error('No se pudo obtener una URL válida para el documento');
     }
   } catch (error) {
-    // Usar el manejo de errores estándar
     handleApiError(error as AxiosError | Error);
-    // Esta línea nunca se ejecuta debido a que handleApiError lanza una excepción
     throw error;
   }
 }
 
-// Funciones de conveniencia para cada método HTTP
 export function get<T>(url: string, config?: AxiosRequestConfig & RetryConfig): Promise<T> {
-  // Añadir parámetro de timestamp para evitar caché del navegador
   const urlWithTimestamp = url.includes('?') 
     ? `${url}&_t=${Date.now()}` 
     : `${url}?_t=${Date.now()}`;
+  
+  if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+    return apiRequest<T>('get', urlWithTimestamp, undefined, {
+      ...config,
+      baseURL: API_BASE_URL?.replace('http:', 'https:')
+    });
+  }
+  
   return apiRequest<T>('get', urlWithTimestamp, undefined, config);
 }
 
