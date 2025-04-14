@@ -19,7 +19,7 @@ interface ChartDataPointByStatus {
 
 /**
  * Fetches total cases data for the dashboard chart, grouped by day
- * @returns Array of data points with date and case count
+ * @returns
  */
 export async function fetchCasesForAreaChart(): Promise<ChartDataPoint[]> {
   try {

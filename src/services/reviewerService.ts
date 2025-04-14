@@ -10,16 +10,14 @@ import {
 } from "@/utils/cacheUtils";
 import { logger } from "@/utils/logUtils";
 
-// Nombre de la caché para reviewers
 const REVIEWER_CACHE = 'reviewers';
 
-// TTL para la caché de reviewers (15 minutos)
 const REVIEWER_TTL = 15 * 60 * 1000;
 
 /**
- * Obtiene los detalles de un revisor específico
- * @param id ID del revisor
- * @returns Detalles del revisor o null si no se encuentra
+ * Gets the details of a specific reviewer
+ * @param id
+ * @returns
  */
 export const fetchReviewerDetails = async (id: string): Promise<Reviewers | null> => {
   try {
@@ -39,7 +37,7 @@ export const fetchReviewerDetails = async (id: string): Promise<Reviewers | null
 };
 
 /**
- * Obtiene todos los revisores registrados en el sistema
+ * Gets all the registered reviewers in the system
  */
 export const fetchAllReviewers = async (): Promise<Reviewers[]> => {
   try {
@@ -59,9 +57,9 @@ export const fetchAllReviewers = async (): Promise<Reviewers[]> => {
 };
 
 /**
- * Crea un nuevo revisor en el sistema
- * @param reviewerData Datos del revisor a crear
- * @returns El revisor creado o null si ocurrió un error
+ * Creates a new reviewer in the system
+ * @param reviewerData
+ * @returns
  */
 export const createReviewer = async (reviewerData: Omit<Reviewers, 'id'>): Promise<Reviewers | null> => {
   try {
@@ -69,7 +67,6 @@ export const createReviewer = async (reviewerData: Omit<Reviewers, 'id'>): Promi
     
     const createdReviewer = await post<Reviewers>('reviewers', reviewerData);
     
-    // Invalidar la caché de revisores al crear uno nuevo
     invalidateCache(REVIEWER_CACHE);
     
     logger.info(`Revisor creado exitosamente: ID=${createdReviewer.id}`);
@@ -81,10 +78,10 @@ export const createReviewer = async (reviewerData: Omit<Reviewers, 'id'>): Promi
 };
 
 /**
- * Actualiza los datos de un revisor existente
- * @param id ID del revisor a actualizar
- * @param reviewerData Datos actualizados del revisor
- * @returns El revisor actualizado o null si ocurrió un error
+ * Updates the data of an existing reviewer
+ * @param id
+ * @param reviewerData
+ * @returns
  */
 export const updateReviewer = async (
   id: string,
@@ -95,7 +92,6 @@ export const updateReviewer = async (
     
     const updatedReviewer = await put<Reviewers>(`reviewers/${id}`, reviewerData);
     
-    // Invalidar solo este revisor en la caché
     invalidateCacheItem(REVIEWER_CACHE, id);
     
     logger.info(`Revisor ${id} actualizado exitosamente`);
@@ -107,9 +103,9 @@ export const updateReviewer = async (
 };
 
 /**
- * Elimina un revisor del sistema
- * @param id ID del revisor a eliminar
- * @returns true si se eliminó correctamente, false en caso contrario
+ * Deletes a reviewer from the system
+ * @param id
+ * @returns true if it was deleted correctly, false otherwise
  */
 export const deleteReviewer = async (id: string): Promise<boolean> => {
   try {
@@ -117,7 +113,6 @@ export const deleteReviewer = async (id: string): Promise<boolean> => {
     
     await del<any>(`reviewers/${id}`);
     
-    // Invalidar este revisor en la caché
     invalidateCacheItem(REVIEWER_CACHE, id);
     
     logger.info(`Revisor ${id} eliminado exitosamente`);

@@ -1,5 +1,5 @@
-// Sistema centralizado de logs que optimiza el rendimiento
-// Basado en niveles y evita logs innecesarios en producción
+// Centralized logging system that optimizes performance
+// Based on levels and avoids unnecessary logs in production
 
 export enum LogLevel {
   DEBUG = 0,
@@ -9,22 +9,20 @@ export enum LogLevel {
   NONE = 4
 }
 
-// Configuración global de logs
+// Global logging configuration
 const config = {
-  // En producción, solo mostrar WARN y ERROR por defecto
   level: process.env.NODE_ENV === 'production' ? LogLevel.WARN : LogLevel.DEBUG,
   enableGrouping: true,
   enableColors: true,
-  // Permitir habilitar logs detallados con una variable de entorno
   forceDebugLogs: Boolean(process.env.DEBUG_LOGS) || false
 };
 
-// Forzar todos los logs si la variable de entorno está habilitada
+// Force all logs if the environment variable is enabled
 if (config.forceDebugLogs) {
   config.level = LogLevel.DEBUG;
 }
 
-// Estilo para cada nivel
+// Style for each level
 const styles = {
   [LogLevel.DEBUG]: { 
     prefix: '🔍 DEBUG:',
@@ -45,21 +43,21 @@ const styles = {
 };
 
 /**
- * Actualiza la configuración de logging
+ * Update the logging configuration
  */
 export function configureLogger(options: Partial<typeof config>) {
   Object.assign(config, options);
 }
 
 /**
- * Determina si un nivel de log debe mostrarse
+ * Determine if a log level should be displayed
  */
 function shouldLog(level: LogLevel): boolean {
   return level >= config.level;
 }
 
 /**
- * Log de nivel DEBUG - información detallada para desarrollo
+ * Log of level DEBUG - detailed information for development
  */
 export function debug(message: string, ...args: any[]): void {
   if (shouldLog(LogLevel.DEBUG)) {
@@ -76,7 +74,7 @@ export function debug(message: string, ...args: any[]): void {
 }
 
 /**
- * Log de nivel INFO - información general del sistema
+ * Log of level INFO - general system information
  */
 export function info(message: string, ...args: any[]): void {
   if (shouldLog(LogLevel.INFO)) {
@@ -93,7 +91,7 @@ export function info(message: string, ...args: any[]): void {
 }
 
 /**
- * Log de nivel WARN - advertencias y problemas no críticos
+ * Log of level WARN - warnings and non-critical problems
  */
 export function warn(message: string, ...args: any[]): void {
   if (shouldLog(LogLevel.WARN)) {
@@ -110,7 +108,7 @@ export function warn(message: string, ...args: any[]): void {
 }
 
 /**
- * Log de nivel ERROR - errores del sistema
+ * Log of level ERROR - system errors
  */
 export function error(message: string | Error, ...args: any[]): void {
   if (shouldLog(LogLevel.ERROR)) {
@@ -132,7 +130,7 @@ export function error(message: string | Error, ...args: any[]): void {
 }
 
 /**
- * Grupo de logs anidados
+ * Nested log group
  */
 export function group(title: string, level: LogLevel = LogLevel.DEBUG): { end: () => void } {
   if (shouldLog(level) && config.enableGrouping) {
@@ -149,14 +147,13 @@ export function group(title: string, level: LogLevel = LogLevel.DEBUG): { end: (
     };
   }
   
-  // No-op si no se debe mostrar
   return {
     end: () => {}
   };
 }
 
 /**
- * Mide el tiempo de ejecución de una función
+ * Measure the execution time of a function
  */
 export function time<T>(
   label: string, 
@@ -184,7 +181,7 @@ export function time<T>(
 }
 
 /**
- * Mide el tiempo de ejecución de una función asíncrona
+ * Measure the execution time of an asynchronous function
  */
 export async function timeAsync<T>(
   label: string, 
@@ -211,7 +208,7 @@ export async function timeAsync<T>(
   }
 }
 
-// Exportar como objeto para uso más conveniente
+// Export as an object for more convenient use
 export const logger = {
   config,
   configure: configureLogger,

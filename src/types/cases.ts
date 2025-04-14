@@ -14,11 +14,11 @@ export interface Nota {
   id_nota: number;
   id_caso: number;
   id_usuario: number;
-  id_usuario_crea?: number; // Campo que viene de la API
+  id_usuario_crea?: number;
   mensaje: string;
   fecha_crea: string;
   fecha_actualiza: string;
-  usuario?: Users; // Optional user info to display
+  usuario?: Users;
 }
 
 export interface Cases {

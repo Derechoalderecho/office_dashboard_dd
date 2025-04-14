@@ -8,7 +8,7 @@ import {
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
-// Interfaz para el usuario serializado
+// Interface for the serialized user
 interface SerializableUser {
   uid: string;
   email: string | null;
@@ -43,7 +43,7 @@ const initialState: AuthState = {
   error: null,
 };
 
-// Función para serializar el usuario después de autenticación
+// Function to serialize the user after authentication
 const serializeAuthUser = (user: any) => {
   if (!user) return null;
   

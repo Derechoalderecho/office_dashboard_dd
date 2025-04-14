@@ -12,10 +12,8 @@ export interface Location {
   municipio: string;
 }
 
-// Nombre de la caché para ubicaciones
 const LOCATION_CACHE = 'locations';
 
-// TTL para la caché de ubicaciones (30 minutos)
 const LOCATION_TTL = 30 * 60 * 1000;
 
 export const fetchLocations = async (): Promise<Location[]> => {
@@ -33,7 +31,6 @@ export const fetchLocations = async (): Promise<Location[]> => {
         
         logger.debug(`Recibidos ${data.length} registros de divipola`);
         
-        // Limpiar y normalizar datos para evitar problemas con espacios o cases
         const locations = data
           .filter(item => item && item.nombre_departamento && item.nombre_municipio)
           .map(item => ({
@@ -68,11 +65,10 @@ export const getMunicipalitiesByDepartment = (locations: Location[], department:
   const trimmedDepartment = department.trim();
   logger.debug(`Buscando municipios para departamento: "${trimmedDepartment}"`);
   
-  // Usar comparación normalizada para evitar problemas de case
   const municipios = locations
     .filter(loc => loc.departamento && loc.departamento.trim().toLowerCase() === trimmedDepartment.toLowerCase())
     .map(loc => loc.municipio)
-    .filter(Boolean) // Filtrar valores undefined o vacíos
+    .filter(Boolean)
     .sort();
   
   logger.debug(`Encontrados ${municipios.length} municipios para ${trimmedDepartment}`);
@@ -81,7 +77,7 @@ export const getMunicipalitiesByDepartment = (locations: Location[], department:
 };
 
 /**
- * Invalida la caché de ubicaciones para forzar una recarga fresca
+ * Invalidates the locations cache to force a fresh reload
  */
 export const invalidateLocationsCache = () => {
   invalidateCache(LOCATION_CACHE);
