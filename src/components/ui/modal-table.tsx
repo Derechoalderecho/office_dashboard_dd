@@ -12,6 +12,8 @@ import { UserWithKey } from "@/types/users";
 import { transformStateByRole } from "@/utils/stateTransformer";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useState } from "react";
+import locations from "@/data/locations.json";
+import { parseDateToLocal } from "@/utils/date";
 
 interface ModalTableProps {
   isOpen: boolean;
@@ -22,7 +24,7 @@ interface ModalTableProps {
 export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
   const { role } = useUserRole();
   const [showMore, setShowMore] = useState(false);
-  
+
   if (!caseData) return null;
 
   const displayState = transformStateByRole(caseData.estado, role);
@@ -58,15 +60,26 @@ export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
                 </div>
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Estado</strong>
-                  <p className={`
-                    ${displayState === "Aprobado" ? "text-[#12A150]" : 
-                      displayState === "Seguimiento" ? "text-[#006FEE]" : 
-                      displayState === "Acción necesaria" ? "text-[#C4841D]" : 
-                      displayState === "No aprobado" ? "text-[#F31260]" : 
-                      displayState === "Elaboración tutela" ? "text-indigo-600" : 
-                      displayState === "Revisar tutela" ? "text-amber-600" : 
-                      displayState === "Radicar" ? "text-emerald-600" : 
-                      displayState === "Espera del juez" ? "text-sky-600" : ""
+                  <p
+                    className={`
+                    ${
+                      displayState === "Aprobado"
+                        ? "text-[#12A150]"
+                        : displayState === "Seguimiento"
+                        ? "text-[#006FEE]"
+                        : displayState === "Acción necesaria"
+                        ? "text-[#C4841D]"
+                        : displayState === "No aprobado"
+                        ? "text-[#F31260]"
+                        : displayState === "Elaboración tutela"
+                        ? "text-indigo-600"
+                        : displayState === "Revisar tutela"
+                        ? "text-amber-600"
+                        : displayState === "Radicar"
+                        ? "text-emerald-600"
+                        : displayState === "Espera del juez"
+                        ? "text-sky-600"
+                        : ""
                     } font-medium`}
                   >
                     {displayState}
@@ -89,7 +102,11 @@ export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
                   <>
                     <div className="flex items-center justify-between border-b pb-3">
                       <strong>Fecha de Actualización</strong>
-                      <p>{new Date(caseData.fecha_actualiza).toLocaleDateString()}</p>
+                      <p>
+                        {new Date(
+                          caseData.fecha_actualiza
+                        ).toLocaleDateString()}
+                      </p>
                     </div>
                     {caseData.documentos && caseData.documentos.length > 0 && (
                       <div className="flex items-center justify-between border-b pb-3">
@@ -108,8 +125,8 @@ export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
               </div>
             </ModalBody>
             <ModalFooter className="flex justify-between">
-              <Button 
-                variant="light" 
+              <Button
+                variant="light"
                 onPress={() => setShowMore(!showMore)}
                 className="text-primary"
               >
@@ -138,8 +155,15 @@ export function ModalCitizen({
   citizenData,
 }: ModalCitizenProps) {
   const [showMore, setShowMore] = useState(false);
-  
+
   if (!citizenData) return null;
+
+  function getMunicipalityName(daneMunicipio: string) {
+    const location = locations.find(
+      (loc) => loc.dane_municipio === daneMunicipio
+    );
+    return location ? location.nombre_municipio : daneMunicipio;
+  }
 
   return (
     <Modal isOpen={isOpen} onOpenChange={onClose}>
@@ -149,7 +173,7 @@ export function ModalCitizen({
             <ModalHeader>
               Vista previa del ciudadano #{citizenData.id_ciudadano}
             </ModalHeader>
-            <ModalBody>
+            <ModalBody className="overflow-y-auto max-h-[500px]">
               <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Ciudadano</strong>
@@ -172,8 +196,12 @@ export function ModalCitizen({
                   <p>{citizenData.num_movil}</p>
                 </div>
                 <div className="flex items-center justify-between border-b pb-3">
-                  <strong>Dane Municipio</strong>
-                  <p>{citizenData.dane_municipio}</p>
+                  <strong>Municipio</strong>
+                  <p>{getMunicipalityName(citizenData.dane_municipio)}</p>
+                </div>
+                <div className="flex items-center justify-between border-b pb-3">
+                  <strong>Dirección</strong>
+                  <p>{citizenData.direccion || "No especificado"}</p>
                 </div>
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Fecha de Creación</strong>
@@ -183,34 +211,43 @@ export function ModalCitizen({
                 {showMore && (
                   <>
                     <div className="flex items-center justify-between border-b pb-3">
-                      <strong>Segundo Nombre</strong>
-                      <p>{citizenData.segundo_nombre || "No especificado"}</p>
-                    </div>
-                    <div className="flex items-center justify-between border-b pb-3">
-                      <strong>Segundo Apellido</strong>
-                      <p>{citizenData.segundo_apellido || "No especificado"}</p>
+                      <strong>Nacionalidad</strong>
+                      <p>{citizenData.nacionalidad || "No especificado"}</p>
                     </div>
                     <div className="flex items-center justify-between border-b pb-3">
                       <strong>Teléfono Fijo</strong>
                       <p>{citizenData.num_fijo || "No especificado"}</p>
                     </div>
                     <div className="flex items-center justify-between border-b pb-3">
-                      <strong>Persona que Modifica</strong>
-                      <p>{citizenData.persona_modifica}</p>
+                      <strong>Fecha de Nacimiento</strong>
+                      <p>
+                        {parseDateToLocal(citizenData.fecha_nacimiento) ||
+                          "No especificado"}
+                      </p>
                     </div>
                     <div className="flex items-center justify-between border-b pb-3">
                       <strong>Fecha de Actualización</strong>
                       <p>
-                        {new Date(citizenData.fecha_actualiza).toLocaleDateString()}
+                        {new Date(
+                          citizenData.fecha_actualiza
+                        ).toLocaleDateString()}
                       </p>
+                    </div>
+                    <div className="flex items-center justify-between border-b pb-3">
+                      <strong>Etnia</strong>
+                      <p>{citizenData.etnia || "No especificado"}</p>
+                    </div>
+                    <div className="flex items-center justify-between border-b pb-3">
+                      <strong>Estrato</strong>
+                      <p>{citizenData.estrato || "No especificado"}</p>
                     </div>
                   </>
                 )}
               </div>
             </ModalBody>
             <ModalFooter className="flex justify-between">
-              <Button 
-                variant="light" 
+              <Button
+                variant="light"
                 onPress={() => setShowMore(!showMore)}
                 className="text-primary"
               >
@@ -235,7 +272,7 @@ interface ModalUserProps {
 
 export function ModalUser({ isOpen, onClose, userData }: ModalUserProps) {
   const [showMore, setShowMore] = useState(false);
-  
+
   if (!userData) return null;
 
   return (
@@ -296,7 +333,9 @@ export function ModalUser({ isOpen, onClose, userData }: ModalUserProps) {
                     <div className="flex items-center justify-between border-b pb-3">
                       <strong>Fecha de Actualización</strong>
                       <p>
-                        {new Date(userData.fecha_actualizacion).toLocaleDateString()}
+                        {new Date(
+                          userData.fecha_actualizacion
+                        ).toLocaleDateString()}
                       </p>
                     </div>
                   </>
@@ -304,8 +343,8 @@ export function ModalUser({ isOpen, onClose, userData }: ModalUserProps) {
               </div>
             </ModalBody>
             <ModalFooter className="flex justify-between">
-              <Button 
-                variant="light" 
+              <Button
+                variant="light"
                 onPress={() => setShowMore(!showMore)}
                 className="text-primary"
               >
