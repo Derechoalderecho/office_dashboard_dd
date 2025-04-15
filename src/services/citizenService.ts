@@ -128,3 +128,31 @@ export const deleteCitizen = async (id: number): Promise<boolean> => {
     return false;
   }
 };
+
+/**
+ * Finds a citizen by document type and number
+ * @param tipo_documento 
+ * @param num_documento 
+ * @returns The citizen if found, null otherwise
+ */
+export const findCitizenByDocument = async (
+  tipo_documento: string,
+  num_documento: string
+): Promise<Citizen | null> => {
+  try {
+    logger.debug(`Buscando ciudadano con documento ${tipo_documento} ${num_documento}`);
+    
+    // Get all citizens first (this uses cache if available)
+    const allCitizens = await fetchAllCitizens();
+    
+    // Find the citizen with matching document type and number
+    const citizen = allCitizens.find(
+      (c) => c.tipo_documento === tipo_documento && c.num_documento === num_documento
+    );
+    
+    return citizen || null;
+  } catch (error) {
+    logger.error(`Error al buscar ciudadano por documento ${tipo_documento} ${num_documento}:`, error);
+    return null;
+  }
+};
