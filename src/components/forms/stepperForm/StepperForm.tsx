@@ -146,7 +146,6 @@ export default function StepperForm() {
       if (!data.hechos) errors.hechos = "Los hechos son requeridos";
       if (!data.pretensiones) errors.pretensiones = "Las pretensiones son requeridas";
       if (!data.fundamentos) errors.fundamentos = "Los fundamentos de derecho son requeridos";
-      if (!data.entidad) errors.entidad = "La entidad es requerida";
       if (!data.notas) errors.notas = "Las notas son requeridas";
       return errors;
     },
