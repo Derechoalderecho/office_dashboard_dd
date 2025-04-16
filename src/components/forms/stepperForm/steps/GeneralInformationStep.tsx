@@ -84,6 +84,7 @@ export default function GeneralInformationStep({
                 label="Hechos"
                 labelPlacement="outside"
                 size="lg"
+                isRequired
                 value={formData.hechos || ""}
                 onChange={(e) => updateFormData({ hechos: e.target.value })}
                 placeholder="Ingrese los hechos"
@@ -98,6 +99,7 @@ export default function GeneralInformationStep({
                 label="Pretensiones"
                 labelPlacement="outside"
                 size="lg"
+                isRequired
                 value={formData.pretensiones || ""}
                 onChange={(e) => updateFormData({ pretensiones: e.target.value })}
                 placeholder="Ingrese las pretensiones"
@@ -112,6 +114,7 @@ export default function GeneralInformationStep({
                 label="Fundamentos de derecho"
                 labelPlacement="outside"
                 size="lg"
+                isRequired
                 value={formData.fundamentos || ""}
                 onChange={(e) => updateFormData({ fundamentos: e.target.value })}
                 placeholder="Ingrese los fundamentos de derecho"
@@ -126,6 +129,7 @@ export default function GeneralInformationStep({
                 label="Entidad"
                 labelPlacement="outside"
                 size="lg"
+                isRequired
                 value={formData.entidad || ""}
                 onChange={(e) => updateFormData({ entidad: e.target.value })}
                 placeholder="Ingrese la entidad"
@@ -142,6 +146,7 @@ export default function GeneralInformationStep({
           label="Notas"
           labelPlacement="outside"
           size="lg"
+          isRequired  
           value={formData.notas}
           onChange={(e) => updateFormData({ notas: e.target.value })}
           placeholder="Ingrese las notas"

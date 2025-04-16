@@ -491,15 +491,24 @@ export const assignUserToCase = async (
  * Updates the calification of a case
  * @param id
  * @param calification
+ * @param criterio1
+ * @param criterio2
+ * @param criterio3
+ * @param criterio4
  * @returns
  */
 export const updateCaseCalification = async (
   id: number,
-  calification: string
+  calification: string,
+  criterio1: string,
+  criterio2: string,
+  criterio3: string,
+  criterio4: string
 ): Promise<boolean> => {
   try {
-    logger.info(`Actualizando calificación del caso ${id} a "${calification}"`);
+    logger.info(`Actualizando calificación del caso ${id} con criterios individuales`);
 
+    // Validar calificación final
     const calificationNumber = parseFloat(calification);
     if (
       isNaN(calificationNumber) ||
@@ -512,16 +521,47 @@ export const updateCaseCalification = async (
       return false;
     }
 
+    // Convertir calificación final a entero (multiplicado por 10)
     const calificationAsInteger = Math.round(calificationNumber * 10);
+    
+    // Validar y convertir cada criterio a su formato adecuado (decimal 0-5)
+    const criterio1Number = parseFloat(criterio1);
+    const criterio2Number = parseFloat(criterio2);
+    const criterio3Number = parseFloat(criterio3);
+    const criterio4Number = parseFloat(criterio4);
+    
+    // Validar que todos los criterios sean números válidos
+    if (
+      isNaN(criterio1Number) || criterio1Number < 0 || criterio1Number > 5 ||
+      isNaN(criterio2Number) || criterio2Number < 0 || criterio2Number > 5 ||
+      isNaN(criterio3Number) || criterio3Number < 0 || criterio3Number > 5 ||
+      isNaN(criterio4Number) || criterio4Number < 0 || criterio4Number > 5
+    ) {
+      logger.warn(`Uno o más criterios no son válidos para el caso ${id}`);
+      return false;
+    }
 
-    await put<Cases>(`casos/${id}`, { calificacion: calificationAsInteger });
+    // Preparar los datos para actualizar
+    // calificacion como entero (0-50) y los criterios como decimales (0-5)
+    const updateData = {
+      calificacion: calificationAsInteger,
+      calificacion1: criterio1Number.toFixed(1),
+      calificacion2: criterio2Number.toFixed(1), 
+      calificacion3: criterio3Number.toFixed(1),
+      calificacion4: criterio4Number.toFixed(1)
+    };
+
+    logger.debug(`Datos de calificación a enviar para caso ${id}:`, JSON.stringify(updateData));
+    console.log(`Actualizando calificación del caso ${id} con datos:`, updateData);
+    
+    await put<Cases>(`casos/${id}`, updateData);
 
     // Invalidate caches
     invalidateCacheItem(CASES_CACHE, id);
     invalidateCache(CASES_CACHE);
 
     logger.info(
-      `Calificación del caso ${id} actualizada correctamente a "${calification}" (valor entero: ${calificationAsInteger})`
+      `Calificación del caso ${id} actualizada correctamente a "${calification}" con criterios individuales`
     );
     return true;
   } catch (error) {

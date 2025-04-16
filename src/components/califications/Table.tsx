@@ -27,6 +27,7 @@ import { ModalCalification } from "../ui/modal-calification";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useAuth } from "@/hooks/useAuth";
 import { getUserIdFromFirebase } from "@/services/userService";
+import { ModalCalificationDetails } from "../ui/modal-table";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "id_caso",
@@ -59,6 +60,7 @@ export default function TableCalifications() {
   // Modal controls
   const previewModal = useDisclosure();
   const calificationModal = useDisclosure();
+  const calificationDetailsModal = useDisclosure();
 
   // Role y auth
   const { role } = useUserRole();
@@ -241,6 +243,11 @@ export default function TableCalifications() {
     calificationModal.onOpen();
   };
 
+  const handleViewCalification = (caseData: CaseWithKey) => {
+    setSelectedCase(caseData);
+    calificationDetailsModal.onOpen();
+  };
+
   const handleCalificationSuccess = () => {
     addToast({
       title: "Calificación guardada",
@@ -258,6 +265,12 @@ export default function TableCalifications() {
         onClose={calificationModal.onClose}
         caseData={selectedCase}
         onSuccess={handleCalificationSuccess}
+      />
+
+      <ModalCalificationDetails
+        isOpen={calificationDetailsModal.isOpen}
+        onClose={calificationDetailsModal.onClose}
+        caseData={selectedCase}
       />
 
       <Table
@@ -310,6 +323,7 @@ export default function TableCalifications() {
                     columnKey={columnKey as keyof CaseWithKey}
                     onPreviewCase={handlePreviewCase}
                     onCalificateCase={handleCalificateCase}
+                    onViewCalification={handleViewCalification}
                     canGradeStudents={canGradeStudents}
                   />
                 </TableCell>

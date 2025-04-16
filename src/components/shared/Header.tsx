@@ -49,8 +49,14 @@ export default function Header() {
 
     // Build the breadcrumb path
     let currentPath = "";
-    paths.forEach((path) => {
+    paths.forEach((path, index) => {
       currentPath += `/${path}`;
+      
+      // Skip "dashboard" in the breadcrumbs display
+      if (path.toLowerCase() === "dashboard") {
+        return;
+      }
+      
       // Use the translation if it exists, otherwise format the path
       const translatedLabel =
         pathTranslations[path.toLowerCase()] ||

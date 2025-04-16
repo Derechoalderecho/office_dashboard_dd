@@ -9,6 +9,7 @@ interface TableCellRendererProps {
   columnKey: keyof CaseWithKey;
   onPreviewCase?: (caseData: CaseWithKey) => void;
   onCalificateCase?: (caseData: CaseWithKey) => void;
+  onViewCalification?: (caseData: CaseWithKey) => void;
   canGradeStudents?: boolean;
 }
 
@@ -17,6 +18,7 @@ export const TableCellRendererCalifications = ({
   columnKey,
   onPreviewCase,
   onCalificateCase,
+  onViewCalification,
   canGradeStudents = true, // Por defecto permitir calificar para compatibilidad
 }: TableCellRendererProps) => {
   const cellValue = caseData[columnKey];
@@ -105,23 +107,36 @@ export const TableCellRendererCalifications = ({
         </div>
       );
     case "actions":
-      // Si el usuario no puede calificar (estudiante), no mostramos el botón
-      if (!canGradeStudents) {
-        return <div className="text-sm text-gray-400">-</div>;
-      }
+      const hasCalification = caseData.calificacion !== undefined && caseData.calificacion !== null;
       
       return (
         <div className="relative flex items-center gap-2">
-          <Tooltip content="Calificar estudiante">
-            <Button
-              isIconOnly
-              className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
-              onPress={() => onCalificateCase?.(caseData)}
-              isDisabled={!caseData.usuarios?.some(user => user.rol === "Estudiante")}
-            >
-              <PencilSquareIcon className="w-6" />
-            </Button>
-          </Tooltip>
+          {/* View button - always visible if there's a calification */}
+          {hasCalification && (
+            <Tooltip content="Ver detalle de calificación">
+              <Button
+                isIconOnly
+                className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
+                onPress={() => onViewCalification?.(caseData)}
+              >
+                <EyeIcon className="w-6" />
+              </Button>
+            </Tooltip>
+          )}
+          
+          {/* Edit button - only visible for users with permission */}
+          {canGradeStudents && (
+            <Tooltip content="Calificar estudiante">
+              <Button
+                isIconOnly
+                className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
+                onPress={() => onCalificateCase?.(caseData)}
+                isDisabled={!caseData.usuarios?.some(user => user.rol === "Estudiante")}
+              >
+                <PencilSquareIcon className="w-6" />
+              </Button>
+            </Tooltip>
+          )}
         </div>
       );
     default:

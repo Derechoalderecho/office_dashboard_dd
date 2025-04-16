@@ -4,6 +4,8 @@ import { Select, SelectItem } from "@heroui/react";
 import { useEffect, useState } from "react";
 import { Users } from "@/types/users";
 import { fetchAllUsers } from "@/services/userService";
+import { useAuth } from "@/hooks/useAuth";
+import { useInternalUserId } from "@/hooks/useInternalUserId";
 
 type AdministrationProps = {
   formData: {
@@ -30,6 +32,9 @@ export default function AdministrationStep({
 }: AdministrationProps) {
   const [users, setUsers] = useState<Users[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { role } = useAuth();
+  const { internalUserId } = useInternalUserId();
+  const isStudent = role === "Estudiante";
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -46,10 +51,29 @@ export default function AdministrationStep({
     loadUsers();
   }, []);
 
+  // Automatically set the current user as the student if they are a student
+  useEffect(() => {
+    if (isStudent && internalUserId) {
+      const studentId = String(internalUserId);
+      
+      // Only update if the student ID is different from the current one
+      // This prevents an infinite loop of updates
+      if (formData.alumno_id !== studentId) {
+        console.log(`Estudiante autenticado detectado (ID: ${studentId}). Seleccionando automáticamente.`);
+        
+        updateFormData({
+          alumno_id: studentId,
+          // If the persona_modifica is not set, set it to the student ID
+          persona_modifica: !formData.persona_modifica ? studentId : formData.persona_modifica
+        });
+      }
+    }
+  }, [isStudent, internalUserId, formData.alumno_id]);
+
   const handleUserSelect = (role: string, userId: string) => {
     updateFormData({
       [`${role}_id`]: userId,
-      // Si es el primer usuario seleccionado, lo establecemos como persona_modifica
+      // If the persona_modifica is not set, set it to the student ID
       persona_modifica: !formData.persona_modifica ? userId : formData.persona_modifica
     });
   };
@@ -112,15 +136,18 @@ export default function AdministrationStep({
           variant="bordered"
           label="Estudiante asignado"
           labelPlacement="outside"
-          placeholder="Seleccione un estudiante"
+          placeholder={isStudent ? "Usted está asignado automáticamente" : "Seleccione un estudiante"}
           selectedKeys={formData.alumno_id ? [formData.alumno_id] : []}
           onSelectionChange={(keys) => {
-            const selectedKey = Array.from(keys)[0]?.toString() || "";
-            handleUserSelect("alumno", selectedKey);
+            if (!isStudent) {
+              const selectedKey = Array.from(keys)[0]?.toString() || "";
+              handleUserSelect("alumno", selectedKey);
+            }
           }}
           isLoading={isLoading}
           errorMessage={validationErrors?.alumno_id}
           isRequired
+          isDisabled={isStudent}
         >
           {users
             .filter(user => user.rol === "Estudiante")
@@ -131,6 +158,12 @@ export default function AdministrationStep({
             ))}
         </Select>
       </div>
+      
+      {isStudent && (
+        <div className="text-sm text-blue-600 mt-2">
+          Como estudiante, usted está asignado automáticamente a este caso.
+        </div>
+      )}
     </div>
   );
 }

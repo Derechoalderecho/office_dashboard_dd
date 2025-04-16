@@ -15,11 +15,22 @@ import {
   PopoverContent,
   NumberInput,
   Checkbox,
+  useDisclosure,
 } from "@heroui/react";
 import { useState, useEffect, Key } from "react";
-import { fetchAllCitizens } from "@/services/citizenService";
+import {
+  fetchAllCitizens,
+  findCitizenByDocument,
+} from "@/services/citizenService";
 import { Citizen } from "@/types/citizens";
-import { PlusIcon, UserIcon, XIcon } from "lucide-react";
+import {
+  PlusIcon,
+  UserIcon,
+  XIcon,
+  SearchIcon,
+  AlertCircleIcon,
+  CheckCircleIcon,
+} from "lucide-react";
 import { I18nProvider } from "@react-aria/i18n";
 import {
   fetchLocations,
@@ -27,6 +38,7 @@ import {
   getMunicipalitiesByDepartment,
   Location,
 } from "@/services/locationService";
+import { parseDate, CalendarDate } from "@internationalized/date";
 
 type BasicInformationProps = {
   formData: {
@@ -99,13 +111,22 @@ export default function BasicInformationStep({
     null
   );
   const [citizens, setCitizens] = useState<Citizen[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showNewCitizenForm, setShowNewCitizenForm] = useState<boolean>(
+  const [isLoading, setIsLoading] = useState(false);
+  const [showFullForm, setShowFullForm] = useState<boolean>(
     Boolean(
-      formData.is_existing_citizen === "false" ||
-        (formData.primer_nombre && formData.primer_apellido)
+      formData.primer_nombre || 
+      formData.primer_apellido || 
+      formData.is_existing_citizen === "true" ||
+      formData.citizen_id
     )
   );
+  const [isExistingCitizen, setIsExistingCitizen] = useState<boolean>(
+    formData.is_existing_citizen === "true"
+  );
+  const [notification, setNotification] = useState<{
+    type: "success" | "info" | "warning" | "error";
+    message: string;
+  } | null>(null);
   const [nacionalidadPersonalizada, setNacionalidadPersonalizada] =
     useState<string>(
       formData.nacionalidad &&
@@ -164,7 +185,6 @@ export default function BasicInformationStep({
     const value = e.target.value;
     updateFormData({
       tipo_documento: value,
-      // If it's "Sin documento", clear the document number
       num_documento: value === "SD" ? "" : formData.num_documento,
     });
   };
@@ -188,7 +208,7 @@ export default function BasicInformationStep({
         const data = await fetchLocations();
         console.log(`Locations data fetched: ${data.length} items`);
         setLocations(data);
-        
+
         if (data.length > 0) {
           const depts = getUniqueDepartments(data);
           console.log(`Unique departments: ${depts.length}`, depts);
@@ -208,18 +228,23 @@ export default function BasicInformationStep({
     if (formData.departamento) {
       console.log(`Selected department: "${formData.departamento}"`);
       console.log(`Available locations:`, locations.length);
-      
+
       const filteredMunicipalities = getMunicipalitiesByDepartment(
         locations,
         formData.departamento
       );
-      
-      console.log(`Filtered municipalities: ${filteredMunicipalities.length}`, filteredMunicipalities);
-      
+
+      console.log(
+        `Filtered municipalities: ${filteredMunicipalities.length}`,
+        filteredMunicipalities
+      );
+
       setMunicipalities(filteredMunicipalities);
       // Reset municipio if it's not in the new list
       if (!filteredMunicipalities.includes(formData.municipio)) {
-        console.log(`Current municipio "${formData.municipio}" not found in filtered list, resetting`);
+        console.log(
+          `Current municipio "${formData.municipio}" not found in filtered list, resetting`
+        );
         updateFormData({ municipio: "" });
       }
     } else {
@@ -228,53 +253,140 @@ export default function BasicInformationStep({
     }
   }, [formData.departamento, locations]);
 
-  // Handle citizen selection and auto-populate form fields
-  const handleCitizenSelect = (selectedKey: Key | null) => {
-    const selectedId = selectedKey?.toString();
+  // Efecto para establecer fechaNacimiento si ya existe en formData
+  useEffect(() => {
+    if (formData.fecha_nacimiento && !fechaNacimiento) {
+      try {
+        const datePart = formData.fecha_nacimiento.split("T")[0];
+        const parsedDate = parseDate(datePart);
+        setFechaNacimiento(parsedDate);
+      } catch (error) {
+        console.error("Error parsing date from formData:", error);
+      }
+    }
+  }, [formData.fecha_nacimiento, fechaNacimiento]);
 
-    if (!selectedId) {
-      // No citizen selected, reset form
-      updateFormData({
-        is_existing_citizen: "false",
-        citizen_id: "",
-        direccion: "",
+  const searchCitizen = async () => {
+    if (!formData.tipo_documento || !formData.num_documento) {
+      setNotification({
+        type: "warning",
+        message: "Por favor ingrese el tipo y número de documento",
       });
-      setShowNewCitizenForm(true);
       return;
     }
 
-    // Find the citizen by ID
-    const citizen = citizens.find(
-      (c) => c.id_ciudadano.toString() === selectedId
-    );
+    setIsLoading(true);
+    try {
+      const citizen = await findCitizenByDocument(
+        formData.tipo_documento,
+        formData.num_documento
+      );
 
-    if (citizen) {
-      // Update form data with citizen information
-      updateFormData({
-        num_documento: citizen.num_documento || "",
-        tipo_documento: citizen.tipo_documento || "",
-        primer_nombre: citizen.primer_nombre || "",
-        segundo_nombre: citizen.segundo_nombre || "",
-        primer_apellido: citizen.primer_apellido || "",
-        segundo_apellido: citizen.segundo_apellido || "",
-        email: citizen.email || "",
-        num_movil: citizen.num_movil || "",
-        num_fijo: citizen.num_fijo || "",
-        citizen_id: selectedId,
-        is_existing_citizen: "true",
-        direccion:
-          typeof citizen.direccion === "string" ? citizen.direccion : "",
+      if (citizen) {
+        // Citizen found - populate form with their data
+        updateFormData({
+          primer_nombre: citizen.primer_nombre || "",
+          segundo_nombre: citizen.segundo_nombre || "",
+          primer_apellido: citizen.primer_apellido || "",
+          segundo_apellido: citizen.segundo_apellido || "",
+          email: citizen.email || "",
+          num_movil: citizen.num_movil || "",
+          num_fijo: citizen.num_fijo || "",
+          fecha_nacimiento: citizen.fecha_nacimiento || "",
+          sexo: citizen.sexo || "",
+          genero: citizen.genero || "",
+          orient_sexual: citizen.orient_sexual || "",
+          nacionalidad: citizen.nacionalidad || "",
+          estado_civil: citizen.estado_civil || "",
+          escolaridad: citizen.escolaridad || "",
+          etnia: citizen.etnia || "",
+          discapacidad: citizen.discapacidad || "",
+          sabe_leer_escribir: citizen.sabe_leer_escribir || "",
+          direccion:
+            typeof citizen.direccion === "string" ? citizen.direccion : "",
+          estrato: citizen.estrato || "",
+          zona: citizen.zona || "",
+          departamento: citizen.departamento || "",
+          municipio: citizen.municipio || "",
+          citizen_id: citizen.id_ciudadano.toString(),
+          is_existing_citizen: "true",
+        });
+
+        setIsExistingCitizen(true);
+        setNotification({
+          type: "success",
+          message:
+            "Ciudadano existente encontrado. Los campos han sido rellenados automáticamente.",
+        });
+
+        // Set fecha_nacimiento state if available
+        if (citizen.fecha_nacimiento) {
+          try {
+            // Extract just the date part if it contains time
+            const datePart = citizen.fecha_nacimiento.split("T")[0];
+            const parsedDate = parseDate(datePart);
+            setFechaNacimiento(parsedDate);
+          } catch (error) {
+            console.error(
+              "Error parsing date:",
+              error,
+              citizen.fecha_nacimiento
+            );
+            setFechaNacimiento(null);
+          }
+        }
+      } else {
+        // Citizen not found - show empty form
+        // Only keep the document fields, reset everything else
+        updateFormData({
+          primer_nombre: "",
+          segundo_nombre: "",
+          primer_apellido: "",
+          segundo_apellido: "",
+          email: "",
+          num_movil: "",
+          num_fijo: "",
+          fecha_nacimiento: "",
+          sexo: "",
+          genero: "",
+          orient_sexual: "",
+          nacionalidad: "",
+          estado_civil: "",
+          escolaridad: "",
+          etnia: "",
+          discapacidad: "",
+          sabe_leer_escribir: "",
+          direccion: "",
+          estrato: "",
+          zona: "",
+          departamento: "",
+          municipio: "",
+          citizen_id: "",
+          is_existing_citizen: "false",
+        });
+
+        setIsExistingCitizen(false);
+        setNotification({
+          type: "info",
+          message:
+            "No se encontró ciudadano con este documento. Por favor ingrese la información para crear uno nuevo.",
+        });
+
+        // Reset fecha_nacimiento
+        setFechaNacimiento(null);
+      }
+
+      // Show the full form after search
+      setShowFullForm(true);
+    } catch (error) {
+      console.error("Error searching for citizen:", error);
+      setNotification({
+        type: "error",
+        message: "Error al buscar ciudadano. Por favor intente nuevamente.",
       });
-      setShowNewCitizenForm(false);
+    } finally {
+      setIsLoading(false);
     }
-  };
-
-  const handleCreateNewCitizen = () => {
-    setShowNewCitizenForm(true);
-  };
-
-  const handleCancelNewCitizen = () => {
-    setShowNewCitizenForm(false);
   };
 
   const construirDireccion = () => {
@@ -351,92 +463,96 @@ export default function BasicInformationStep({
 
   return (
     <div className="space-y-8">
-      {!showNewCitizenForm ? (
-        <div className="flex flex-col">
-          <div className="flex-grow mb-4">
-            <Autocomplete
-              id="citizen_id"
-              name="citizen_id"
-              variant="bordered"
-              label="Seleccionar ciudadano existente"
-              listboxProps={{
-                emptyContent: "No hay resultados",
-              }}
-              labelPlacement="outside"
-              placeholder="Seleccione o escriba el nombre del ciudadano o su cédula"
-              value={formData.citizen_id}
-              onSelectionChange={handleCitizenSelect}
-              isLoading={isLoading}
-              disabled={isLoading}
-              className="w-full"
-            >
-              {citizens.map((citizen) => (
-                <AutocompleteItem key={citizen.id_ciudadano.toString()}>
-                  {`${citizen.primer_nombre} ${citizen.primer_apellido} - ${citizen.num_documento}`}
-                </AutocompleteItem>
-              ))}
-            </Autocomplete>
-          </div>
+      {notification && (
+        <div
+          className={`p-4 mb-4 rounded-lg flex items-center gap-2 ${
+            notification.type === "success"
+              ? "bg-green-100 text-green-800"
+              : notification.type === "info"
+              ? "bg-blue-100 text-blue-800"
+              : notification.type === "warning"
+              ? "bg-yellow-100 text-yellow-800"
+              : "bg-red-100 text-red-800"
+          }`}
+        >
+          {notification.type === "success" ? (
+            <CheckCircleIcon size={20} />
+          ) : notification.type === "error" ? (
+            <AlertCircleIcon size={20} />
+          ) : (
+            <AlertCircleIcon size={20} />
+          )}
+          <span>{notification.message}</span>
           <Button
-            color="primary"
-            startContent={<PlusIcon size={16} />}
-            onClick={handleCreateNewCitizen}
+            isIconOnly
+            variant="light"
+            size="sm"
+            className="ml-auto"
+            onPress={() => setNotification(null)}
           >
-            Crear nuevo ciudadano
+            <XIcon size={16} />
           </Button>
         </div>
-      ) : (
-        <>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium">Crear nuevo ciudadano</h3>
-            <Button
-              variant="light"
-              color="primary"
-              startContent={<UserIcon size={16} />}
-              onClick={handleCancelNewCitizen}
-            >
-              Usar ciudadano existente
-            </Button>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Select
+          id="tipo_documento"
+          name="tipo_documento"
+          variant="bordered"
+          label="Tipo de documento"
+          labelPlacement="outside"
+          placeholder="Seleccione tipo de documento"
+          selectedKeys={
+            formData.tipo_documento ? [formData.tipo_documento] : []
+          }
+          onChange={handleTipoDocumentoChange}
+          isRequired
+        >
+          <SelectItem key="TI">Tarjeta de identidad</SelectItem>
+          <SelectItem key="CC">Cédula de ciudadanía</SelectItem>
+          <SelectItem key="CE">Cédula de extranjería</SelectItem>
+          <SelectItem key="P">Pasaporte</SelectItem>
+          <SelectItem key="PPT">Permiso por protección temporal</SelectItem>
+          <SelectItem key="SD">Sin documento</SelectItem>
+        </Select>
+
+        {formData.tipo_documento !== "SD" && (
+          <Input
+            id="num_documento"
+            name="num_documento"
+            variant="bordered"
+            label="Número de documento"
+            labelPlacement="outside"
+            value={formData.num_documento}
+            onChange={(e) => updateFormData({ num_documento: e.target.value })}
+            placeholder="Ingrese número de documento"
+            isRequired
+          />
+        )}
+
+        <Button
+          color="primary"
+          startContent={<SearchIcon size={16} />}
+          onPress={searchCitizen}
+          isLoading={isLoading}
+          className="self-end"
+        >
+          Buscar Ciudadano
+        </Button>
+      </div>
+
+      {showFullForm && (
+        <div className="mt-8">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-medium">
+              {isExistingCitizen
+                ? "Información del Ciudadano"
+                : "Crear Nuevo Ciudadano"}
+            </h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Select
-              id="tipo_documento"
-              name="tipo_documento"
-              variant="bordered"
-              label="Tipo de documento"
-              labelPlacement="outside"
-              placeholder="Seleccione su tipo de documento"
-              selectedKeys={
-                formData.tipo_documento ? [formData.tipo_documento] : []
-              }
-              onChange={handleTipoDocumentoChange}
-              isRequired
-            >
-              <SelectItem key="TI">Tarjeta de identidad</SelectItem>
-              <SelectItem key="CC">Cédula de ciudadanía</SelectItem>
-              <SelectItem key="CE">Cédula de extranjería</SelectItem>
-              <SelectItem key="P">Pasaporte</SelectItem>
-              <SelectItem key="PPT">Permiso por protección temporal</SelectItem>
-              <SelectItem key="SD">Sin documento</SelectItem>
-            </Select>
-
-            {formData.tipo_documento !== "SD" && (
-              <Input
-                id="num_documento"
-                name="num_documento"
-                variant="bordered"
-                label="Número de documento"
-                labelPlacement="outside"
-                value={formData.num_documento}
-                onChange={(e) =>
-                  updateFormData({ num_documento: e.target.value })
-                }
-                placeholder="Ingrese su número de documento"
-                isRequired
-              />
-            )}
-
             <Input
               id="primer_nombre"
               name="primer_nombre"
@@ -464,24 +580,6 @@ export default function BasicInformationStep({
               placeholder="Ingrese su segundo nombre"
             />
 
-            <I18nProvider locale="es">
-              <DateInput
-                id="fecha_nacimiento"
-                name="fecha_nacimiento"
-                variant="bordered"
-                label="Fecha de nacimiento"
-                labelPlacement="outside"
-                value={fechaNacimiento}
-                onChange={(date) => {
-                  setFechaNacimiento(date);
-                  if (date) {
-                    const formattedDate = date.toString().split("T")[0];
-                    updateFormData({ fecha_nacimiento: formattedDate });
-                  }
-                }}
-                isRequired
-              />
-            </I18nProvider>
             <Input
               id="primer_apellido"
               name="primer_apellido"
@@ -508,6 +606,25 @@ export default function BasicInformationStep({
               }
               placeholder="Ingrese su segundo apellido"
             />
+
+            <I18nProvider locale="es">
+              <DateInput
+                id="fecha_nacimiento"
+                name="fecha_nacimiento"
+                variant="bordered"
+                label="Fecha de nacimiento"
+                labelPlacement="outside"
+                value={fechaNacimiento}
+                onChange={(date) => {
+                  setFechaNacimiento(date);
+                  if (date) {
+                    const formattedDate = date.toString().split("T")[0];
+                    updateFormData({ fecha_nacimiento: formattedDate });
+                  }
+                }}
+                isRequired
+              />
+            </I18nProvider>
 
             <Select
               id="sexo"
@@ -540,10 +657,10 @@ export default function BasicInformationStep({
               onChange={(e) => updateFormData({ genero: e.target.value })}
               isRequired
             >
-              <SelectItem key="M">Masculino</SelectItem>
-              <SelectItem key="F">Femenino</SelectItem>
-              <SelectItem key="T">Transgénero</SelectItem>
-              <SelectItem key="N">No binario</SelectItem>
+              <SelectItem key="Masculino">Masculino</SelectItem>
+              <SelectItem key="Femenino">Femenino</SelectItem>
+              <SelectItem key="Transgénero">Transgénero</SelectItem>
+              <SelectItem key="No binario">No binario</SelectItem>
             </Select>
 
             <Select
@@ -561,11 +678,11 @@ export default function BasicInformationStep({
               }
               isRequired
             >
-              <SelectItem key="HE">Heterosexual</SelectItem>
-              <SelectItem key="HO">Homosexual</SelectItem>
-              <SelectItem key="BI">Bisexual</SelectItem>
-              <SelectItem key="AS">Asexual</SelectItem>
-              <SelectItem key="PA">Pansexual</SelectItem>
+              <SelectItem key="Heterosexual">Heterosexual</SelectItem>
+              <SelectItem key="Homosexual">Homosexual</SelectItem>
+              <SelectItem key="Bisexual">Bisexual</SelectItem>
+              <SelectItem key="Asexual">Asexual</SelectItem>
+              <SelectItem key="Pansexual">Pansexual</SelectItem>
             </Select>
 
             <NumberInput
@@ -576,6 +693,9 @@ export default function BasicInformationStep({
               label="Número móvil"
               labelPlacement="outside"
               placeholder="Ingrese su número móvil"
+              formatOptions={{
+                useGrouping: false,
+              }}
               value={
                 formData.num_movil ? Number(formData.num_movil) : undefined
               }
@@ -592,6 +712,9 @@ export default function BasicInformationStep({
               label="Número fijo"
               labelPlacement="outside"
               hideStepper
+              formatOptions={{
+                useGrouping: false,
+              }}
               value={formData.num_fijo ? Number(formData.num_fijo) : undefined}
               onValueChange={(value) =>
                 updateFormData({ num_fijo: value.toString() })
@@ -678,12 +801,12 @@ export default function BasicInformationStep({
               onChange={(e) => updateFormData({ estado_civil: e.target.value })}
               isRequired
             >
-              <SelectItem key="SO">Soltero/a</SelectItem>
-              <SelectItem key="CA">Casado/a</SelectItem>
-              <SelectItem key="UL">Unión libre</SelectItem>
-              <SelectItem key="DI">Divorciado/a</SelectItem>
-              <SelectItem key="VI">Viudo/a</SelectItem>
-              <SelectItem key="NI">No informa</SelectItem>
+              <SelectItem key="Soltero/a">Soltero/a</SelectItem>
+              <SelectItem key="Casado/a">Casado/a</SelectItem>
+              <SelectItem key="Unión libre">Unión libre</SelectItem>
+              <SelectItem key="Divorciado/a">Divorciado/a</SelectItem>
+              <SelectItem key="Viudo/a">Viudo/a</SelectItem>
+              <SelectItem key="No informa">No informa</SelectItem>
             </Select>
 
             <Select
@@ -741,6 +864,9 @@ export default function BasicInformationStep({
               labelPlacement="outside"
               placeholder="Ingrese su estrato"
               hideStepper
+              formatOptions={{
+                useGrouping: false,
+              }}
               value={formData.estrato ? Number(formData.estrato) : undefined}
               onValueChange={(value) =>
                 updateFormData({ estrato: value.toString() })
@@ -887,6 +1013,9 @@ export default function BasicInformationStep({
                         label="Número"
                         placeholder="Número"
                         hideStepper
+                        formatOptions={{
+                          useGrouping: false,
+                        }}
                         value={numeroVia ? Number(numeroVia) : undefined}
                         onValueChange={(value) =>
                           setNumeroVia(value.toString())
@@ -932,6 +1061,9 @@ export default function BasicInformationStep({
                       <NumberInput
                         label="Número"
                         placeholder="Número"
+                        formatOptions={{
+                          useGrouping: false,
+                        }}
                         hideStepper
                         value={numeroCruce ? Number(numeroCruce) : undefined}
                         onValueChange={(value) =>
@@ -952,6 +1084,9 @@ export default function BasicInformationStep({
 
                       <NumberInput
                         hideStepper
+                        formatOptions={{
+                          useGrouping: false,
+                        }}
                         value={numeroPlaca ? Number(numeroPlaca) : undefined}
                         onValueChange={(value) =>
                           setNumeroPlaca(value.toString())
@@ -979,7 +1114,7 @@ export default function BasicInformationStep({
               </Popover>
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );
