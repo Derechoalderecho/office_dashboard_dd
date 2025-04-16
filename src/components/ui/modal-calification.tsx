@@ -42,6 +42,72 @@ export function ModalCalification({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  // Función auxiliar para formatear valores de criterios
+  function formatCriterioValue(value: string | undefined): string {
+    if (!value) return "";
+    
+    // Si el valor es un string vacío o null, retornar vacío
+    if (value === "" || value === "null") return "";
+    
+    const numValue = Number(value);
+    if (isNaN(numValue)) return value;
+    
+    // Si está en formato 0-50, convertir a 0-5
+    if (numValue > 5) {
+      return (numValue / 10).toFixed(1);
+    } else {
+      // Asegurar que siempre tenga un decimal (para mantener consistencia)
+      return numValue.toFixed(1);
+    }
+  }
+
+  // Cargar valores existentes cuando el modal se abre y caseData cambia
+  useEffect(() => {
+    if (caseData && isOpen) {
+      const newCriterios = [...criterios];
+      let valuesLoaded = false;
+      
+      // Cargar criterios individuales si existen
+      if (caseData.calificacion1) {
+        newCriterios[0].valor = formatCriterioValue(caseData.calificacion1);
+        valuesLoaded = true;
+      }
+      
+      if (caseData.calificacion2) {
+        newCriterios[1].valor = formatCriterioValue(caseData.calificacion2);
+        valuesLoaded = true;
+      }
+      
+      if (caseData.calificacion3) {
+        newCriterios[2].valor = formatCriterioValue(caseData.calificacion3);
+        valuesLoaded = true;
+      }
+      
+      if (caseData.calificacion4) {
+        newCriterios[3].valor = formatCriterioValue(caseData.calificacion4);
+        valuesLoaded = true;
+      }
+      
+      if (valuesLoaded) {
+        console.log("Cargando criterios existentes:", newCriterios);
+        setCriterios(newCriterios);
+      }
+      
+      // Si hay calificación final, también la cargamos
+      if (caseData.calificacion) {
+        const numCalificacion = Number(caseData.calificacion);
+        if (!isNaN(numCalificacion)) {
+          // Si está en formato 0-50, convertir a 0-5
+          const finalValue = numCalificacion > 5 
+            ? (numCalificacion / 10).toFixed(1)
+            : numCalificacion.toString();
+          console.log("Cargando calificación final:", finalValue);
+          setCalificacionFinal(finalValue);
+        }
+      }
+    }
+  }, [caseData, isOpen]);
+
   useEffect(() => {
     // Calcular el promedio cada vez que cambien los criterios
     const valores = criterios.map(c => parseFloat(c.valor) || 0);
@@ -60,6 +126,7 @@ export function ModalCalification({
     const newCriterios = [...criterios];
     
     if (value === "" || (/^\d*\.?\d*$/.test(value) && parseFloat(value) <= 5)) {
+      // Si el valor es válido, formatearlo correctamente
       newCriterios[index] = { 
         valor: value, 
         error: "" 
@@ -93,6 +160,13 @@ export function ModalCalification({
     });
     
     setCriterios(newCriterios);
+    
+    // También validar que la calificación final exista y sea un número válido
+    if (valido && !calificacionFinal) {
+      setError("Error calculando la calificación final. Revise los criterios.");
+      valido = false;
+    }
+    
     return valido;
   };
 
@@ -106,7 +180,16 @@ export function ModalCalification({
 
     setIsSubmitting(true);
     try {
-      await updateCaseCalification(caseData.id_caso, calificacionFinal);
+      // Enviar cada criterio individual junto con la calificación final
+      await updateCaseCalification(
+        caseData.id_caso, 
+        calificacionFinal,
+        criterios[0].valor,
+        criterios[1].valor,
+        criterios[2].valor,
+        criterios[3].valor
+      );
+      
       setIsSubmitting(false);
       onClose();
       if (onSuccess) {
@@ -120,6 +203,7 @@ export function ModalCalification({
   };
 
   const handleClose = () => {
+    // Reset all form values
     setCriterios([
       { valor: "", error: "" },
       { valor: "", error: "" },
@@ -130,6 +214,21 @@ export function ModalCalification({
     setError("");
     onClose();
   };
+
+  function getCriterioLabel(index: number): string {
+    switch (index) {
+      case 0:
+        return "Criterio 1: Análisis del caso";
+      case 1:
+        return "Criterio 2: Fundamentación jurídica";
+      case 2:
+        return "Criterio 3: Redacción y argumentación";
+      case 3:
+        return "Criterio 4: Cumplimiento de plazos";
+      default:
+        return `Criterio ${index + 1}`;
+    }
+  }
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} placement="center">
@@ -162,7 +261,7 @@ export function ModalCalification({
                 <div key={index} className="mb-4">
                   <Input
                     type="number"
-                    label={`Criterio ${index + 1} (0-5)`}
+                    label={`${getCriterioLabel(index)} (0-5)`}
                     placeholder="Ej: 4.5"
                     value={criterio.valor}
                     onValueChange={(value) => handleCriterioChange(value, index)}

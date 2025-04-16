@@ -360,3 +360,125 @@ export function ModalUser({ isOpen, onClose, userData }: ModalUserProps) {
     </Modal>
   );
 }
+
+interface ModalCalificationDetailsProps {
+  isOpen: boolean;
+  onClose: () => void;
+  caseData: CaseWithKey | null;
+}
+
+export function ModalCalificationDetails({ 
+  isOpen, 
+  onClose, 
+  caseData 
+}: ModalCalificationDetailsProps) {
+  if (!caseData) return null;
+
+  function formatCalification(value: string | number | undefined | null): string {
+    if (value === undefined || value === null || value === '') return "-";
+    
+    // If the value is the string "null", return "-"
+    if (value === "null") return "-";
+    
+    const numValue = Number(value);
+    if (isNaN(numValue)) return String(value);
+    
+    // If it's in integer format (0-50), convert to decimal (0-5)
+    if (numValue > 5) {
+      return (numValue / 10).toFixed(1);
+    }
+    
+    // Ensure we return with one decimal place for consistency
+    return numValue.toFixed(1);
+  }
+
+  function getCriterioLabel(index: number): string {
+    switch (index) {
+      case 1:
+        return "Análisis del caso";
+      case 2:
+        return "Fundamentación jurídica";
+      case 3:
+        return "Redacción y argumentación";
+      case 4:
+        return "Cumplimiento de plazos";
+      default:
+        return `Criterio ${index}`;
+    }
+  }
+
+  // Get the student assigned to the case
+  const estudiante = caseData.usuarios?.find(user => user.rol === "Estudiante");
+  const nombreEstudiante = estudiante 
+    ? `${estudiante.primer_nombre} ${estudiante.primer_apellido}`
+    : "Sin estudiante asignado";
+
+  return (
+    <Modal isOpen={isOpen} onOpenChange={onClose}>
+      <ModalContent>
+        {(onClose) => (
+          <>
+            <ModalHeader className="flex flex-col gap-1">
+              Calificación del caso #{caseData.id_caso}
+            </ModalHeader>
+            <ModalBody>
+              <div className="flex flex-col gap-4">
+                {/* Information header */}
+                <div className="bg-blue-50 p-4 rounded-lg mb-3">
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold">Tipo de Proceso:</span>
+                      <span>{caseData.tipo_proceso}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold">Estudiante:</span>
+                      <span>{nombreEstudiante}</span>
+                    </div>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="font-semibold text-lg">Calificación Final:</span>
+                      <span className="text-lg font-bold text-primary">
+                        {formatCalification(caseData.calificacion)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Criteria list */}
+                <div className="mt-2">
+                  <h3 className="text-base font-semibold mb-3">Detalle de criterios (25% cada uno)</h3>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between border-b pb-3">
+                      <strong>Criterio 1: {getCriterioLabel(1)}</strong>
+                      <p className="font-medium">{formatCalification(caseData.calificacion1)}</p>
+                    </div>
+                    
+                    <div className="flex items-center justify-between border-b pb-3">
+                      <strong>Criterio 2: {getCriterioLabel(2)}</strong>
+                      <p className="font-medium">{formatCalification(caseData.calificacion2)}</p>
+                    </div>
+                    
+                    <div className="flex items-center justify-between border-b pb-3">
+                      <strong>Criterio 3: {getCriterioLabel(3)}</strong>
+                      <p className="font-medium">{formatCalification(caseData.calificacion3)}</p>
+                    </div>
+                    
+                    <div className="flex items-center justify-between border-b pb-3">
+                      <strong>Criterio 4: {getCriterioLabel(4)}</strong>
+                      <p className="font-medium">{formatCalification(caseData.calificacion4)}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </ModalBody>
+            <ModalFooter>
+              <Button color="primary" variant="light" onPress={onClose}>
+                Cerrar
+              </Button>
+            </ModalFooter>
+          </>
+        )}
+      </ModalContent>
+    </Modal>
+  );
+}
