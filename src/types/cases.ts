@@ -50,6 +50,7 @@ export interface Cases {
   calificacion2?: string;
   calificacion3?: string;
   calificacion4?: string;
+  ganado?: boolean;
   entidad?: string;
   fundamentos?: string;
   estudiante_asignado?: string;
