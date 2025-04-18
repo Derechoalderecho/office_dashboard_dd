@@ -177,10 +177,62 @@ export default function StepperForm() {
         setValidationErrors({});
       }
     } else {
+      // Get the list of missing fields for a more detailed error message
+      const missingFields = Object.keys(validationErrors);
+      
+      // Map field keys to human-readable names
+      const fieldNames = missingFields.map(field => {
+        const fieldLabels: {[key: string]: string} = {
+          // Basic Information
+          tipo_documento: "Tipo de documento",
+          num_documento: "Número de documento",
+          primer_nombre: "Primer nombre",
+          primer_apellido: "Primer apellido",
+          sexo: "Sexo",
+          genero: "Género",
+          orient_sexual: "Orientación sexual",
+          fecha_nacimiento: "Fecha de nacimiento",
+          num_movil: "Número móvil",
+          nacionalidad: "Nacionalidad",
+          estado_civil: "Estado civil",
+          escolaridad: "Escolaridad",
+          etnia: "Etnia",
+          discapacidad: "Discapacidad",
+          sabe_leer_escribir: "Sabe leer y escribir",
+          departamento: "Departamento",
+          municipio: "Municipio",
+          // General Information
+          tipo_proceso: "Tipo de proceso",
+          tiempo_respuesta: "Tiempo de respuesta",
+          hechos: "Hechos",
+          pretensiones: "Pretensiones",
+          fundamentos: "Fundamentos de derecho",
+          entidad: "Entidad",
+          notas: "Notas",
+          // Administration
+          profesor_id: "Docente asignado",
+          alumno_id: "Estudiante asignado",
+          citizen_id: "Ciudadano existente",
+        };
+        
+        return fieldLabels[field] || field;
+      });
+      
+      // Create the error message with the list of missing fields
+      let errorMessage = "Por favor complete los siguientes campos:";
+      
+      if (fieldNames.length <= 3) {
+        // Show all fields if there are 3 or fewer
+        errorMessage += ` ${fieldNames.join(', ')}`;
+      } else {
+        // Show only the first 3 fields if there are more than 3
+        errorMessage += ` ${fieldNames.slice(0, 3).join(', ')} y ${fieldNames.length - 3} más`;
+      }
+      
       // Show error toast for validation errors
       addToast({
         title: "Error de validación",
-        description: "Por favor complete todos los campos requeridos",
+        description: errorMessage,
         color: "danger",
       });
     }
@@ -197,6 +249,86 @@ export default function StepperForm() {
     e.preventDefault();
 
     if (currentStep === steps.length - 1) {
+      // Perform a final validation of all steps before submitting
+      const validationErrors: { [key: string]: string } = {};
+      
+      // Validate each step
+      Object.keys(stepValidations).forEach((stepKey) => {
+        const stepNumber = parseInt(stepKey);
+        const stepValidator = stepValidations[stepNumber as keyof typeof stepValidations];
+        if (stepValidator) {
+          const errors = stepValidator(formData);
+          Object.assign(validationErrors, errors);
+        }
+      });
+      
+      // Check if there are any validation errors
+      if (Object.keys(validationErrors).length > 0) {
+        setValidationErrors(validationErrors);
+        
+        // Get the list of missing fields for a more detailed error message
+        const missingFields = Object.keys(validationErrors);
+        
+        // Map field keys to human-readable names
+        const fieldNames = missingFields.map(field => {
+          const fieldLabels: {[key: string]: string} = {
+            // Basic Information
+            tipo_documento: "Tipo de documento",
+            num_documento: "Número de documento",
+            primer_nombre: "Primer nombre",
+            primer_apellido: "Primer apellido",
+            sexo: "Sexo",
+            genero: "Género",
+            orient_sexual: "Orientación sexual",
+            fecha_nacimiento: "Fecha de nacimiento",
+            num_movil: "Número móvil",
+            nacionalidad: "Nacionalidad",
+            estado_civil: "Estado civil",
+            escolaridad: "Escolaridad",
+            etnia: "Etnia",
+            discapacidad: "Discapacidad",
+            sabe_leer_escribir: "Sabe leer y escribir",
+            departamento: "Departamento",
+            municipio: "Municipio",
+            // General Information
+            tipo_proceso: "Tipo de proceso",
+            tiempo_respuesta: "Tiempo de respuesta",
+            hechos: "Hechos",
+            pretensiones: "Pretensiones",
+            fundamentos: "Fundamentos de derecho",
+            entidad: "Entidad",
+            notas: "Notas",
+            // Administration
+            profesor_id: "Docente asignado",
+            alumno_id: "Estudiante asignado",
+            citizen_id: "Ciudadano existente",
+          };
+          
+          return fieldLabels[field] || field;
+        });
+        
+        // Create the error message with the list of missing fields
+        let errorMessage = "No se puede enviar el formulario. Campos faltantes:";
+        
+        if (fieldNames.length <= 3) {
+          // Show all fields if there are 3 or fewer
+          errorMessage += ` ${fieldNames.join(', ')}`;
+        } else {
+          // Show only the first 3 fields if there are more than 3
+          errorMessage += ` ${fieldNames.slice(0, 3).join(', ')} y ${fieldNames.length - 3} más`;
+        }
+        
+        // Show error toast for validation errors
+        addToast({
+          title: "Error en el formulario",
+          description: errorMessage,
+          color: "danger",
+        });
+        
+        return; // Prevent form submission
+      }
+      
+      // If validation passes, proceed with submission
       setIsSubmitting(true);
       setSubmissionError(null);
 

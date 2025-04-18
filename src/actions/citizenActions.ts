@@ -63,6 +63,7 @@ export async function submitFormData(
         orient_sexual: formData.get("orient_sexual") || "",
         nacionalidad: formData.get("nacionalidad") || "",
         estado: formData.get("estado") || "Seguimiento",
+        estado_civil: formData.get("estado_civil") || "",
         escolaridad: formData.get("escolaridad") || "",
         etnia: formData.get("etnia") || "",
         discapacidad: formData.get("discapacidad") || "",
@@ -159,6 +160,7 @@ export async function submitFormData(
       fecha_actualiza: new Date().toISOString(),
       fecha_elimina: "",
       eliminado: "false",
+      ganado: "false",
       usuarios: [],
       ciudadano: null,
       id_caso: "0",
@@ -170,6 +172,10 @@ export async function submitFormData(
       antecedentes: "Pendiente de revisión",
       tutela: "Pendiente de revisión",
       calificacion: "0.0",
+      calificacion1: "0.0",
+      calificacion2: "0.0",
+      calificacion3: "0.0",
+      calificacion4: "0.0",
       fundamentos: formData.get("fundamentos")?.toString() || "",
       entidad: formData.get("entidad")?.toString() || ""
     };
