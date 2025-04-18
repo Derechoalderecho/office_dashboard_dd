@@ -2,6 +2,7 @@
 
 import { API_BASE_URL } from "@/config/api";
 import { assignUserToCase } from "@/services/caseService";
+import { invalidateCache } from "@/utils/cacheUtils";
 
 interface ApiResponse {
   success: boolean;
@@ -145,6 +146,9 @@ export async function submitFormData(
       const citizenResult = await citizenResponse.json();
       console.log("Citizen created successfully:", citizenResult);
       citizenId = citizenResult.id_ciudadano;
+      
+      // Invalidate citizens cache after creating a new citizen
+      invalidateCache("citizens");
     }
 
     // Step 2: Create case with the citizen ID
@@ -235,6 +239,9 @@ export async function submitFormData(
 
     const caseResult = await caseResponse.json();
     const caseId = caseResult.id_caso;
+    
+    // Invalidate cases cache after creating a new case
+    invalidateCache("cases");
 
     // Step 3: Assign users to the case
     const userAssignments = [
@@ -242,15 +249,16 @@ export async function submitFormData(
         userId: Number(formData.get("profesor_id")),
         role: "Docente"
       },
-      {
+      // Only include monitor if one is selected
+      ...(formData.get("monitor_id") ? [{
         userId: Number(formData.get("monitor_id")),
         role: "Monitor"
-      },
+      }] : []),
       {
         userId: Number(formData.get("alumno_id")),
         role: "Estudiante"
       }
-    ];
+    ].filter(assignment => !isNaN(assignment.userId) && assignment.userId > 0);
 
     // Assign each user to the case
     const assignmentPromises = userAssignments.map(({ userId, role }) => 
