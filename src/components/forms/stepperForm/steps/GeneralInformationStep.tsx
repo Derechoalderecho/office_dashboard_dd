@@ -145,8 +145,7 @@ export default function GeneralInformationStep({
           variant="bordered"
           label="Notas"
           labelPlacement="outside"
-          size="lg"
-          isRequired  
+          size="lg"  
           value={formData.notas}
           onChange={(e) => updateFormData({ notas: e.target.value })}
           placeholder="Ingrese las notas"
