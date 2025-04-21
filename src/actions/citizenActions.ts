@@ -145,7 +145,73 @@ export async function submitFormData(
 
       const citizenResult = await citizenResponse.json();
       console.log("Citizen created successfully:", citizenResult);
-      citizenId = citizenResult.id_ciudadano;
+      
+      // Handle different API response formats
+      if (Array.isArray(citizenResult)) {
+        if (citizenResult.length === 0) {
+          // API returned empty array - we need to fetch the citizen by document
+          console.log("API returned empty array, fetching citizen by document...");
+          try {
+            const existingCitizen = await fetch(
+              `${API_BASE_URL}/ciudadanos/documento/${formData.get("tipo_documento")}/${formData.get("num_documento")}`
+            );
+            
+            if (existingCitizen.ok) {
+              const citizenData = await existingCitizen.json();
+              if (citizenData && citizenData.id_ciudadano) {
+                citizenId = citizenData.id_ciudadano;
+                console.log("Found citizen by document with ID:", citizenId);
+              } else {
+                console.error("Could not find citizen by document after creation");
+                return {
+                  success: false,
+                  error: "No se pudo recuperar el ID del ciudadano después de crearlo",
+                };
+              }
+            } else {
+              console.error("Error fetching citizen by document");
+              return {
+                success: false,
+                error: "Error al buscar el ciudadano creado",
+              };
+            }
+          } catch (error) {
+            console.error("Error fetching citizen:", error);
+            return {
+              success: false,
+              error: "No se pudo recuperar el ID del ciudadano",
+            };
+          }
+        } else if (citizenResult.length > 0) {
+          // Use first item in array
+          citizenId = citizenResult[0].id_ciudadano;
+          console.log("Using first citizen from array with ID:", citizenId);
+        } else {
+          console.error("Unexpected server response");
+          return {
+            success: false,
+            error: "Respuesta inesperada del servidor",
+          };
+        }
+      } else if (citizenResult && citizenResult.id_ciudadano) {
+        citizenId = citizenResult.id_ciudadano;
+        console.log("Using citizen with ID:", citizenId);
+      } else {
+        console.error("Unrecognized response format:", JSON.stringify(citizenResult));
+        return {
+          success: false,
+          error: "Formato de respuesta no reconocido",
+        };
+      }
+      
+      // Double-check citizenId is valid at this point
+      if (typeof citizenId !== 'number' || isNaN(citizenId) || citizenId <= 0) {
+        console.error("Invalid citizenId after parsing citizen response:", citizenId);
+        return {
+          success: false,
+          error: "Error interno: ID de ciudadano inválido o no generado correctamente",
+        };
+      }
       
       // Invalidate citizens cache after creating a new citizen
       invalidateCache("citizens");
@@ -153,8 +219,18 @@ export async function submitFormData(
 
     // Step 2: Create case with the citizen ID
     const profesorId = formData.get("profesor_id")?.toString() || "0";
+    
+    // Validate citizenId before using it
+    if (typeof citizenId !== 'number' || isNaN(citizenId) || citizenId <= 0) {
+      console.error("Invalid citizenId before case creation:", citizenId);
+      return {
+        success: false,
+        error: "Error interno: ID de ciudadano inválido o no generado correctamente",
+      };
+    }
+    
     const caseData = {
-      id_ciudadano: citizenId.toString(),
+      id_ciudadano: String(citizenId || 0),
       tipo_proceso: formData.get("tipo_proceso")?.toString() || "Tutela",
       estado: "Viabilidad",
       tiempo_respuesta: formData.get("tiempo_respuesta")?.toString() || "48",
