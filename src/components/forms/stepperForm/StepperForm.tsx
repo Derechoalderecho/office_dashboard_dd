@@ -364,6 +364,12 @@ export default function StepperForm() {
               ? "Modo de prueba: Simulación exitosa"
               : "El formulario se ha enviado correctamente",
           });
+          
+          // Redirect to cases page instead of citizens
+          setTimeout(() => {
+            router.push("/dashboard/cases");
+            router.refresh();
+          }, 1500);
         } else {
           setSubmissionError(result.error || "Error al enviar el formulario");
           addToast({

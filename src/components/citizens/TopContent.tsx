@@ -90,11 +90,6 @@ export default function TopContent({
             </Button>
           </div>
         </div>
-        <Link href="/dashboard/citizens/create">
-          <Button color="primary" startContent={<UserPlusIcon className="w-5" />}>
-            Añadir ciudadano
-          </Button>
-        </Link>
       </div>
       <div className="flex justify-between items-center mt-6">
         <span className="text-default-400 text-small">
