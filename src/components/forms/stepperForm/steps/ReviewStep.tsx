@@ -1,3 +1,7 @@
+import { useEffect, useState } from "react";
+import { fetchUserDetails } from "@/services/userService";
+import { Users } from "@/types/users";
+
 type ReviewStepProps = {
   formData: {
     // Citizen information
@@ -49,6 +53,71 @@ type ReviewStepProps = {
 
 export default function ReviewStep({ formData }: ReviewStepProps) {
   const isExistingCitizen = formData.is_existing_citizen === "true";
+  const [userNames, setUserNames] = useState<{
+    profesor: string;
+    monitor: string;
+    alumno: string;
+  }>({
+    profesor: "Cargando...",
+    monitor: "Cargando...",
+    alumno: "Cargando...",
+  });
+
+  // Fetch user details to get names
+  useEffect(() => {
+    const loadUserNames = async () => {
+      try {
+        // Fetch professor name
+        if (formData.profesor_id) {
+          const profesor = await fetchUserDetails(formData.profesor_id);
+          if (profesor) {
+            setUserNames(prev => ({
+              ...prev,
+              profesor: `${profesor.primer_nombre} ${profesor.primer_apellido}`
+            }));
+          } else {
+            setUserNames(prev => ({ ...prev, profesor: "No encontrado" }));
+          }
+        } else {
+          setUserNames(prev => ({ ...prev, profesor: "No asignado" }));
+        }
+
+        // Fetch monitor name
+        if (formData.monitor_id) {
+          const monitor = await fetchUserDetails(formData.monitor_id);
+          if (monitor) {
+            setUserNames(prev => ({
+              ...prev,
+              monitor: `${monitor.primer_nombre} ${monitor.primer_apellido}`
+            }));
+          } else {
+            setUserNames(prev => ({ ...prev, monitor: "No encontrado" }));
+          }
+        } else {
+          setUserNames(prev => ({ ...prev, monitor: "No asignado" }));
+        }
+
+        // Fetch student name
+        if (formData.alumno_id) {
+          const alumno = await fetchUserDetails(formData.alumno_id);
+          if (alumno) {
+            setUserNames(prev => ({
+              ...prev,
+              alumno: `${alumno.primer_nombre} ${alumno.primer_apellido}`
+            }));
+          } else {
+            setUserNames(prev => ({ ...prev, alumno: "No encontrado" }));
+          }
+        } else {
+          setUserNames(prev => ({ ...prev, alumno: "No asignado" }));
+        }
+      } catch (error) {
+        console.error("Error fetching user details:", error);
+      }
+    };
+
+    loadUserNames();
+  }, [formData.profesor_id, formData.monitor_id, formData.alumno_id]);
 
   return (
     <div className="space-y-8">
@@ -217,15 +286,15 @@ export default function ReviewStep({ formData }: ReviewStepProps) {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-500">Profesor de referencia</p>
-            <p>{formData.profesor_id || "No especificado"}</p>
+            <p>{userNames.profesor}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Monitor de referencia</p>
-            <p>{formData.monitor_id || "No especificado"}</p>
+            <p>{userNames.monitor}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Alumno de referencia</p>
-            <p>{formData.alumno_id || "No especificado"}</p>
+            <p>{userNames.alumno}</p>
           </div>
         </div>
       </div>
