@@ -3,6 +3,7 @@
 import { API_BASE_URL } from "@/config/api";
 import { assignUserToCase } from "@/services/caseService";
 import { invalidateCache } from "@/utils/cacheUtils";
+import { convertZonaToCode } from "@/utils/citizenUtils";
 
 interface ApiResponse {
   success: boolean;
@@ -74,7 +75,7 @@ export async function submitFormData(
         fecha_nacimiento: formData.get("fecha_nacimiento") || "",
         direccion: formData.get("direccion") || "",
         estrato: formData.get("estrato") || "",
-        zona: formData.get("zona") || "",
+        zona: convertZonaToCode(formData.get("zona")?.toString() || ""),
         departamento: formData.get("departamento") || "",
         municipio: formData.get("municipio") || "",
       };
@@ -194,7 +195,7 @@ export async function submitFormData(
           };
         }
       } else if (citizenResult && citizenResult.id_ciudadano) {
-        citizenId = citizenResult.id_ciudadano;
+      citizenId = citizenResult.id_ciudadano;
         console.log("Using citizen with ID:", citizenId);
       } else {
         console.error("Unrecognized response format:", JSON.stringify(citizenResult));

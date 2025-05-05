@@ -9,6 +9,7 @@ import {
   invalidateCache,
 } from "@/utils/cacheUtils";
 import { logger } from "@/utils/logUtils";
+import { convertZonaToCode } from "@/utils/citizenUtils";
 
 const CITIZEN_CACHE = "citizens";
 
@@ -69,7 +70,13 @@ export const createCitizen = async (
   try {
     logger.info("Creando nuevo ciudadano");
 
-    const createdCitizen = await post<Citizen>("ciudadanos", citizenData);
+    // Ensure zona is in the correct format for the database
+    const processedData = {
+      ...citizenData,
+      zona: convertZonaToCode(citizenData.zona)
+    };
+
+    const createdCitizen = await post<Citizen>("ciudadanos", processedData);
 
     invalidateCache(CITIZEN_CACHE);
 
@@ -84,21 +91,29 @@ export const createCitizen = async (
 };
 
 /**
- * Updates the data of an existing citizen
- * @param id
- * @param citizenData
- * @returns
+ * Updates an existing citizen
+ * @param id 
+ * @param citizenData 
+ * @returns 
  */
 export const updateCitizen = async (
-  id: number,
+  id: string,
   citizenData: Partial<Citizen>
 ): Promise<Citizen | null> => {
   try {
     logger.info(`Actualizando ciudadano ${id}`);
 
-    const updatedCitizen = await put<Citizen>(`ciudadanos/${id}`, citizenData);
+    // Ensure zona is in the correct format for the database
+    const processedData = {
+      ...citizenData,
+      zona: citizenData.zona ? convertZonaToCode(citizenData.zona) : undefined
+    };
 
+    const updatedCitizen = await put<Citizen>(`ciudadanos/${id}`, processedData);
+
+    // Invalidate cache for this specific citizen and the general collection
     invalidateCacheItem(CITIZEN_CACHE, id);
+    invalidateCache(CITIZEN_CACHE);
 
     logger.info(`Ciudadano ${id} actualizado exitosamente`);
     return updatedCitizen;
