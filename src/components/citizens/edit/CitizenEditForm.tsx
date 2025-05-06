@@ -362,7 +362,7 @@ export default function CitizenEditForm({ citizenId }: CitizenEditFormProps) {
 
     setIsSaving(true);
     try {
-      const updatedCitizen = await updateCitizen(Number(citizenId), filteredFormData);
+      const updatedCitizen = await updateCitizen(citizenId, filteredFormData);
 
       if (updatedCitizen) {
         addToast({
