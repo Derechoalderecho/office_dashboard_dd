@@ -146,27 +146,34 @@ export async function submitFormData(
 
       const citizenResult = await citizenResponse.json();
       console.log("Citizen created successfully:", citizenResult);
-      
+
       // Handle different API response formats
       if (Array.isArray(citizenResult)) {
         if (citizenResult.length === 0) {
           // API returned empty array - we need to fetch the citizen by document
-          console.log("API returned empty array, fetching citizen by document...");
+          console.log(
+            "API returned empty array, fetching citizen by document..."
+          );
           try {
             const existingCitizen = await fetch(
-              `${API_BASE_URL}/ciudadanos/documento/${formData.get("tipo_documento")}/${formData.get("num_documento")}`
+              `${API_BASE_URL}/ciudadanos/documento/${formData.get(
+                "tipo_documento"
+              )}/${formData.get("num_documento")}`
             );
-            
+
             if (existingCitizen.ok) {
               const citizenData = await existingCitizen.json();
               if (citizenData && citizenData.id_ciudadano) {
                 citizenId = citizenData.id_ciudadano;
                 console.log("Found citizen by document with ID:", citizenId);
               } else {
-                console.error("Could not find citizen by document after creation");
+                console.error(
+                  "Could not find citizen by document after creation"
+                );
                 return {
                   success: false,
-                  error: "No se pudo recuperar el ID del ciudadano después de crearlo",
+                  error:
+                    "No se pudo recuperar el ID del ciudadano después de crearlo",
                 };
               }
             } else {
@@ -195,41 +202,49 @@ export async function submitFormData(
           };
         }
       } else if (citizenResult && citizenResult.id_ciudadano) {
-      citizenId = citizenResult.id_ciudadano;
+        citizenId = citizenResult.id_ciudadano;
         console.log("Using citizen with ID:", citizenId);
       } else {
-        console.error("Unrecognized response format:", JSON.stringify(citizenResult));
+        console.error(
+          "Unrecognized response format:",
+          JSON.stringify(citizenResult)
+        );
         return {
           success: false,
           error: "Formato de respuesta no reconocido",
         };
       }
-      
+
       // Double-check citizenId is valid at this point
-      if (typeof citizenId !== 'number' || isNaN(citizenId) || citizenId <= 0) {
-        console.error("Invalid citizenId after parsing citizen response:", citizenId);
+      if (typeof citizenId !== "number" || isNaN(citizenId) || citizenId <= 0) {
+        console.error(
+          "Invalid citizenId after parsing citizen response:",
+          citizenId
+        );
         return {
           success: false,
-          error: "Error interno: ID de ciudadano inválido o no generado correctamente",
+          error:
+            "Error interno: ID de ciudadano inválido o no generado correctamente",
         };
       }
-      
+
       // Invalidate citizens cache after creating a new citizen
       invalidateCache("citizens");
     }
 
     // Step 2: Create case with the citizen ID
     const profesorId = formData.get("profesor_id")?.toString() || "0";
-    
+
     // Validate citizenId before using it
-    if (typeof citizenId !== 'number' || isNaN(citizenId) || citizenId <= 0) {
+    if (typeof citizenId !== "number" || isNaN(citizenId) || citizenId <= 0) {
       console.error("Invalid citizenId before case creation:", citizenId);
       return {
         success: false,
-        error: "Error interno: ID de ciudadano inválido o no generado correctamente",
+        error:
+          "Error interno: ID de ciudadano inválido o no generado correctamente",
       };
     }
-    
+
     const caseData = {
       id_ciudadano: String(citizenId || 0),
       tipo_proceso: formData.get("tipo_proceso")?.toString() || "Tutela",
@@ -237,14 +252,6 @@ export async function submitFormData(
       tiempo_respuesta: formData.get("tiempo_respuesta")?.toString() || "48",
       notas: formData.get("notas")?.toString() || "",
       persona_modifica: profesorId,
-      fecha_crea: new Date().toISOString(),
-      fecha_actualiza: new Date().toISOString(),
-      fecha_elimina: "",
-      eliminado: "false",
-      ganado: "false",
-      usuarios: [],
-      ciudadano: null,
-      pretensiones: formData.get("pretensiones")?.toString() || "Pendiente de revisión",
       concepto_estudiante: "Pendiente de revisión",
       hechos: formData.get("hechos")?.toString() || "Pendiente de revisión",
       rama_derecho: "Derecho Constitucional",
@@ -252,12 +259,15 @@ export async function submitFormData(
       antecedentes: "Pendiente de revisión",
       tutela: "Pendiente de revisión",
       calificacion: "0.0",
+      ganado: "false",
+      pretensiones:
+        formData.get("pretensiones")?.toString() || "Pendiente de revisión",
+      entidad: formData.get("entidad")?.toString() || "",
+      fundamentos: formData.get("fundamentos")?.toString() || "",
       calificacion1: "0.0",
       calificacion2: "0.0",
       calificacion3: "0.0",
       calificacion4: "0.0",
-      fundamentos: formData.get("fundamentos")?.toString() || "",
-      entidad: formData.get("entidad")?.toString() || ""
     };
 
     console.log("Sending case data:", JSON.stringify(caseData, null, 2));
@@ -283,10 +293,13 @@ export async function submitFormData(
 
       // Print detailed error information
       if (errorData.detail && Array.isArray(errorData.detail)) {
-        console.error("Missing fields:", errorData.detail.map((err: any) => ({
-          field: err.loc[1],
-          message: err.msg
-        })));
+        console.error(
+          "Missing fields:",
+          errorData.detail.map((err: any) => ({
+            field: err.loc[1],
+            message: err.msg,
+          }))
+        );
       }
 
       // Check for specific error types
@@ -314,18 +327,20 @@ export async function submitFormData(
     }
 
     const caseResult = await caseResponse.json();
-    const caseId = caseResult.id_caso;
-    
+    const caseId = caseResult[0].id_caso;
+    console.log(caseResponse)
+    console.log(caseResult);
+
     // Invalidate cases cache after creating a new case
     invalidateCache("cases");
 
     // Ensure we have a valid case ID before proceeding with user assignments
-    if (!caseId || typeof caseId !== 'number') {
-      console.error('Invalid or missing case ID after case creation:', caseId);
+    if (!caseId || typeof caseId !== "number") {
+      console.error("Invalid or missing case ID after case creation:", caseId);
       return {
         success: false,
-        error: 'Error: No se pudo obtener el ID del caso creado',
-        data: { citizen: { id_ciudadano: citizenId }, case: caseResult }
+        error: "Error: No se pudo obtener el ID del caso creado",
+        data: { citizen: { id_ciudadano: citizenId }, case: caseResult },
       };
     }
 
@@ -335,28 +350,34 @@ export async function submitFormData(
     const userAssignments = [
       {
         userId: Number(formData.get("profesor_id")),
-        role: "Docente"
+        role: "Docente",
       },
       // Only include monitor if one is selected
-      ...(formData.get("monitor_id") ? [{
-        userId: Number(formData.get("monitor_id")),
-        role: "Monitor"
-      }] : []),
+      ...(formData.get("monitor_id")
+        ? [
+            {
+              userId: Number(formData.get("monitor_id")),
+              role: "Monitor",
+            },
+          ]
+        : []),
       {
         userId: Number(formData.get("alumno_id")),
-        role: "Estudiante"
-      }
-    ].filter(assignment => !isNaN(assignment.userId) && assignment.userId > 0);
+        role: "Estudiante",
+      },
+    ].filter(
+      (assignment) => !isNaN(assignment.userId) && assignment.userId > 0
+    );
 
     // Verificar que tenemos asignaciones válidas
     if (userAssignments.length === 0) {
-      console.warn('No valid user assignments found for case:', caseId);
+      console.warn("No valid user assignments found for case:", caseId);
       return {
         success: true,
         data: {
           citizen: { id_ciudadano: citizenId },
           case: caseResult,
-          warning: 'No se asignaron usuarios al caso'
+          warning: "No se asignaron usuarios al caso",
         },
       };
     }
@@ -366,34 +387,46 @@ export async function submitFormData(
     const RETRY_DELAY = 1000; // 1 segundo
 
     // Función para realizar un retraso
-    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+    const delay = (ms: number) =>
+      new Promise((resolve) => setTimeout(resolve, ms));
 
     // Función para asignar un usuario con reintentos
-    const assignUserWithRetry = async (caseId: number, userId: number, role: string): Promise<boolean> => {
+    const assignUserWithRetry = async (
+      caseId: number,
+      userId: number,
+      role: string
+    ): Promise<boolean> => {
       let retries = 0;
-      
+
       while (retries < MAX_RETRIES) {
         try {
           const result = await assignUserToCase(caseId, userId, role);
           if (result) {
             return true;
           }
-          
-          console.warn(`Assignment failed for user ${userId} to case ${caseId} as ${role}, retrying (${retries + 1}/${MAX_RETRIES})...`);
+
+          console.warn(
+            `Assignment failed for user ${userId} to case ${caseId} as ${role}, retrying (${
+              retries + 1
+            }/${MAX_RETRIES})...`
+          );
           retries++;
           await delay(RETRY_DELAY);
         } catch (error) {
-          console.error(`Error assigning user ${userId} to case ${caseId}:`, error);
+          console.error(
+            `Error assigning user ${userId} to case ${caseId}:`,
+            error
+          );
           retries++;
           await delay(RETRY_DELAY);
         }
       }
-      
+
       return false;
     };
 
     // Asignar cada usuario al caso con reintentos
-    const assignmentPromises = userAssignments.map(({ userId, role }) => 
+    const assignmentPromises = userAssignments.map(({ userId, role }) =>
       assignUserWithRetry(caseId, userId, role)
     );
 
