@@ -329,6 +329,8 @@ export async function submitFormData(
       };
     }
 
+    console.log(`Case created successfully with ID: ${caseId}`);
+
     // Step 3: Assign users to the case
     const userAssignments = [
       {
@@ -346,16 +348,60 @@ export async function submitFormData(
       }
     ].filter(assignment => !isNaN(assignment.userId) && assignment.userId > 0);
 
-    // Assign each user to the case
+    // Verificar que tenemos asignaciones válidas
+    if (userAssignments.length === 0) {
+      console.warn('No valid user assignments found for case:', caseId);
+      return {
+        success: true,
+        data: {
+          citizen: { id_ciudadano: citizenId },
+          case: caseResult,
+          warning: 'No se asignaron usuarios al caso'
+        },
+      };
+    }
+
+    // Implementar un mecanismo de reintento para las asignaciones de usuarios
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = 1000; // 1 segundo
+
+    // Función para realizar un retraso
+    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+    // Función para asignar un usuario con reintentos
+    const assignUserWithRetry = async (caseId: number, userId: number, role: string): Promise<boolean> => {
+      let retries = 0;
+      
+      while (retries < MAX_RETRIES) {
+        try {
+          const result = await assignUserToCase(caseId, userId, role);
+          if (result) {
+            return true;
+          }
+          
+          console.warn(`Assignment failed for user ${userId} to case ${caseId} as ${role}, retrying (${retries + 1}/${MAX_RETRIES})...`);
+          retries++;
+          await delay(RETRY_DELAY);
+        } catch (error) {
+          console.error(`Error assigning user ${userId} to case ${caseId}:`, error);
+          retries++;
+          await delay(RETRY_DELAY);
+        }
+      }
+      
+      return false;
+    };
+
+    // Asignar cada usuario al caso con reintentos
     const assignmentPromises = userAssignments.map(({ userId, role }) => 
-      assignUserToCase(caseId, userId, role)
+      assignUserWithRetry(caseId, userId, role)
     );
 
     const assignmentResults = await Promise.all(assignmentPromises);
     const allAssignmentsSuccessful = assignmentResults.every(Boolean);
 
     if (!allAssignmentsSuccessful) {
-      console.warn("Some user assignments failed");
+      console.warn("Some user assignments failed after retries");
     }
 
     return {
