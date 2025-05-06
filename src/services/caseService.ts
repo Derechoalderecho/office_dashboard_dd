@@ -542,13 +542,13 @@ export const updateCaseCalification = async (
     }
 
     // Preparar los datos para actualizar
-    // calificacion como entero (0-50) y los criterios como decimales (0-5)
+    // calificacion como entero (0-50) y los criterios como enteros (0-50)
     const updateData = {
       calificacion: calificationAsInteger,
-      calificacion1: criterio1Number.toFixed(1),
-      calificacion2: criterio2Number.toFixed(1), 
-      calificacion3: criterio3Number.toFixed(1),
-      calificacion4: criterio4Number.toFixed(1)
+      calificacion1: Math.round(criterio1Number * 10), // Convertir a entero (0-50)
+      calificacion2: Math.round(criterio2Number * 10), // Convertir a entero (0-50)
+      calificacion3: Math.round(criterio3Number * 10), // Convertir a entero (0-50)
+      calificacion4: Math.round(criterio4Number * 10)  // Convertir a entero (0-50)
     };
 
     logger.debug(`Datos de calificación a enviar para caso ${id}:`, JSON.stringify(updateData));
