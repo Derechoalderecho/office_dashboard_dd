@@ -244,7 +244,6 @@ export async function submitFormData(
       ganado: "false",
       usuarios: [],
       ciudadano: null,
-      id_caso: "0",
       pretensiones: formData.get("pretensiones")?.toString() || "Pendiente de revisión",
       concepto_estudiante: "Pendiente de revisión",
       hechos: formData.get("hechos")?.toString() || "Pendiente de revisión",
@@ -319,6 +318,16 @@ export async function submitFormData(
     
     // Invalidate cases cache after creating a new case
     invalidateCache("cases");
+
+    // Ensure we have a valid case ID before proceeding with user assignments
+    if (!caseId || typeof caseId !== 'number') {
+      console.error('Invalid or missing case ID after case creation:', caseId);
+      return {
+        success: false,
+        error: 'Error: No se pudo obtener el ID del caso creado',
+        data: { citizen: { id_ciudadano: citizenId }, case: caseResult }
+      };
+    }
 
     // Step 3: Assign users to the case
     const userAssignments = [
