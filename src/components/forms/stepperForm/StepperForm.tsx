@@ -354,21 +354,73 @@ export default function StepperForm() {
         // Submit the form data with mock mode enabled temporarily
         // Set to true to use mock mode, false to use real API calls
         const useMockMode = false; // Toggle this when database permissions are fixed
-        const result = await submitFormData(formDataObj, useMockMode);
+        
+        // Mostrar un mensaje de estado mientras se procesa la solicitud
+        addToast({
+          title: "Procesando solicitud",
+          description: "Creando caso y asignando usuarios...",
+          color: "primary",
+        });
+        
+        // Implementar un timeout para la solicitud
+        const SUBMISSION_TIMEOUT = 30000; // 30 segundos
+        
+        // Crear una promesa con timeout
+        const submissionPromise = submitFormData(formDataObj, useMockMode);
+        
+        // Crear una promesa de timeout
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => {
+            reject(new Error("La solicitud ha excedido el tiempo de espera"));
+          }, SUBMISSION_TIMEOUT);
+        });
+        
+        // Esperar a que se complete la primera promesa (éxito o timeout)
+        const result = await Promise.race([submissionPromise, timeoutPromise]) as { 
+          success: boolean; 
+          error?: string; 
+          data?: any;
+          warning?: string;
+        };
 
         if (result.success) {
           setIsComplete(true);
-          addToast({
-            title: "Formulario enviado exitosamente",
-            description: useMockMode
-              ? "Modo de prueba: Simulación exitosa"
-              : "El formulario se ha enviado correctamente",
-          });
+          
+          // Verificar si hay advertencias
+          if (result.warning) {
+            addToast({
+              title: "Formulario enviado con advertencias",
+              description: result.warning,
+              color: "warning",
+            });
+          } else {
+            addToast({
+              title: "Formulario enviado exitosamente",
+              description: useMockMode
+                ? "Modo de prueba: Simulación exitosa"
+                : "El formulario se ha enviado correctamente",
+              color: "success",
+            });
+          }
+          
+          // Verificar que tenemos un ID de caso válido antes de redirigir
+          const caseId = result.data?.case?.id_caso;
+          
+          // Redirect to cases page instead of citizens
+          setTimeout(() => {
+            if (caseId) {
+              router.push(`/dashboard/cases/${caseId}`);
+            } else {
+              router.push("/dashboard/cases");
+            }
+            router.refresh();
+          }, 1500);
         } else {
           setSubmissionError(result.error || "Error al enviar el formulario");
           addToast({
             title: "Error al enviar el formulario",
             description: result.error || "Error al enviar el formulario",
+            color: "danger",
           });
         }
       } catch (error) {

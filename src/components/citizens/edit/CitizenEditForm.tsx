@@ -33,6 +33,7 @@ import {
 } from "@/services/locationService";
 import { ArrowLeftIcon, CheckIcon, Loader2Icon } from "lucide-react";
 import { parseDate, CalendarDate } from "@internationalized/date";
+import { mapZonaForSelect } from "@/utils/citizenUtils";
 
 interface CitizenEditFormProps {
   citizenId: string;
@@ -793,15 +794,15 @@ export default function CitizenEditForm({ citizenId }: CitizenEditFormProps) {
               variant="bordered"
               labelPlacement="outside"
               placeholder="Seleccione su zona"
-              selectedKeys={formData.zona ? [formData.zona] : []}
+              selectedKeys={mapZonaForSelect(formData.zona)}
               onSelectionChange={(keys) => {
                 const selectedKey = Array.from(keys)[0]?.toString() || "";
                 updateFormData({ zona: selectedKey });
               }}
               errorMessage={validationErrors.zona}
             >
-              <SelectItem key="urbana">Urbana</SelectItem>
-              <SelectItem key="rural">Rural</SelectItem>
+              <SelectItem key="UR">Urbana</SelectItem>
+              <SelectItem key="RU">Rural</SelectItem>
             </Select>
 
             <Select

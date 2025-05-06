@@ -5,6 +5,7 @@ import { EyeIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
 import { CitizenWithKey } from "@/types/citizens";
 import { parseDateToLocal } from "@/utils/date";
 import { useRouter } from "next/navigation";
+import { convertZonaCodeToDisplay } from "@/utils/citizenUtils";
 
 interface TableCellRendererProps {
   user: CitizenWithKey;
@@ -49,6 +50,12 @@ export const TableCellRendererCitizens = ({
       return (
         <div className="flex flex-col">
           <p className="text-base">{String(cellValue)}</p>
+        </div>
+      );
+    case "zona":
+      return (
+        <div className="flex flex-col">
+          <p className="text-base">{convertZonaCodeToDisplay(String(cellValue))}</p>
         </div>
       );
     case "actions":

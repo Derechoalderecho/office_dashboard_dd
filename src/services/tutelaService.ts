@@ -60,7 +60,7 @@ export async function getLatestTutelaDocument(
 ): Promise<{ success: boolean; data?: TutelaResponse; error?: string }> {
   try {
     const response = await axios.get(
-      `${API_BASE_URL}/tutelas/${caseId}/latest`
+      `${API_BASE_URL}/tutelas/${caseId}`
     );
 
     if (response.status === 200) {

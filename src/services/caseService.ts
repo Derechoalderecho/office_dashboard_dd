@@ -447,12 +447,52 @@ export const assignUserToCase = async (
   userId: number,
   role: string
 ): Promise<boolean> => {
+  // Validar parámetros de entrada
+  if (!caseId || !userId || !role) {
+    logger.error(`Parámetros inválidos para asignación: caseId=${caseId}, userId=${userId}, role=${role}`);
+    return false;
+  }
+
+  // Verificar que el caso exista antes de intentar asignar usuarios
+  try {
+    const caseExists = await getWithCache(
+      CASES_CACHE,
+      caseId,
+      async () => {
+        try {
+          const caseData = await get(`casos/${caseId}`);
+          return caseData ? true : false;
+        } catch (error) {
+          return false;
+        }
+      },
+      CASES_TTL
+    );
+
+    if (!caseExists) {
+      logger.error(`No se puede asignar usuario ${userId} al caso ${caseId} porque el caso no existe`);
+      return false;
+    }
+  } catch (error) {
+    logger.error(`Error al verificar existencia del caso ${caseId}:`, error);
+    // Continuamos con la asignación a pesar del error en la verificación
+  }
+
   try {
     logger.info(`Asignando usuario ${userId} como ${role} al caso ${caseId}`);
 
-    const currentUsers = await fetchUsersByCaseId(caseId);
+    // Obtener usuarios actuales asignados al caso
+    let currentUsers = [];
+    try {
+      currentUsers = await fetchUsersByCaseId(caseId);
+    } catch (fetchError) {
+      logger.warn(`No se pudieron obtener usuarios actuales del caso ${caseId}: ${fetchError}`);
+      // Continuamos con la asignación aunque no podamos obtener los usuarios actuales
+    }
+
     const existingAssignment = currentUsers.find((user) => user.rol === role);
 
+    // Eliminar asignación existente si es necesario
     if (existingAssignment) {
       logger.info(
         `Eliminando asignación existente: caso ${caseId}, usuario ${existingAssignment.id_usuario}, rol ${role}`
@@ -460,17 +500,31 @@ export const assignUserToCase = async (
 
       try {
         await del(`casos-usuarios/${existingAssignment.id_usuario}/${caseId}`);
+        // Esperar un momento para asegurar que la eliminación se complete
+        await new Promise(resolve => setTimeout(resolve, 500));
       } catch (deleteError) {
         logger.error(`Error al eliminar asignación existente: ${deleteError}`);
+        // Continuamos con la nueva asignación a pesar del error en la eliminación
       }
     }
 
-    await post<any>("casos-usuarios", {
+    // Crear la nueva asignación
+    const assignmentData = {
       id_caso: caseId,
       id_usuario: userId,
       rol: role,
-    });
+    };
 
+    logger.debug(`Enviando datos de asignación: ${JSON.stringify(assignmentData)}`);
+    
+    const response = await post<any>("casos-usuarios", assignmentData);
+    
+    // Verificar respuesta
+    if (!response) {
+      logger.warn(`No se recibió respuesta al asignar usuario ${userId} al caso ${caseId}`);
+    }
+
+    // Invalidar caché para reflejar los cambios
     invalidateCacheItem(CASES_CACHE, caseId);
     invalidateCache(`${CASES_CACHE}_usuarios_${caseId}`);
 
@@ -542,13 +596,13 @@ export const updateCaseCalification = async (
     }
 
     // Preparar los datos para actualizar
-    // calificacion como entero (0-50) y los criterios como decimales (0-5)
+    // calificacion como entero (0-50) y los criterios como enteros (0-50)
     const updateData = {
       calificacion: calificationAsInteger,
-      calificacion1: criterio1Number.toFixed(1),
-      calificacion2: criterio2Number.toFixed(1), 
-      calificacion3: criterio3Number.toFixed(1),
-      calificacion4: criterio4Number.toFixed(1)
+      calificacion1: Math.round(criterio1Number * 10), // Convertir a entero (0-50)
+      calificacion2: Math.round(criterio2Number * 10), // Convertir a entero (0-50)
+      calificacion3: Math.round(criterio3Number * 10), // Convertir a entero (0-50)
+      calificacion4: Math.round(criterio4Number * 10)  // Convertir a entero (0-50)
     };
 
     logger.debug(`Datos de calificación a enviar para caso ${id}:`, JSON.stringify(updateData));

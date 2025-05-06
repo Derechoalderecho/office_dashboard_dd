@@ -3,6 +3,7 @@
 import { API_BASE_URL } from "@/config/api";
 import { assignUserToCase } from "@/services/caseService";
 import { invalidateCache } from "@/utils/cacheUtils";
+import { convertZonaToCode } from "@/utils/citizenUtils";
 
 interface ApiResponse {
   success: boolean;
@@ -74,7 +75,7 @@ export async function submitFormData(
         fecha_nacimiento: formData.get("fecha_nacimiento") || "",
         direccion: formData.get("direccion") || "",
         estrato: formData.get("estrato") || "",
-        zona: formData.get("zona") || "",
+        zona: convertZonaToCode(formData.get("zona")?.toString() || ""),
         departamento: formData.get("departamento") || "",
         municipio: formData.get("municipio") || "",
       };
@@ -194,7 +195,7 @@ export async function submitFormData(
           };
         }
       } else if (citizenResult && citizenResult.id_ciudadano) {
-        citizenId = citizenResult.id_ciudadano;
+      citizenId = citizenResult.id_ciudadano;
         console.log("Using citizen with ID:", citizenId);
       } else {
         console.error("Unrecognized response format:", JSON.stringify(citizenResult));
@@ -243,7 +244,6 @@ export async function submitFormData(
       ganado: "false",
       usuarios: [],
       ciudadano: null,
-      id_caso: "0",
       pretensiones: formData.get("pretensiones")?.toString() || "Pendiente de revisión",
       concepto_estudiante: "Pendiente de revisión",
       hechos: formData.get("hechos")?.toString() || "Pendiente de revisión",
@@ -319,6 +319,18 @@ export async function submitFormData(
     // Invalidate cases cache after creating a new case
     invalidateCache("cases");
 
+    // Ensure we have a valid case ID before proceeding with user assignments
+    if (!caseId || typeof caseId !== 'number') {
+      console.error('Invalid or missing case ID after case creation:', caseId);
+      return {
+        success: false,
+        error: 'Error: No se pudo obtener el ID del caso creado',
+        data: { citizen: { id_ciudadano: citizenId }, case: caseResult }
+      };
+    }
+
+    console.log(`Case created successfully with ID: ${caseId}`);
+
     // Step 3: Assign users to the case
     const userAssignments = [
       {
@@ -336,16 +348,60 @@ export async function submitFormData(
       }
     ].filter(assignment => !isNaN(assignment.userId) && assignment.userId > 0);
 
-    // Assign each user to the case
+    // Verificar que tenemos asignaciones válidas
+    if (userAssignments.length === 0) {
+      console.warn('No valid user assignments found for case:', caseId);
+      return {
+        success: true,
+        data: {
+          citizen: { id_ciudadano: citizenId },
+          case: caseResult,
+          warning: 'No se asignaron usuarios al caso'
+        },
+      };
+    }
+
+    // Implementar un mecanismo de reintento para las asignaciones de usuarios
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = 1000; // 1 segundo
+
+    // Función para realizar un retraso
+    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+    // Función para asignar un usuario con reintentos
+    const assignUserWithRetry = async (caseId: number, userId: number, role: string): Promise<boolean> => {
+      let retries = 0;
+      
+      while (retries < MAX_RETRIES) {
+        try {
+          const result = await assignUserToCase(caseId, userId, role);
+          if (result) {
+            return true;
+          }
+          
+          console.warn(`Assignment failed for user ${userId} to case ${caseId} as ${role}, retrying (${retries + 1}/${MAX_RETRIES})...`);
+          retries++;
+          await delay(RETRY_DELAY);
+        } catch (error) {
+          console.error(`Error assigning user ${userId} to case ${caseId}:`, error);
+          retries++;
+          await delay(RETRY_DELAY);
+        }
+      }
+      
+      return false;
+    };
+
+    // Asignar cada usuario al caso con reintentos
     const assignmentPromises = userAssignments.map(({ userId, role }) => 
-      assignUserToCase(caseId, userId, role)
+      assignUserWithRetry(caseId, userId, role)
     );
 
     const assignmentResults = await Promise.all(assignmentPromises);
     const allAssignmentsSuccessful = assignmentResults.every(Boolean);
 
     if (!allAssignmentsSuccessful) {
-      console.warn("Some user assignments failed");
+      console.warn("Some user assignments failed after retries");
     }
 
     return {

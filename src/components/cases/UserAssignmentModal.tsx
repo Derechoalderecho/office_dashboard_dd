@@ -68,10 +68,10 @@ export const UserAssignmentModal: React.FC<UserAssignmentModalProps> = ({
   const loadUsers = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const allUsers = await fetchAllUsers();
-      
+
       if (allUsers && allUsers.length > 0) {
         logger.debug("Usuarios cargados:", allUsers.length);
         setUsers(allUsers);
@@ -81,7 +81,9 @@ export const UserAssignmentModal: React.FC<UserAssignmentModalProps> = ({
       }
     } catch (err) {
       logger.error("Error al cargar usuarios:", err);
-      setError("No se pudieron cargar los usuarios. Por favor, intente nuevamente.");
+      setError(
+        "No se pudieron cargar los usuarios. Por favor, intente nuevamente."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -114,23 +116,25 @@ export const UserAssignmentModal: React.FC<UserAssignmentModalProps> = ({
     try {
       // Crear un array con las asignaciones a realizar
       const assignmentResults = [];
-      
+
       // Para cada caso seleccionado
       for (const caseId of selectedCaseIds) {
         // Obtener las asignaciones actuales para este caso
         const currentUsers = await fetchUsersByCaseId(caseId);
-        
+
         // Procesar estudiante
         if (selectedStudent) {
           // Verificar si ya existe un estudiante asignado
           const existingStudent = currentUsers.find(
-            user => user.rol === ROLES.STUDENT
+            (user) => user.rol === ROLES.STUDENT
           );
-          
+
           if (existingStudent) {
-            logger.debug(`Se reemplazará la asignación existente para estudiante en caso ${caseId}`);
+            logger.debug(
+              `Se reemplazará la asignación existente para estudiante en caso ${caseId}`
+            );
           }
-          
+
           // Asignar el nuevo estudiante
           const studentResult = await assignUserToCase(
             caseId,
@@ -139,18 +143,20 @@ export const UserAssignmentModal: React.FC<UserAssignmentModalProps> = ({
           );
           assignmentResults.push(studentResult);
         }
-        
+
         // Procesar docente
         if (selectedTeacher) {
           // Verificar si ya existe un docente asignado
           const existingTeacher = currentUsers.find(
-            user => user.rol === ROLES.TEACHER
+            (user) => user.rol === ROLES.TEACHER
           );
-          
+
           if (existingTeacher) {
-            logger.debug(`Se reemplazará la asignación existente para docente en caso ${caseId}`);
+            logger.debug(
+              `Se reemplazará la asignación existente para docente en caso ${caseId}`
+            );
           }
-          
+
           // Asignar el nuevo docente
           const teacherResult = await assignUserToCase(
             caseId,
@@ -159,18 +165,20 @@ export const UserAssignmentModal: React.FC<UserAssignmentModalProps> = ({
           );
           assignmentResults.push(teacherResult);
         }
-        
+
         // Procesar monitor
         if (selectedMonitor) {
           // Verificar si ya existe un monitor asignado
           const existingMonitor = currentUsers.find(
-            user => user.rol === ROLES.MONITOR
+            (user) => user.rol === ROLES.MONITOR
           );
-          
+
           if (existingMonitor) {
-            logger.debug(`Se reemplazará la asignación existente para monitor en caso ${caseId}`);
+            logger.debug(
+              `Se reemplazará la asignación existente para monitor en caso ${caseId}`
+            );
           }
-          
+
           // Asignar el nuevo monitor
           const monitorResult = await assignUserToCase(
             caseId,
@@ -182,8 +190,12 @@ export const UserAssignmentModal: React.FC<UserAssignmentModalProps> = ({
       }
 
       // Contar éxitos y fallos
-      const successful = assignmentResults.filter(result => result === true).length;
-      const failed = assignmentResults.filter(result => result === false).length;
+      const successful = assignmentResults.filter(
+        (result) => result === true
+      ).length;
+      const failed = assignmentResults.filter(
+        (result) => result === false
+      ).length;
 
       if (failed > 0) {
         addToast({
@@ -212,7 +224,9 @@ export const UserAssignmentModal: React.FC<UserAssignmentModalProps> = ({
 
   // Filtrar usuarios por rol
   const getFilteredUsers = (role: string) => {
-    return users.filter((user) => user.rol.toLowerCase() === role.toLowerCase());
+    return users.filter(
+      (user) => user.rol.toLowerCase() === role.toLowerCase()
+    );
   };
 
   // Obtener el nombre completo del usuario
@@ -261,7 +275,7 @@ export const UserAssignmentModal: React.FC<UserAssignmentModalProps> = ({
                     <Autocomplete
                       label="Seleccionar estudiante"
                       placeholder="Buscar por nombre o email"
-                      className="w-full"
+                      itemHeight={48}
                       selectedKey={selectedStudent?.id_usuario.toString()}
                       onSelectionChange={(key) => {
                         if (key) {
@@ -279,11 +293,16 @@ export const UserAssignmentModal: React.FC<UserAssignmentModalProps> = ({
                           key={user.id_usuario.toString()}
                           textValue={getUserFullName(user)}
                         >
-                          <div className="flex flex-col">
-                            <span>{getUserFullName(user)}</span>
-                            <span className="text-sm text-gray-500">
-                              {user.email}
-                            </span>
+                          <div className="flex gap-2 items-center">
+                            <div className="flex flex-col">
+                              <span className="text-small">
+                                {" "}
+                                {getUserFullName(user)}
+                              </span>
+                              <span className="text-tiny text-default-400">
+                                {user.email}
+                              </span>
+                            </div>
                           </div>
                         </AutocompleteItem>
                       ))}
@@ -303,6 +322,7 @@ export const UserAssignmentModal: React.FC<UserAssignmentModalProps> = ({
                     <Autocomplete
                       label="Seleccionar docente"
                       placeholder="Buscar por nombre o email"
+                      itemHeight={48}
                       className="w-full"
                       selectedKey={selectedTeacher?.id_usuario.toString()}
                       onSelectionChange={(key) => {
@@ -345,6 +365,7 @@ export const UserAssignmentModal: React.FC<UserAssignmentModalProps> = ({
                     <Autocomplete
                       label="Seleccionar monitor"
                       placeholder="Buscar por nombre o email"
+                      itemHeight={48}
                       className="w-full"
                       selectedKey={selectedMonitor?.id_usuario.toString()}
                       onSelectionChange={(key) => {
@@ -407,4 +428,4 @@ export const UserAssignmentModal: React.FC<UserAssignmentModalProps> = ({
       </ModalContent>
     </Modal>
   );
-}; 
+};

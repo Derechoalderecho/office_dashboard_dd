@@ -18,6 +18,8 @@ import { statusOptions } from "@/constants/casesConstants";
 import { DateRange, RangeValue } from "@/types/sharedTypes";
 import { CalendarDate } from "@internationalized/date";
 import { capitalize } from "@/utils/capitalize";
+import Link from "next/link";
+import { UserPlusIcon } from "lucide-react";
 
 interface TopContentProps {
   usersLength: number;
@@ -83,64 +85,77 @@ export default function TopContent({
 
   return (
     <div className="flex flex-col">
-      <div className="flex gap-3 items-center pb-6 border-b">
-        <Input
-          isClearable
-          className="w-full sm:max-w-[25%]"
-          placeholder="Buscar por nombre..."
-          startContent={<MagnifyingGlassIcon className="w-6" />}
-          value={filterValue}
-          onClear={() => onClear()}
-          onValueChange={onSearchChange}
-        />
-        <div className="flex gap-3">
-          <Dropdown>
-            <DropdownTrigger className="hidden sm:flex">
-              <Button
-                endContent={<ChevronDownIcon className="text-small w-4" />}
-                variant="bordered"
-              >
-                Estado
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu
-              disallowEmptySelection
-              aria-label="Table Columns"
-              closeOnSelect={false}
-              selectedKeys={statusFilter}
-              selectionMode="multiple"
-              onSelectionChange={(keys) => setStatusFilter(keys as Set<string>)}
-            >
-              {statusOptions.map((status) => (
-                <DropdownItem key={status.uid} className="capitalize">
-                  {capitalize(status.name)}
-                </DropdownItem>
-              ))}
-            </DropdownMenu>
-          </Dropdown>
-        </div>
-        <I18nProvider locale="es-ES">
-          <DateRangePicker
-            variant="bordered"
-            labelPlacement="inside"
-            label="Buscar por fecha"
-            className="max-w-xs"
-            value={convertToDateValue(dateRange)}
-            onChange={(value) =>
-              handleDateRangeChange(value as RangeValue<CalendarDate>)
-            }
+      <div className="flex justify-between items-center  pb-6 border-b">
+        <div className="flex gap-3 items-center">
+          <Input
+            isClearable
+            className="w-full sm:max-w-[25%]"
+            placeholder="Buscar por nombre..."
+            startContent={<MagnifyingGlassIcon className="w-6" />}
+            value={filterValue}
+            onClear={() => onClear()}
+            onValueChange={onSearchChange}
           />
-        </I18nProvider>
-        <div>
+          <div className="flex gap-3">
+            <Dropdown>
+              <DropdownTrigger className="hidden sm:flex">
+                <Button
+                  endContent={<ChevronDownIcon className="text-small w-4" />}
+                  variant="bordered"
+                >
+                  Estado
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu
+                disallowEmptySelection
+                aria-label="Table Columns"
+                closeOnSelect={false}
+                selectedKeys={statusFilter}
+                selectionMode="multiple"
+                onSelectionChange={(keys) =>
+                  setStatusFilter(keys as Set<string>)
+                }
+              >
+                {statusOptions.map((status) => (
+                  <DropdownItem key={status.uid} className="capitalize">
+                    {capitalize(status.name)}
+                  </DropdownItem>
+                ))}
+              </DropdownMenu>
+            </Dropdown>
+          </div>
+          <I18nProvider locale="es-ES">
+            <DateRangePicker
+              variant="bordered"
+              labelPlacement="inside"
+              label="Buscar por fecha"
+              className="max-w-xs"
+              value={convertToDateValue(dateRange)}
+              onChange={(value) =>
+                handleDateRangeChange(value as RangeValue<CalendarDate>)
+              }
+            />
+          </I18nProvider>
+          <div>
+            <Button
+              color="primary"
+              onPress={onResetFilters}
+              isDisabled={!hasActiveFilters}
+            >
+              Limpiar filtros
+            </Button>
+          </div>
+        </div>
+        <Link href="/dashboard/cases/create">
           <Button
             color="primary"
-            onPress={onResetFilters}
-            isDisabled={!hasActiveFilters}
+            startContent={<UserPlusIcon className="w-5" />}
           >
-            Limpiar filtros
+            Añadir caso
           </Button>
-        </div>
+        </Link>
       </div>
+
       {showTabs && onTabChange && (
         <Tabs
           aria-label="Filtros de casos"
