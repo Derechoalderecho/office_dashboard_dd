@@ -34,3 +34,18 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Deploy on GCP
+
+```bash
+docker build -t gcr.io/regal-station-395907/nextjs-frontend .
+```
+
+```bash
+docker push gcr.io/regal-station-395907/nextjs-frontend
+```
+
+```bash
+gcloud run deploy nextjs-frontend --image gcr.io/regal-station-395907/nextjs-frontend --platform managed --region us-central1 --allow-unauthenticated
+```
+
