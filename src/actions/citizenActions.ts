@@ -60,24 +60,21 @@ export async function submitFormData(
         email: formData.get("email") || "",
         num_fijo: formData.get("num_fijo") || "",
         num_movil: formData.get("num_movil") || "",
+        dane_municipio: formData.get("dane_municipio") || "05001",
+        persona_modifica: formData.get("persona_modifica") || "",
         sexo: formData.get("sexo") || "",
         genero: formData.get("genero") || "",
+        fecha_nacimiento: formData.get("fecha_nacimiento") || "",
         orient_sexual: formData.get("orient_sexual") || "",
         nacionalidad: formData.get("nacionalidad") || "",
-        estado: formData.get("estado") || "Seguimiento",
         estado_civil: formData.get("estado_civil") || "",
         escolaridad: formData.get("escolaridad") || "",
         etnia: formData.get("etnia") || "",
         discapacidad: formData.get("discapacidad") || "",
         sabe_leer_escribir: formData.get("sabe_leer_escribir") || "",
-        dane_municipio: formData.get("dane_municipio") || "05001",
-        persona_modifica: formData.get("persona_modifica") || "",
-        fecha_nacimiento: formData.get("fecha_nacimiento") || "",
         direccion: formData.get("direccion") || "",
-        estrato: formData.get("estrato") || "",
         zona: convertZonaToCode(formData.get("zona")?.toString() || ""),
-        departamento: formData.get("departamento") || "",
-        municipio: formData.get("municipio") || "",
+        estrato: formData.get("estrato") || "",
       };
 
       console.log(
@@ -328,7 +325,7 @@ export async function submitFormData(
 
     const caseResult = await caseResponse.json();
     const caseId = caseResult[0].id_caso;
-    console.log(caseResponse)
+    console.log(caseResponse);
     console.log(caseResult);
 
     // Invalidate cases cache after creating a new case
