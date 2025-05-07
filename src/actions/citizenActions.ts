@@ -374,20 +374,15 @@ export async function submitFormData(
       // Invalidar caché
       invalidateCache("cases");
       
-      // Si no hay errores hasta aquí, devolver éxito sin esperar asignaciones
+      // Verificar que tenemos un ID de caso válido
       if (!caseId) {
         return {
           success: false,
           error: "No se pudo obtener el ID del caso creado",
         };
-      } else {
-        console.log("Caso creado exitosamente con ID:", caseId);
-        // Continuar con asignaciones pero devolver éxito inmediatamente
-        return {
-          success: true,
-          data: { citizen: { id_ciudadano: citizenId }, case: createdCase },
-        };
       }
+      
+      console.log("Caso creado exitosamente con ID:", caseId);
       
       // PASO 3: Asignar usuarios al caso
       console.log("===== ASIGNANDO USUARIOS AL CASO =====");

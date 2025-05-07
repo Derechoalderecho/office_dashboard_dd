@@ -423,12 +423,12 @@ export default function StepperForm() {
           // Redirect to citizens page 
           setTimeout(() => {
             if (citizenId) {
-              router.push(`/dashboard/citizens/${citizenId}`);
+              router.push(`/dashboard/cases`);
             } else {
-              router.push("/dashboard/citizens");
+              router.push("/dashboard/cases");
             }
             router.refresh();
-          }, 1500);
+          }, 10000);
         } else {
           setSubmissionError(result.error || "Error al enviar el formulario");
           addToast({
