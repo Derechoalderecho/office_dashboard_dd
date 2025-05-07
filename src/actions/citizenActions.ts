@@ -324,7 +324,7 @@ export async function submitFormData(
     }
 
     const caseResult = await caseResponse.json();
-    const caseId = caseResult[0].id_caso;
+    const caseId = caseResult.id_caso;
     console.log(caseResponse);
     console.log(caseResult);
 
