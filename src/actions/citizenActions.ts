@@ -168,7 +168,7 @@ export async function submitFormData(
     const caseData = {
       id_ciudadano: citizenId, // Número en lugar de string
       tipo_proceso: formData.get("tipo_proceso")?.toString() || "Tutela",
-      estado: "Espera del juez", // Estado inicial
+      estado: "Viabilidad", // Estado inicial
       tiempo_respuesta: Number(formData.get("tiempo_respuesta")) || 48,
       notas: formData.get("notas")?.toString() || "",
       hechos: formData.get("hechos")?.toString() || "",
