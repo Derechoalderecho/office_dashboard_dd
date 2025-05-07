@@ -409,6 +409,10 @@ export async function submitFormData(
         (assignment) => !isNaN(assignment.userId) && assignment.userId > 0
       );
       
+      // Realizar las asignaciones directamente con fetch
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      let assignmentSuccess = true;
+      
       // Verificar que hay asignaciones válidas
       if (userAssignments.length === 0) {
         console.warn("No se encontraron asignaciones válidas para el caso:", caseId);
@@ -430,7 +434,7 @@ export async function submitFormData(
       const delay = (ms: number) =>
         new Promise((resolve) => setTimeout(resolve, ms));
       
-      // Función para asignar usuarios con reintentos
+      // Función para asignar usuarios con reintentos usando fetch directamente
       const assignUserWithRetry = async (
         caseId: number,
         userId: number,
@@ -440,18 +444,33 @@ export async function submitFormData(
         
         while (retries < MAX_RETRIES) {
           try {
-            const result = await assignUserToCase(caseId, userId, role);
-            if (result) {
-              return true;
+            console.info(`Asignando usuario ${userId} como ${role} al caso ${caseId}`);
+            
+            const assignmentData = {
+              id_caso: caseId,
+              id_usuario: userId,
+              rol: role
+            };
+            
+            console.debug(`Enviando datos de asignación: ${JSON.stringify(assignmentData)}`);
+            
+            const endpoint = `${apiBaseUrl}/casos-usuarios/`;
+            const response = await fetch(endpoint, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(assignmentData)
+            });
+            
+            if (!response.ok) {
+              const errorText = await response.text();
+              console.error(`Error ${response.status}: ${response.statusText}
+${errorText}`);
+              throw new Error(`Error ${response.status}: ${response.statusText}`);
             }
             
-            console.warn(
-              `Falló la asignación del usuario ${userId} al caso ${caseId} como ${role}, reintentando (${
-                retries + 1
-              }/${MAX_RETRIES})...`
-            );
-            retries++;
-            await delay(RETRY_DELAY);
+            return true;
           } catch (error) {
             console.error(
               `Error al asignar usuario ${userId} al caso ${caseId}:`,
