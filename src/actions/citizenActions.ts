@@ -16,12 +16,9 @@ export async function submitFormData(
   formData: FormData,
   mockMode = false
 ): Promise<ApiResponse> {
-  // For testing when database permissions are an issue
+  // Mock mode
   if (mockMode) {
-    console.log("Running in mock mode - no actual API calls will be made");
-    console.log("Form data received:", Object.fromEntries(formData.entries()));
-
-    // Simulate a successful response
+    console.log("Running in mock mode - no API calls made");
     return {
       success: true,
       data: {
@@ -40,17 +37,25 @@ export async function submitFormData(
   }
 
   try {
-    // Check if we're using an existing citizen
+    console.log("===== INICIO PROCESAMIENTO DE FORMULARIO =====");
+    console.log("Datos recibidos:", Object.fromEntries(formData.entries()));
+    
+    // PASO 1: Crear o actualizar ciudadano
+    console.log("===== CREANDO/ACTUALIZANDO CIUDADANO =====");
+    let citizenId: number | null = null;
+    
+    // Verificar si se debe usar un ciudadano existente
     const isExistingCitizen = formData.get("isExistingCitizen") === "true";
-    let citizenId: number;
-
-    if (isExistingCitizen && formData.get("citizenId")) {
-      // Use the existing citizen ID
-      citizenId = Number(formData.get("citizenId"));
-      console.log("Using existing citizen with ID:", citizenId);
+    const existingCitizenId = formData.get("citizenId");
+    
+    if (isExistingCitizen && existingCitizenId && existingCitizenId !== "0" && existingCitizenId !== "") {
+      // Usar el ciudadano existente
+      citizenId = Number(existingCitizenId);
+      console.log("Usando ciudadano existente con ID:", citizenId);
     } else {
-      // Step 1: Create a new citizen to get the citizen ID
-      const citizenData = {
+      // Crear nuevo ciudadano
+      console.log("Creando nuevo ciudadano");
+      const ciudadanoData = {
         primer_nombre: formData.get("primer_nombre") || "",
         segundo_nombre: formData.get("segundo_nombre") || "",
         primer_apellido: formData.get("primer_apellido") || "",
@@ -60,395 +65,467 @@ export async function submitFormData(
         email: formData.get("email") || "",
         num_fijo: formData.get("num_fijo") || "",
         num_movil: formData.get("num_movil") || "",
+        dane_municipio: formData.get("dane_municipio") || "05001",
+        persona_modifica: Number(formData.get("persona_modifica")) || null,
         sexo: formData.get("sexo") || "",
         genero: formData.get("genero") || "",
+        fecha_nacimiento: formData.get("fecha_nacimiento") 
+          ? new Date(formData.get("fecha_nacimiento") as string).toISOString().split('T')[0] + "T00:00:00"
+          : new Date().toISOString().split('T')[0] + "T00:00:00",
         orient_sexual: formData.get("orient_sexual") || "",
         nacionalidad: formData.get("nacionalidad") || "",
-        estado: formData.get("estado") || "Seguimiento",
         estado_civil: formData.get("estado_civil") || "",
         escolaridad: formData.get("escolaridad") || "",
         etnia: formData.get("etnia") || "",
         discapacidad: formData.get("discapacidad") || "",
         sabe_leer_escribir: formData.get("sabe_leer_escribir") || "",
-        dane_municipio: formData.get("dane_municipio") || "05001",
-        persona_modifica: formData.get("persona_modifica") || "",
-        fecha_nacimiento: formData.get("fecha_nacimiento") || "",
         direccion: formData.get("direccion") || "",
-        estrato: formData.get("estrato") || "",
         zona: convertZonaToCode(formData.get("zona")?.toString() || ""),
-        departamento: formData.get("departamento") || "",
-        municipio: formData.get("municipio") || "",
+        estrato: formData.get("estrato") || "",
       };
-
-      console.log(
-        "Sending citizen data:",
-        JSON.stringify(citizenData, null, 2)
-      );
-
-      // Make a test request to see the API schema
+      
+      console.log("Datos del ciudadano a crear:", JSON.stringify(ciudadanoData, null, 2));
+      
       try {
-        const schemaResponse = await fetch(`${API_BASE_URL}/ciudadanos`, {
-          method: "GET",
+        // URL directa para asegurar el funcionamiento
+        const ciudadanosUrl = `${API_BASE_URL}/ciudadanos/`;
+        console.log("URL para creación de ciudadano:", ciudadanosUrl);
+        
+        // Hacer POST para crear ciudadano
+        const ciudadanoResponse = await fetch(ciudadanosUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify(ciudadanoData),
+          cache: "no-store"
         });
-        if (schemaResponse.ok) {
-          const schema = await schemaResponse.json();
-          console.log("API Schema:", schema);
+        
+        console.log("Respuesta status:", ciudadanoResponse.status);
+        console.log("Respuesta status text:", ciudadanoResponse.statusText);
+        
+        if (ciudadanoResponse.ok) {
+          const ciudadanoResult = await ciudadanoResponse.json();
+          citizenId = ciudadanoResult.id_ciudadano;
+          console.log("Ciudadano creado con ID:", citizenId);
+        } else {
+          const errorData = await ciudadanoResponse.json();
+          console.log("Error al crear ciudadano:", JSON.stringify(errorData));
+          
+          // Si el error es por duplicado, intentamos buscar el ciudadano por número de documento
+          if (errorData.detail && errorData.detail.includes("duplicate key value") && errorData.detail.includes("num_documento")) {
+            console.log("Documento duplicado, buscando ciudadano existente");
+            const numDocumento = formData.get("num_documento");
+            if (numDocumento) {
+              try {
+                const searchUrl = `${API_BASE_URL}/ciudadanos/buscar?num_documento=${numDocumento}`;
+                const searchResponse = await fetch(searchUrl);
+                if (searchResponse.ok) {
+                  const searchData = await searchResponse.json();
+                  if (searchData && searchData.length > 0) {
+                    citizenId = searchData[0].id_ciudadano;
+                    console.log("Encontrado ciudadano existente con ID:", citizenId);
+                  } else {
+                    throw new Error(`No se encontró ciudadano con documento ${numDocumento}`);
+                  }
+                } else {
+                  throw new Error(`Error al buscar ciudadano: ${searchResponse.statusText}`);
+                }
+              } catch (searchError) {
+                console.error("Error al buscar ciudadano:", searchError);
+                throw searchError;
+              }
+            } else {
+              throw new Error("Número de documento no proporcionado");
+            }
+          } else {
+            throw new Error(`Error al crear ciudadano: ${JSON.stringify(errorData)}`);
+          }
         }
-      } catch (e) {
-        console.log("Could not fetch schema, continuing with request");
+      } catch (error) {
+        console.error("Error al crear ciudadano:", error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "Error desconocido al crear ciudadano",
+        };
       }
-
-      const citizenResponse = await fetch(`${API_BASE_URL}/ciudadanos`, {
+    }
+    
+    // Validar el ID del ciudadano antes de continuar
+    if (typeof citizenId !== "number" || isNaN(citizenId) || citizenId <= 0) {
+      console.error("ID de ciudadano inválido:", citizenId);
+      return {
+        success: false,
+        error: "No se pudo obtener un ID de ciudadano válido",
+      };
+    }
+    
+    // PASO 2: Crear caso asociado al ciudadano
+    console.log("===== CREANDO CASO PARA CIUDADANO =====");
+    
+    // Crear objeto con los tipos de datos correctos
+    const caseData = {
+      id_ciudadano: citizenId, // Número en lugar de string
+      tipo_proceso: formData.get("tipo_proceso")?.toString() || "Tutela",
+      estado: "Espera del juez", // Estado inicial
+      tiempo_respuesta: Number(formData.get("tiempo_respuesta")) || 48,
+      notas: formData.get("notas")?.toString() || "",
+      hechos: formData.get("hechos")?.toString() || "",
+      pretensiones: formData.get("pretensiones")?.toString() || "",
+      fundamentos: formData.get("fundamentos")?.toString() || "",
+      entidad: formData.get("entidad")?.toString() || "",
+      persona_modifica: Number(formData.get("persona_modifica")) || 0,
+      calificacion1: 0, // Número en lugar de string
+      calificacion2: 0, // Número en lugar de string
+      calificacion3: 0, // Número en lugar de string
+      calificacion4: 0, // Número en lugar de string
+      // Campos adicionales requeridos por el backend
+      concepto_estudiante: formData.get("concepto_estudiante")?.toString() || "",
+      rama_derecho: formData.get("rama_derecho")?.toString() || "Constitucional",
+      tramite: formData.get("tramite")?.toString() || "Pendiente",
+      antecedentes: formData.get("antecedentes")?.toString() || "",
+      tutela: formData.get("tutela")?.toString() || "NO",
+      calificacion: formData.get("calificacion")?.toString() || "0",
+      ganado: formData.get("ganado")?.toString() || "NO"
+    };
+    
+    console.log("Datos del caso a crear:", JSON.stringify(caseData, null, 2));
+    
+    try {
+      // Verificar casos existentes antes de crear uno nuevo
+      console.log("Verificando casos existentes antes de crear uno nuevo");
+      
+      // Obtener casos antes de crear el nuevo
+      const casesBeforeResponse = await fetch(`${API_BASE_URL}/casos`);
+      const casesBeforeData = await casesBeforeResponse.json();
+      console.log(`Total de casos existentes antes: ${casesBeforeData.length}`);
+      
+      // Añadir una marca única para identificar el caso después
+      const uniqueMark = `Test-${Date.now()}`;
+      caseData.notas = `${caseData.notas} ${uniqueMark}`;
+      caseData.hechos = `${caseData.hechos} ${uniqueMark}`;
+      caseData.pretensiones = `${caseData.pretensiones} ${uniqueMark}`;
+      caseData.fundamentos = `${caseData.fundamentos} ${uniqueMark}`;
+      
+      // URL directa para asegurar el funcionamiento
+      const casosUrl = `${API_BASE_URL}/casos/`;
+      console.log("URL para creación de caso:", casosUrl);
+      
+      // Hacer POST para crear caso
+      const caseResponse = await fetch(casosUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Accept: "application/json",
+          "Accept": "application/json"
         },
-        body: JSON.stringify(citizenData),
+        body: JSON.stringify(caseData),
+        cache: "no-store"
       });
-
-      if (!citizenResponse.ok) {
-        const errorText = await citizenResponse.text();
-        console.error("Raw error response:", errorText);
-
-        let errorData;
-        try {
-          errorData = JSON.parse(errorText);
-        } catch (e) {
-          errorData = { message: errorText };
-        }
-
-        console.error("Citizen API error response:", errorData);
-
-        // Check for specific error types
-        const errorDetail =
-          typeof errorData.detail === "string"
-            ? errorData.detail
-            : JSON.stringify(errorData);
-        let errorMessage = `Error al crear ciudadano (${citizenResponse.status})`;
-
-        if (
-          errorDetail.includes("permission denied") ||
-          errorDetail.includes("InsufficientPrivilege")
-        ) {
-          errorMessage =
-            "Error de permisos en la base de datos. Por favor, contacte al administrador del sistema.";
-        } else if (errorDetail.includes("Field required")) {
-          errorMessage = "Faltan campos requeridos en el formulario.";
-        }
-
+      
+      console.log("Respuesta status:", caseResponse.status);
+      console.log("Respuesta status text:", caseResponse.statusText);
+      
+      // Imprimir los headers de la respuesta para debugging
+      const headers: Record<string, string> = {};
+      caseResponse.headers.forEach((value, key) => {
+        headers[key] = value;
+      });
+      console.log("Headers de respuesta:", headers);
+      
+      if (!caseResponse.ok) {
+        const errorText = await caseResponse.text();
+        console.error("Error al crear caso:", errorText);
         return {
           success: false,
-          error: errorMessage,
-          details: errorData,
+          error: `Error al crear caso: ${caseResponse.status} ${caseResponse.statusText}`,
+          details: errorText
         };
       }
-
-      const citizenResult = await citizenResponse.json();
-      console.log("Citizen created successfully:", citizenResult);
-
-      // Handle different API response formats
-      if (Array.isArray(citizenResult)) {
-        if (citizenResult.length === 0) {
-          // API returned empty array - we need to fetch the citizen by document
-          console.log(
-            "API returned empty array, fetching citizen by document..."
-          );
-          try {
-            const existingCitizen = await fetch(
-              `${API_BASE_URL}/ciudadanos/documento/${formData.get(
-                "tipo_documento"
-              )}/${formData.get("num_documento")}`
-            );
-
-            if (existingCitizen.ok) {
-              const citizenData = await existingCitizen.json();
-              if (citizenData && citizenData.id_ciudadano) {
-                citizenId = citizenData.id_ciudadano;
-                console.log("Found citizen by document with ID:", citizenId);
-              } else {
-                console.error(
-                  "Could not find citizen by document after creation"
-                );
-                return {
-                  success: false,
-                  error:
-                    "No se pudo recuperar el ID del ciudadano después de crearlo",
-                };
-              }
-            } else {
-              console.error("Error fetching citizen by document");
-              return {
-                success: false,
-                error: "Error al buscar el ciudadano creado",
-              };
-            }
-          } catch (error) {
-            console.error("Error fetching citizen:", error);
-            return {
-              success: false,
-              error: "No se pudo recuperar el ID del ciudadano",
-            };
-          }
-        } else if (citizenResult.length > 0) {
-          // Use first item in array
-          citizenId = citizenResult[0].id_ciudadano;
-          console.log("Using first citizen from array with ID:", citizenId);
+      
+      // Leer respuesta como JSON
+      const caseResult = await caseResponse.json();
+      console.log("Respuesta de creación de caso:", JSON.stringify(caseResult, null, 2));
+      
+      // Verificar casos después de crear el nuevo
+      const casesAfterResponse = await fetch(`${API_BASE_URL}/casos`);
+      const casesAfterData = await casesAfterResponse.json();
+      console.log(`Total de casos existentes después: ${casesAfterData.length}`);
+      
+      // Buscar el nuevo caso comparando los arrays antes y después
+      let newCases = [];
+      if (Array.isArray(casesBeforeData) && Array.isArray(casesAfterData)) {
+        // Verificar si hay más casos después que antes
+        if (casesAfterData.length > casesBeforeData.length) {
+          // Buscar casos que están en el segundo array pero no en el primero
+          const beforeIds = new Set(casesBeforeData.map((c: any) => c.id_caso));
+          newCases = casesAfterData.filter((c: any) => !beforeIds.has(c.id_caso));
+          console.log(`Se encontraron ${newCases.length} casos nuevos`);
         } else {
-          console.error("Unexpected server response");
-          return {
-            success: false,
-            error: "Respuesta inesperada del servidor",
-          };
+          // Buscar por la marca única
+          newCases = casesAfterData.filter((c: any) => 
+            c.notas?.includes(uniqueMark) || 
+            c.hechos?.includes(uniqueMark) || 
+            c.pretensiones?.includes(uniqueMark) || 
+            c.fundamentos?.includes(uniqueMark)
+          );
+          console.log(`Se encontraron ${newCases.length} casos con la marca única`);
         }
-      } else if (citizenResult && citizenResult.id_ciudadano) {
-        citizenId = citizenResult.id_ciudadano;
-        console.log("Using citizen with ID:", citizenId);
-      } else {
-        console.error(
-          "Unrecognized response format:",
-          JSON.stringify(citizenResult)
+      }
+      
+      // Buscar el caso creado para nuestro ciudadano
+      let createdCase = null;
+      let caseId: number;
+      
+      // Primero intentar usar los casos nuevos identificados
+      if (newCases.length > 0) {
+        // Filtrar por nuestro ciudadano
+        const citizenNewCases = newCases.filter((c: any) => 
+          c.id_ciudadano === citizenId
         );
+        
+        if (citizenNewCases.length > 0) {
+          // Ordenar por fecha de creación (más reciente primero)
+          citizenNewCases.sort((a: any, b: any) => {
+            const dateA = new Date(a.fecha_crea || 0).getTime();
+            const dateB = new Date(b.fecha_crea || 0).getTime();
+            return dateB - dateA;
+          });
+          
+          createdCase = citizenNewCases[0];
+          console.log("Caso nuevo identificado para nuestro ciudadano:", createdCase);
+        } else {
+          // Si no hay casos para nuestro ciudadano, usar el más reciente
+          newCases.sort((a: any, b: any) => {
+            const dateA = new Date(a.fecha_crea || 0).getTime();
+            const dateB = new Date(b.fecha_crea || 0).getTime();
+            return dateB - dateA;
+          });
+          
+          createdCase = newCases[0];
+          console.log("Caso nuevo más reciente:", createdCase);
+        }
+      }
+      
+      // Si no se encontró un caso nuevo, intentar el método original
+      if (!createdCase) {
+        if (Array.isArray(caseResult)) {
+          // Buscar casos que coincidan con nuestro ciudadano y datos
+          const matchingCases = caseResult.filter((c: any) => 
+            Number(c.id_ciudadano) === citizenId && 
+            (c.notas?.includes(uniqueMark) || 
+             c.hechos?.includes(uniqueMark) || 
+             c.pretensiones?.includes(uniqueMark) || 
+             c.fundamentos?.includes(uniqueMark))
+          );
+          
+          if (matchingCases.length > 0) {
+            // Ordenar por fecha de creación (más reciente primero)
+            matchingCases.sort((a: any, b: any) => {
+              const dateA = new Date(a.fecha_crea || 0).getTime();
+              const dateB = new Date(b.fecha_crea || 0).getTime();
+              return dateB - dateA;
+            });
+            
+            createdCase = matchingCases[0]; // El caso más reciente
+            console.log("Caso identificado por coincidencia de datos:", createdCase);
+          } else {
+            // Si no encontramos coincidencias exactas, verificar por id_ciudadano
+            const citizenCases = caseResult.filter((c: any) => 
+              Number(c.id_ciudadano) === citizenId
+            );
+            
+            if (citizenCases.length > 0) {
+              // Ordenar por fecha de creación (más reciente primero)
+              citizenCases.sort((a: any, b: any) => {
+                const dateA = new Date(a.fecha_crea || 0).getTime();
+                const dateB = new Date(b.fecha_crea || 0).getTime();
+                return dateB - dateA;
+              });
+              
+              createdCase = citizenCases[0]; // El caso más reciente
+              console.log("Caso identificado por ciudadano:", createdCase);
+            } else if (caseResult.length > 0) {
+              // Como último recurso, usar el último caso creado
+              console.warn("No se encontraron casos coincidentes, usando el último como respaldo");
+              createdCase = caseResult[caseResult.length - 1];
+            }
+          }
+        } else if (caseResult && caseResult.id_caso) {
+          // Respuesta es un objeto directo
+          createdCase = caseResult;
+          console.log("Caso recibido como objeto directo:", createdCase);
+        }
+      }
+      
+      // Verificar que tenemos un caso válido
+      if (!createdCase || !createdCase.id_caso) {
+        console.error("No se pudo identificar el caso creado");
         return {
           success: false,
-          error: "Formato de respuesta no reconocido",
+          error: "No se pudo identificar el caso creado",
         };
       }
-
-      // Double-check citizenId is valid at this point
-      if (typeof citizenId !== "number" || isNaN(citizenId) || citizenId <= 0) {
-        console.error(
-          "Invalid citizenId after parsing citizen response:",
-          citizenId
-        );
+      
+      // Guardar el ID del caso
+      caseId = createdCase.id_caso;
+      console.log("Caso creado con ID:", caseId);
+      
+      // Invalidar caché
+      invalidateCache("cases");
+      
+      // Verificar que tenemos un ID de caso válido
+      if (!caseId) {
         return {
           success: false,
-          error:
-            "Error interno: ID de ciudadano inválido o no generado correctamente",
+          error: "No se pudo obtener el ID del caso creado",
         };
       }
-
-      // Invalidate citizens cache after creating a new citizen
-      invalidateCache("citizens");
-    }
-
-    // Step 2: Create case with the citizen ID
-    const profesorId = formData.get("profesor_id")?.toString() || "0";
-
-    // Validate citizenId before using it
-    if (typeof citizenId !== "number" || isNaN(citizenId) || citizenId <= 0) {
-      console.error("Invalid citizenId before case creation:", citizenId);
-      return {
-        success: false,
-        error:
-          "Error interno: ID de ciudadano inválido o no generado correctamente",
+      
+      console.log("Caso creado exitosamente con ID:", caseId);
+      
+      // PASO 3: Asignar usuarios al caso
+      console.log("===== ASIGNANDO USUARIOS AL CASO =====");
+      
+      const userAssignments = [
+        {
+          userId: Number(formData.get("profesor_id")),
+          role: "Docente",
+        },
+        // Incluir monitor solo si está seleccionado
+        ...(formData.get("monitor_id")
+          ? [
+              {
+                userId: Number(formData.get("monitor_id")),
+                role: "Monitor",
+              },
+            ]
+          : []),
+        {
+          userId: Number(formData.get("alumno_id")),
+          role: "Estudiante",
+        },
+      ].filter(
+        (assignment) => !isNaN(assignment.userId) && assignment.userId > 0
+      );
+      
+      // Realizar las asignaciones directamente con fetch
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      let assignmentSuccess = true;
+      
+      // Verificar que hay asignaciones válidas
+      if (userAssignments.length === 0) {
+        console.warn("No se encontraron asignaciones válidas para el caso:", caseId);
+        return {
+          success: true,
+          data: {
+            citizen: { id_ciudadano: citizenId },
+            case: createdCase,
+            warning: "No se asignaron usuarios al caso",
+          },
+        };
+      }
+      
+      // Mecanismo de reintento para asignaciones
+      const MAX_RETRIES = 3;
+      const RETRY_DELAY = 1000; // 1 segundo
+      
+      // Función para retraso
+      const delay = (ms: number) =>
+        new Promise((resolve) => setTimeout(resolve, ms));
+      
+      // Función para asignar usuarios con reintentos usando fetch directamente
+      const assignUserWithRetry = async (
+        caseId: number,
+        userId: number,
+        role: string
+      ): Promise<boolean> => {
+        let retries = 0;
+        
+        while (retries < MAX_RETRIES) {
+          try {
+            console.info(`Asignando usuario ${userId} como ${role} al caso ${caseId}`);
+            
+            const assignmentData = {
+              id_caso: caseId,
+              id_usuario: userId,
+              rol: role
+            };
+            
+            console.debug(`Enviando datos de asignación: ${JSON.stringify(assignmentData)}`);
+            
+            const endpoint = `${apiBaseUrl}/casos-usuarios/`;
+            const response = await fetch(endpoint, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(assignmentData)
+            });
+            
+            if (!response.ok) {
+              const errorText = await response.text();
+              console.error(`Error ${response.status}: ${response.statusText}
+${errorText}`);
+              throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+            
+            return true;
+          } catch (error) {
+            console.error(
+              `Error al asignar usuario ${userId} al caso ${caseId}:`,
+              error
+            );
+            retries++;
+            await delay(RETRY_DELAY);
+          }
+        }
+        
+        return false;
       };
-    }
-
-    const caseData = {
-      id_ciudadano: String(citizenId || 0),
-      tipo_proceso: formData.get("tipo_proceso")?.toString() || "Tutela",
-      estado: "Viabilidad",
-      tiempo_respuesta: formData.get("tiempo_respuesta")?.toString() || "48",
-      notas: formData.get("notas")?.toString() || "",
-      persona_modifica: profesorId,
-      concepto_estudiante: "Pendiente de revisión",
-      hechos: formData.get("hechos")?.toString() || "Pendiente de revisión",
-      rama_derecho: "Derecho Constitucional",
-      tramite: "En proceso",
-      antecedentes: "Pendiente de revisión",
-      tutela: "Pendiente de revisión",
-      calificacion: "0.0",
-      ganado: "false",
-      pretensiones:
-        formData.get("pretensiones")?.toString() || "Pendiente de revisión",
-      entidad: formData.get("entidad")?.toString() || "",
-      fundamentos: formData.get("fundamentos")?.toString() || "",
-      calificacion1: "0.0",
-      calificacion2: "0.0",
-      calificacion3: "0.0",
-      calificacion4: "0.0",
-    };
-
-    console.log("Sending case data:", JSON.stringify(caseData, null, 2));
-
-    const caseResponse = await fetch(`${API_BASE_URL}/casos`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(caseData),
-    });
-
-    if (!caseResponse.ok) {
-      const errorText = await caseResponse.text();
-      let errorData;
+      
       try {
-        errorData = JSON.parse(errorText);
-      } catch (e) {
-        errorData = { message: errorText };
-      }
-
-      console.error("Case API error response:", errorData);
-
-      // Print detailed error information
-      if (errorData.detail && Array.isArray(errorData.detail)) {
-        console.error(
-          "Missing fields:",
-          errorData.detail.map((err: any) => ({
-            field: err.loc[1],
-            message: err.msg,
-          }))
+        // Intentar asignar usuarios pero no bloquear el flujo si falla
+        const assignmentPromises = userAssignments.map(({ userId, role }) =>
+          assignUserWithRetry(caseId, userId, role)
         );
+        
+        const assignmentResults = await Promise.all(assignmentPromises);
+        const allAssignmentsSuccessful = assignmentResults.every(Boolean);
+        
+        if (!allAssignmentsSuccessful) {
+          console.warn("Algunas asignaciones fallaron después de los reintentos");
+        }
+      } catch (assignError) {
+        console.error("Error en asignación de usuarios:", assignError);
+        // Continuar el flujo incluso si las asignaciones fallan
       }
-
-      // Check for specific error types
-      const errorDetail =
-        typeof errorData.detail === "string"
-          ? errorData.detail
-          : JSON.stringify(errorData);
-      let errorMessage = `Error al crear caso (${caseResponse.status})`;
-
-      if (
-        errorDetail.includes("permission denied") ||
-        errorDetail.includes("InsufficientPrivilege")
-      ) {
-        errorMessage =
-          "Error de permisos en la base de datos. Por favor, contacte al administrador del sistema.";
-      } else if (errorDetail.includes("Field required")) {
-        errorMessage = "Faltan campos requeridos en el formulario de caso.";
-      }
-
-      return {
-        success: false,
-        error: errorMessage,
-        details: errorData,
-      };
-    }
-
-    const caseResult = await caseResponse.json();
-    const caseId = caseResult[0].id_caso;
-    console.log(caseResponse)
-    console.log(caseResult);
-
-    // Invalidate cases cache after creating a new case
-    invalidateCache("cases");
-
-    // Ensure we have a valid case ID before proceeding with user assignments
-    if (!caseId || typeof caseId !== "number") {
-      console.error("Invalid or missing case ID after case creation:", caseId);
-      return {
-        success: false,
-        error: "Error: No se pudo obtener el ID del caso creado",
-        data: { citizen: { id_ciudadano: citizenId }, case: caseResult },
-      };
-    }
-
-    console.log(`Case created successfully with ID: ${caseId}`);
-
-    // Step 3: Assign users to the case
-    const userAssignments = [
-      {
-        userId: Number(formData.get("profesor_id")),
-        role: "Docente",
-      },
-      // Only include monitor if one is selected
-      ...(formData.get("monitor_id")
-        ? [
-            {
-              userId: Number(formData.get("monitor_id")),
-              role: "Monitor",
-            },
-          ]
-        : []),
-      {
-        userId: Number(formData.get("alumno_id")),
-        role: "Estudiante",
-      },
-    ].filter(
-      (assignment) => !isNaN(assignment.userId) && assignment.userId > 0
-    );
-
-    // Verificar que tenemos asignaciones válidas
-    if (userAssignments.length === 0) {
-      console.warn("No valid user assignments found for case:", caseId);
+      
+      // Devolver resultado de éxito independientemente de las asignaciones
       return {
         success: true,
         data: {
           citizen: { id_ciudadano: citizenId },
-          case: caseResult,
-          warning: "No se asignaron usuarios al caso",
+          case: createdCase,
+          warning: "El caso se ha creado correctamente. La asignación de usuarios podría haber fallado."
         },
       };
+      
+    } catch (caseError) {
+      console.error("Error en creación de caso:", caseError);
+      return {
+        success: false,
+        error: caseError instanceof Error ? caseError.message : "Error desconocido en la creación del caso",
+      };
     }
-
-    // Implementar un mecanismo de reintento para las asignaciones de usuarios
-    const MAX_RETRIES = 3;
-    const RETRY_DELAY = 1000; // 1 segundo
-
-    // Función para realizar un retraso
-    const delay = (ms: number) =>
-      new Promise((resolve) => setTimeout(resolve, ms));
-
-    // Función para asignar un usuario con reintentos
-    const assignUserWithRetry = async (
-      caseId: number,
-      userId: number,
-      role: string
-    ): Promise<boolean> => {
-      let retries = 0;
-
-      while (retries < MAX_RETRIES) {
-        try {
-          const result = await assignUserToCase(caseId, userId, role);
-          if (result) {
-            return true;
-          }
-
-          console.warn(
-            `Assignment failed for user ${userId} to case ${caseId} as ${role}, retrying (${
-              retries + 1
-            }/${MAX_RETRIES})...`
-          );
-          retries++;
-          await delay(RETRY_DELAY);
-        } catch (error) {
-          console.error(
-            `Error assigning user ${userId} to case ${caseId}:`,
-            error
-          );
-          retries++;
-          await delay(RETRY_DELAY);
-        }
-      }
-
-      return false;
-    };
-
-    // Asignar cada usuario al caso con reintentos
-    const assignmentPromises = userAssignments.map(({ userId, role }) =>
-      assignUserWithRetry(caseId, userId, role)
-    );
-
-    const assignmentResults = await Promise.all(assignmentPromises);
-    const allAssignmentsSuccessful = assignmentResults.every(Boolean);
-
-    if (!allAssignmentsSuccessful) {
-      console.warn("Some user assignments failed after retries");
-    }
-
-    return {
-      success: true,
-      data: {
-        citizen: { id_ciudadano: citizenId },
-        case: caseResult,
-      },
-    };
+    
   } catch (error) {
-    console.error("Error submitting form:", error);
+    console.error("Error general en procesamiento de formulario:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Error desconocido",
     };
+  } finally {
+    console.log("===== FIN PROCESAMIENTO DE FORMULARIO =====");
   }
 }

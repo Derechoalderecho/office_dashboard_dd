@@ -331,15 +331,19 @@ export default function StepperForm() {
       setIsSubmitting(true);
       setSubmissionError(null);
 
+      console.log("Starting form submission process");
+
       // Create FormData object
       const formDataObj = new FormData();
 
       // Add flag to indicate if we're using an existing citizen
       formDataObj.append("isExistingCitizen", isExistingCitizen.toString());
+      console.log("isExistingCitizen:", isExistingCitizen);
 
       // If using existing citizen, add the citizen ID
       if (isExistingCitizen && selectedCitizenId) {
         formDataObj.append("citizenId", selectedCitizenId.toString());
+        console.log("Using existing citizen ID:", selectedCitizenId);
       }
 
       // Add all form data
@@ -347,8 +351,12 @@ export default function StepperForm() {
         // Skip the tracking fields that we don't want to send to the server
         if (key !== "citizen_id" && key !== "is_existing_citizen") {
           formDataObj.append(key, value.toString());
+          console.log(`Added form field: ${key}=${value}`);
         }
       });
+
+      // Debug: Log all form data being sent
+      console.log("Form data being submitted:", Object.fromEntries(formDataObj.entries()));
 
       try {
         // Submit the form data with mock mode enabled temporarily
@@ -358,12 +366,14 @@ export default function StepperForm() {
         // Mostrar un mensaje de estado mientras se procesa la solicitud
         addToast({
           title: "Procesando solicitud",
-          description: "Creando caso y asignando usuarios...",
+          description: "Creando ciudadano...",
           color: "primary",
         });
         
         // Implementar un timeout para la solicitud
         const SUBMISSION_TIMEOUT = 30000; // 30 segundos
+        
+        console.log("Calling submitFormData with useMockMode:", useMockMode);
         
         // Crear una promesa con timeout
         const submissionPromise = submitFormData(formDataObj, useMockMode);
@@ -383,8 +393,12 @@ export default function StepperForm() {
           warning?: string;
         };
 
+        console.log("Submission result:", result);
+
         if (result.success) {
           setIsComplete(true);
+          
+          console.log("Citizen created successfully:", result.data);
           
           // Verificar si hay advertencias
           if (result.warning) {
@@ -398,23 +412,23 @@ export default function StepperForm() {
               title: "Formulario enviado exitosamente",
               description: useMockMode
                 ? "Modo de prueba: Simulación exitosa"
-                : "El formulario se ha enviado correctamente",
+                : "El ciudadano se ha creado correctamente",
               color: "success",
             });
           }
           
-          // Verificar que tenemos un ID de caso válido antes de redirigir
-          const caseId = result.data?.case?.id_caso;
+          // Verificar que tenemos un ID de ciudadano válido
+          const citizenId = result.data?.citizen?.id_ciudadano;
           
-          // Redirect to cases page instead of citizens
+          // Redirect to citizens page 
           setTimeout(() => {
-            if (caseId) {
-              router.push(`/dashboard/cases/${caseId}`);
+            if (citizenId) {
+              router.push(`/dashboard/cases`);
             } else {
               router.push("/dashboard/cases");
             }
             router.refresh();
-          }, 1500);
+          }, 10000);
         } else {
           setSubmissionError(result.error || "Error al enviar el formulario");
           addToast({
@@ -428,7 +442,8 @@ export default function StepperForm() {
         setSubmissionError("Error inesperado al enviar el formulario");
         addToast({
           title: "Error inesperado al enviar el formulario",
-          description: "Error inesperado al enviar el formulario",
+          description: error instanceof Error ? error.message : "Error desconocido",
+          color: "danger"
         });
       } finally {
         setIsSubmitting(false);
