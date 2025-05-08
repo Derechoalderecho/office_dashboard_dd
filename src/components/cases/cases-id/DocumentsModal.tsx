@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import axios from "axios";
 import { 
   Modal, 
   ModalContent, 
@@ -28,6 +29,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setDocuments } from '@/store/slices/documentSlice';
 import { fetchCase } from '@/store/slices/caseSlice';
 import { parseDateToLocal } from "@/utils/date";
+import { API_BASE_URL } from "@/config/api";
 
 type SortOption = "newest" | "oldest" | "name" | "type";
 
@@ -210,24 +212,21 @@ export default function DocumentsModal({
         folder = 'radicados';
       }
       
-      // Primero obtenemos la URL firmada del API
-      const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/documentos/${document.id_documento}/download?folder=${folder || 'documentos_casos'}`;
+      // Obtener la URL firmada del API
+      const apiUrl = `${API_BASE_URL}/documentos/${document.id_documento}/download?folder=${folder || 'documentos_casos'}`;
       console.log('Obteniendo URL firmada desde:', apiUrl);
       
-      const response = await fetch(apiUrl);
-      if (!response.ok) {
-        throw new Error(`Error al obtener la URL firmada: ${response.statusText}`);
-      }
+      const response = await axios.get(apiUrl);
       
-      const data = await response.json();
-      if (!data.url_firmada) {
+      if (response.status !== 200 || !response.data.url_firmada) {
         throw new Error('No se encontró la URL firmada en la respuesta');
       }
       
-      console.log('URL firmada obtenida:', data.url_firmada);
+      const signedUrl = response.data.url_firmada;
+      console.log('URL firmada obtenida:', signedUrl);
       
-      // Ahora usamos la URL firmada para descargar directamente
-      window.open(data.url_firmada, '_blank');
+      // Abrir la URL firmada en una nueva pestaña
+      window.open(signedUrl, '_blank');
       
       addToast({
         title: "Descarga iniciada",
