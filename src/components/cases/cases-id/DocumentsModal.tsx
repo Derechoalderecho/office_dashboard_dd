@@ -210,27 +210,30 @@ export default function DocumentsModal({
         folder = 'radicados';
       }
       
-      const response = await downloadDocument(document.id_documento, folder);
+      // Primero obtenemos la URL firmada del API
+      const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/documentos/${document.id_documento}/download?folder=${folder || 'documentos_casos'}`;
+      console.log('Obteniendo URL firmada desde:', apiUrl);
       
-      if (response.success && response.data && response.fileName) {
-        // Crear URL para el blob y descargar
-        const url = window.URL.createObjectURL(response.data);
-        const a = window.document.createElement('a');
-        a.href = url;
-        a.download = response.fileName;
-        window.document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        window.document.body.removeChild(a);
-        
-        addToast({
-          title: "Descarga iniciada",
-          description: `${response.fileName} se está descargando`,
-          color: "success"
-        });
-      } else {
-        throw new Error(response.error || 'Error al descargar el documento');
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+        throw new Error(`Error al obtener la URL firmada: ${response.statusText}`);
       }
+      
+      const data = await response.json();
+      if (!data.url_firmada) {
+        throw new Error('No se encontró la URL firmada en la respuesta');
+      }
+      
+      console.log('URL firmada obtenida:', data.url_firmada);
+      
+      // Ahora usamos la URL firmada para descargar directamente
+      window.open(data.url_firmada, '_blank');
+      
+      addToast({
+        title: "Descarga iniciada",
+        description: `${document.nombre_documento}${document.ext_documento} se está descargando`,
+        color: "success"
+      });
       
       setDownloadingId(null);
     } catch (error: any) {
