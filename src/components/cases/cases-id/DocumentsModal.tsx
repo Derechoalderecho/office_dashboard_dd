@@ -204,7 +204,13 @@ export default function DocumentsModal({
     setDownloadingId(document.id_documento);
     
     try {
-      const response = await downloadDocument(document.id_documento);
+      // Determinar el folder basado en el nombre del documento
+      let folder;
+      if (document.nombre_documento && document.nombre_documento.toLowerCase().includes('radicado')) {
+        folder = 'radicados';
+      }
+      
+      const response = await downloadDocument(document.id_documento, folder);
       
       if (response.success && response.data && response.fileName) {
         // Crear URL para el blob y descargar

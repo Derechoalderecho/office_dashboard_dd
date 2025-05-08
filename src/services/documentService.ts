@@ -74,7 +74,7 @@ export const downloadDocument = async (
   try {
     logger.info(`Descargando documento ${documentId}`);
     const downloadUrl = await downloadFile(
-      `documentos/${documentId}/descargar`
+      `documentos/${documentId}/download/?folder=documentos_casos`
     );
     logger.debug(`URL de descarga obtenida: ${downloadUrl}`);
     return downloadUrl;
