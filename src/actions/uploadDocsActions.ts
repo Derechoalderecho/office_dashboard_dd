@@ -114,8 +114,9 @@ export async function downloadDocument(
           }
           console.log('Folder extraído de la URL:', documentFolder);
           
-          // Validar que el folder sea uno de los dos válidos
-          if (documentFolder !== 'radicados' && documentFolder !== 'documentos_casos') {
+          // Validar que el folder sea uno de los válidos
+          const validFolders = ['radicados', 'documentos_casos', 'tutelas'];
+          if (!validFolders.includes(documentFolder)) {
             console.log('Folder no válido, usando documentos_casos como default');
             documentFolder = 'documentos_casos';
           }
