@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import axios from "axios";
 import { 
   Modal, 
   ModalContent, 
@@ -28,6 +29,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setDocuments } from '@/store/slices/documentSlice';
 import { fetchCase } from '@/store/slices/caseSlice';
 import { parseDateToLocal } from "@/utils/date";
+import { API_BASE_URL } from "@/config/api";
 
 type SortOption = "newest" | "oldest" | "name" | "type";
 
@@ -204,32 +206,62 @@ export default function DocumentsModal({
     setDownloadingId(document.id_documento);
     
     try {
-      const response = await downloadDocument(document.id_documento);
+      // Determinar el folder correcto basado en el enlace original del documento
+      let folder = 'documentos_casos'; // Valor por defecto
       
-      if (response.success && response.data && response.fileName) {
-        // Crear URL para el blob y descargar
-        const url = window.URL.createObjectURL(response.data);
-        const a = window.document.createElement('a');
-        a.href = url;
-        a.download = response.fileName;
-        window.document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        window.document.body.removeChild(a);
-        
-        addToast({
-          title: "Descarga iniciada",
-          description: `${response.fileName} se está descargando`,
-          color: "success"
-        });
-      } else {
-        throw new Error(response.error || 'Error al descargar el documento');
+      // Si el documento tiene un enlace, intentamos extraer el folder de la URL
+      if (document.enlace) {
+        const urlParts = document.enlace.split('/');
+        // Buscamos el índice de 'bucket_consultorios' y tomamos el siguiente elemento
+        const bucketIndex = urlParts.findIndex(part => part === 'bucket_consultorios');
+        if (bucketIndex !== -1 && bucketIndex + 1 < urlParts.length) {
+          const extractedFolder = urlParts[bucketIndex + 1];
+          // Si el folder contiene un signo de interrogación, lo eliminamos
+          if (extractedFolder.includes('?')) {
+            folder = extractedFolder.split('?')[0];
+          } else {
+            folder = extractedFolder;
+          }
+          console.log('Folder extraído de la URL:', folder);
+        }
+      } 
+      // Si no hay enlace o no pudimos extraer el folder, usamos el nombre del documento
+      else if (document.nombre_documento && document.nombre_documento.toLowerCase().includes('radicado')) {
+        folder = 'radicados';
+        console.log('Folder determinado por el nombre del documento:', folder);
       }
+      
+      // Verificar que el folder sea válido (solo 'documentos_casos' o 'radicados')
+      if (folder !== 'documentos_casos' && folder !== 'radicados') {
+        console.warn(`Folder no válido: ${folder}, usando documentos_casos`);
+        folder = 'documentos_casos';
+      }
+      
+      // Obtener la URL firmada del API
+      const apiUrl = `${API_BASE_URL}/documentos/${document.id_documento}/download?folder=${folder}`;
+      console.log(`Descargando documento con folder: ${folder}. URL: ${apiUrl}`);
+      
+      const response = await axios.get(apiUrl);
+      
+      if (response.status !== 200 || !response.data.url_firmada) {
+        throw new Error(`No se encontró la URL firmada en la respuesta para el folder ${folder}`);
+      }
+      
+      const signedUrl = response.data.url_firmada;
+      console.log('URL firmada obtenida:', signedUrl);
+      
+      // Abrir la URL firmada en una nueva pestaña
+      window.open(signedUrl, '_blank');
+      
+      addToast({
+        title: "Descarga iniciada",
+        description: `${document.nombre_documento}${document.ext_documento} se está descargando`,
+        color: "success"
+      });
       
       setDownloadingId(null);
     } catch (error: any) {
       console.error("Error en la descarga:", error);
-      // Mostrar mensaje de error usando toast
       addToast({
         title: "Error de descarga",
         description: error.message || "No se pudo descargar el documento",

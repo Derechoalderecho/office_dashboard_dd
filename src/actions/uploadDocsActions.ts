@@ -85,33 +85,106 @@ export async function getDocumentsByCaseId(
 }
 
 export async function downloadDocument(
-  documentId: number
+  documentId: number,
+  folder?: string
 ): Promise<{ success: boolean; data?: Blob; fileName?: string; error?: string }> {
   try {
-    // Primero, obtener los detalles del documento para obtener el nombre y la extensión
+    // Primero, obtener los detalles del documento para obtener el nombre, extensión y enlace
     const docResponse = await axios.get(`${API_BASE_URL}/documentos/${documentId}`);
     const documentData = docResponse.data as DocumentResponse;
     const fileName = `${documentData.nombre_documento}${documentData.ext_documento}`;
-
-    // Luego, hacer la solicitud de descarga al nuevo endpoint
-    const response = await axios.get(`${API_BASE_URL}/documentos/${documentId}/download`, {
-      responseType: 'blob'
-    });
     
-    if (response.status === 200) {
-      // Crear un blob con los datos recibidos
-      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+    // Determinar el folder adecuado
+    let documentFolder = folder;
+    
+    if (!documentFolder && documentData.enlace) {
+      // Intentar extraer el folder de la URL firmada
+      try {
+        // La URL firmada tiene un formato como:
+        // https://storage.googleapis.com/bucket_consultorios/radicados/archivo.ext?X-Goog...
+        // o https://storage.googleapis.com/bucket_consultorios/documentos_casos/archivo.ext?X-Goog...
+        const urlParts = documentData.enlace.split('/');
+        // Buscamos el índice de 'bucket_consultorios' y tomamos el siguiente elemento
+        const bucketIndex = urlParts.findIndex(part => part === 'bucket_consultorios');
+        if (bucketIndex !== -1 && bucketIndex + 1 < urlParts.length) {
+          documentFolder = urlParts[bucketIndex + 1];
+          // Si el folder contiene un signo de interrogación, lo eliminamos
+          if (documentFolder.includes('?')) {
+            documentFolder = documentFolder.split('?')[0];
+          }
+          console.log('Folder extraído de la URL:', documentFolder);
+          
+          // Validar que el folder sea uno de los dos válidos
+          if (documentFolder !== 'radicados' && documentFolder !== 'documentos_casos') {
+            console.log('Folder no válido, usando documentos_casos como default');
+            documentFolder = 'documentos_casos';
+          }
+        } else {
+          // Si no podemos extraer el folder, usamos el default
+          documentFolder = 'documentos_casos';
+        }
+      } catch (error) {
+        console.error('Error al extraer folder de la URL:', error);
+        // Si hay algún error al extraer el folder, usamos el default
+        documentFolder = 'documentos_casos';
+      }
+    } else if (!documentFolder) {
+      // Si no hay enlace ni folder especificado, usamos el default
+      documentFolder = 'documentos_casos';
+    }
+    
+    // Construir la URL con el parámetro folder como query parameter
+    const downloadUrl = `${API_BASE_URL}/documentos/${documentId}/download?folder=${documentFolder}`;
+    console.log('URL de descarga:', downloadUrl, 'Folder:', documentFolder);
+    
+    // Hacer la solicitud de descarga
+    try {
+      const response = await axios.get(downloadUrl, {
+        responseType: 'blob'
+      });
       
-      return { 
-        success: true, 
-        data: blob,
-        fileName: fileName
-      };
-    } else {
-      return {
-        success: false,
-        error: `Error al descargar documento: ${response.statusText}`,
-      };
+      if (response.status === 200) {
+        // Crear un blob con los datos recibidos
+        const blob = new Blob([response.data], { type: response.headers['content-type'] });
+        
+        return { 
+          success: true, 
+          data: blob,
+          fileName: fileName
+        };
+      } else {
+        return {
+          success: false,
+          error: `Error al descargar documento: ${response.statusText}`,
+        };
+      }
+    } catch (downloadError: any) {
+      // Si falla con el folder detectado y no es el default, intentamos con documentos_casos
+      if (documentFolder !== 'documentos_casos') {
+        console.log('Intento fallido con folder:', documentFolder, 'Intentando con documentos_casos');
+        const fallbackUrl = `${API_BASE_URL}/documentos/${documentId}/download?folder=documentos_casos`;
+        
+        try {
+          const fallbackResponse = await axios.get(fallbackUrl, {
+            responseType: 'blob'
+          });
+          
+          if (fallbackResponse.status === 200) {
+            const blob = new Blob([fallbackResponse.data], { type: fallbackResponse.headers['content-type'] });
+            return { 
+              success: true, 
+              data: blob,
+              fileName: fileName
+            };
+          }
+        } catch (fallbackError) {
+          console.error('Error en fallback download:', fallbackError);
+          // Continuamos con el error original si el fallback también falla
+        }
+      }
+      
+      // Si llegamos aquí, ambos intentos fallaron o solo falló el intento principal
+      throw downloadError;
     }
   } catch (error: any) {
     console.error("Error downloading document:", error);

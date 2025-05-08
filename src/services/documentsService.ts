@@ -67,7 +67,7 @@ export const getDocumentById = async (documentId: number): Promise<DocumentRespo
 export const downloadDocument = async (documentId: number): Promise<string | null> => {
   try {
     logger.info(`Descargando documento ${documentId}`);
-    return await downloadFile(`documentos/${documentId}/descargar`);
+    return await downloadFile(`documentos/${documentId}/download/?folder=documentos_casos`);
   } catch (error) {
     logger.error(`Error al descargar documento ${documentId}:`, error);
     return null;

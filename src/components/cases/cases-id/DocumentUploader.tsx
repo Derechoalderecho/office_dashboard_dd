@@ -34,8 +34,8 @@ export default function DocumentUploader({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dispatch = useAppDispatch();
 
-  // Max file size in bytes (5MB)
-  const MAX_FILE_SIZE = 5 * 1024 * 1024;
+  // Max file size in bytes (10MB)
+  const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
   const showErrorToast = (message: string) => {
     addToast({
@@ -46,19 +46,10 @@ export default function DocumentUploader({
   };
 
   const validateFile = (file: File): boolean => {
-    const fileExt = file.name.split('.').pop()?.toLowerCase();
-    
-    // Check file type
-    if (fileExt !== 'docx' && fileExt !== 'pdf') {
-      setError("Solo se permiten archivos .docx o .pdf");
-      showErrorToast("Solo se permiten archivos .docx o .pdf");
-      return false;
-    }
-    
-    // Check file size
+    // Check file size only - now allowing any file type
     if (file.size > MAX_FILE_SIZE) {
-      setError(`El archivo es demasiado grande. El tamaño máximo es 5 MB.`);
-      showErrorToast(`El archivo es demasiado grande. El tamaño máximo es 5 MB.`);
+      setError(`El archivo es demasiado grande. El tamaño máximo es 10 MB.`);
+      showErrorToast(`El archivo es demasiado grande. El tamaño máximo es 10 MB.`);
       return false;
     }
     
@@ -212,7 +203,7 @@ export default function DocumentUploader({
               <ArrowUpTrayIcon className="w-16 h-16 text-primary mb-4 animate-bounce" />
               <p className="text-lg font-medium text-primary text-center">Suelta para subir</p>
               <p className="text-sm text-primary/80 text-center mt-2">
-                Archivos .docx o .pdf (Máx. 1 MB)
+                Todos los formatos de archivo (Máx. 10 MB)
               </p>
             </div>
           </div>
@@ -231,7 +222,7 @@ export default function DocumentUploader({
               <p className="mb-2 text-sm text-center text-gray-600">
                 <span className="font-bold">Click para subir</span> o arrastra y suelta
               </p>
-              <p className="text-xs text-gray-500 mb-2">docx, pdf (Máx. 5 MB)</p>
+              <p className="text-xs text-gray-500 mb-2">Todos los formatos de archivo (Máx. 10 MB)</p>
               <p className="text-xs text-gray-400 text-center">
                 Una vez cargado, el documento estará disponible para visualización y descarga
               </p>
@@ -249,7 +240,7 @@ export default function DocumentUploader({
                 id="document-upload"
                 name="document-upload"
                 type="file"
-                accept=".docx,.pdf"
+                accept="*/*"
                 className="hidden"
                 onChange={handleFileChange}
                 ref={fileInputRef}
@@ -272,4 +263,4 @@ export default function DocumentUploader({
       />
     </div>
   );
-} 
+}
