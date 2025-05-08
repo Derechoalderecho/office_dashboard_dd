@@ -226,13 +226,18 @@ export default function DocumentsModal({
         }
       } 
       // Si no hay enlace o no pudimos extraer el folder, usamos el nombre del documento
-      else if (document.nombre_documento && document.nombre_documento.toLowerCase().includes('radicado')) {
-        folder = 'radicados';
-        console.log('Folder determinado por el nombre del documento:', folder);
+      else if (document.nombre_documento) {
+        const nombre = document.nombre_documento.toLowerCase();
+        if (nombre.includes('radicado')) {
+          folder = 'radicados';
+        } else if (nombre.includes('tutela')) {
+          folder = 'tutelas';
+        }
       }
+      console.log('Folder determinado por el nombre del documento:', folder);
       
-      // Verificar que el folder sea válido (solo 'documentos_casos' o 'radicados')
-      if (folder !== 'documentos_casos' && folder !== 'radicados') {
+      // Verificar que el folder sea válido (solo 'documentos_casos', 'radicados' o 'tutelas')
+      if (folder !== 'documentos_casos' && folder !== 'radicados' && folder !== 'tutelas') {
         console.warn(`Folder no válido: ${folder}, usando documentos_casos`);
         folder = 'documentos_casos';
       }
