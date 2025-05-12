@@ -41,6 +41,7 @@ export default {
 			10: "rgba(255, 255, 255, 0.1)",
 			5: "rgba(255, 255, 255, 0.05)",
 		},
+        student: "#a7e6c2",
         tertiary: "#D4EAFF",
         bgNav: "rgba(8, 172, 215, 0.15)",
         success: "rgba(23, 201, 100, 0.20)",
