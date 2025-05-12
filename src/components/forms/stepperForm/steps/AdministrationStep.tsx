@@ -52,23 +52,26 @@ export default function AdministrationStep({
   }, []);
 
   // Automatically set the current user as the student if they are a student
+  // and clear profesor_id if student is logged in
   useEffect(() => {
     if (isStudent && internalUserId) {
       const studentId = String(internalUserId);
       
       // Only update if the student ID is different from the current one
-      // This prevents an infinite loop of updates
-      if (formData.alumno_id !== studentId) {
-        console.log(`Estudiante autenticado detectado (ID: ${studentId}). Seleccionando automáticamente.`);
+      // or if profesor_id is set (we want to clear it for students)
+      if (formData.alumno_id !== studentId || formData.profesor_id) {
+        console.log(`Estudiante autenticado detectado (ID: ${studentId}). Seleccionando automáticamente y dejando profesor pendiente.`);
         
         updateFormData({
           alumno_id: studentId,
+          // Clear profesor_id for students - will be handled by teachers later
+          profesor_id: undefined,
           // If the persona_modifica is not set, set it to the student ID
           persona_modifica: !formData.persona_modifica ? studentId : formData.persona_modifica
         });
       }
     }
-  }, [isStudent, internalUserId, formData.alumno_id]);
+  }, [isStudent, internalUserId, formData.alumno_id, formData.profesor_id]);
 
   const handleUserSelect = (role: string, userId: string) => {
     updateFormData({
@@ -87,23 +90,30 @@ export default function AdministrationStep({
           variant="bordered"
           label="Docente asignado"
           labelPlacement="outside"
-          placeholder="Seleccione un docente"
-          selectedKeys={formData.profesor_id ? [formData.profesor_id] : []}
+          placeholder={isStudent ? "Pendiente de asignación" : "Seleccione un docente"}
+          selectedKeys={formData.profesor_id ? [formData.profesor_id] : isStudent ? ["pendiente"] : []}
           onSelectionChange={(keys) => {
-            const selectedKey = Array.from(keys)[0]?.toString() || "";
-            handleUserSelect("profesor", selectedKey);
+            if (!isStudent) {
+              const selectedKey = Array.from(keys)[0]?.toString() || "";
+              handleUserSelect("profesor", selectedKey);
+            }
           }}
           isLoading={isLoading}
           errorMessage={validationErrors?.profesor_id}
           isRequired
+          isDisabled={isStudent}
         >
-          {users
-            .filter(user => user.rol === "Docente")
-            .map((profesor) => (
-              <SelectItem key={profesor.id_usuario.toString()}>
-                {`${profesor.primer_nombre} ${profesor.primer_apellido}`}
-              </SelectItem>
-            ))}
+          {isStudent ? (
+            <SelectItem key="pendiente">Pendiente de asignación</SelectItem>
+          ) : (
+            users
+              .filter(user => user.rol === "Docente")
+              .map((profesor) => (
+                <SelectItem key={profesor.id_usuario.toString()}>
+                  {`${profesor.primer_nombre} ${profesor.primer_apellido}`}
+                </SelectItem>
+              ))
+          )}
         </Select>
 
         <Select
@@ -161,7 +171,8 @@ export default function AdministrationStep({
       
       {isStudent && (
         <div className="text-sm text-blue-600 mt-2">
-          Como estudiante, usted está asignado automáticamente a este caso.
+          <p>Como estudiante, usted está asignado automáticamente a este caso.</p>
+          <p>El docente será asignado posteriormente por el coordinador del consultorio jurídico.</p>
         </div>
       )}
     </div>
