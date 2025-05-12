@@ -21,9 +21,12 @@ import AdministrationStep from "./steps/AdministrationStep";
 import ReviewStep from "./steps/ReviewStep";
 import { submitFormData } from "@/actions/citizenActions";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function StepperForm() {
   const router = useRouter();
+  const { role } = useAuth();
+  const isStudent = role === "Estudiante";
   const [currentStep, setCurrentStep] = useState(0);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [isExistingCitizen, setIsExistingCitizen] = useState(false);
@@ -152,7 +155,10 @@ export default function StepperForm() {
       const errors: { [key: string]: string } = {};
       
       // Administration validation
-      if (!data.profesor_id) errors.profesor_id = "Debe seleccionar un profesor";
+      // Solo validar profesor_id si el usuario NO es estudiante
+      if (!isStudent && !data.profesor_id) {
+        errors.profesor_id = "Debe seleccionar un profesor";
+      }
       if (!data.alumno_id) errors.alumno_id = "Debe seleccionar un alumno";
 
       return errors;
@@ -350,8 +356,13 @@ export default function StepperForm() {
       Object.entries(formData).forEach(([key, value]) => {
         // Skip the tracking fields that we don't want to send to the server
         if (key !== "citizen_id" && key !== "is_existing_citizen") {
-          formDataObj.append(key, value.toString());
-          console.log(`Added form field: ${key}=${value}`);
+          // Solo agregar el campo si el valor no es undefined o null
+          if (value !== undefined && value !== null) {
+            formDataObj.append(key, String(value));
+            console.log(`Added form field: ${key}=${value}`);
+          } else {
+            console.log(`Skipping undefined/null field: ${key}`);
+          }
         }
       });
 
