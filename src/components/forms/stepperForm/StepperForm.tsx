@@ -5,7 +5,7 @@ import type React from "react";
 import { useState } from "react";
 import { ArrowLeftIcon, Check, ChevronRight, Link } from "lucide-react";
 import { CheckIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
-import { Button, Divider, addToast } from "@heroui/react";
+import { Button, Divider, addToast, Alert } from "@heroui/react";
 import {
   Card,
   CardContent,
@@ -85,6 +85,8 @@ export default function StepperForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
 
   const steps = [
     { title: "Información básica", component: BasicInformationStep },
@@ -176,17 +178,23 @@ export default function StepperForm() {
   };
 
   const handleNext = () => {
-    if (validateCurrentStep()) {
-      if (currentStep < steps.length - 1) {
-        setCurrentStep((prev) => prev + 1);
-        setValidationErrors({});
-      }
-    } else {
-      // Get the list of missing fields for a more detailed error message
-      const missingFields = Object.keys(validationErrors);
+    // First validate the current step
+    const currentValidation = stepValidations[currentStep as keyof typeof stepValidations];
+    if (currentValidation) {
+      const errors = currentValidation(formData);
+      setValidationErrors(errors);
       
-      // Map field keys to human-readable names
-      const fieldNames = missingFields.map(field => {
+      // If there are no errors, proceed to the next step
+      if (Object.keys(errors).length === 0) {
+        if (currentStep < steps.length - 1) {
+          setCurrentStep((prev) => prev + 1);
+          setValidationErrors({});
+        }
+      } else {
+        // Get the list of missing fields for a more detailed error message
+        const missingFields = Object.keys(errors);
+        
+        // Map field keys to human-readable names
         const fieldLabels: {[key: string]: string} = {
           // Basic Information
           tipo_documento: "Tipo de documento",
@@ -220,26 +228,26 @@ export default function StepperForm() {
           citizen_id: "Ciudadano existente",
         };
         
-        return fieldLabels[field] || field;
-      });
-      
-      // Create the error message with the list of missing fields
-      let errorMessage = "Por favor complete los siguientes campos:";
-      
-      if (fieldNames.length <= 3) {
-        // Show all fields if there are 3 or fewer
-        errorMessage += ` ${fieldNames.join(', ')}`;
-      } else {
-        // Show only the first 3 fields if there are more than 3
-        errorMessage += ` ${fieldNames.slice(0, 3).join(', ')} y ${fieldNames.length - 3} más`;
+        const fieldNames = missingFields.map(field => fieldLabels[field] || field);
+        
+        // Create the error message with the list of missing fields
+        let errorMessage = "Por favor complete los siguientes campos:";
+        
+        if (fieldNames.length <= 3) {
+          // Show all fields if there are 3 or fewer
+          errorMessage += ` ${fieldNames.join(', ')}`;
+        } else {
+          // Show only the first 3 fields if there are more than 3
+          errorMessage += ` ${fieldNames.slice(0, 3).join(', ')} y ${fieldNames.length - 3} más`;
+        }
+        
+        // Show error alert for validation errors
+        setAlertMessage(errorMessage);
+        setAlertVisible(true);
+        
+        // Hide alert after 10 seconds
+        setTimeout(() => setAlertVisible(false), 10000);
       }
-      
-      // Show error toast for validation errors
-      addToast({
-        title: "Error de validación",
-        description: errorMessage,
-        color: "danger",
-      });
     }
   };
 
@@ -275,42 +283,40 @@ export default function StepperForm() {
         const missingFields = Object.keys(validationErrors);
         
         // Map field keys to human-readable names
-        const fieldNames = missingFields.map(field => {
-          const fieldLabels: {[key: string]: string} = {
-            // Basic Information
-            tipo_documento: "Tipo de documento",
-            num_documento: "Número de documento",
-            primer_nombre: "Primer nombre",
-            primer_apellido: "Primer apellido",
-            sexo: "Sexo",
-            genero: "Género",
-            orient_sexual: "Orientación sexual",
-            fecha_nacimiento: "Fecha de nacimiento",
-            num_movil: "Número móvil",
-            nacionalidad: "Nacionalidad",
-            estado_civil: "Estado civil",
-            escolaridad: "Escolaridad",
-            etnia: "Etnia",
-            discapacidad: "Discapacidad",
-            sabe_leer_escribir: "Sabe leer y escribir",
-            departamento: "Departamento",
-            municipio: "Municipio",
-            // General Information
-            tipo_proceso: "Tipo de proceso",
-            tiempo_respuesta: "Tiempo de respuesta",
-            hechos: "Hechos",
-            pretensiones: "Pretensiones",
-            fundamentos: "Fundamentos de derecho",
-            entidad: "Entidad",
-            notas: "Notas",
-            // Administration
-            profesor_id: "Docente asignado",
-            alumno_id: "Estudiante asignado",
-            citizen_id: "Ciudadano existente",
-          };
-          
-          return fieldLabels[field] || field;
-        });
+        const fieldLabels: {[key: string]: string} = {
+          // Basic Information
+          tipo_documento: "Tipo de documento",
+          num_documento: "Número de documento",
+          primer_nombre: "Primer nombre",
+          primer_apellido: "Primer apellido",
+          sexo: "Sexo",
+          genero: "Género",
+          orient_sexual: "Orientación sexual",
+          fecha_nacimiento: "Fecha de nacimiento",
+          num_movil: "Número móvil",
+          nacionalidad: "Nacionalidad",
+          estado_civil: "Estado civil",
+          escolaridad: "Escolaridad",
+          etnia: "Etnia",
+          discapacidad: "Discapacidad",
+          sabe_leer_escribir: "Sabe leer y escribir",
+          departamento: "Departamento",
+          municipio: "Municipio",
+          // General Information
+          tipo_proceso: "Tipo de proceso",
+          tiempo_respuesta: "Tiempo de respuesta",
+          hechos: "Hechos",
+          pretensiones: "Pretensiones",
+          fundamentos: "Fundamentos de derecho",
+          entidad: "Entidad",
+          notas: "Notas",
+          // Administration
+          profesor_id: "Docente asignado",
+          alumno_id: "Estudiante asignado",
+          citizen_id: "Ciudadano existente",
+        };
+        
+        const fieldNames = missingFields.map(field => fieldLabels[field] || field);
         
         // Create the error message with the list of missing fields
         let errorMessage = "No se puede enviar el formulario. Campos faltantes:";
@@ -323,13 +329,10 @@ export default function StepperForm() {
           errorMessage += ` ${fieldNames.slice(0, 3).join(', ')} y ${fieldNames.length - 3} más`;
         }
         
-        // Show error toast for validation errors
-        addToast({
-          title: "Error en el formulario",
-          description: errorMessage,
-          color: "danger",
-        });
-        
+        // Show error alert for validation errors
+        setAlertMessage(errorMessage);
+        setAlertVisible(true);
+      
         return; // Prevent form submission
       }
       
@@ -475,6 +478,23 @@ export default function StepperForm() {
 
   return (
     <div className="py-6">
+      {/* Fixed position alert at top-center with animation */}
+      <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md transition-all duration-300 ease-in-out" style={{
+        opacity: alertVisible ? 1 : 0,
+        transform: `translate(-50%, ${alertVisible ? '0' : '-20px'})`,
+        pointerEvents: alertVisible ? 'auto' : 'none'
+      }}>
+        <Alert
+          isVisible={true}
+          variant="faded"
+          onVisibleChange={setAlertVisible}
+          title="Faltan campos por completar"
+          description={alertMessage}
+          color="warning"
+          isClosable
+        />
+      </div>
+      
       <div className="mb-16">
         <div className="flex justify-between">
           {steps.map((step, index) => (
