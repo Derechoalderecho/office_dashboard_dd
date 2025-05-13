@@ -150,7 +150,6 @@ export const TableCellRendererCases = ({
             <AvatarGroup
               isBordered
               max={2}
-              color={user.usuarios[0].rol === "Estudiante" ? "success" : "primary"}
               total={user.usuarios.length > 2 ? user.usuarios.length : undefined}
               classNames={{
                 count: "text-sm h-8 w-8",
