@@ -449,7 +449,9 @@ export const assignUserToCase = async (
 ): Promise<boolean> => {
   // Validar parámetros de entrada
   if (!caseId || !userId || !role) {
-    logger.error(`Parámetros inválidos para asignación: caseId=${caseId}, userId=${userId}, role=${role}`);
+    logger.error(
+      `Parámetros inválidos para asignación: caseId=${caseId}, userId=${userId}, role=${role}`
+    );
     return false;
   }
 
@@ -470,7 +472,9 @@ export const assignUserToCase = async (
     );
 
     if (!caseExists) {
-      logger.error(`No se puede asignar usuario ${userId} al caso ${caseId} porque el caso no existe`);
+      logger.error(
+        `No se puede asignar usuario ${userId} al caso ${caseId} porque el caso no existe`
+      );
       return false;
     }
   } catch (error) {
@@ -485,23 +489,44 @@ export const assignUserToCase = async (
     let currentUsers = [];
     try {
       currentUsers = await fetchUsersByCaseId(caseId);
+      console.log("currentUsers", currentUsers);
     } catch (fetchError) {
-      logger.warn(`No se pudieron obtener usuarios actuales del caso ${caseId}: ${fetchError}`);
+      logger.warn(
+        `No se pudieron obtener usuarios actuales del caso ${caseId}: ${fetchError}`
+      );
       // Continuamos con la asignación aunque no podamos obtener los usuarios actuales
     }
 
-    const existingAssignment = currentUsers.find((user) => user.rol === role);
+    logger.debug(`Buscando asignaciones existentes para rol ${role} en ${currentUsers.length} usuarios`);
+    
+    // Imprimir todos los roles para depuración
+    currentUsers.forEach((user, index) => {
+      logger.debug(`Usuario ${index}: id=${user.id_usuario}, rol=${user.rol}`);
+    });
+    
+    // Buscar coincidencia de rol insensible a mayúsculas/minúsculas
+    const existingAssignment = currentUsers.find(
+      (user) => user.rol && user.rol.toLowerCase() === role.toLowerCase()
+    );
+    
+    logger.debug(`Asignación existente encontrada para rol ${role}: ${JSON.stringify(existingAssignment || 'ninguna')}`);
 
-    // Eliminar asignación existente si es necesario
+    // Eliminar asignación existente si se encontró
     if (existingAssignment) {
       logger.info(
-        `Eliminando asignación existente: caso ${caseId}, usuario ${existingAssignment.id_usuario}, rol ${role}`
+        `Eliminando asignación existente: caso ${caseId}, usuario ${existingAssignment.id_usuario}, rol ${existingAssignment.rol}`
       );
 
       try {
-        await del(`casos-usuarios/${existingAssignment.id_usuario}/${caseId}`);
+        // Asegurarnos de que la URL no tenga slash al final
+        const deleteUrl = `casos-usuarios?id_caso=${caseId}&id_usuario=${existingAssignment.id_usuario}`;
+        logger.debug(`URL para eliminar asignación: ${deleteUrl}`);
+        
+        const deleteResponse = await del(deleteUrl);
+        logger.debug(`Respuesta al eliminar asignación: ${JSON.stringify(deleteResponse || 'sin respuesta')}`);
+        
         // Esperar un momento para asegurar que la eliminación se complete
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 5000));
       } catch (deleteError) {
         logger.error(`Error al eliminar asignación existente: ${deleteError}`);
         // Continuamos con la nueva asignación a pesar del error en la eliminación
@@ -512,21 +537,33 @@ export const assignUserToCase = async (
     const assignmentData = {
       id_caso: caseId,
       id_usuario: userId,
-      rol: role,
     };
 
-    logger.debug(`Enviando datos de asignación: ${JSON.stringify(assignmentData)}`);
-    
-    const response = await post<any>("casos-usuarios", assignmentData);
-    
+    logger.debug(
+      `Enviando datos de asignación: ${JSON.stringify(assignmentData)}`
+    );
+
+    const response = await post<any>("casos-usuarios/", assignmentData);
+
     // Verificar respuesta
     if (!response) {
-      logger.warn(`No se recibió respuesta al asignar usuario ${userId} al caso ${caseId}`);
+      logger.warn(
+        `No se recibió respuesta al asignar usuario ${userId} al caso ${caseId}`
+      );
     }
 
     // Invalidar caché para reflejar los cambios
+    // 1. Invalidar el caso específico
     invalidateCacheItem(CASES_CACHE, caseId);
+    
+    // 2. Invalidar la caché de usuarios del caso
     invalidateCache(`${CASES_CACHE}_usuarios_${caseId}`);
+    
+    // 3. Invalidar la colección completa de casos para asegurar que los listados se actualicen
+    invalidateCache(CASES_CACHE);
+    
+    // 4. Invalidar cualquier caché relacionada con el usuario
+    invalidateCache(`user_cases_${userId}`);
 
     logger.info(
       `Usuario ${userId} asignado correctamente como ${role} al caso ${caseId}`
@@ -560,7 +597,9 @@ export const updateCaseCalification = async (
   criterio4: string
 ): Promise<boolean> => {
   try {
-    logger.info(`Actualizando calificación del caso ${id} con criterios individuales`);
+    logger.info(
+      `Actualizando calificación del caso ${id} con criterios individuales`
+    );
 
     // Validar calificación final
     const calificationNumber = parseFloat(calification);
@@ -577,19 +616,27 @@ export const updateCaseCalification = async (
 
     // Convertir calificación final a entero (multiplicado por 10)
     const calificationAsInteger = Math.round(calificationNumber * 10);
-    
+
     // Validar y convertir cada criterio a su formato adecuado (decimal 0-5)
     const criterio1Number = parseFloat(criterio1);
     const criterio2Number = parseFloat(criterio2);
     const criterio3Number = parseFloat(criterio3);
     const criterio4Number = parseFloat(criterio4);
-    
+
     // Validar que todos los criterios sean números válidos
     if (
-      isNaN(criterio1Number) || criterio1Number < 0 || criterio1Number > 5 ||
-      isNaN(criterio2Number) || criterio2Number < 0 || criterio2Number > 5 ||
-      isNaN(criterio3Number) || criterio3Number < 0 || criterio3Number > 5 ||
-      isNaN(criterio4Number) || criterio4Number < 0 || criterio4Number > 5
+      isNaN(criterio1Number) ||
+      criterio1Number < 0 ||
+      criterio1Number > 5 ||
+      isNaN(criterio2Number) ||
+      criterio2Number < 0 ||
+      criterio2Number > 5 ||
+      isNaN(criterio3Number) ||
+      criterio3Number < 0 ||
+      criterio3Number > 5 ||
+      isNaN(criterio4Number) ||
+      criterio4Number < 0 ||
+      criterio4Number > 5
     ) {
       logger.warn(`Uno o más criterios no son válidos para el caso ${id}`);
       return false;
@@ -602,12 +649,18 @@ export const updateCaseCalification = async (
       calificacion1: Math.round(criterio1Number * 10), // Convertir a entero (0-50)
       calificacion2: Math.round(criterio2Number * 10), // Convertir a entero (0-50)
       calificacion3: Math.round(criterio3Number * 10), // Convertir a entero (0-50)
-      calificacion4: Math.round(criterio4Number * 10)  // Convertir a entero (0-50)
+      calificacion4: Math.round(criterio4Number * 10), // Convertir a entero (0-50)
     };
 
-    logger.debug(`Datos de calificación a enviar para caso ${id}:`, JSON.stringify(updateData));
-    console.log(`Actualizando calificación del caso ${id} con datos:`, updateData);
-    
+    logger.debug(
+      `Datos de calificación a enviar para caso ${id}:`,
+      JSON.stringify(updateData)
+    );
+    console.log(
+      `Actualizando calificación del caso ${id} con datos:`,
+      updateData
+    );
+
     await put<Cases>(`casos/${id}`, updateData);
 
     // Invalidate caches
