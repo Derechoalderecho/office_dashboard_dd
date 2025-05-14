@@ -21,6 +21,7 @@ import { parseDateToLocal } from "@/utils/date";
 import { useAuth } from "@/hooks/useAuth";
 import { getUserIdFromFirebase } from "@/services/userService";
 import { useInternalUserId } from "@/hooks/useInternalUserId";
+import { logger } from "@/utils/logUtils";
 
 interface NotesSectionProps {
   caseId: number;
@@ -72,12 +73,14 @@ export default function NotesSection({
   }, [initialNotes]);
 
   const handleAddNote = async () => {
+    // Validar que haya texto en la nota
     if (!noteText.trim()) return;
 
+    // Verificar que tenemos el ID de usuario interno
     if (!internalUserId) {
-      const errorMsg =
-        "No se pudo identificar al usuario. Por favor, inicia sesión nuevamente.";
+      const errorMsg = "No se pudo identificar al usuario. Por favor, inicia sesión nuevamente.";
       setError(errorMsg);
+      logger.error(`[NotesSection] Error: ${errorMsg}`);
       addToast({
         title: "Error",
         description: errorMsg,
@@ -90,54 +93,43 @@ export default function NotesSection({
     setError(null);
 
     try {
-      console.log(
-        `Preparando para crear nota: Case ID=${caseId}, User ID=${internalUserId}, Mensaje="${noteText
-          .trim()
-          .substring(0, 30)}..."`
-      );
-
-      if (!caseId) {
-        throw new Error(`ID de caso inválido: ${caseId}`);
-      }
-
+      logger.info(`[NotesSection] Enviando nota: caso=${caseId}, usuario=${internalUserId}, mensaje=${noteText.substring(0, 20)}...`);
+      
+      // Llamar al servicio para crear la nota
       const newNote = await createNote(caseId, noteText.trim(), internalUserId);
 
       if (newNote) {
-        console.log("Nota creada exitosamente:", newNote);
-        // Add the new note to the list
+        logger.info(`[NotesSection] Nota creada exitosamente`);
+        
+        // Actualizar la lista de notas en la interfaz
         setNotes([newNote, ...notes]);
         setNoteText("");
 
+        // Mostrar mensaje de éxito
         addToast({
           title: "Nota agregada",
           description: "La nota ha sido agregada correctamente",
           color: "success",
         });
 
+        // Notificar al componente padre que se ha añadido una nota
         if (onNoteAdded) {
+          logger.debug(`[NotesSection] Ejecutando callback onNoteAdded`);
           onNoteAdded();
         }
       } else {
-        console.error("La función createNote devolvió null");
-        throw new Error(
-          "Error al crear la nota. No se recibió respuesta del servidor."
-        );
+        throw new Error("No se recibió respuesta del servidor");
       }
     } catch (error: any) {
-      console.error("Error completo al agregar nota:", error);
+      logger.error(`[NotesSection] Error al agregar nota: ${error.message}`);
 
-      // Obtener un mensaje de error más descriptivo
+      // Preparar mensaje de error para mostrar al usuario
       let errorMessage = "No se pudo agregar la nota";
-
-      if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
+      if (error.message) {
         errorMessage = error.message;
       }
 
-      console.error(`Mensaje de error: ${errorMessage}`);
       setError(errorMessage);
-
       addToast({
         title: "Error",
         description: errorMessage,
