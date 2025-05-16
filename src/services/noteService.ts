@@ -7,16 +7,19 @@ import {
   getWithCache, 
   getCollectionWithCache,
   getCachedItem,
-  invalidateCache
+  invalidateCache,
+  invalidateCacheItem
 } from "@/utils/cacheUtils";
 import { logger } from "@/utils/logUtils";
 import { fetchUserDetails, fetchAllUsers } from "./userService";
 
 const NOTES_CACHE = 'notes';
 const USERS_CACHE = 'users';
+const CASES_CACHE = 'cases';
 
 const NOTES_TTL = 5 * 60 * 1000;
 const USERS_CACHE_TTL = 30 * 60 * 1000;
+const CASES_CACHE_TTL = 5 * 60 * 1000;
 
 /**
  * Enrich notes with user information efficiently
@@ -132,6 +135,7 @@ export const createNote = async (
     logger.info(`Invalidando caché: ${caseNotesCache}`);
     invalidateCache(caseNotesCache);
     invalidateCache(NOTES_CACHE);
+    invalidateCacheItem(CASES_CACHE, numericCaseId);
     
     // Construir objeto de nota con la respuesta
     // Usar los campos que vienen en la respuesta o valores por defecto
