@@ -187,7 +187,8 @@ export async function submitFormData(
       antecedentes: formData.get("antecedentes")?.toString() || "",
       tutela: formData.get("tutela")?.toString() || "NO",
       calificacion: formData.get("calificacion")?.toString() || "0",
-      ganado: formData.get("ganado")?.toString() || "NO"
+      ganado: formData.get("ganado")?.toString() || "NO",
+      fecha_elimina: null
     };
     
     console.log("Datos del caso a crear:", JSON.stringify(caseData, null, 2));
