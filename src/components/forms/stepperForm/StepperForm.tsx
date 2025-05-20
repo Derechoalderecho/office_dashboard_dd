@@ -392,15 +392,8 @@ export default function StepperForm() {
         // Crear una promesa con timeout
         const submissionPromise = submitFormData(formDataObj, useMockMode);
         
-        // Crear una promesa de timeout
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => {
-            reject(new Error("La solicitud ha excedido el tiempo de espera"));
-          }, SUBMISSION_TIMEOUT);
-        });
-        
-        // Esperar a que se complete la primera promesa (éxito o timeout)
-        const result = await Promise.race([submissionPromise, timeoutPromise]) as { 
+        // Esperar a que se complete la primera promesa (éxito)
+        const result = await Promise.race([submissionPromise]) as { 
           success: boolean; 
           error?: string; 
           data?: any;
@@ -564,10 +557,10 @@ export default function StepperForm() {
                 className="mt-10"
                 type="button"
                 onPress={() => {
-                  router.push("/dashboard/citizens");   
+                  router.push("/dashboard/cases");   
                 }}
               >
-                Volver al dashboard
+                Volver a casos
               </Button>
             </div>
           ) : (

@@ -1,11 +1,21 @@
 "use client";
 
 import { useRef, useState, useCallback, useEffect } from "react";
-import { Button, Spinner, addToast } from "@heroui/react";
+import { 
+  Button, 
+  Spinner, 
+  addToast, 
+  Modal, 
+  ModalContent, 
+  ModalHeader, 
+  ModalBody, 
+  ModalFooter 
+} from "@heroui/react";
 import {
   CloudArrowUpIcon,
   DocumentTextIcon,
   ArrowUpTrayIcon,
+  PhotoIcon,
 } from "@heroicons/react/24/outline";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import { 
@@ -33,6 +43,7 @@ export default function CasePreview({
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [isReplaceAlertOpen, setIsReplaceAlertOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tutelaData, setTutelaData] = useState<TutelaResponse | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -123,25 +134,37 @@ export default function CasePreview({
   // Función para validar archivo
   const validateFile = (file: File): boolean => {
     const fileExt = file.name.split(".").pop()?.toLowerCase();
+    const isImage = ["jpg", "jpeg", "png", "gif", "bmp", "webp"].includes(fileExt || "");
+    const isDocument = ["docx", "pdf"].includes(fileExt || "");
+    
+    // Verificar si el caso está en estado "Radicar" para permitir imágenes
+    const allowImages = canUpload; // En el estado "Radicar", canUpload será true
 
     // Check file type
-    if (fileExt !== "docx" && fileExt !== "pdf") {
-      setError("Solo se permiten archivos .docx o .pdf");
+    if ((!isDocument && !allowImages) || (!isDocument && !isImage && allowImages)) {
+      const message = allowImages 
+        ? "Solo se permiten archivos .docx, .pdf, .jpg, .jpeg, .png, .gif, .bmp o .webp" 
+        : "Solo se permiten archivos .docx o .pdf";
+      
+      setError(message);
       addToast({
         title: "Error de formato",
-        description: "Solo se permiten archivos .docx o .pdf",
+        description: message,
         color: "danger",
       });
       return false;
     }
 
-    // Check file size (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError("El archivo es demasiado grande. El tamaño máximo es 5 MB.");
+    // Check file size (10MB para imágenes, 5MB para documentos)
+    const maxSize = isImage ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
+    const maxSizeText = isImage ? "10 MB" : "5 MB";
+    
+    if (file.size > maxSize) {
+      setError(`El archivo es demasiado grande. El tamaño máximo es ${maxSizeText}.`);
       addToast({
         title: "Error de tamaño",
         description:
-          "El archivo es demasiado grande. El tamaño máximo es 5 MB.",
+          `El archivo es demasiado grande. El tamaño máximo es ${maxSizeText}.`,
         color: "danger",
       });
       return false;
@@ -153,9 +176,25 @@ export default function CasePreview({
   const processFile = (file: File) => {
     if (validateFile(file)) {
       setSelectedFile(file);
+      
+      // Generar preview para imágenes
+      const fileExt = file.name.split(".").pop()?.toLowerCase();
+      const isImage = ["jpg", "jpeg", "png", "gif", "bmp", "webp"].includes(fileExt || "");
+      
+      if (isImage) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setImagePreview(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setImagePreview(null);
+      }
+      
       setIsAlertOpen(true);
     } else {
       setSelectedFile(null);
+      setImagePreview(null);
     }
   };
 
@@ -220,13 +259,14 @@ export default function CasePreview({
     // Limpiar estado para cambiar la tutela
     setTutelaData(null);
     setSelectedFile(null);
+    setImagePreview(null);
     setError(null);
     setIsReplaceAlertOpen(false);
     
     // Mostrar indicación visual de que se está cambiando la tutela
     addToast({
       title: "Cambio de tutela",
-      description: "Seleccione el nuevo documento para reemplazar la tutela actual",
+      description: "Seleccione el nuevo archivo para reemplazar la tutela actual",
       color: "primary",
     });
     
@@ -323,27 +363,86 @@ export default function CasePreview({
         Previsualización de la tutela
       </h6>
 
-      <AlertDialog
-        isOpen={isAlertOpen}
-        onClose={() => setIsAlertOpen(false)}
-        onConfirm={handleUpload}
-        title="Confirmar carga"
-        description={`¿Está seguro que desea cargar el documento "${selectedFile?.name}"? Este documento se procesará y mostrará como tutela.`}
-        confirmText="Cargar"
-        type="info"
-        isLoading={isLoading}
-      />
+      {/* Usar Modal directamente en lugar de AlertDialog para poder mostrar contenido JSX */}
+      <Modal isOpen={isAlertOpen} onClose={() => {
+        setIsAlertOpen(false);
+        setSelectedFile(null);
+        setImagePreview(null);
+      }}>
+        <ModalContent>
+          <ModalHeader className="flex flex-col gap-1">Confirmar carga de archivo</ModalHeader>
+          <ModalBody>
+            <p className="mb-2">
+              ¿Estás seguro de que deseas cargar el archivo{" "}
+              <strong>{selectedFile?.name}</strong>?
+            </p>
+            {imagePreview && (
+              <div className="my-3 border rounded-md overflow-hidden">
+                <img 
+                  src={imagePreview} 
+                  alt="Vista previa" 
+                  className="max-h-64 max-w-full mx-auto object-contain"
+                />
+              </div>
+            )}
+            <p className="text-xs text-gray-500">
+              Una vez cargado, el archivo será procesado y estará disponible
+              para su revisión.
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <Button 
+              color="default" 
+              variant="light" 
+              onPress={() => {
+                setIsAlertOpen(false);
+                setSelectedFile(null);
+                setImagePreview(null);
+              }}
+              isDisabled={isLoading}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              color="primary" 
+              onPress={handleUpload}
+              isLoading={isLoading}
+              spinner={<Spinner size="sm" color="white" />}
+            >
+              Cargar archivo
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
 
-      <AlertDialog
-        isOpen={isReplaceAlertOpen}
-        onClose={() => setIsReplaceAlertOpen(false)}
-        onConfirm={confirmReplaceTutela}
-        title="Reemplazar tutela"
-        description="¿Está seguro que desea reemplazar la tutela actual? La tutela anterior seguirá en el historial de documentos pero ya no será la principal."
-        confirmText="Reemplazar"
-        type="warning"
-        isLoading={isLoading}
-      />
+      <Modal isOpen={isReplaceAlertOpen} onClose={() => setIsReplaceAlertOpen(false)}>
+        <ModalContent>
+          <ModalHeader className="flex flex-col gap-1">Reemplazar tutela</ModalHeader>
+          <ModalBody>
+            <p>
+              ¿Está seguro que desea reemplazar la tutela actual? La tutela anterior seguirá en el historial de documentos pero ya no será la principal.
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <Button 
+              color="default" 
+              variant="light" 
+              onPress={() => setIsReplaceAlertOpen(false)}
+              isDisabled={isLoading}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              color="warning" 
+              onPress={confirmReplaceTutela}
+              isLoading={isLoading}
+              spinner={<Spinner size="sm" color="white" />}
+            >
+              Reemplazar
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
 
       {!tutelaData ? (
         <div
@@ -376,7 +475,9 @@ export default function CasePreview({
                   Arrastra y suelta un archivo aquí, o haz clic para seleccionar
                 </p>
                 <p className="text-xs text-gray-400 mb-4">
-                  Formatos aceptados: DOCX, PDF (máximo 5MB)
+                  {canUpload 
+                    ? "Formatos aceptados: DOCX, PDF (máximo 5MB), JPG, PNG, GIF, BMP, WEBP (máximo 10MB)" 
+                    : "Formatos aceptados: DOCX, PDF (máximo 5MB)"}
                 </p>
 
                 <Button
@@ -439,11 +540,26 @@ export default function CasePreview({
               </Button>
           </div>
 
-          <div className="prose prose-sm max-w-none overflow-y-auto h-[500px]">
-            <div className="text-sm whitespace-pre-line font-sans text-gray-800">
-              {tutelaData.contenido_documento}
+          {/* Mostrar contenido según el tipo de archivo */}
+          {tutelaData.ext_documento && [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"].includes(tutelaData.ext_documento.toLowerCase()) ? (
+            <div className="flex flex-col items-center justify-center p-4 border rounded-lg">
+              <div className="flex items-center mb-3 w-full">
+                <PhotoIcon className="w-5 h-5 text-gray-500 mr-2" />
+                <span className="text-sm text-gray-700">{tutelaData.nombre_documento}{tutelaData.ext_documento}</span>
+              </div>
+              <img 
+                src={tutelaData.enlace || ""} 
+                alt={tutelaData.nombre_documento} 
+                className="max-h-[450px] max-w-full object-contain rounded-md border border-gray-200"
+              />
             </div>
-          </div>
+          ) : (
+            <div className="prose prose-sm max-w-none overflow-y-auto h-[500px]">
+              <div className="text-sm whitespace-pre-line font-sans text-gray-800">
+                {tutelaData.contenido_documento}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -452,7 +568,7 @@ export default function CasePreview({
         type="file"
         ref={fileInputRef}
         className="hidden"
-        accept=".docx,.pdf"
+        accept=".docx,.pdf,.jpg,.jpeg,.png,.gif,.bmp,.webp"
         onChange={handleFileChange}
         disabled={isLoading || !canUpload}
       />
