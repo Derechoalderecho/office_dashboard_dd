@@ -20,7 +20,7 @@ import BottomContent from "../shared/BottomContentTable";
 import { sortItems } from "@/utils/sortItems";
 import { paginateItems } from "@/utils/paginateItems";
 import { CaseWithKey } from "@/types/cases";
-import { TableCellRendererCalifications } from "./TableCellRenderer";
+import { TableCellRendererGrades } from "./TableCellRenderer";
 import { fetchAllCases, fetchCasesByUserId } from "@/services/caseService";
 import { useFilteredCalifications } from "@/hooks/useFilteredCalifications";
 import { ModalCalification } from "../ui/modal-calification";
@@ -39,7 +39,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   "actions",
 ];
 
-export default function TableCalifications() {
+export default function TableGrades() {
   const [filterValue, setFilterValue] = useState("");
   const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([]));
   const [visibleColumns, setVisibleColumns] = useState<Selection>(
@@ -318,7 +318,7 @@ export default function TableCalifications() {
             <TableRow key={item.id_caso}>
               {(columnKey) => (
                 <TableCell>
-                  <TableCellRendererCalifications
+                  <TableCellRendererGrades
                     case={item as CaseWithKey}
                     columnKey={columnKey as keyof CaseWithKey}
                     onPreviewCase={handlePreviewCase}

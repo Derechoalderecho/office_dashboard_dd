@@ -13,7 +13,7 @@ interface TableCellRendererProps {
   canGradeStudents?: boolean;
 }
 
-export const TableCellRendererCalifications = ({
+export const TableCellRendererGrades = ({
   case: caseData,
   columnKey,
   onPreviewCase,
