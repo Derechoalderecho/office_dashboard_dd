@@ -29,7 +29,7 @@ interface CasePreviewProps {
   previewText?: string;
   caseId: number;
   canUpload?: boolean;
-  onTutelaUploaded?: () => void;
+  onTutelaUploaded?: (isFromRadicarButton?: boolean) => void;
 }
 
 export default function CasePreview({
@@ -250,6 +250,11 @@ export default function CasePreview({
 
   // Manejar el cambio de tutela existente
   const handleChangeTutela = () => {
+    // Si estamos en estado de radicar, asegurarnos de que solo cambiamos la tutela sin radicarla
+    if (localStorage.getItem(`case_${caseId}_radicar_action`) === 'true') {
+      localStorage.removeItem(`case_${caseId}_radicar_action`);
+    }
+    
     // Abrir diálogo de confirmación para cambiar tutela
     setIsReplaceAlertOpen(true);
   };
@@ -310,9 +315,17 @@ export default function CasePreview({
           color: "success",
         });
 
-        // Notificar al componente padre que se ha subido una tutela
+        // Verificar si la carga viene del botón de radicar
+        const isFromRadicarButton = localStorage.getItem(`case_${caseId}_radicar_action`) === 'true';
+        
+        // Limpiar la bandera después de usarla
+        if (isFromRadicarButton) {
+          localStorage.removeItem(`case_${caseId}_radicar_action`);
+        }
+
+        // Notificar al componente padre que se ha subido una tutela, indicando si viene del botón de radicar
         if (onTutelaUploaded) {
-          onTutelaUploaded();
+          onTutelaUploaded(isFromRadicarButton);
         }
       } else {
         setError(result.error || "Error desconocido al subir el documento");
@@ -422,6 +435,11 @@ export default function CasePreview({
             <p>
               ¿Está seguro que desea reemplazar la tutela actual? La tutela anterior seguirá en el historial de documentos pero ya no será la principal.
             </p>
+            {!canUpload && (
+              <p className="mt-2 text-sm text-amber-600 font-medium">
+                <strong>Nota:</strong> Este cambio solo reemplazará la tutela pero no la radicará. Para radicar la tutela, use el botón "Radicar Tutela" en la parte superior.
+              </p>
+            )}
           </ModalBody>
           <ModalFooter>
             <Button 

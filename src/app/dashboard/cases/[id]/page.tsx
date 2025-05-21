@@ -92,6 +92,9 @@ export default function CasePage() {
 
   // Manejador para el botón de radicar tutela
   const handleRadicarClick = () => {
+    // Establecer una bandera en localStorage para indicar que la carga viene del botón de radicar
+    localStorage.setItem(`case_${caseId}_radicar_action`, 'true');
+    
     // Referencia al input de archivo en CasePreview
     const fileInput = document.querySelector('#tutela-file-input') as HTMLInputElement;
     
@@ -217,7 +220,7 @@ export default function CasePage() {
   };
 
   // Manejador para cuando se sube una tutela
-  const handleTutelaUploaded = async () => {
+  const handleTutelaUploaded = async (isFromRadicarButton = false) => {
     if (!caseData) return;
     
     setStatusChangeLoading(true);
@@ -231,7 +234,8 @@ export default function CasePage() {
           newStatus = "Revisar tutela";
           break;
         case "Radicar":
-          newStatus = "Espera del juez";
+          // Solo cambiar a "Espera del juez" si viene del botón de radicar
+          newStatus = isFromRadicarButton ? "Espera del juez" : caseData.estado;
           break;
         default:
           // Si no es ninguno de los casos específicos, mantener el estado actual
