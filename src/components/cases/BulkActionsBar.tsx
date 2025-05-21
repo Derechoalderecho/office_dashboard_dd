@@ -36,6 +36,7 @@ interface BulkActionsBarProps {
 
 // Mapeo de claves de estado a valores de API
 const STATUS_MAP = {
+  viability: "Viabilidad",
   action_required: "Acción necesaria",
   followed: "Seguimiento",
   no_approved: "No aprobado",
@@ -294,6 +295,15 @@ export const BulkActionsBar = ({
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 bg-[#F31260] rounded-full"></div>
                         No aprobado
+                      </div>
+                    </DropdownItem>
+                    <DropdownItem 
+                      key="viability"
+                      onPress={() => handleStatusChange("viability")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-[#9f33ea] rounded-full"></div>
+                        Viabilidad
                       </div>
                     </DropdownItem>
                     <DropdownItem 
