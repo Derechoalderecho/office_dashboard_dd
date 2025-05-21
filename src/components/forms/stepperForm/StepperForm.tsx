@@ -380,7 +380,7 @@ export default function StepperForm() {
         // Mostrar un mensaje de estado mientras se procesa la solicitud
         addToast({
           title: "Procesando solicitud",
-          description: "Creando ciudadano...",
+          description: "Creando Caso...",
           color: "primary",
         });
         
