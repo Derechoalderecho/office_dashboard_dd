@@ -38,14 +38,14 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 ## Deploy on GCP
 
 ```bash
-docker build -t gcr.io/regal-station-395907/nextjs-frontend .
+docker build -t gcr.io/<PROJECT ID>/nextjs-frontend .
 ```
 
 ```bash
-docker push gcr.io/regal-station-395907/nextjs-frontend
+docker push gcr.io/<PROJECT ID>/nextjs-frontend
 ```
 
 ```bash
-gcloud run deploy nextjs-frontend --image gcr.io/regal-station-395907/nextjs-frontend --platform managed --region us-central1 --allow-unauthenticated
+gcloud run deploy nextjs-frontend --image gcr.io/<PROJECT ID>/nextjs-frontend --platform managed --region us-central1 --allow-unauthenticated
 ```
 
