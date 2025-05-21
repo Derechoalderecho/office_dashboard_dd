@@ -92,21 +92,35 @@ export default function CasePage() {
 
   // Manejador para el botón de radicar tutela
   const handleRadicarClick = () => {
-    // Hacer scroll a la sección de tutela
-    if (tutelaPreviewRef.current) {
-      tutelaPreviewRef.current.scrollIntoView({ behavior: 'smooth' });
-      
-      // Resaltar la sección con un efecto visual
-      tutelaPreviewRef.current.classList.add('highlight-section');
-      setTimeout(() => {
-        tutelaPreviewRef.current?.classList.remove('highlight-section');
-      }, 2000);
+    // Referencia al input de archivo en CasePreview
+    const fileInput = document.querySelector('#tutela-file-input') as HTMLInputElement;
+    
+    if (fileInput) {
+      // Simular clic en el input de archivo para abrir el explorador de archivos directamente
+      fileInput.click();
       
       addToast({
         title: "Radicar tutela",
-        description: "Por favor, cargue o actualice el documento de tutela para radicar el caso",
+        description: "Seleccione el documento de tutela para radicar el caso",
         color: "primary",
       });
+    } else {
+      // Si no se encuentra el input, hacer scroll como fallback
+      if (tutelaPreviewRef.current) {
+        tutelaPreviewRef.current.scrollIntoView({ behavior: 'smooth' });
+        
+        // Resaltar la sección con un efecto visual
+        tutelaPreviewRef.current.classList.add('highlight-section');
+        setTimeout(() => {
+          tutelaPreviewRef.current?.classList.remove('highlight-section');
+        }, 2000);
+        
+        addToast({
+          title: "Radicar tutela",
+          description: "Por favor, cargue o actualice el documento de tutela para radicar el caso",
+          color: "primary",
+        });
+      }
     }
   };
 

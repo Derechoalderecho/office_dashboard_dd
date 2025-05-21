@@ -567,6 +567,7 @@ export default function CasePreview({
       <input
         type="file"
         ref={fileInputRef}
+        id="tutela-file-input"
         className="hidden"
         accept=".docx,.pdf,.jpg,.jpeg,.png,.gif,.bmp,.webp"
         onChange={handleFileChange}
