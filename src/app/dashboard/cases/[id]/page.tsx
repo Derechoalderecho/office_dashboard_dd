@@ -613,7 +613,8 @@ export default function CasePage() {
                   caseId={caseData?.id_caso || caseId} 
                   onTutelaUploaded={handleTutelaUploaded}
                   canUpload={canUploadTutela()}
-               />
+                  caseState={caseData?.estado}
+                />
               </div>
            
               <DocumentsSection caseId={caseData?.id_caso || caseId} />

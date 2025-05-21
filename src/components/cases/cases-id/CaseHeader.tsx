@@ -1,13 +1,13 @@
 "use client";
 
-import { Chip, Button, Tooltip } from "@heroui/react";
+import { Button, Tooltip } from "@heroui/react";
 import {
   PencilSquareIcon,
-  ClipboardDocumentCheckIcon,
   DocumentArrowUpIcon,
   XCircleIcon,
   CheckCircleIcon,
   ArrowUpTrayIcon,
+  ArrowPathRoundedSquareIcon
 } from "@heroicons/react/24/outline";
 import { parseDateToLocal } from "@/utils/date";
 import { Cases } from "@/types/cases";
@@ -200,7 +200,7 @@ export default function CaseHeader({
             isDisabled={isStatusChangeLoading}
             isLoading={isStatusChangeLoading}
             onPress={handleChangeTutelaClick}
-            startContent={<DocumentArrowUpIcon className="w-6 text-white" />}
+            startContent={<ArrowPathRoundedSquareIcon className="w-6 text-white" />}
           >
             Cambiar Tutela
           </Button>

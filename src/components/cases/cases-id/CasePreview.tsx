@@ -9,7 +9,8 @@ import {
   ModalContent, 
   ModalHeader, 
   ModalBody, 
-  ModalFooter 
+  ModalFooter,
+  Tooltip
 } from "@heroui/react";
 import {
   CloudArrowUpIcon,
@@ -29,6 +30,7 @@ interface CasePreviewProps {
   previewText?: string;
   caseId: number;
   canUpload?: boolean;
+  caseState?: string;
   onTutelaUploaded?: (isFromRadicarButton?: boolean) => void;
 }
 
@@ -36,6 +38,7 @@ export default function CasePreview({
   previewText,
   caseId,
   canUpload = true, // Por defecto permitimos la carga si no se especifica
+  caseState,
   onTutelaUploaded,
 }: CasePreviewProps) {
   const [isLoading, setIsLoading] = useState(false);
@@ -553,6 +556,8 @@ export default function CasePreview({
                 })}
               </p>
             </div>
+            {/* Mostrar botón Cambiar solo si no está en estado Espera del juez o si se ha habilitado explícitamente */}
+            {(caseState !== "Espera del juez" || localStorage.getItem(`case_${caseId}_allow_change_tutela`) === 'true') && (
               <Button
                 color="primary"
                 variant="light"
@@ -562,6 +567,21 @@ export default function CasePreview({
               >
                 Cambiar
               </Button>
+            )}
+            {/* Mostrar mensaje informativo si está en estado Espera del juez */}
+            {caseState === "Espera del juez" && localStorage.getItem(`case_${caseId}_allow_change_tutela`) !== 'true' && (
+              <Tooltip content="Use el botón 'Cambiar Tutela' en la parte superior para modificar este documento">
+                <Button
+                  color="primary"
+                  variant="light"
+                  size="sm"
+                  isDisabled
+                  startContent={<CloudArrowUpIcon className="w-4 h-4" />}
+                >
+                  Cambiar
+                </Button>
+              </Tooltip>
+            )}
           </div>
 
           {/* Mostrar contenido según el tipo de archivo */}
