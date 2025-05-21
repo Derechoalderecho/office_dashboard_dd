@@ -306,8 +306,8 @@ export default function CasePage() {
         // En pendiente, sólo estudiantes, docentes o monitores pueden subir
         return role === "Estudiante" || role === "Docente" || role === "Monitor";
       case "Revisar tutela":
-        // En revisión, cualquier rol puede ver pero no modificar
-        return false;
+        // En revisión, permitir cambiar la tutela
+        return true;
       case "Radicar":
         // En radicar, cualquier rol puede subir la tutela final
         return true;

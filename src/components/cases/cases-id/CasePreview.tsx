@@ -437,7 +437,7 @@ export default function CasePreview({
             </p>
             {!canUpload && (
               <p className="mt-2 text-sm text-amber-600 font-medium">
-                <strong>Nota:</strong> Este cambio solo reemplazará la tutela pero no la radicará. Para radicar la tutela, use el botón "Radicar Tutela" en la parte superior.
+                <strong>Nota:</strong> Este cambio solo reemplazará la previsualización de la tutela pero no la radicará.
               </p>
             )}
           </ModalBody>
