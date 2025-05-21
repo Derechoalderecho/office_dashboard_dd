@@ -94,17 +94,13 @@ export default function CasePage() {
   // Efecto para mostrar notificación cuando el caso está en estado 'Radicar'
   useEffect(() => {
     if (caseData && caseData.estado === "Radicar") {
-      // Verificar si ya se mostró la notificación para este caso en esta sesión
-      const notificationShown = sessionStorage.getItem(`case_${caseId}_radicar_notification_shown`);
-      
-      if (!notificationShown) {
-        // Mostrar la notificación
-        setShowRadicarNotification(true);
-        // Marcar como mostrada para esta sesión
-        sessionStorage.setItem(`case_${caseId}_radicar_notification_shown`, 'true');
-      }
+      // Mostrar la notificación siempre que el caso esté en estado 'Radicar'
+      setShowRadicarNotification(true);
+    } else {
+      // Ocultar la notificación si el caso no está en estado 'Radicar'
+      setShowRadicarNotification(false);
     }
-  }, [caseData, caseId]);
+  }, [caseData]);
 
   // Manejador para el botón de radicar tutela
   const handleRadicarClick = () => {
