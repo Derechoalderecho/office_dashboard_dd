@@ -67,6 +67,11 @@ export default function NotesSection({
   useEffect(() => {
     if (initialNotes) {
       console.log(`Notas iniciales cargadas: ${initialNotes.length}`);
+      // Ordenar notas por fecha (más recientes primero)
+      const sortedNotes = [...initialNotes].sort((a, b) => 
+        new Date(b.fecha_crea).getTime() - new Date(a.fecha_crea).getTime()
+      );
+      setNotes(sortedNotes);
     } else {
       console.log("No hay notas iniciales disponibles");
     }
@@ -101,7 +106,7 @@ export default function NotesSection({
       if (newNote) {
         logger.info(`[NotesSection] Nota creada exitosamente`);
         
-        // Actualizar la lista de notas en la interfaz
+        // Actualizar la lista de notas en la interfaz (la nueva nota al principio)
         setNotes([newNote, ...notes]);
         setNoteText("");
 
