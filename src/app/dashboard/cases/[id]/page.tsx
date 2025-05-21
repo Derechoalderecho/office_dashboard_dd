@@ -1,6 +1,6 @@
 "use client";
 
-import { Chip, Button, Textarea, addToast } from "@heroui/react";
+import { Chip, Button, Textarea, addToast, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import {
   PencilSquareIcon,
@@ -43,6 +43,7 @@ export default function CasePage() {
   const [notasList, setNotasList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusChangeLoading, setStatusChangeLoading] = useState(false);
+  const [showRadicarNotification, setShowRadicarNotification] = useState(false);
   
   // Referencia para hacer scroll a la sección de tutela
   const tutelaPreviewRef = useRef<HTMLDivElement>(null);
@@ -89,6 +90,21 @@ export default function CasePage() {
     
     loadCaseData();
   }, [caseId, id]);
+
+  // Efecto para mostrar notificación cuando el caso está en estado 'Radicar'
+  useEffect(() => {
+    if (caseData && caseData.estado === "Radicar") {
+      // Verificar si ya se mostró la notificación para este caso en esta sesión
+      const notificationShown = sessionStorage.getItem(`case_${caseId}_radicar_notification_shown`);
+      
+      if (!notificationShown) {
+        // Mostrar la notificación
+        setShowRadicarNotification(true);
+        // Marcar como mostrada para esta sesión
+        sessionStorage.setItem(`case_${caseId}_radicar_notification_shown`, 'true');
+      }
+    }
+  }, [caseData, caseId]);
 
   // Manejador para el botón de radicar tutela
   const handleRadicarClick = () => {
@@ -391,7 +407,6 @@ export default function CasePage() {
       setStatusChangeLoading(false);
     }
   };
-
   // Manejador para permitir cambiar tutela en estado "Espera del juez"
   const handleChangeTutelaInEsperaJuez = () => {
     if (!caseData) return;
@@ -432,6 +447,11 @@ export default function CasePage() {
         });
       }
     }
+  };
+
+  // Manejador para cerrar la notificación de radicar
+  const handleCloseRadicarNotification = () => {
+    setShowRadicarNotification(false);
   };
 
   // Limpiar bandera de cambio de tutela cuando se desmonta el componente
@@ -580,6 +600,49 @@ export default function CasePage() {
   return (
     <main>
       <div key={caseData?.id_caso}>
+        {/* Modal de notificación para casos en estado Radicar */}
+        <Modal
+          isOpen={showRadicarNotification}
+          onClose={handleCloseRadicarNotification}
+          placement="center"
+          classNames={{
+            base: "bg-white shadow-lg rounded-lg max-w-md mx-auto",
+            header: "border-b border-gray-200 p-4",
+            body: "p-6",
+            footer: "border-t border-gray-200 p-4"
+          }}
+        >
+          <ModalContent>
+            <ModalHeader className="flex flex-col gap-1 text-center">
+              <div className="flex justify-center mb-2">
+                <div className="bg-emerald-100 p-3 rounded-full">
+                  <CheckCircleIcon className="w-8 h-8 text-emerald-600" />
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900">¡Caso listo para radicar!</h3>
+            </ModalHeader>
+            <ModalBody>
+              <div className="text-center space-y-4">
+                <p className="text-gray-700">
+                  La tutela ha sido aprobada y está lista para ser radicada. Para completar este proceso, haga clic en el botón "Radicar Tutela" en la parte superior de la página.
+                </p>
+                <p className="text-sm text-gray-500">
+                  Una vez radicada, el caso pasará automáticamente al estado "Espera del juez".
+                </p>
+              </div>
+            </ModalBody>
+            <ModalFooter className="flex justify-center">
+              <Button
+                color="primary"
+                className="w-full"
+                onPress={handleCloseRadicarNotification}
+              >
+                Entendido
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
         <CaseHeader 
           caseData={caseData!} 
           onApproveSubmission={handleApproveSubmission}
