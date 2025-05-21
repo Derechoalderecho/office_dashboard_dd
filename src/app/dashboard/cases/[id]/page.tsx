@@ -311,6 +311,10 @@ export default function CasePage() {
       case "Radicar":
         // En radicar, cualquier rol puede subir la tutela final
         return true;
+      case "Espera del juez":
+        // En espera del juez, permitir cambiar la tutela si se solicita explícitamente
+        // La bandera se establecerá cuando se haga clic en el botón de cambiar tutela
+        return localStorage.getItem(`case_${caseData.id_caso}_allow_change_tutela`) === 'true';
       default:
         return false;
     }
@@ -387,6 +391,57 @@ export default function CasePage() {
       setStatusChangeLoading(false);
     }
   };
+
+  // Manejador para permitir cambiar tutela en estado "Espera del juez"
+  const handleChangeTutelaInEsperaJuez = () => {
+    if (!caseData) return;
+    
+    // Establecer bandera para permitir cambiar la tutela
+    localStorage.setItem(`case_${caseId}_allow_change_tutela`, 'true');
+    
+    // Establecer bandera para indicar que la acción viene del botón de cambiar tutela en Espera del juez
+    localStorage.setItem(`case_${caseId}_change_tutela_action`, 'true');
+    
+    // Referencia al input de archivo en CasePreview
+    const fileInput = document.querySelector('#tutela-file-input') as HTMLInputElement;
+    
+    if (fileInput) {
+      // Simular clic en el input de archivo para abrir el explorador de archivos directamente
+      fileInput.click();
+      
+      addToast({
+        title: "Cambiar tutela",
+        description: "Seleccione el nuevo documento de tutela para reemplazar el actual",
+        color: "primary",
+      });
+    } else {
+      // Si no se encuentra el input, hacer scroll como fallback
+      if (tutelaPreviewRef.current) {
+        tutelaPreviewRef.current.scrollIntoView({ behavior: 'smooth' });
+        
+        // Resaltar la sección con un efecto visual
+        tutelaPreviewRef.current.classList.add('highlight-section');
+        setTimeout(() => {
+          tutelaPreviewRef.current?.classList.remove('highlight-section');
+        }, 2000);
+        
+        addToast({
+          title: "Cambiar tutela",
+          description: "Ahora puede cambiar el documento de tutela. Haga clic en el botón 'Cambiar'.",
+          color: "primary",
+        });
+      }
+    }
+  };
+
+  // Limpiar bandera de cambio de tutela cuando se desmonta el componente
+  useEffect(() => {
+    return () => {
+      if (caseData) {
+        localStorage.removeItem(`case_${caseData.id_caso}_allow_change_tutela`);
+      }
+    };
+  }, [caseData]);
 
   // Si no hay datos o hay un error, mostrar un mensaje
   if (!caseData && !loading) {
@@ -533,6 +588,7 @@ export default function CasePage() {
           onNotViableSubmission={handleNotViableSubmission}
           isStatusChangeLoading={statusChangeLoading}
           onRadicarClick={handleRadicarClick}
+          onChangeTutelaInEsperaJuez={handleChangeTutelaInEsperaJuez}
           role={role}
         />
        

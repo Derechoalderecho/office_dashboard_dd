@@ -315,12 +315,18 @@ export default function CasePreview({
           color: "success",
         });
 
-        // Verificar si la carga viene del botón de radicar
+        // Verificar si la carga viene del botón de radicar o del botón de cambiar tutela
         const isFromRadicarButton = localStorage.getItem(`case_${caseId}_radicar_action`) === 'true';
+        const isFromChangeTutelaButton = localStorage.getItem(`case_${caseId}_change_tutela_action`) === 'true';
         
-        // Limpiar la bandera después de usarla
+        // Limpiar las banderas después de usarlas
         if (isFromRadicarButton) {
           localStorage.removeItem(`case_${caseId}_radicar_action`);
+        }
+        if (isFromChangeTutelaButton) {
+          localStorage.removeItem(`case_${caseId}_change_tutela_action`);
+          // Limpiar también la bandera que permite cambiar la tutela en estado Espera del juez
+          localStorage.removeItem(`case_${caseId}_allow_change_tutela`);
         }
 
         // Notificar al componente padre que se ha subido una tutela, indicando si viene del botón de radicar

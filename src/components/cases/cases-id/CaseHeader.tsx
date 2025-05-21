@@ -24,6 +24,7 @@ interface CaseHeaderProps {
   onNotViableSubmission?: () => Promise<void>;
   isStatusChangeLoading?: boolean;
   onRadicarClick?: () => void;
+  onChangeTutelaInEsperaJuez?: () => void;
   role: UserRole;
 }
 
@@ -35,10 +36,12 @@ export default function CaseHeader({
   onNotViableSubmission,
   isStatusChangeLoading = false,
   onRadicarClick,
+  onChangeTutelaInEsperaJuez,
   role,
 }: CaseHeaderProps) {
   const displayState = transformStateByRole(caseData.estado, role);
   const [isRadicarInfoOpen, setIsRadicarInfoOpen] = useState(false);
+  const [isChangeTutelaDialogOpen, setIsChangeTutelaDialogOpen] = useState(false);
 
   const handleRadicarClick = () => {
     if (onRadicarClick) {
@@ -46,6 +49,21 @@ export default function CaseHeader({
     } else {
       // Mostrar información sobre la radicación
       setIsRadicarInfoOpen(true);
+    }
+  };
+
+  const handleChangeTutelaClick = () => {
+    // Mostrar diálogo de confirmación
+    setIsChangeTutelaDialogOpen(true);
+  };
+
+  const confirmChangeTutela = () => {
+    // Cerrar diálogo
+    setIsChangeTutelaDialogOpen(false);
+    
+    // Llamar a la función del componente padre
+    if (onChangeTutelaInEsperaJuez) {
+      onChangeTutelaInEsperaJuez();
     }
   };
 
@@ -175,6 +193,19 @@ export default function CaseHeader({
           </Button>
         )}
 
+        {/* Botón de Cambiar Tutela (solo para estado "Espera del juez") */}
+        {caseData.estado === "Espera del juez" && (
+          <Button
+            className="text-white bg-[#F59E0B]"
+            isDisabled={isStatusChangeLoading}
+            isLoading={isStatusChangeLoading}
+            onPress={handleChangeTutelaClick}
+            startContent={<DocumentArrowUpIcon className="w-6 text-white" />}
+          >
+            Cambiar Tutela
+          </Button>
+        )}
+
         {/* Botón de Aprobar (para estados "Revisar tutela" y "Radicar") */}
         {showApproveButton && (
           <Button
@@ -229,6 +260,17 @@ export default function CaseHeader({
         description="Para avanzar este caso, es obligatorio radicar la tutela. Desplácese hacia abajo hasta la sección 'Previsualización de la tutela' y cargue el documento. Una vez cargado, el estado cambiará automáticamente a 'Espera del juez'. Esta es la única forma de avanzar el caso en este estado."
         confirmText="Entendido"
         type="info"
+      />
+
+      <AlertDialog
+        isOpen={isChangeTutelaDialogOpen}
+        onClose={() => setIsChangeTutelaDialogOpen(false)}
+        onConfirm={confirmChangeTutela}
+        title="Cambiar tutela radicada"
+        description="Está a punto de cambiar la tutela que ya ha sido radicada. Esta acción es importante y debe realizarse solo si es necesario corregir o actualizar el documento. ¿Está seguro de que desea continuar?"
+        confirmText="Sí, cambiar tutela"
+        cancelText="Cancelar"
+        type="warning"
       />
     </section>
   );
