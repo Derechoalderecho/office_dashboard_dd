@@ -140,3 +140,21 @@ export const deleteDocument = async (
     return false;
   }
 };
+
+/**
+ * Obtiene el último documento radicado para un caso
+ * @param caseId ID del caso
+ * @returns Documento radicado o null si no existe
+ */
+export const getLatestRadicadoDocument = async (
+  caseId: number
+): Promise<DocumentResponse | null> => {
+  try {
+    logger.info(`Obteniendo último documento radicado para el caso ${caseId}`);
+    const document = await get<DocumentResponse>(`documentos/${caseId}/radicados/`);
+    return document;
+  } catch (error) {
+    logger.error(`Error al obtener último documento radicado para el caso ${caseId}:`, error);
+    return null;
+  }
+};
