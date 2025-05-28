@@ -36,6 +36,7 @@ import {
   fetchLocations,
   getUniqueDepartments,
   getMunicipalitiesByDepartment,
+  getDaneMunicipioByName,
   Location,
 } from "@/services/locationService";
 import { parseDate, CalendarDate } from "@internationalized/date";
@@ -68,6 +69,7 @@ type BasicInformationProps = {
     zona: string;
     departamento: string;
     municipio: string;
+    dane_municipio: string;
   };
   updateFormData: (
     data: Partial<{
@@ -97,6 +99,7 @@ type BasicInformationProps = {
       zona: string;
       departamento: string;
       municipio: string;
+      dane_municipio: string;
     }>
   ) => void;
   validationErrors?: { [key: string]: string };
@@ -922,7 +925,18 @@ export default function BasicInformationStep({
               selectedKeys={formData.municipio ? [formData.municipio] : []}
               onSelectionChange={(keys) => {
                 const selectedKey = Array.from(keys)[0]?.toString() || "";
+                
+                // Guardar el nombre del municipio
                 updateFormData({ municipio: selectedKey });
+                
+                // Obtener y guardar el código DANE del municipio
+                if (selectedKey) {
+                  const daneMunicipio = getDaneMunicipioByName(locations, selectedKey);
+                  if (daneMunicipio) {
+                    console.log(`Guardando código DANE del municipio: ${daneMunicipio}`);
+                    updateFormData({ dane_municipio: daneMunicipio });
+                  }
+                }
               }}
               isDisabled={!formData.departamento}
               errorMessage={validationErrors?.municipio}

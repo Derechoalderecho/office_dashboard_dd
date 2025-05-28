@@ -59,6 +59,7 @@ export default function StepperForm() {
     zona: "",
     departamento: "",
     municipio: "",
+    dane_municipio: "",
 
     // Case information
     notas: "",
@@ -74,9 +75,6 @@ export default function StepperForm() {
     profesor_id: "",
     monitor_id: "",
     alumno_id: "",
-
-    // Other required fields
-    dane_municipio: "05001",
 
     // For tracking citizen selection
     citizen_id: "",
