@@ -193,7 +193,7 @@ export default function CaseHeader({
           </Button>
         )}
 
-        {/* Botón de Cambiar Tutela (solo para estado "Espera del juez") */}
+        {/* Botón de Cambiar Radicado (solo para estado "Espera del juez") */}
         {caseData.estado === "Espera del juez" && (
           <Button
             className="text-white bg-[#F59E0B]"
@@ -202,7 +202,7 @@ export default function CaseHeader({
             onPress={handleChangeTutelaClick}
             startContent={<ArrowPathRoundedSquareIcon className="w-6 text-white" />}
           >
-            Cambiar Tutela
+            Cambiar Radicado
           </Button>
         )}
 
@@ -266,9 +266,9 @@ export default function CaseHeader({
         isOpen={isChangeTutelaDialogOpen}
         onClose={() => setIsChangeTutelaDialogOpen(false)}
         onConfirm={confirmChangeTutela}
-        title="Cambiar tutela radicada"
-        description="Está a punto de cambiar la tutela que ya ha sido radicada. Esta acción es importante y debe realizarse solo si es necesario corregir o actualizar el documento. ¿Está seguro de que desea continuar?"
-        confirmText="Sí, cambiar tutela"
+        title="Cambiar documento radicado"
+        description="Está a punto de cambiar el documento radicado. Esta acción es importante y debe realizarse solo si es necesario corregir o actualizar el documento. ¿Está seguro de que desea continuar?"
+        confirmText="Sí, cambiar radicado"
         cancelText="Cancelar"
         type="warning"
       />

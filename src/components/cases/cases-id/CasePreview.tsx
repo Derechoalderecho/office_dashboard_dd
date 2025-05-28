@@ -330,30 +330,38 @@ export default function CasePreview({
     }
   };
 
-  // Manejar el cambio de tutela existente
+  // Manejar el cambio de tutela o radicado existente
   const handleChangeTutela = () => {
     // Si estamos en estado de radicar, asegurarnos de que solo cambiamos la tutela sin radicarla
     if (localStorage.getItem(`case_${caseId}_radicar_action`) === 'true') {
       localStorage.removeItem(`case_${caseId}_radicar_action`);
     }
     
-    // Abrir diálogo de confirmación para cambiar tutela
+    // Si estamos en estado Espera del juez, establecer la bandera para cambiar radicado
+    if (caseState === "Espera del juez") {
+      localStorage.setItem(`case_${caseId}_change_tutela_action`, 'true');
+    }
+    
+    // Abrir diálogo de confirmación para cambiar documento
     setIsReplaceAlertOpen(true);
   };
 
-  // Confirmación para reemplazar tutela existente
+  // Confirmación para reemplazar documento existente
   const confirmReplaceTutela = () => {
-    // Limpiar estado para cambiar la tutela
+    // Limpiar estado para cambiar el documento
     setTutelaData(null);
     setSelectedFile(null);
     setImagePreview(null);
     setError(null);
     setIsReplaceAlertOpen(false);
     
-    // Mostrar indicación visual de que se está cambiando la tutela
+    // Mostrar indicación visual de que se está cambiando el documento
+    const isRadicado = caseState === "Espera del juez";
     addToast({
-      title: "Cambio de tutela",
-      description: "Seleccione el nuevo archivo para reemplazar la tutela actual",
+      title: isRadicado ? "Cambio de radicado" : "Cambio de tutela",
+      description: isRadicado 
+        ? "Seleccione el nuevo documento para reemplazar el radicado actual" 
+        : "Seleccione el nuevo archivo para reemplazar la tutela actual",
       color: "primary",
     });
     
@@ -382,13 +390,18 @@ export default function CasePreview({
 
       // Verificar si estamos en estado "Radicar" y viene del botón de radicar
       const isRadicarAction = localStorage.getItem(`case_${caseId}_radicar_action`) === 'true';
+      // Verificar si estamos cambiando el radicado en estado "Espera del juez"
+      const isChangeTutelaAction = localStorage.getItem(`case_${caseId}_change_tutela_action`) === 'true';
       const isRadicarState = caseState === "Radicar";
+      const isEsperaJuezState = caseState === "Espera del juez";
       
       let tutelaDocId;
       
-      // Usar el endpoint específico para radicar tutelas cuando estamos en estado Radicar
-      if (isRadicarState && isRadicarAction) {
-        console.log("📤 Subiendo tutela al endpoint /upload con folder=radicados");
+      // Usar el endpoint específico para radicar tutelas cuando:
+      // 1. Estamos en estado Radicar y viene del botón de radicar, o
+      // 2. Estamos en estado Espera del juez y viene del botón de cambiar radicado
+      if ((isRadicarState && isRadicarAction) || (isEsperaJuezState && isChangeTutelaAction)) {
+        console.log("📤 Subiendo documento al endpoint /upload con folder=radicados");
         const result = await uploadRadicadoDocument(formData, caseId);
         
         if (result.success && result.data) {
@@ -445,9 +458,12 @@ export default function CasePreview({
       localStorage.removeItem(`case_${caseId}_change_tutela_action`);
       
       // Mostrar mensaje de éxito
+      const isRadicado = (isRadicarState && isRadicarAction) || (isEsperaJuezState && isChangeTutelaAction);
       addToast({
         title: "Éxito",
-        description: "Documento de tutela cargado correctamente",
+        description: isRadicado 
+          ? "Documento radicado cargado correctamente" 
+          : "Documento de tutela cargado correctamente",
         color: "success",
       });
       
@@ -671,32 +687,16 @@ export default function CasePreview({
                 })}
               </p>
             </div>
-            {/* Mostrar botón Cambiar solo si no está en estado Espera del juez o si se ha habilitado explícitamente */}
-            {(caseState !== "Espera del juez" || localStorage.getItem(`case_${caseId}_allow_change_tutela`) === 'true') && (
-              <Button
-                color="primary"
-                variant="light"
-                size="sm"
-                startContent={<CloudArrowUpIcon className="w-4 h-4" />}
-                onPress={handleChangeTutela}
-              >
-                Cambiar
-              </Button>
-            )}
-            {/* Mostrar mensaje informativo si está en estado Espera del juez */}
-            {caseState === "Espera del juez" && localStorage.getItem(`case_${caseId}_allow_change_tutela`) !== 'true' && (
-              <Tooltip content="Use el botón 'Cambiar Tutela' en la parte superior para modificar este documento">
-                <Button
-                  color="primary"
-                  variant="light"
-                  size="sm"
-                  isDisabled
-                  startContent={<CloudArrowUpIcon className="w-4 h-4" />}
-                >
-                  Cambiar
-                </Button>
-              </Tooltip>
-            )}
+            {/* Mostrar botón Cambiar */}
+            <Button
+              color="primary"
+              variant="light"
+              size="sm"
+              startContent={<CloudArrowUpIcon className="w-4 h-4" />}
+              onPress={handleChangeTutela}
+            >
+              Cambiar
+            </Button>
           </div>
 
           {/* Mostrar contenido según el tipo de archivo y estado del caso */}
