@@ -29,6 +29,7 @@ type ReviewStepProps = {
     zona: string;
     departamento: string;
     municipio: string;
+    dane_municipio: string;
     // Case information
     notas: string;
     tipo_proceso: string;

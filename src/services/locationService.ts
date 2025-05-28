@@ -56,6 +56,34 @@ export const getMunicipalitiesByDepartment = (locations: Location[], department:
 };
 
 /**
+ * Obtiene el código DANE de un municipio por su nombre
+ * @param locations Lista de ubicaciones
+ * @param municipioNombre Nombre del municipio
+ * @returns Código DANE del municipio o undefined si no se encuentra
+ */
+export const getDaneMunicipioByName = (locations: Location[], municipioNombre: string): string | undefined => {
+  if (!municipioNombre || !locations || locations.length === 0) {
+    logger.debug('getDaneMunicipioByName: No municipality name or locations provided');
+    return undefined;
+  }
+  
+  const trimmedMunicipio = municipioNombre.trim();
+  
+  const location = locations.find(
+    loc => loc.nombre_municipio && 
+    loc.nombre_municipio.trim().toLowerCase() === trimmedMunicipio.toLowerCase()
+  );
+  
+  if (location) {
+    logger.debug(`Encontrado código DANE ${location.dane_municipio} para municipio ${trimmedMunicipio}`);
+    return location.dane_municipio;
+  }
+  
+  logger.debug(`No se encontró código DANE para municipio ${trimmedMunicipio}`);
+  return undefined;
+};
+
+/**
  * Invalidates the locations cache to force a fresh reload
  */
 export const invalidateLocationsCache = () => {
