@@ -1,6 +1,6 @@
 "use client";
 
-import { Chip, Button, Textarea, addToast } from "@heroui/react";
+import { Chip, Button, Textarea, addToast, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import {
   PencilSquareIcon,
@@ -43,6 +43,7 @@ export default function CasePage() {
   const [notasList, setNotasList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusChangeLoading, setStatusChangeLoading] = useState(false);
+  const [showRadicarNotification, setShowRadicarNotification] = useState(false);
   
   // Referencia para hacer scroll a la sección de tutela
   const tutelaPreviewRef = useRef<HTMLDivElement>(null);
@@ -90,23 +91,51 @@ export default function CasePage() {
     loadCaseData();
   }, [caseId, id]);
 
+  // Efecto para mostrar notificación cuando el caso está en estado 'Radicar'
+  useEffect(() => {
+    if (caseData && caseData.estado === "Radicar") {
+      // Mostrar la notificación siempre que el caso esté en estado 'Radicar'
+      setShowRadicarNotification(true);
+    } else {
+      // Ocultar la notificación si el caso no está en estado 'Radicar'
+      setShowRadicarNotification(false);
+    }
+  }, [caseData]);
+
   // Manejador para el botón de radicar tutela
   const handleRadicarClick = () => {
-    // Hacer scroll a la sección de tutela
-    if (tutelaPreviewRef.current) {
-      tutelaPreviewRef.current.scrollIntoView({ behavior: 'smooth' });
-      
-      // Resaltar la sección con un efecto visual
-      tutelaPreviewRef.current.classList.add('highlight-section');
-      setTimeout(() => {
-        tutelaPreviewRef.current?.classList.remove('highlight-section');
-      }, 2000);
+    // Establecer una bandera en localStorage para indicar que la carga viene del botón de radicar
+    localStorage.setItem(`case_${caseId}_radicar_action`, 'true');
+    
+    // Referencia al input de archivo en CasePreview
+    const fileInput = document.querySelector('#tutela-file-input') as HTMLInputElement;
+    
+    if (fileInput) {
+      // Simular clic en el input de archivo para abrir el explorador de archivos directamente
+      fileInput.click();
       
       addToast({
         title: "Radicar tutela",
-        description: "Por favor, cargue o actualice el documento de tutela para radicar el caso",
+        description: "Seleccione el documento de tutela para radicar el caso",
         color: "primary",
       });
+    } else {
+      // Si no se encuentra el input, hacer scroll como fallback
+      if (tutelaPreviewRef.current) {
+        tutelaPreviewRef.current.scrollIntoView({ behavior: 'smooth' });
+        
+        // Resaltar la sección con un efecto visual
+        tutelaPreviewRef.current.classList.add('highlight-section');
+        setTimeout(() => {
+          tutelaPreviewRef.current?.classList.remove('highlight-section');
+        }, 2000);
+        
+        addToast({
+          title: "Radicar tutela",
+          description: "Por favor, cargue o actualice el documento de tutela para radicar el caso",
+          color: "primary",
+        });
+      }
     }
   };
 
@@ -203,7 +232,7 @@ export default function CasePage() {
   };
 
   // Manejador para cuando se sube una tutela
-  const handleTutelaUploaded = async () => {
+  const handleTutelaUploaded = async (isFromRadicarButton = false) => {
     if (!caseData) return;
     
     setStatusChangeLoading(true);
@@ -217,7 +246,8 @@ export default function CasePage() {
           newStatus = "Revisar tutela";
           break;
         case "Radicar":
-          newStatus = "Espera del juez";
+          // Solo cambiar a "Espera del juez" si viene del botón de radicar
+          newStatus = isFromRadicarButton ? "Espera del juez" : caseData.estado;
           break;
         default:
           // Si no es ninguno de los casos específicos, mantener el estado actual
@@ -288,11 +318,15 @@ export default function CasePage() {
         // En pendiente, sólo estudiantes, docentes o monitores pueden subir
         return role === "Estudiante" || role === "Docente" || role === "Monitor";
       case "Revisar tutela":
-        // En revisión, cualquier rol puede ver pero no modificar
-        return false;
+        // En revisión, permitir cambiar la tutela
+        return true;
       case "Radicar":
         // En radicar, cualquier rol puede subir la tutela final
         return true;
+      case "Espera del juez":
+        // En espera del juez, permitir cambiar la tutela si se solicita explícitamente
+        // La bandera se establecerá cuando se haga clic en el botón de cambiar tutela
+        return localStorage.getItem(`case_${caseData.id_caso}_allow_change_tutela`) === 'true';
       default:
         return false;
     }
@@ -369,6 +403,61 @@ export default function CasePage() {
       setStatusChangeLoading(false);
     }
   };
+  // Manejador para permitir cambiar tutela en estado "Espera del juez"
+  const handleChangeTutelaInEsperaJuez = () => {
+    if (!caseData) return;
+    
+    // Establecer bandera para permitir cambiar la tutela
+    localStorage.setItem(`case_${caseId}_allow_change_tutela`, 'true');
+    
+    // Establecer bandera para indicar que la acción viene del botón de cambiar tutela en Espera del juez
+    localStorage.setItem(`case_${caseId}_change_tutela_action`, 'true');
+    
+    // Referencia al input de archivo en CasePreview
+    const fileInput = document.querySelector('#tutela-file-input') as HTMLInputElement;
+    
+    if (fileInput) {
+      // Simular clic en el input de archivo para abrir el explorador de archivos directamente
+      fileInput.click();
+      
+      addToast({
+        title: "Cambiar tutela",
+        description: "Seleccione el nuevo documento de tutela para reemplazar el actual",
+        color: "primary",
+      });
+    } else {
+      // Si no se encuentra el input, hacer scroll como fallback
+      if (tutelaPreviewRef.current) {
+        tutelaPreviewRef.current.scrollIntoView({ behavior: 'smooth' });
+        
+        // Resaltar la sección con un efecto visual
+        tutelaPreviewRef.current.classList.add('highlight-section');
+        setTimeout(() => {
+          tutelaPreviewRef.current?.classList.remove('highlight-section');
+        }, 2000);
+        
+        addToast({
+          title: "Cambiar tutela",
+          description: "Ahora puede cambiar el documento de tutela. Haga clic en el botón 'Cambiar'.",
+          color: "primary",
+        });
+      }
+    }
+  };
+
+  // Manejador para cerrar la notificación de radicar
+  const handleCloseRadicarNotification = () => {
+    setShowRadicarNotification(false);
+  };
+
+  // Limpiar bandera de cambio de tutela cuando se desmonta el componente
+  useEffect(() => {
+    return () => {
+      if (caseData) {
+        localStorage.removeItem(`case_${caseData.id_caso}_allow_change_tutela`);
+      }
+    };
+  }, [caseData]);
 
   // Si no hay datos o hay un error, mostrar un mensaje
   if (!caseData && !loading) {
@@ -507,6 +596,49 @@ export default function CasePage() {
   return (
     <main>
       <div key={caseData?.id_caso}>
+        {/* Modal de notificación para casos en estado Radicar */}
+        <Modal
+          isOpen={showRadicarNotification}
+          onClose={handleCloseRadicarNotification}
+          placement="center"
+          classNames={{
+            base: "bg-white shadow-lg rounded-lg max-w-md mx-auto",
+            header: "border-b border-gray-200 p-4",
+            body: "p-6",
+            footer: "border-t border-gray-200 p-4"
+          }}
+        >
+          <ModalContent>
+            <ModalHeader className="flex flex-col gap-1 text-center">
+              <div className="flex justify-center mb-2">
+                <div className="bg-emerald-100 p-3 rounded-full">
+                  <CheckCircleIcon className="w-8 h-8 text-emerald-600" />
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900">¡Caso listo para radicar!</h3>
+            </ModalHeader>
+            <ModalBody>
+              <div className="text-center space-y-4">
+                <p className="text-gray-700">
+                  La tutela ha sido aprobada y está lista para ser radicada. Para completar este proceso, haga clic en el botón "Radicar Tutela" en la parte superior de la página.
+                </p>
+                <p className="text-sm text-gray-500">
+                  Una vez radicada, el caso pasará automáticamente al estado "Espera del juez".
+                </p>
+              </div>
+            </ModalBody>
+            <ModalFooter className="flex justify-center">
+              <Button
+                color="primary"
+                className="w-full"
+                onPress={handleCloseRadicarNotification}
+              >
+                Entendido
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
         <CaseHeader 
           caseData={caseData!} 
           onApproveSubmission={handleApproveSubmission}
@@ -515,6 +647,7 @@ export default function CasePage() {
           onNotViableSubmission={handleNotViableSubmission}
           isStatusChangeLoading={statusChangeLoading}
           onRadicarClick={handleRadicarClick}
+          onChangeTutelaInEsperaJuez={handleChangeTutelaInEsperaJuez}
           role={role}
         />
        
@@ -539,7 +672,8 @@ export default function CasePage() {
                   caseId={caseData?.id_caso || caseId} 
                   onTutelaUploaded={handleTutelaUploaded}
                   canUpload={canUploadTutela()}
-               />
+                  caseState={caseData?.estado}
+                />
               </div>
            
               <DocumentsSection caseId={caseData?.id_caso || caseId} />

@@ -8,6 +8,7 @@ import {
   UserIcon,
   Squares2X2Icon,
   Cog6ToothIcon,
+  TrophyIcon
 } from "@heroicons/react/24/solid";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -25,6 +26,7 @@ export const NAV_LINKS = [
   /*{ href: "/dashboard/mails", key: "mails", label: "Correos", icon: EnvelopeIcon, enabled: false },*/
   { href: "/dashboard/citizens", key: "citizens", label: "Ciudadanos", icon: UsersIcon, enabled: true },
   { href: "/dashboard/users", key: "users", label: "Usuarios", icon: UserGroupIcon, enabled: true },
+  { href: "/dashboard/grades", key: "grades", label: "Calificaciones", icon: TrophyIcon, enabled: true },
 /*
   {
     href: "/dashboard/reviewers",

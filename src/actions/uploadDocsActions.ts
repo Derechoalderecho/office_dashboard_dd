@@ -42,6 +42,42 @@ export async function uploadDocument(
   }
 }
 
+/**
+ * Sube un documento de tutela al folder específico de radicados
+ * @param formData Formulario con el archivo a subir
+ * @param caseId ID del caso
+ * @returns Respuesta con el documento subido o error
+ */
+export async function uploadRadicadoDocument(
+  formData: FormData,
+  caseId: number
+): Promise<{ success: boolean; data?: DocumentResponse; error?: string }> {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/upload/${caseId}/?folder=radicados`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    if (response.status === 200 || response.status === 201) {
+      return { success: true, data: response.data };
+    } else {
+      return {
+        success: false,
+        error: `Error al subir tutela: ${response.statusText}`,
+      };
+    }
+  } catch (error: any) {
+    console.error("Error uploading tutela document to upload endpoint:", error);
+    const errorMessage = error.response?.data?.message || error.message || "Error desconocido";
+    return { success: false, error: errorMessage };
+  }
+}
+
 export async function getDocumentById(
   documentId: number
 ): Promise<{ success: boolean; data?: DocumentResponse; error?: string }> {

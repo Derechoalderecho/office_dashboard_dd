@@ -60,9 +60,12 @@ export default function DocumentsSection({ caseId }: DocumentsSectionProps) {
     <section>
       <div className="flex flex-col justify-center items-center mb-10">
         <h4 className="font-medium">Documentos del caso</h4>
-        <span className="text-sm text-secondary">
-          Puede cargar o visualizar documentos relacionados con este caso
-        </span>
+        <p className="text-sm text-secondary">
+          Puede cargar o visualizar anexos y documentos relacionados con este caso
+        </p>
+        <p className="text-xs text-secondary">
+        (Aquí no se deben subir documentos radicados)
+        </p>
       </div>
       <div className="flex gap-5 flex-col md:flex-row">
         <div className="md:w-[35%] w-full">

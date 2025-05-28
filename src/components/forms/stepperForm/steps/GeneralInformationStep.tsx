@@ -29,13 +29,20 @@ export default function GeneralInformationStep({
 }: GeneralInformationProps) {
   const isTutela = formData.tipo_proceso === "Tutela";
   const isDerechoPeticion = formData.tipo_proceso === "Derecho de petición";
+  const isTutelaPrimeraInstancia = formData.tipo_proceso === "Tutela primera instancia";
+  const isTutelaSegundaInstancia = formData.tipo_proceso === "Tutela segunda instancia";
+  const isTutelaDesacato = formData.tipo_proceso === "Tutela desacato";
   
   const selectedInSelect = !!formData.tipo_proceso && 
-    (formData.tipo_proceso === "Tutela" || formData.tipo_proceso === "Derecho de petición");
+    (formData.tipo_proceso === "Tutela" || 
+     formData.tipo_proceso === "Tutela primera instancia" || 
+     formData.tipo_proceso === "Tutela segunda instancia" || 
+     formData.tipo_proceso === "Tutela desacato" || 
+     formData.tipo_proceso === "Derecho de petición");
   
-  const showHechos = selectedInSelect && (isTutela || isDerechoPeticion);
-  const showPretensiones = selectedInSelect && (isTutela || isDerechoPeticion);
-  const showFundamentos = selectedInSelect && (isTutela || isDerechoPeticion);
+  const showHechos = selectedInSelect && (isTutela || isDerechoPeticion || isTutelaPrimeraInstancia || isTutelaSegundaInstancia || isTutelaDesacato);
+  const showPretensiones = selectedInSelect && (isTutela || isDerechoPeticion || isTutelaPrimeraInstancia || isTutelaSegundaInstancia || isTutelaDesacato);
+  const showFundamentos = selectedInSelect && (isTutela || isDerechoPeticion || isTutelaPrimeraInstancia || isTutelaSegundaInstancia || isTutelaDesacato);
   const showEntidad = selectedInSelect && isDerechoPeticion;
   
   const showAdditionalFields = selectedInSelect;
@@ -55,6 +62,9 @@ export default function GeneralInformationStep({
           isRequired
         >
           <SelectItem key="Tutela">Tutela</SelectItem>
+          <SelectItem key="Tutela primera instancia">Tutela primera instancia</SelectItem>
+          <SelectItem key="Tutela segunda instancia">Tutela segunda instancia</SelectItem>
+          <SelectItem key="Tutela desacato">Tutela desacato</SelectItem>
           <SelectItem key="Derecho de petición">Derecho de petición</SelectItem>
         </Select>
 

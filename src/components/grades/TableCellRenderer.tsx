@@ -13,7 +13,7 @@ interface TableCellRendererProps {
   canGradeStudents?: boolean;
 }
 
-export const TableCellRendererCalifications = ({
+export const TableCellRendererGrades = ({
   case: caseData,
   columnKey,
   onPreviewCase,
@@ -83,7 +83,7 @@ export const TableCellRendererCalifications = ({
       );
     case "calificacion":
       // Format the calificacion value
-      let displayValue = "-";
+      let displayValue = "Sin calificar";
       if (cellValue !== null && cellValue !== undefined) {
         // If it's a numeric string, parse it
         const numValue = Number(cellValue);

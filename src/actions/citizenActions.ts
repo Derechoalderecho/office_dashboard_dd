@@ -175,19 +175,19 @@ export async function submitFormData(
       pretensiones: formData.get("pretensiones")?.toString() || "",
       fundamentos: formData.get("fundamentos")?.toString() || "",
       entidad: formData.get("entidad")?.toString() || "",
-      persona_modifica: Number(formData.get("persona_modifica")) || 0,
-      calificacion1: 0, // Número en lugar de string
-      calificacion2: 0, // Número en lugar de string
-      calificacion3: 0, // Número en lugar de string
-      calificacion4: 0, // Número en lugar de string
+      persona_modifica: Number(formData.get("persona_modifica")) || null,
+      calificacion1: null, // Número en lugar de string
+      calificacion2: null, // Número en lugar de string
+      calificacion3: null, // Número en lugar de string
+      calificacion4: null, // Número en lugar de string
       // Campos adicionales requeridos por el backend
       concepto_estudiante: formData.get("concepto_estudiante")?.toString() || "",
       rama_derecho: formData.get("rama_derecho")?.toString() || "Constitucional",
       tramite: formData.get("tramite")?.toString() || "Pendiente",
       antecedentes: formData.get("antecedentes")?.toString() || "",
       tutela: formData.get("tutela")?.toString() || "NO",
-      calificacion: formData.get("calificacion")?.toString() || "0",
-      ganado: formData.get("ganado")?.toString() || "NO",
+      calificacion: formData.get("calificacion")?.toString() || null,
+      ganado: formData.get("ganado")?.toString() || false,
       fecha_elimina: null
     };
     

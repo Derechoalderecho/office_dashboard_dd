@@ -285,15 +285,13 @@ export default function DocumentsModal({
   };
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={onClose}
-      size="3xl"
-      classNames={{
-        footer: "border-t-[1px] border-gray-200",
-      }}
-    >
+    <Modal isOpen={isOpen} onClose={onClose} size="3xl" scrollBehavior="inside">
       <ModalContent>
+        {loading && (
+          <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 z-50 flex items-center justify-center rounded-lg">
+            <Spinner size="lg" color="primary" />
+          </div>
+        )}
         <ModalHeader className="flex flex-col gap-1">
           <div className="flex justify-between items-center">
             <h2 className="text-xl">Documentos del caso</h2>

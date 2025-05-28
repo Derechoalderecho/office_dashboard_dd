@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { NavLinks } from "./nav-links";
-import { addToast } from "@heroui/react";
 
 export function SideBar() {
   const [isHovered, setIsHovered] = useState(false);
