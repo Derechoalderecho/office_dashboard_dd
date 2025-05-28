@@ -421,8 +421,8 @@ export default function CasePage() {
       fileInput.click();
       
       addToast({
-        title: "Cambiar tutela",
-        description: "Seleccione el nuevo documento de tutela para reemplazar el actual",
+        title: "Cambiar radicado",
+        description: "Seleccione el nuevo documento radicado para reemplazar el actual",
         color: "primary",
       });
     } else {
@@ -437,8 +437,8 @@ export default function CasePage() {
         }, 2000);
         
         addToast({
-          title: "Cambiar tutela",
-          description: "Ahora puede cambiar el documento de tutela. Haga clic en el botón 'Cambiar'.",
+          title: "Cambiar radicado",
+          description: "Ahora puede cambiar el documento radicado. Haga clic en el botón 'Cambiar'.",
           color: "primary",
         });
       }
