@@ -52,7 +52,7 @@ case $COMMAND in
       --platform managed \
       --region us-central1 \
       --allow-unauthenticated \
-      --set-secrets "DB_HOST=DB_HOST:latest, DB_PORT=DB_PORT:latest, DB_NAME=DB_NAME:latest, DB_USER=DB_USER:latest, DB_PASSWORD=DB_PASSWORD:latest"
+      --set-secrets "NEXT_PUBLIC_FIREBASE_API_KEY=NEXT_PUBLIC_FIREBASE_API_KEY:latest, NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:latest, NEXT_PUBLIC_API_BASE_URL=NEXT_PUBLIC_API_BASE_URL:latest"
 
     echo "✅ Servicio desplegado correctamente: $IMAGE_NAME"
     ;;
