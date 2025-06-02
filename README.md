@@ -35,17 +35,24 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
-## Deploy on GCP
+## Despliegue en Google Cloud Platform utilizando `utils.sh`
 
+1. Debemos dar permisos al sistema operativo para ejecutar utils.sh
 ```bash
-docker build -t gcr.io/<PROJECT ID>/nextjs-frontend .
+chmod +x utils.sh
 ```
 
+2. Construimos la imagen
 ```bash
-docker push gcr.io/<PROJECT ID>/nextjs-frontend
+./utils.sh build --project_id <PROJECT ID>
 ```
 
+3. Empujamos la imagen al artifact registry
 ```bash
-gcloud run deploy nextjs-frontend --image gcr.io/<PROJECT ID>/nextjs-frontend --platform managed --region us-central1 --allow-unauthenticated
+./utils push --project_id <PROJECT ID>
 ```
 
+4. Desplegamos servicio en Cloud Run
+```bash
+./utils deploy --project_id <PROJECT ID>
+```
