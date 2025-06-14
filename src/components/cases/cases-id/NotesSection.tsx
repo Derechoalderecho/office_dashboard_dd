@@ -6,8 +6,6 @@ import {
   Spinner,
   addToast,
   Avatar,
-  Divider,
-  Tooltip,
 } from "@heroui/react";
 import {
   PaperAirplaneIcon,
@@ -16,16 +14,15 @@ import {
 } from "@heroicons/react/24/outline";
 import { useState, useEffect } from "react";
 import { createNote } from "@/services/noteService";
-import { Nota } from "@/types/cases";
+import { ApiNota } from "@/types/cases";
 import { parseDateToLocal } from "@/utils/date";
 import { useAuth } from "@/hooks/useAuth";
-import { getUserIdFromFirebase } from "@/services/userService";
 import { useInternalUserId } from "@/hooks/useInternalUserId";
 import { logger } from "@/utils/logUtils";
 
 interface NotesSectionProps {
   caseId: number;
-  initialNotes?: Nota[];
+  initialNotes?: ApiNota[];
   onNoteAdded?: () => void;
 }
 
@@ -43,7 +40,7 @@ export default function NotesSection({
 
   const [noteText, setNoteText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [notes, setNotes] = useState<Nota[]>(initialNotes || []);
+  const [notes, setNotes] = useState<ApiNota[]>(initialNotes || []);
   const [error, setError] = useState<string | null>(null);
 
   // Log user details for debugging
@@ -69,7 +66,7 @@ export default function NotesSection({
       console.log(`Notas iniciales cargadas: ${initialNotes.length}`);
       // Ordenar notas por fecha (más recientes primero)
       const sortedNotes = [...initialNotes].sort((a, b) => 
-        new Date(b.fecha_crea).getTime() - new Date(a.fecha_crea).getTime()
+        new Date(b.created_date).getTime() - new Date(a.created_date).getTime()
       );
       setNotes(sortedNotes);
     } else {
@@ -236,12 +233,12 @@ export default function NotesSection({
               <div className="space-y-4 max-h-80 overflow-y-auto pr-1">
                 {notes.map((note) => (
                   <div
-                    key={note.id_nota}
+                    key={note.id_nota_caso}
                     className="bg-gray-50 rounded-lg p-3 shadow-sm"
                   >
                     <div className="flex items-start gap-3">
                       <Avatar
-                        name={getUserInitials(note.usuario)}
+                        name={getUserInitials(note.id_usuario)}
                         color="primary"
                         size="sm"
                         isBordered
@@ -249,17 +246,15 @@ export default function NotesSection({
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-center mb-1">
                           <p className="font-medium text-sm">
-                            {note.usuario
-                              ? `${note.usuario.primer_nombre} ${note.usuario.primer_apellido}`
+                            {note.id_usuario
+                              ? `${note.id_usuario.primer_nombre} ${note.id_usuario.primer_apellido}`
                               : `Usuario ${
-                                  note.id_usuario ||
-                                  note.id_usuario_crea ||
-                                  "desconocido"
+                                  note.id_usuario
                                 }`}
                           </p>
                           <div className="flex items-center text-gray-500 text-xs">
                             <ClockIcon className="w-3 h-3 mr-1" />
-                            <span>{parseDateToLocal(note.fecha_crea)}</span>
+                            <span>{parseDateToLocal(note.created_date)}</span>
                           </div>
                         </div>
                         <p className="text-sm text-gray-700 whitespace-pre-wrap break-words">
