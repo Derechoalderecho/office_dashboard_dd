@@ -39,6 +39,7 @@ export interface ApiNota {
   modified_date: string | null;
   deleted_at: string | null;
   status: boolean;
+  usuario?: Users;
 }
 
 export interface ApiCiudadano {

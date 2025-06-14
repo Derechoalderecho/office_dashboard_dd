@@ -143,10 +143,10 @@ export const createNote = async (
       id_caso: numericCaseId,
       id_usuario: numericUserId,
       mensaje: content.trim(),
-      created_date: new Date().toISOString(),
-      modified_date: new Date().toISOString(),
+      created_date: response.created_date || new Date().toISOString(),
+      modified_date: response.modified_date || null,
       deleted_at: null,
-      status: true
+      status: response.status !== undefined ? response.status : true
     };
     
     logger.info(`Nota construida con ID=${nota.id_nota_caso || 'desconocido'}`);
