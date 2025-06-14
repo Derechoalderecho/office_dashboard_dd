@@ -14,6 +14,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useState } from "react";
 import locations from "@/data/locations.json";
 import { parseDateToLocal } from "@/utils/date";
+import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 
 interface ModalTableProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ interface ModalTableProps {
 export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
   const { role } = useUserRole();
   const [showMore, setShowMore] = useState(false);
+  const [showUsers, setShowUsers] = useState(false);
 
   if (!caseData) return null;
 
@@ -111,9 +113,36 @@ export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
                       </div>
                     )}
                     {caseData.usuarios && caseData.usuarios.length > 0 && (
-                      <div className="flex items-center justify-between border-b pb-3">
-                        <strong>Usuarios Asignados</strong>
-                        <p>{caseData.usuarios.length} usuarios</p>
+                      <div className="flex flex-col border-b pb-3">
+                        <div className="flex items-center justify-between cursor-pointer" 
+                             onClick={() => setShowUsers(!showUsers)}>
+                          <strong>Usuarios Asignados</strong>
+                          <div className="flex items-center">
+                            <p className="mr-2">{caseData.usuarios.length} usuarios</p>
+                            {showUsers ? 
+                              <ChevronUpIcon className="w-4 h-4 text-gray-500" /> : 
+                              <ChevronDownIcon className="w-4 h-4 text-gray-500" />
+                            }
+                          </div>
+                        </div>
+                        
+                        {showUsers && (
+                          <div className="mt-3 bg-gray-50 p-3 rounded-md space-y-2 max-h-40 overflow-y-auto">
+                            {caseData.usuarios.map((usuario, index) => (
+                              <div key={index} className="flex justify-between items-center py-1 border-b border-gray-200 last:border-0">
+                                <div>
+                                  <span className="font-medium">{usuario.primer_nombre} {usuario.primer_apellido}</span>
+                                  <p className="text-xs text-gray-500">{usuario.email}</p>
+                                </div>
+                                <div>
+                                  <span className="text-sm px-2 py-1 rounded-full bg-blue-100 text-blue-800">
+                                    {usuario.rol}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </>
