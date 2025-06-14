@@ -27,7 +27,7 @@ export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
 
   if (!caseData) return null;
 
-  const displayState = transformStateByRole(caseData.estado, role);
+  const displayState = transformStateByRole(caseData.estado_actual, role);
 
   return (
     <Modal isOpen={isOpen} onOpenChange={onClose}>
@@ -56,7 +56,7 @@ export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
                 </div>
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Tipo de Proceso</strong>
-                  <p>{caseData.tipo_proceso}</p>
+                  <p>{caseData.id_tipo_caso}</p>
                 </div>
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Estado</strong>
@@ -87,15 +87,11 @@ export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
                 </div>
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Tiempo de Respuesta</strong>
-                  <p>{caseData.tiempo_respuesta} Horas</p>
+             
                 </div>
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Fecha de Creación</strong>
-                  <p>{new Date(caseData.fecha_crea).toLocaleDateString()}</p>
-                </div>
-                <div className="flex items-center justify-between border-b pb-3">
-                  <strong>Notas</strong>
-                  <p className="text-right">{caseData.notas}</p>
+                  <p>{new Date(caseData.created_date).toLocaleDateString()}</p>
                 </div>
 
                 {showMore && (
@@ -104,7 +100,7 @@ export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
                       <strong>Fecha de Actualización</strong>
                       <p>
                         {new Date(
-                          caseData.fecha_actualiza
+                          caseData.modified_date || caseData.created_date
                         ).toLocaleDateString()}
                       </p>
                     </div>
