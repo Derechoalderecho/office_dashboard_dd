@@ -2,7 +2,7 @@
 
 import { ClockIcon, EyeIcon, PencilIcon } from "@heroicons/react/24/outline";
 import { Chip, Tooltip, Button, Avatar, AvatarGroup } from "@heroui/react";
-import { parseDateToLocal, parseDate, parseTime } from "@/utils/date";
+import { parseDate, parseTime } from "@/utils/date";
 import { CaseWithKey } from "@/types/cases";
 import { transformStateByRole } from "@/utils/stateTransformer";
 import { useUserRole } from "@/hooks/useUserRole";

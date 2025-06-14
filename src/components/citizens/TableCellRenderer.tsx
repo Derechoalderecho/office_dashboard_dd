@@ -3,7 +3,7 @@
 import { Tooltip, Button } from "@heroui/react";
 import { EyeIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
 import { CitizenWithKey } from "@/types/citizens";
-import { parseDateToLocal } from "@/utils/date";
+import { parseDate, parseTime } from "@/utils/date";
 import { useRouter } from "next/navigation";
 import { convertZonaCodeToDisplay } from "@/utils/citizenUtils";
 
@@ -30,7 +30,10 @@ export const TableCellRendererCitizens = ({
       return (
         <div className="flex flex-col">
           <p className="font-medium text-sm">
-            {parseDateToLocal(cellValue as string | number | Date)}
+            {parseDate(cellValue as string | number | Date)}
+          </p>
+          <p className="text-xs text-gray-500">
+            {parseTime(cellValue as string | number | Date)}
           </p>
         </div>
       );

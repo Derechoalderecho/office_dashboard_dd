@@ -350,7 +350,7 @@ export function ModalUser({ isOpen, onClose, userData }: ModalUserProps) {
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Fecha de Creación</strong>
                   <p>
-                    {new Date(userData.fecha_creacion).toLocaleDateString()}
+                    {new Date(userData.created_date).toLocaleDateString()}
                   </p>
                 </div>
 
@@ -365,10 +365,6 @@ export function ModalUser({ isOpen, onClose, userData }: ModalUserProps) {
                       <p>{userData.segundo_apellido || "No especificado"}</p>
                     </div>
                     <div className="flex items-center justify-between border-b pb-3">
-                      <strong>Rama de Derecho</strong>
-                      <p>{userData.rama_derecho || "No especificada"}</p>
-                    </div>
-                    <div className="flex items-center justify-between border-b pb-3">
                       <strong>Nivel de Consultorio</strong>
                       <p>{userData.nivel_consultorio || "No especificado"}</p>
                     </div>
@@ -376,7 +372,7 @@ export function ModalUser({ isOpen, onClose, userData }: ModalUserProps) {
                       <strong>Fecha de Actualización</strong>
                       <p>
                         {new Date(
-                          userData.fecha_actualizacion
+                          userData.modified_date || userData.created_date
                         ).toLocaleDateString()}
                       </p>
                     </div>
@@ -474,7 +470,7 @@ export function ModalCalificationDetails({
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center justify-between">
                       <span className="font-semibold">Tipo de Proceso:</span>
-                      <span>{caseData.tipo_proceso}</span>
+                      <span>{caseData.tipo_caso?.nombre_tipo}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="font-semibold">Estudiante:</span>
