@@ -86,7 +86,7 @@ export default function CasePage() {
 
   // Efecto para mostrar notificación cuando el caso está en estado 'Radicar'
   useEffect(() => {
-    if (caseData && caseData.estado === "Radicar") {
+    if (caseData && caseData.estado_actual === "Radicar") {
       // Mostrar la notificación siempre que el caso esté en estado 'Radicar'
       setShowRadicarNotification(true);
     } else {
@@ -138,7 +138,7 @@ export default function CasePage() {
     
     // Si el estado es "Radicar", no permitir cambio directo a "Espera del juez"
     // Solo debe cambiar cuando se sube la tutela desde el botón de radicar
-    if (caseData.estado === "Radicar") {
+    if (caseData.estado_actual === "Radicar") {
       addToast({
         title: "Acción requerida",
         description: "Para completar este caso debe radicar la tutela usando el botón 'Radicar Tutela'",
@@ -153,7 +153,7 @@ export default function CasePage() {
     setStatusChangeLoading(true);
     try {
       // Ahora solo aplica al estado "Revisar tutela"
-      const newStatus = caseData.estado === "Revisar tutela" ? "Radicar" : "Espera del juez";
+      const newStatus = caseData.estado_actual === "Revisar tutela" ? "Radicar" : "Espera del juez";
       const success = await updateCaseStatus(caseId, newStatus);
       
       if (success) {
@@ -234,22 +234,22 @@ export default function CasePage() {
       // Determinar el nuevo estado según el estado actual
       let newStatus = "";
       
-      switch (caseData.estado) {
+      switch (caseData.estado_actual) {
         case "Pendiente":
           newStatus = "Revisar tutela";
           break;
         case "Radicar":
           // Solo cambiar a "Espera del juez" si viene del botón de radicar
-          newStatus = isFromRadicarButton ? "Espera del juez" : caseData.estado;
+          newStatus = isFromRadicarButton ? "Espera del juez" : caseData.estado_actual;
           break;
         default:
           // Si no es ninguno de los casos específicos, mantener el estado actual
-          newStatus = caseData.estado;
+          newStatus = caseData.estado_actual;
           break;
       }
       
       // Solo actualizar si hay un cambio de estado
-      if (newStatus !== caseData.estado) {
+      if (newStatus !== caseData.estado_actual) {
         const success = await updateCaseStatus(caseId, newStatus);
         
         if (success) {
@@ -303,7 +303,7 @@ export default function CasePage() {
   const canUploadTutela = () => {
     if (!caseData) return false;
     
-    const estado = caseData.estado;
+    const estado = caseData.estado_actual;
     
     // Permitir subir tutelas en varios estados
     switch (estado) {
@@ -665,7 +665,7 @@ export default function CasePage() {
                   caseId={caseData?.id_caso || caseId} 
                   onTutelaUploaded={handleTutelaUploaded}
                   canUpload={canUploadTutela()}
-                  caseState={caseData?.estado}
+                  caseState={caseData?.estado_actual}
                 />
               </div>
            
