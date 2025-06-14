@@ -29,6 +29,25 @@ const pathTranslations: { [key: string]: string } = {
   help: "Ayuda",
 };
 
+function getRoleColor(
+  role: string | null
+): "primary" | "success" | "default" | "danger" | "default" {
+  if (!role) return "default";
+
+  switch (role) {
+    case "Director":
+      return "primary";
+    case "Docente":
+      return "success";
+    case "Estudiante":
+      return "default";
+    case "Monitor":
+      return "danger";
+    default:
+      return "default";
+  }
+}
+
 export default function Header() {
   const { user, role } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -51,7 +70,7 @@ export default function Header() {
     let currentPath = "";
     paths.forEach((path, index) => {
       currentPath += `/${path}`;
-      
+
       // Use the translation if it exists, otherwise format the path
       const translatedLabel =
         pathTranslations[path.toLowerCase()] ||
@@ -120,7 +139,12 @@ export default function Header() {
             </DropdownTrigger>
             <DropdownMenu aria-label="User Actions" variant="flat">
               <DropdownItem key="profile" className="h-14 gap-2">
-                <Chip size="sm" className="text-sm text-gray-500 my-2">
+                <Chip
+                  size="sm"
+                  color={getRoleColor(role)}
+                  variant="flat"
+                  className="hidden sm:flex mr-2"
+                >
                   {role}
                 </Chip>
                 <p className="font-bold">
