@@ -1,11 +1,10 @@
 "use server";
 
-import { Nota } from "@/types/cases";
+import { ApiNota } from "@/types/cases";
 import { Users } from "@/types/users";
 import { post } from "@/utils/apiUtils";
 import { 
   getWithCache, 
-  getCollectionWithCache,
   getCachedItem,
   invalidateCache,
   invalidateCacheItem
@@ -25,7 +24,7 @@ const CASES_CACHE_TTL = 5 * 60 * 1000;
  * Enrich notes with user information efficiently
  * using the centralized cache to avoid unnecessary requests
  */
-export async function enrichNotesWithUserInfo(notes: Nota[]): Promise<Nota[]> {
+export async function enrichNotesWithUserInfo(notes: ApiNota[]): Promise<ApiNota[]> {
   if (!notes || notes.length === 0) {
     return [];
   }
@@ -55,7 +54,7 @@ export async function enrichNotesWithUserInfo(notes: Nota[]): Promise<Nota[]> {
       USERS_CACHE,
       userId,
       async () => {
-        logger.debug(`Obteniendo detalles de usuario ${userId} para nota ${nota.id_nota}`);
+        logger.debug(`Obteniendo detalles de usuario ${userId} para nota ${nota.id_nota_caso}`);
         return await fetchUserDetails(userId.toString());
       },
       USERS_CACHE_TTL
@@ -80,7 +79,7 @@ export const createNote = async (
   caseId: number | string,
   content: string,
   userIdParam: number | string
-): Promise<Nota | null> => {
+): Promise<ApiNota | null> => {
   try {
     // Convertir los parámetros a números si son strings
     const numericCaseId: number = typeof caseId === 'string' ? parseInt(caseId, 10) : caseId;
@@ -139,16 +138,18 @@ export const createNote = async (
     
     // Construir objeto de nota con la respuesta
     // Usar los campos que vienen en la respuesta o valores por defecto
-    const nota: Nota = {
-      id_nota: response.id_nota || response.id || 0,
+    const nota: ApiNota = {
+      id_nota_caso: response.id_nota_caso || response.id || 0,
       id_caso: numericCaseId,
       id_usuario: numericUserId,
       mensaje: content.trim(),
-      fecha_crea: new Date().toISOString(),
-      fecha_actualiza: new Date().toISOString()
+      created_date: new Date().toISOString(),
+      modified_date: new Date().toISOString(),
+      deleted_at: null,
+      status: true
     };
     
-    logger.info(`Nota construida con ID=${nota.id_nota || 'desconocido'}`);
+    logger.info(`Nota construida con ID=${nota.id_nota_caso || 'desconocido'}`);
     logger.info(`Nota creada exitosamente para caso ID=${numericCaseId}`);
     
     // Obtener información del usuario para enriquecer la nota

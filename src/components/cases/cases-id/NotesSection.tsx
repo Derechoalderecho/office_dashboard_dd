@@ -15,7 +15,7 @@ import {
 import { useState, useEffect } from "react";
 import { createNote } from "@/services/noteService";
 import { ApiNota } from "@/types/cases";
-import { parseDateToLocal, parseDate, parseTime } from "@/utils/date";
+import { parseDate, parseTime } from "@/utils/date";
 import { useAuth } from "@/hooks/useAuth";
 import { useInternalUserId } from "@/hooks/useInternalUserId";
 import { logger } from "@/utils/logUtils";
