@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 import { CaseWithKey } from '@/types/cases';
 import { DateRange } from '@/types/sharedTypes';
 import { statusOptions } from '@/constants/casesConstants';
+import { transformStateByRole } from '@/utils/stateTransformer';
+import { UserRole } from '@/store/slices/authSlice';
 
 interface UseFilteredItemsProps {
   cases: CaseWithKey[];
@@ -9,6 +11,7 @@ interface UseFilteredItemsProps {
   statusFilter: string | Set<string>;
   dateRange: DateRange | null;
   onResetFilters?: () => void;
+  userRole?: UserRole;
 }
 
 export const useFilteredItems = ({
@@ -17,6 +20,7 @@ export const useFilteredItems = ({
   statusFilter,
   dateRange,
   onResetFilters,
+  userRole,
 }: UseFilteredItemsProps) => {
   const hasSearchFilter = Boolean(filterValue);
 
@@ -37,9 +41,20 @@ export const useFilteredItems = ({
         return statusOption ? statusOption.name : null;
       });
 
-      filteredUsers = filteredUsers.filter((user) =>
-        selectedStatuses.includes(user.estado_actual)
-      );
+      filteredUsers = filteredUsers.filter((user) => {
+        // Comprueba si el estado real coincide directamente
+        if (selectedStatuses.includes(user.estado_actual)) {
+          return true;
+        }
+        
+        // Si tenemos un rol, comprueba si el estado transformado según el rol coincide
+        if (userRole) {
+          const transformedState = transformStateByRole(user.estado_actual, userRole);
+          return selectedStatuses.includes(transformedState);
+        }
+        
+        return false;
+      });
     }
 
     // Date range filter

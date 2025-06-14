@@ -20,6 +20,9 @@ import { CalendarDate } from "@internationalized/date";
 import { capitalize } from "@/utils/capitalize";
 import Link from "next/link";
 import { UserPlusIcon } from "lucide-react";
+import { useUserRole } from "@/hooks/useUserRole";
+import { transformStateByRole } from "@/utils/stateTransformer";
+import { UserRole } from "@/store/slices/authSlice";
 
 interface TopContentProps {
   usersLength: number;
@@ -50,6 +53,8 @@ export default function TopContent({
   setStatusFilter,
   onResetFilters,
 }: TopContentProps) {
+  // Obtenemos el rol del usuario
+  const { role } = useUserRole();
   // Convert dateRange to RangeValue<CalendarDate>
   const convertToDateValue = (
     dateRange: DateRange | null
@@ -110,11 +115,18 @@ export default function TopContent({
                   setStatusFilter(keys as Set<string>)
                 }
               >
-                {statusOptions.map((status) => (
-                  <DropdownItem key={status.uid} className="capitalize">
-                    {capitalize(status.name)}
-                  </DropdownItem>
-                ))}
+                {statusOptions.map((status) => {
+                  // Si tenemos un rol, transformamos el estado para mostrarlo según el rol
+                  const displayName = role 
+                    ? transformStateByRole(status.name, role)
+                    : status.name;
+                    
+                  return (
+                    <DropdownItem key={status.uid} className="capitalize">
+                      {capitalize(displayName)}
+                    </DropdownItem>
+                  );
+                })}
               </DropdownMenu>
             </Dropdown>
           </div>

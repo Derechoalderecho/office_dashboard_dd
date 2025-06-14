@@ -18,6 +18,13 @@ export const statusOptions: StatusOption[] = [
   { name: "Aprobado", uid: "Aprobado" },
   { name: "No aprobado", uid: "No aprobado" },
   { name: "Acción necesaria", uid: "Acción necesaria" },
+  { name: "Viabilidad", uid: "Viabilidad" },
+  { name: "Elaboración tutela", uid: "Elaboración tutela" },
+  { name: "Valoración del asesor", uid: "Valoración del asesor" },
+  { name: "Revisar tutela", uid: "Revisar tutela" },
+  { name: "Radicar", uid: "Radicar" },
+  { name: "Pendiente", uid: "Pendiente" },
+  { name: "Espera del juez", uid: "Espera del juez" },
 ];
 
 

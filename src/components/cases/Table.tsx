@@ -213,6 +213,7 @@ export default function TableCases() {
     statusFilter: statusFilter as string | Set<string>,
     dateRange,
     onResetFilters: handleResetAllFilters,
+    userRole: role,
   });
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
