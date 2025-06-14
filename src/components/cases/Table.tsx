@@ -34,10 +34,9 @@ import { fetchUserCasesFull } from "@/services/userCasesService";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "id_caso",
-  "fecha_crea",
-  "fecha_actualiza",
+  "created_date",
   "tipo_proceso",
-  "estado",
+  "estado_actual",
   "ciudadano",
   "usuarios",
   "tiempo_respuesta",

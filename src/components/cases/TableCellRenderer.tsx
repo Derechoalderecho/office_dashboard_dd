@@ -38,14 +38,6 @@ export const TableCellRendererCases = ({
           </p>
         </div>
       );
-    case "modified_date":
-      return (
-        <div className="flex flex-col">
-          <p className="text-sm font-medium">
-            {parseDateToLocal(cellValue as string | number | Date)}
-          </p>
-        </div>
-      );
     case "id_tipo_caso":
       return (
         <div className="flex flex-col">
@@ -53,7 +45,6 @@ export const TableCellRendererCases = ({
         </div>
       );
     case "estado_actual":
-      // Transformamos el estado según el rol del usuario
       const originalState = String(cellValue);
       const displayState = transformStateByRole(originalState, role);
       
@@ -67,7 +58,7 @@ export const TableCellRendererCases = ({
               : displayState === "Acción necesaria"
               ? "bg-warning text-[#C4841D]"
               : displayState === "No aprobado"
-              ? "bg-error text-[#F31260]"
+              ? "bg-red-100 text-[#F31260]"
               : displayState === "Viabilidad"
               ? "bg-purple-100 text-purple-600"
               : displayState === "Elaboración tutela"

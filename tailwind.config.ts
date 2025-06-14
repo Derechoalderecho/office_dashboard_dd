@@ -43,6 +43,7 @@ export default {
 		},
         student: "#a7e6c2",
         tertiary: "#D4EAFF",
+        bgError: "fdd0df",
         bgNav: "rgba(8, 172, 215, 0.15)",
         followed: "rgba(0, 111, 238, 0.20)",
         background: "hsl(var(--background))",
