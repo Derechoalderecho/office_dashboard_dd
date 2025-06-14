@@ -312,7 +312,7 @@ export default function NotesSection({
                           </p>
                           <div className="flex items-center text-gray-500 text-xs">
                             <div className="flex flex-col">
-                              <span className="pl-4">{parseDate(note.created_date)}</span>
+                              <span>{parseDate(note.created_date)}</span>
 
                               <div className="flex items-center">
                                 <ClockIcon className="w-3 h-3 mr-1" />

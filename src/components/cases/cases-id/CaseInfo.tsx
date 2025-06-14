@@ -66,7 +66,7 @@ export default function CaseInfo({ caseData }: CaseInfoProps) {
             Ultima actualización
           </p>
           <span className="text-sm">
-            {parseDateToLocal(caseData.modified_date || "")}
+            {parseDateToLocal(caseData.modified_date)}
           </span>
         </article>
         <article className="flex items-center gap-8">
