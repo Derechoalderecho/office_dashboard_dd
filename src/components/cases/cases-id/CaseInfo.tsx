@@ -1,11 +1,11 @@
 "use client";
 
 import { parseDateToLocal } from "@/utils/date";
-import { Cases } from "@/types/cases";
+import { CompleteCaseData } from "@/types/cases";
 import { Citizen } from "@/types/citizens";
 
 interface CaseInfoProps {
-  caseData: Cases & { ciudadano: Citizen };
+  caseData: CompleteCaseData & { ciudadano: Citizen };
 }
 
 export default function CaseInfo({ caseData }: CaseInfoProps) {
@@ -58,7 +58,7 @@ export default function CaseInfo({ caseData }: CaseInfoProps) {
             Creado en
           </p>
           <span className="text-sm">
-            {parseDateToLocal(caseData.fecha_crea)}
+            {parseDateToLocal(caseData.created_date || "")}
           </span>
         </article>
         <article className="flex items-center gap-8">
@@ -66,7 +66,7 @@ export default function CaseInfo({ caseData }: CaseInfoProps) {
             Ultima actualización
           </p>
           <span className="text-sm">
-            {parseDateToLocal(caseData.fecha_actualiza)}
+            {parseDateToLocal(caseData.modified_date || "")}
           </span>
         </article>
         <article className="flex items-center gap-8">

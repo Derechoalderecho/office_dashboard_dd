@@ -1,20 +1,13 @@
 "use client";
 
-import { Chip, Button, Textarea, addToast, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/react";
+import { Button, addToast, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import {
-  PencilSquareIcon,
-  ClipboardDocumentCheckIcon,
-  DocumentArrowUpIcon,
-  CloudArrowUpIcon,
-  CloudArrowDownIcon,
-  LinkIcon,
   CheckCircleIcon,
-  XCircleIcon
 } from "@heroicons/react/24/outline";
 import { useEffect, useState, useRef } from "react";
-import { parseDateToLocal } from "@/utils/date";
 import { fetchCaseById, fetchCaseHistory, updateCaseStatus } from "@/services/caseService";
+import { fetchCompleteCaseById } from "@/services/completeUserCasesService";
 import CaseHeader from "@/components/cases/cases-id/CaseHeader";
 import CaseInfo from "@/components/cases/cases-id/CaseInfo";
 import CasePreview from "@/components/cases/cases-id/CasePreview";
@@ -23,7 +16,7 @@ import NotesSection from "@/components/cases/cases-id/NotesSection";
 import CaseHistoryLogs from "@/components/cases/cases-id/CaseHistoryLogs";
 import EditCaseModal from "@/components/cases/cases-id/EditCaseModal";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Cases } from "@/types/cases";
+import { CompleteCaseData } from "@/types/cases";
 import { useParams } from "next/navigation";
 
 interface CasePageProps {
@@ -38,7 +31,7 @@ export default function CasePage() {
   const router = useRouter();
   const { role } = useUserRole();
   
-  const [caseData, setCaseData] = useState<Cases | null>(null);
+  const [caseData, setCaseData] = useState<CompleteCaseData | null>(null);
   const [historyLogs, setHistoryLogs] = useState<any[]>([]);
   const [notasList, setNotasList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,7 +45,7 @@ export default function CasePage() {
   const loadCaseData = async () => {
     setLoading(true);
     try {
-      const caseData = await fetchCaseById(caseId);
+      const caseData = await fetchCompleteCaseById(caseId);
       const historyLogs = await fetchCaseHistory(caseId);
       
       if (!caseData) {
@@ -67,7 +60,7 @@ export default function CasePage() {
       
       setCaseData(caseData);
       setHistoryLogs(historyLogs || []);
-      setNotasList(caseData.notas_list || []);
+      setNotasList(caseData.notas || []);
       
     } catch (error) {
       console.error("Error al cargar datos del caso:", error);

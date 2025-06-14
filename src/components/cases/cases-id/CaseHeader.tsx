@@ -10,14 +10,14 @@ import {
   ArrowPathRoundedSquareIcon
 } from "@heroicons/react/24/outline";
 import { parseDateToLocal } from "@/utils/date";
-import { Cases } from "@/types/cases";
+import { CompleteCaseData } from "@/types/cases";
 import { transformStateByRole } from "@/utils/stateTransformer";
 import { UserRole } from "@/store/slices/authSlice";
 import { useState } from "react";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 
 interface CaseHeaderProps {
-  caseData: Cases;
+  caseData: CompleteCaseData;
   onApproveSubmission?: () => Promise<void>;
   onRejectSubmission?: () => Promise<void>;
   onViableSubmission?: () => Promise<void>;
@@ -39,7 +39,7 @@ export default function CaseHeader({
   onChangeTutelaInEsperaJuez,
   role,
 }: CaseHeaderProps) {
-  const displayState = transformStateByRole(caseData.estado, role);
+  const displayState = transformStateByRole(caseData.estado_actual, role);
   const [isRadicarInfoOpen, setIsRadicarInfoOpen] = useState(false);
   const [isChangeTutelaDialogOpen, setIsChangeTutelaDialogOpen] = useState(false);
 
@@ -68,20 +68,20 @@ export default function CaseHeader({
   };
 
   // Determinar si se debe mostrar los botones de viabilidad
-  const showViabilityButtons = caseData.estado === "Viabilidad";
+  const showViabilityButtons = caseData.estado_actual === "Viabilidad";
 
   // Determinar si se debe mostrar el botón de "Aprobar Envío"
-  const showApproveButton = caseData.estado === "Revisar tutela";
+  const showApproveButton = caseData.estado_actual === "Revisar tutela";
 
   // Determinar si se debe mostrar el botón de "Rechazar Envío"
   const showRejectButton =
-    caseData.estado === "Revisar tutela" ||
-    caseData.estado === "Radicar" ||
-    caseData.estado === "Valoración del asesor";
+    caseData.estado_actual === "Revisar tutela" ||
+    caseData.estado_actual === "Radicar" ||
+    caseData.estado_actual === "Valoración del asesor";
 
   // Determinar el texto del botón de aprobar según el estado
   const getApproveButtonText = () => {
-    if (caseData.estado === "Revisar tutela") {
+    if (caseData.estado_actual === "Revisar tutela") {
       return "Aprobar Tutela";
     }
     return "Aprobar Envío";
@@ -151,7 +151,7 @@ export default function CaseHeader({
           </div>
         </div>
         <p className="text-sm text-secondary">
-          {parseDateToLocal(caseData.fecha_crea)}
+          {parseDateToLocal(caseData.created_date)}
         </p>
       </div>
       <div className="flex gap-2 items-center">
@@ -181,7 +181,7 @@ export default function CaseHeader({
         )}
 
         {/* Botón de Radicar (solo para estado "Radicar") */}
-        {caseData.estado === "Radicar" && (
+        {caseData.estado_actual === "Radicar" && (
           <Button
             className="text-white bg-[#006FEE]"
             isDisabled={isStatusChangeLoading}
@@ -194,7 +194,7 @@ export default function CaseHeader({
         )}
 
         {/* Botón de Cambiar Radicado (solo para estado "Espera del juez") */}
-        {caseData.estado === "Espera del juez" && (
+        {caseData.estado_actual === "Espera del juez" && (
           <Button
             className="text-white bg-[#F59E0B]"
             isDisabled={isStatusChangeLoading}

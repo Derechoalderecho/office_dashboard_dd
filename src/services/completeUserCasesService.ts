@@ -23,3 +23,24 @@ export const fetchCompleteUserCases = async (userId: number): Promise<CompleteCa
     throw error;
   }
 };
+
+/**
+ * Obtiene todos los casos completos asignados a un caso específico
+ * @param caseId ID del caso para el que se quieren obtener los datos
+ * @returns Lista de casos completos con todos los datos relacionados
+ */
+export const fetchCompleteCaseById= async (caseId: number): Promise<CompleteCaseData[]> => {
+  try {
+    const endpoint = `/casos/full/${caseId}/`;
+    logger.info(`Fetching complete case for case ${caseId}`);
+    
+    const response = await get<CompleteCaseData[]>(endpoint);
+    logger.info(`Retrieved ${response.length} complete cases for case ${caseId}`);
+    
+    return response;
+  } catch (error) {
+    logger.error(`Error fetching complete cases for case ${caseId}:`, error);
+    throw error;
+  }
+};
+  
