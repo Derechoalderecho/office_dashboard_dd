@@ -1,5 +1,5 @@
 import { get } from '@/utils/apiUtils';
-import { Cases } from '@/types/cases';
+import { CompleteCaseData } from '@/types/cases';
 import { logger } from '@/utils/logUtils';
 
 /**
@@ -7,7 +7,7 @@ import { logger } from '@/utils/logUtils';
  * @param userId ID del usuario
  * @returns Lista de casos asociados al usuario
  */
-export const fetchUserCasesFull = async (userId: number | null): Promise<Cases[]> => {
+export const fetchUserCasesFull = async (userId: number | null): Promise<CompleteCaseData[]> => {
   try {
     if (!userId) {
       logger.warn('fetchUserCasesFull: ID de usuario no proporcionado');
@@ -15,7 +15,7 @@ export const fetchUserCasesFull = async (userId: number | null): Promise<Cases[]
     }
     
     logger.debug(`Obteniendo todos los casos del usuario ${userId}`);
-    return await get<Cases[]>(`usuarios/${userId}/casos/full/`);
+    return await get<CompleteCaseData[]>(`usuarios/${userId}/casos/full/`);
   } catch (error) {
     logger.error(`Error al obtener los casos del usuario ${userId}:`, error);
     return [];

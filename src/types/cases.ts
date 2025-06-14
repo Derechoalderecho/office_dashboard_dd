@@ -120,6 +120,9 @@ export interface CompleteCaseData {
   usuarios: ApiUsuario[];
   historial_estados: any[]; // Podríamos crear un tipo específico si se proporciona estructura
   datos_tutela?: ApiDatosTutela;
+  tiempo_estimado?: number;
+  actions?: string;
+  key?: string;
 }
 
 // Lo viejo
@@ -200,8 +203,8 @@ export type DateRange = {
   end: { year: number; month: number; day: number };
 };
 
-export type CaseWithKey = Cases & {
+export type CaseWithKey = CompleteCaseData & {
   key: string;
-  assignedUsers?: Users[];
-  usuarios?: Users[];
+  assignedUsers?: ApiUsuario[];
+  usuarios?: ApiUsuario[];
 };

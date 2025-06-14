@@ -30,7 +30,7 @@ export const TableCellRendererCases = ({
           <p className="font-medium text-sm text-blue-600">#{String(cellValue)}</p>
         </div>
       );
-    case "fecha_crea":
+    case "created_date":
       return (
         <div className="flex flex-col">
           <p className="font-medium text-sm">
@@ -38,7 +38,7 @@ export const TableCellRendererCases = ({
           </p>
         </div>
       );
-    case "fecha_actualiza":
+    case "modified_date":
       return (
         <div className="flex flex-col">
           <p className="text-sm font-medium">
@@ -46,13 +46,13 @@ export const TableCellRendererCases = ({
           </p>
         </div>
       );
-    case "tipo_proceso":
+    case "id_tipo_caso":
       return (
         <div className="flex flex-col">
           <p className="text-sm">{String(cellValue)}</p>
         </div>
       );
-    case "estado":
+    case "estado_actual":
       // Transformamos el estado según el rol del usuario
       const originalState = String(cellValue);
       const displayState = transformStateByRole(originalState, role);
@@ -103,7 +103,7 @@ export const TableCellRendererCases = ({
           )}
         </div>
       );
-    case "tiempo_respuesta":
+    case "tiempo_estimado":
       const tiempo = Number(cellValue);
       const getColor = () => {
         if (tiempo <= 24) return "text-[#F31260]";

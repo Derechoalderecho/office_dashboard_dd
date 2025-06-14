@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
-import { Cases } from '@/types/cases';
+import { CaseWithKey } from '@/types/cases';
 import { DateRange } from '@/types/sharedTypes';
 import { statusOptions } from '@/constants/casesConstants';
 
 interface UseFilteredItemsProps {
-  cases: (Cases & { key: string })[];
+  cases: CaseWithKey[];
   filterValue: string;
   statusFilter: string | Set<string>;
   dateRange: DateRange | null;
@@ -38,7 +38,7 @@ export const useFilteredItems = ({
       });
 
       filteredUsers = filteredUsers.filter((user) =>
-        selectedStatuses.includes(user.estado)
+        selectedStatuses.includes(user.estado_actual)
       );
     }
 
@@ -49,9 +49,9 @@ export const useFilteredItems = ({
       const endDate = new Date(end.year, end.month - 1, end.day);
 
       filteredUsers = filteredUsers.filter((user) => {
-        const userDate = new Date(user.fecha_crea);
+        const userDate = new Date(user.created_date);
         if (isNaN(userDate.getTime())) {
-          console.error(`Invalid date for user: ${user.id_caso}`, user.fecha_crea);
+          console.error(`Invalid date for user: ${user.id_caso}`, user.created_date);
           return false;
         }
 

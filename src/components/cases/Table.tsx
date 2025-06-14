@@ -59,7 +59,7 @@ export default function TableCases() {
   const [page, setPage] = useState(1);
   const [showAll, setShowAll] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState<number | null>(null); // Estado de la tabla
   const [cases, setCases] = useState<CaseWithKey[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -111,7 +111,7 @@ export default function TableCases() {
         key: caseItem.id_caso.toString(),
         assignedUsers: caseItem.usuarios,
         usuarios: caseItem.usuarios
-      }));
+      })) as CaseWithKey[];
       setCases(casesList);
 
       if (showToast) {
@@ -367,12 +367,12 @@ export default function TableCases() {
             </div>
           }
         >
-          {(item) => (
+          {(item: CaseWithKey) => (
             <TableRow key={item.id_caso}>
               {(columnKey) => (
                 <TableCell>
                   <TableCellRendererCases
-                    user={item as CaseWithKey}
+                    user={item}
                     columnKey={columnKey as keyof CaseWithKey}
                     onPreviewCase={handlePreviewCase}
                   />
