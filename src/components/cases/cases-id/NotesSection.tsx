@@ -15,10 +15,12 @@ import {
 import { useState, useEffect } from "react";
 import { createNote } from "@/services/noteService";
 import { ApiNota } from "@/types/cases";
-import { parseDateToLocal } from "@/utils/date";
+import { parseDateToLocal, parseDate, parseTime } from "@/utils/date";
 import { useAuth } from "@/hooks/useAuth";
 import { useInternalUserId } from "@/hooks/useInternalUserId";
 import { logger } from "@/utils/logUtils";
+import { fetchUserDetails } from "@/services/userService";
+import { Users } from "@/types/users";
 
 interface NotesSectionProps {
   caseId: number;
@@ -42,6 +44,8 @@ export default function NotesSection({
   const [isLoading, setIsLoading] = useState(false);
   const [notes, setNotes] = useState<ApiNota[]>(initialNotes || []);
   const [error, setError] = useState<string | null>(null);
+  const [userCache, setUserCache] = useState<Record<number, Users>>({});
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   // Log user details for debugging
   useEffect(() => {
@@ -60,7 +64,7 @@ export default function NotesSection({
     }
   }, [user, internalUserId, userIdError]);
 
-  // Log initial notes
+  // Log initial notes and fetch user information
   useEffect(() => {
     if (initialNotes) {
       console.log(`Notas iniciales cargadas: ${initialNotes.length}`);
@@ -69,10 +73,69 @@ export default function NotesSection({
         new Date(b.created_date).getTime() - new Date(a.created_date).getTime()
       );
       setNotes(sortedNotes);
+      
+      // Fetch user information for each note
+      fetchUsersForNotes(sortedNotes);
     } else {
       console.log("No hay notas iniciales disponibles");
     }
   }, [initialNotes]);
+  
+  // Fetch user information for all notes
+  const fetchUsersForNotes = async (notesToProcess: ApiNota[]) => {
+    if (!notesToProcess.length) return;
+    
+    setLoadingUsers(true);
+    
+    try {
+      // Get unique user IDs from notes
+      const userIds = Array.from(new Set(notesToProcess.map(note => note.id_usuario)));
+      
+      // Create a new cache object
+      const newUserCache: Record<number, Users> = {...userCache};
+      
+      // Fetch user information for each unique user ID not already in cache
+      const fetchPromises = userIds
+        .filter(userId => !newUserCache[userId])
+        .map(async (userId) => {
+          try {
+            const user = await fetchUserDetails(userId.toString());
+            if (user) {
+              newUserCache[userId] = user;
+            }
+            return user;
+          } catch (error) {
+            logger.error(`Error fetching user ${userId}:`, error);
+            return null;
+          }
+        });
+      
+      await Promise.all(fetchPromises);
+      setUserCache(newUserCache);
+    } catch (error) {
+      logger.error('Error fetching users for notes:', error);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+  
+  // Get user name from cache
+  const getUserName = (userId: number): string => {
+    const user = userCache[userId];
+    if (user) {
+      return `${user.primer_nombre} ${user.primer_apellido}`;
+    }
+    return `Usuario ${userId}`;
+  };
+  
+  // Get user initials from cache
+  const getUserInitialsFromCache = (userId: number): string => {
+    const user = userCache[userId];
+    if (user) {
+      return getUserInitials(user);
+    }
+    return `U${userId}`;
+  };
 
   const handleAddNote = async () => {
     // Validar que haya texto en la nota
@@ -143,12 +206,12 @@ export default function NotesSection({
   };
 
   // Get user initials for avatar
-  const getUserInitials = (user: any): string => {
-    if (!user) return "?";
-
+  const getUserInitials = (user: Users): string => {
+    if (!user) return "U";
+    
     const firstName = user.primer_nombre || "";
     const lastName = user.primer_apellido || "";
-
+    
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   };
 
@@ -238,7 +301,7 @@ export default function NotesSection({
                   >
                     <div className="flex items-start gap-3">
                       <Avatar
-                        name={getUserInitials(note.id_usuario)}
+                        name={getUserInitialsFromCache(note.id_usuario)}
                         color="primary"
                         size="sm"
                         isBordered
@@ -246,15 +309,14 @@ export default function NotesSection({
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-center mb-1">
                           <p className="font-medium text-sm">
-                            {note.id_usuario
-                              ? `${note.id_usuario.primer_nombre} ${note.id_usuario.primer_apellido}`
-                              : `Usuario ${
-                                  note.id_usuario
-                                }`}
+                            {getUserName(note.id_usuario)}
                           </p>
                           <div className="flex items-center text-gray-500 text-xs">
                             <ClockIcon className="w-3 h-3 mr-1" />
-                            <span>{parseDateToLocal(note.created_date)}</span>
+                            <div className="flex flex-col">
+                              <span>{parseDate(note.created_date)}</span>
+                              <span>{parseTime(note.created_date)}</span>
+                            </div>
                           </div>
                         </div>
                         <p className="text-sm text-gray-700 whitespace-pre-wrap break-words">

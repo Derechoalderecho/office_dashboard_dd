@@ -32,7 +32,7 @@ export async function enrichNotesWithUserInfo(notes: Nota[]): Promise<Nota[]> {
   
   const userIds = Array.from(new Set(
     notes
-      .map(nota => nota.id_usuario || nota.id_usuario_crea)
+      .map(nota => nota.id_usuario)
       .filter(Boolean) as number[]
   ));
   
@@ -47,7 +47,7 @@ export async function enrichNotesWithUserInfo(notes: Nota[]): Promise<Nota[]> {
   }
   
   return await Promise.all(notes.map(async nota => {
-    const userId = nota.id_usuario || nota.id_usuario_crea;
+    const userId = nota.id_usuario || nota.id_usuario;
     
     if (!userId) return nota;
     
@@ -109,7 +109,7 @@ export const createNote = async (
     // Preparar datos para enviar al API
     const noteData = {
       id_caso: numericCaseId,
-      id_usuario_crea: numericUserId,
+      id_usuario: numericUserId,
       mensaje: content.trim()
     };
     
@@ -143,7 +143,6 @@ export const createNote = async (
       id_nota: response.id_nota || response.id || 0,
       id_caso: numericCaseId,
       id_usuario: numericUserId,
-      id_usuario_crea: numericUserId,
       mensaje: content.trim(),
       fecha_crea: new Date().toISOString(),
       fecha_actualiza: new Date().toISOString()
