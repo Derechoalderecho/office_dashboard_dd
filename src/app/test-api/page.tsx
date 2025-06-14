@@ -2,6 +2,7 @@ import { fetchCasesByCitizenId } from "@/services/caseService"
 import { fetchAllCases } from "@/services/caseService";
 import { fetchCaseById } from "@/services/caseService";
 import { fetchCasesByUserId } from "@/services/caseService";
+import { fetchCompleteUserCases } from "@/services/completeUserCasesService";
 
 
 export default async function page() {
@@ -14,6 +15,8 @@ export default async function page() {
     //console.log(casesByUserId);
     //console.log(allCases);
     //console.log(cases);
+    const completeCases = await fetchCompleteUserCases(parseInt("3"));
+    console.log(completeCases);
   return (
     <div>page</div>
   )
