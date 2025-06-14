@@ -26,7 +26,7 @@ export const TableCellRendererCitizens = ({
   };
 
   switch (columnKey) {
-    case "fecha_crea":
+    case "created_date":
       return (
         <div className="flex flex-col">
           <p className="font-medium text-sm">
@@ -36,26 +36,21 @@ export const TableCellRendererCitizens = ({
       );
     case "primer_nombre":
       return (
-        <p className="text-sm font-semibold">
-        {user?.primer_nombre} {user?.primer_apellido}
+        <p className="text-sm font-semibold flex flex-col">
+        <span>{user?.primer_nombre} {user?.primer_apellido}</span>
+        <span>{user?.segundo_nombre} {user?.segundo_apellido}</span>
       </p>
       );
     case "email":
       return (
         <div className="flex flex-col">
-          <p className="text-base font-medium">{String(cellValue)}</p>
+          <p className="text-base text-primary">{String(cellValue)}</p>
         </div>
       );
     case "num_movil":
       return (
         <div className="flex flex-col">
           <p className="text-base">{String(cellValue)}</p>
-        </div>
-      );
-    case "zona":
-      return (
-        <div className="flex flex-col">
-          <p className="text-base">{convertZonaCodeToDisplay(String(cellValue))}</p>
         </div>
       );
     case "actions":

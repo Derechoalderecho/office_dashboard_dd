@@ -73,7 +73,7 @@ export const createCitizen = async (
     // Ensure zona is in the correct format for the database
     const processedData = {
       ...citizenData,
-      zona: convertZonaToCode(citizenData.zona)
+      zona: convertZonaToCode(citizenData.zona_residencia)
     };
 
     const createdCitizen = await post<Citizen>("ciudadanos", processedData);
@@ -106,7 +106,7 @@ export const updateCitizen = async (
     // Ensure zona is in the correct format for the database
     const processedData = {
       ...citizenData,
-      zona: citizenData.zona ? convertZonaToCode(citizenData.zona) : undefined
+      zona: citizenData.zona_residencia ? convertZonaToCode(citizenData.zona_residencia) : undefined
     };
 
     const updatedCitizen = await put<Citizen>(`ciudadanos/${id}`, processedData);
