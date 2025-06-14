@@ -104,6 +104,16 @@ export interface ApiDatosTutela {
   status: boolean;
 }
 
+export interface ApiDatosTipoCaso {
+  created_date: string;
+  deleted_at: string | null;
+  descripcion: string;
+  id_tipo_caso: number;
+  modified_date: string | null;
+  nombre_tipo: string;
+  status: boolean;
+}
+
 export interface CompleteCaseData {
   id_ciudadano: number;
   id_tipo_caso: number;
@@ -118,9 +128,10 @@ export interface CompleteCaseData {
   documentos_generados: ApiDocumentoGenerado[];
   notas: ApiNota[];
   usuarios: ApiUsuario[];
-  historial_estados: any[]; // Podríamos crear un tipo específico si se proporciona estructura
+  historial_estados: any[];
   datos_tutela?: ApiDatosTutela;
-  tiempo_estimado?: number;
+  tipo_caso?: ApiDatosTipoCaso;
+  tiempo_respuesta?: number;
   actions?: string;
   key?: string;
 }

@@ -4,7 +4,7 @@ export const columns: Column[] = [
   { name: "ID", uid: "id_caso" },
   { name: "Estudiante Asignado", uid: "estudiante_asignado" },
   { name: "Fecha de creación", uid: "created_date" },
-  { name: "Tipo de proceso", uid: "tipo_proceso", sortable: true },
+  { name: "Tipo de proceso", uid: "tipo_caso", sortable: true },
   { name: "Estado", uid: "estado_actual", sortable: true },
   { name: "Ciudadano", uid: "ciudadano" },
   { name: "Asignados", uid: "usuarios" },
