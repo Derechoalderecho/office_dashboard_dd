@@ -7,8 +7,13 @@ import { logger } from '@/utils/logUtils';
  * @param userId ID del usuario
  * @returns Lista de casos asociados al usuario
  */
-export const fetchUserCasesFull = async (userId: number): Promise<Cases[]> => {
+export const fetchUserCasesFull = async (userId: number | null): Promise<Cases[]> => {
   try {
+    if (!userId) {
+      logger.warn('fetchUserCasesFull: ID de usuario no proporcionado');
+      return [];
+    }
+    
     logger.debug(`Obteniendo todos los casos del usuario ${userId}`);
     return await get<Cases[]>(`usuarios/${userId}/casos/full/`);
   } catch (error) {

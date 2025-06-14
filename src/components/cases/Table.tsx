@@ -27,7 +27,6 @@ import { TableCellRendererCases } from "./TableCellRenderer";
 import { BulkActionsBar } from "./BulkActionsBar";
 import { deleteCasesByIds } from "@/services/caseService";
 import { ModalCase } from "../ui/modal-table";
-import { invalidateCache } from "@/utils/cacheUtils";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { getUserIdFromFirebase } from "@/services/userService";
@@ -89,7 +88,7 @@ export default function TableCases() {
   }, []);
 
   // Definir fetchCases fuera de useEffect para poder reutilizarlo
-  const fetchCases = async (showToast = false, userId?: number) => {
+  const fetchCases = async (showToast = false, userId?: number | null) => {
     try {
       setIsLoading(true);
       
@@ -142,7 +141,9 @@ export default function TableCases() {
     async function loadUserAndCases() {
       if (user?.uid) {
         const userId = await getUserIdFromFirebase(user.uid);
-        fetchCases(false, userId);
+        if (userId) {
+          fetchCases(false, userId);
+        }
       }
     }
     
