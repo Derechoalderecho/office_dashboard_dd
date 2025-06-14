@@ -25,12 +25,13 @@ import { paginateItems } from "@/utils/paginateItems";
 import { CaseWithKey } from "@/types/cases";
 import { TableCellRendererCases } from "./TableCellRenderer";
 import { BulkActionsBar } from "./BulkActionsBar";
-import { fetchAllCases, deleteCasesByIds, fetchCasesByUserId } from "@/services/caseService";
+import { deleteCasesByIds } from "@/services/caseService";
 import { ModalCase } from "../ui/modal-table";
 import { invalidateCache } from "@/utils/cacheUtils";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { getUserIdFromFirebase } from "@/services/userService";
+import { fetchUserCasesFull } from "@/services/userCasesService";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "id_caso",
@@ -66,23 +67,6 @@ export default function TableCases() {
   const [selectedCase, setSelectedCase] = useState<CaseWithKey | null>(null);
   const { user } = useAuth();
   const { role } = useUserRole();
-  const [userId, setUserId] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState("all");
-
-  // Función para obtener el ID del usuario desde Firebase
-  const fetchUserId = async () => {
-    if (user?.uid) {
-      const id = await getUserIdFromFirebase(user.uid);
-      setUserId(id);
-    }
-  };
-
-  // Efecto para obtener el ID del usuario cuando cambia el usuario o el rol
-  useEffect(() => {
-    if (user?.uid) {
-      fetchUserId();
-    }
-  }, [user?.uid]);
 
   // Función para reiniciar todos los filtros
   const handleResetAllFilters = useCallback(() => {
@@ -105,62 +89,32 @@ export default function TableCases() {
   }, []);
 
   // Definir fetchCases fuera de useEffect para poder reutilizarlo
-  const fetchCases = async (showToast = false) => {
+  const fetchCases = async (showToast = false, userId?: number) => {
     try {
       setIsLoading(true);
       
       // Limpiar las selecciones actuales
       setSelectedKeys(new Set([]));
       
-      // No invalidar cachés agresivamente, solo cuando sea necesario
-      // invalidateCache('cases');
-      // invalidateCache('caseHistory');
-      
-      let casesList: CaseWithKey[] = [];
-      
-      // Lógica de obtención de casos según el rol y la pestaña activa
-      if (role === 'Estudiante' && userId) {
-        // Para estudiantes, siempre mostrar sus casos
-        const studentCases = await fetchCasesByUserId(userId);
-        casesList = studentCases.map(caseItem => ({
-          ...caseItem,
-          key: caseItem.id_caso.toString(),
-          assignedUsers: caseItem.usuarios,
-          usuarios: caseItem.usuarios
-        }));
-      } else if (role === 'Docente') {
-        // Para docentes, mostrar casos según la pestaña activa
-        if (activeTab === 'my' && userId) {
-          const teacherCases = await fetchCasesByUserId(userId);
-          casesList = teacherCases.map(caseItem => ({
-            ...caseItem,
-            key: caseItem.id_caso.toString(),
-            assignedUsers: caseItem.usuarios,
-            usuarios: caseItem.usuarios
-          }));
-        } else {
-          const allCases = await fetchAllCases();
-          casesList = allCases.map(caseItem => ({
-            ...caseItem,
-            key: caseItem.id_caso.toString(),
-            assignedUsers: caseItem.usuarios,
-            usuarios: caseItem.usuarios
-          }));
-        }
-      } else {
-        // Para otros roles, obtener todos los casos
-        const allCases = await fetchAllCases();
-        casesList = allCases.map(caseItem => ({
-          ...caseItem,
-          key: caseItem.id_caso.toString(),
-          assignedUsers: caseItem.usuarios,
-          usuarios: caseItem.usuarios
-        }));
+      if (!userId && user?.uid) {
+        userId = await getUserIdFromFirebase(user.uid);
       }
       
-      // Actualizar el estado con los nuevos datos
-      setCases(casesList);
+      if (!userId) {
+        setIsLoading(false);
+        return;
+      }
       
+      // Obtener todos los casos del usuario
+      const userCases = await fetchUserCasesFull(userId);
+      const casesList = userCases.map(caseItem => ({
+        ...caseItem,
+        key: caseItem.id_caso.toString(),
+        assignedUsers: caseItem.usuarios,
+        usuarios: caseItem.usuarios
+      }));
+      setCases(casesList);
+
       if (showToast) {
         addToast({
           title: "Datos actualizados",
@@ -183,13 +137,17 @@ export default function TableCases() {
     }
   };
 
-  // Fetch cases from API when component mounts or when user/role/tab changes
+  // Fetch cases from API when component mounts
   useEffect(() => {
-    if ((role === 'Estudiante' || (role === 'Docente' && activeTab === 'my')) && !userId) {
-      return; // No hacer nada si es estudiante o docente en pestaña "mis casos" y no tenemos el ID
+    async function loadUserAndCases() {
+      if (user?.uid) {
+        const userId = await getUserIdFromFirebase(user.uid);
+        fetchCases(false, userId);
+      }
     }
-    fetchCases();
-  }, [role, userId, activeTab]);
+    
+    loadUserAndCases();
+  }, [user?.uid]);
 
   // Handle delete cases
   const handleDeleteCases = async (ids: number[]): Promise<boolean> => {
@@ -246,11 +204,7 @@ export default function TableCases() {
     );
   }, [visibleColumns]);
 
-  // Handle tab change
-  const handleTabChange = useCallback((key: string) => {
-    setActiveTab(key);
-    setPage(1); // Reset pagination when changing tabs
-  }, []);
+
 
   // Filters
   const { filteredItems, hasSearchFilter } = useFilteredItems({
@@ -258,8 +212,6 @@ export default function TableCases() {
     filterValue,
     statusFilter: statusFilter as string | Set<string>,
     dateRange,
-    activeTab,
-    userId,
     onResetFilters: handleResetAllFilters,
   });
 
@@ -313,9 +265,6 @@ export default function TableCases() {
         dateRange={dateRange as DateRange}
         onSearchChange={onSearchChange}
         onResetFilters={handleResetAllFilters}
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-        showTabs={role === 'Docente'}
       />
     );
   }, [
@@ -328,8 +277,6 @@ export default function TableCases() {
     cases.length,
     hasSearchFilter,
     handleResetAllFilters,
-    activeTab,
-    handleTabChange,
     role
   ]);
 

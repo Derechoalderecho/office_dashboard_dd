@@ -8,8 +8,6 @@ interface UseFilteredItemsProps {
   filterValue: string;
   statusFilter: string | Set<string>;
   dateRange: DateRange | null;
-  activeTab?: string;
-  userId?: number | null;
   onResetFilters?: () => void;
 }
 
@@ -18,8 +16,6 @@ export const useFilteredItems = ({
   filterValue,
   statusFilter,
   dateRange,
-  activeTab,
-  userId,
   onResetFilters,
 }: UseFilteredItemsProps) => {
   const hasSearchFilter = Boolean(filterValue);
@@ -63,15 +59,10 @@ export const useFilteredItems = ({
       });
     }
 
-    // Tab filter
-    if (activeTab === 'my' && userId) {
-      filteredUsers = filteredUsers.filter((user) => 
-        user.usuarios?.some(u => u.id_usuario === userId)
-      );
-    }
+    // Ya no hacemos filtrado por pestaña o usuario, siempre mostramos todos los casos
 
     return filteredUsers;
-  }, [cases, filterValue, statusFilter, dateRange, activeTab, userId]);
+  }, [cases, filterValue, statusFilter, dateRange]);
 
   const resetFilters = () => {
     if (onResetFilters) {

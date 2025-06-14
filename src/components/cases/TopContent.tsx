@@ -34,9 +34,6 @@ interface TopContentProps {
   setShowAll: (value: boolean) => void;
   setStatusFilter: (value: Set<string>) => void;
   onResetFilters: () => void;
-  activeTab?: string;
-  onTabChange?: (key: string) => void;
-  showTabs?: boolean;
 }
 
 export default function TopContent({
@@ -52,9 +49,6 @@ export default function TopContent({
   handleDateRangeChange,
   setStatusFilter,
   onResetFilters,
-  activeTab,
-  onTabChange,
-  showTabs = false,
 }: TopContentProps) {
   // Convert dateRange to RangeValue<CalendarDate>
   const convertToDateValue = (
@@ -156,17 +150,7 @@ export default function TopContent({
         </Link>
       </div>
 
-      {showTabs && onTabChange && (
-        <Tabs
-          aria-label="Filtros de casos"
-          selectedKey={activeTab}
-          onSelectionChange={(key) => onTabChange(key as string)}
-          className="mt-6"
-        >
-          <Tab key="all" title="Todos los casos" />
-          <Tab key="my" title="Mis casos" />
-        </Tabs>
-      )}
+
       <div className="flex justify-between items-center mt-6">
         <span className="text-default-400 text-small">
           Total {usersLength} casos
