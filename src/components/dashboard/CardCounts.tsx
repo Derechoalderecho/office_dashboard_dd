@@ -85,8 +85,8 @@ export default function CardCountsWrapper() {
       if (internalUserId) {
         setIsLoading(true);
         const students = await calculateWeeklyChange("students", internalUserId);
-        const citizens = await calculateWeeklyChange("citizens");
-        const cases = await calculateWeeklyChange("cases");
+        const citizens = await calculateWeeklyChange("citizens", internalUserId);
+        const cases = await calculateWeeklyChange("cases", internalUserId);
         
         setStudentsData(students);
         setCitizensData(citizens);
