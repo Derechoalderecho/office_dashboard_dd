@@ -1,3 +1,6 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
 import {
   UserPlusIcon,
   ChartBarSquareIcon,
@@ -5,10 +8,9 @@ import {
   ArrowTrendingDownIcon,
   ArrowTrendingUpIcon,
 } from "@heroicons/react/24/solid";
-import { fetchAllUsers } from "@/services/userService";
-import { fetchAllCasesDashboard } from "@/services/caseService";
-import { fetchAllCitizens } from "@/services/citizenService";
+import { fetchTotalUsuariosConsultorio, fetchCiudadanosAtendidos, fetchCasosAtendidos } from "@/services/dasboardService";
 import { Card, CardContent } from "@/components/ui/card";
+import { useInternalUserId } from "@/hooks/useInternalUserId";
 
 const iconMap = {
   students: UserPlusIcon,
@@ -22,83 +24,97 @@ const colorIconMap = {
   cases: "bg-[#FF947A]",
 };
 
-async function calculateWeeklyChange(type: "students" | "citizens" | "cases"): Promise<{
+async function calculateWeeklyChange(type: "students" | "citizens" | "cases", userId?: number): Promise<{
   currentCount: number;
   percentChange: number;
 }> {
-  const currentDate = new Date();
-  const oneWeekAgo = new Date(currentDate);
-  oneWeekAgo.setDate(currentDate.getDate() - 7);
-  
-  let currentCount = 0;
-  let previousCount = 0;
+  if (!userId) {
+    console.error("Se requiere userId para obtener datos del dashboard");
+    return { currentCount: 0, percentChange: 0 };
+  }
   
   try {
     switch (type) {
       case "students":
-        const allUsers = await fetchAllUsers();
-        currentCount = allUsers.length;
-        // Filter users created before one week ago
-        previousCount = allUsers.filter(user => 
-          new Date(user.fecha_creacion || "") < oneWeekAgo
-        ).length;
-        break;
+        // Usar el nuevo endpoint para obtener el total de usuarios
+        const totalUsuarios = await fetchTotalUsuariosConsultorio(userId);
+        
+        // Como no tenemos datos de variación para usuarios, asumimos un valor
+        return { 
+          currentCount: totalUsuarios, 
+          percentChange: 0 // Por defecto no mostramos variación
+        };
       
       case "citizens":
-        const allCitizens = await fetchAllCitizens();
-        currentCount = allCitizens.length;
-        // Filter citizens created before one week ago
-        previousCount = allCitizens.filter(citizen => 
-          new Date(citizen.fecha_crea || "") < oneWeekAgo
-        ).length;
-        break;
+        // Usar el nuevo endpoint para obtener total de ciudadanos y su variación
+        const ciudadanoData = await fetchCiudadanosAtendidos(userId);
+        
+        return { 
+          currentCount: ciudadanoData.total, 
+          percentChange: ciudadanoData.variacion 
+        };
       
       case "cases":
-        const allCases = await fetchAllCasesDashboard();
-        currentCount = allCases.length;
-        // Filter cases created before one week ago
-        previousCount = allCases.filter(caseItem => 
-          new Date(caseItem.fecha_crea) < oneWeekAgo
-        ).length;
-        break;
+        // Usar el nuevo endpoint para obtener total de casos y su variación
+        const casoData = await fetchCasosAtendidos(userId);
+        
+        return { 
+          currentCount: casoData.total, 
+          percentChange: casoData.variacion 
+        };
     }
     
-    const percentChange = previousCount === 0 
-      ? 100 
-      : ((currentCount - previousCount) / previousCount) * 100;
-    
-    return { 
-      currentCount, 
-      percentChange: Math.round(percentChange * 10) / 10 
-    };
+    // Caso por defecto si algo sale mal con los switch cases
+    return { currentCount: 0, percentChange: 0 };
   } catch (error) {
     console.error(`Error calculando cambio semanal para ${type}:`, error);
     return { currentCount: 0, percentChange: 0 };
   }
 }
 
-export default async function CardCountsWrapper() {
-  const studentsData = await calculateWeeklyChange("students");
-  const citizensData = await calculateWeeklyChange("citizens");
-  const casesData = await calculateWeeklyChange("cases");
+export default function CardCountsWrapper() {
+  const { internalUserId } = useInternalUserId();
+
+  const [studentsData, setStudentsData] = useState({ currentCount: 0, percentChange: 0 });
+  const [citizensData, setCitizensData] = useState({ currentCount: 0, percentChange: 0 });
+  const [casesData, setCasesData] = useState({ currentCount: 0, percentChange: 0 });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      if (internalUserId) {
+        setIsLoading(true);
+        const students = await calculateWeeklyChange("students", internalUserId);
+        const citizens = await calculateWeeklyChange("citizens");
+        const cases = await calculateWeeklyChange("cases");
+        
+        setStudentsData(students);
+        setCitizensData(citizens);
+        setCasesData(cases);
+        setIsLoading(false);
+      }
+    }
+
+    loadData();
+  }, [internalUserId]);
 
   return (
     <>
       <CardCounts
-        description="Total de estudiantes"
-        value={studentsData.currentCount}
+        description="Total de usuarios consultorio"
+        value={isLoading ? "..." : studentsData.currentCount}
         percentChange={studentsData.percentChange}
         type="students"
       />
       <CardCounts
         description="Total de ciudadanos"
-        value={citizensData.currentCount}
+        value={isLoading ? "..." : citizensData.currentCount}
         percentChange={citizensData.percentChange}
         type="citizens"
       />
       <CardCounts
         description="Total de casos"
-        value={casesData.currentCount}
+        value={isLoading ? "..." : casesData.currentCount}
         percentChange={casesData.percentChange}
         type="cases"
       />
