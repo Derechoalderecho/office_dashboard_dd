@@ -12,6 +12,7 @@ import {
   ModalFooter,
   Tooltip
 } from "@heroui/react";
+import { useInternalUserId } from "@/hooks/useInternalUserId";
 import {
   CloudArrowUpIcon,
   DocumentTextIcon,
@@ -46,6 +47,8 @@ export default function CasePreview({
   caseState,
   onTutelaUploaded,
 }: CasePreviewProps) {
+  // Obtener el ID del estudiante actualmente logueado
+  const { internalUserId } = useInternalUserId();
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -69,44 +72,12 @@ export default function CasePreview({
       try {
         console.log("Intentando cargar tutela existente para caso:", caseId);
         
-        // Si el caso está en estado "Espera del juez", intentar cargar el último documento radicado
-        if (caseState === "Espera del juez") {
-          console.log("📥 Caso en estado 'Espera del juez', buscando último documento radicado");
-          const radicadoDoc = await getLatestRadicadoDocument(caseId);
-          
-          if (radicadoDoc) {
-            // Convertir DocumentResponse a TutelaResponse
-            const tutelaData: TutelaResponse = {
-              nombre_documento: radicadoDoc.nombre_documento || "",
-              enlace: radicadoDoc.enlace || "",
-              contenido_documento: "", // Radicados no tienen contenido, solo enlace
-              ext_documento: radicadoDoc.ext_documento || "",
-              id_caso: radicadoDoc.id_caso || caseId, // Usamos caseId como fallback
-              id_documento: radicadoDoc.id_documento,
-              fecha_asigna: radicadoDoc.fecha_asigna || new Date().toISOString()
-            };
-            
-            setTutelaData(tutelaData);
-            console.log("✅ Documento radicado cargado exitosamente:", tutelaData.nombre_documento);
-            
-            // Guardar el ID del documento para futuras cargas
-            localStorage.setItem(`case_${caseId}_tutela_doc_id`, tutelaData.id_documento.toString());
-            console.log("💾 ID de documento radicado guardado en localStorage:", tutelaData.id_documento);
-            
-            setIsInitialLoading(false);
-            return;
-          } else {
-            console.log("⚠️ No se encontró documento radicado, intentando cargar tutela normal");
-          }
-        }
-        
         // Intentar recuperar el ID del documento de tutela desde localStorage
         const savedTutelaDocId = localStorage.getItem(`case_${caseId}_tutela_doc_id`);
         
         if (savedTutelaDocId) {
           console.log("📋 ID de tutela encontrado en localStorage:", savedTutelaDocId);
           // Si tenemos un ID guardado, intentamos cargar ese documento específico
-          const { getTutelaDocumentById } = await import('@/services/tutelaService');
           const result = await getTutelaDocumentById(parseInt(savedTutelaDocId, 10));
           
           if (result.success && result.data) {
@@ -121,6 +92,7 @@ export default function CasePreview({
         }
         
         // Si no hay ID guardado o falló la carga, intentamos obtener la tutela más reciente
+        console.log("📥 Buscando último documento de tutela para el caso");
         const result = await getLatestTutelaFromDocuments(caseId);
         
         if (result.success && result.data) {
@@ -286,25 +258,22 @@ export default function CasePreview({
     setError(null);
     fileInputRef.current?.click();
   };
-  
-  // Función para descargar el documento radicado usando URL firmada
+
+  // Función para descargar el documento usando URL firmada
   const handleDownloadDocument = async () => {
     if (!tutelaData || !tutelaData.id_documento) return;
     
     try {
       setIsLoading(true);
       
-      // Determinar el folder basado en el estado del caso
-      const folder = caseState === "Espera del juez" ? "radicados" : "documentos_casos";
-      
-      // Obtener la URL firmada del API
-      const apiUrl = `${API_BASE_URL}/documentos/${tutelaData.id_documento}/download?folder=${folder}`;
-      console.log(`Descargando documento con folder: ${folder}. URL: ${apiUrl}`);
+      // Usar un endpoint unificado para obtener la URL firmada del documento
+      const apiUrl = `${API_BASE_URL}/documentos/${tutelaData.id_documento}/download`;
+      console.log(`Descargando documento. URL: ${apiUrl}`);
       
       const response = await axios.get(apiUrl);
       
       if (response.status !== 200 || !response.data.url_firmada) {
-        throw new Error(`No se encontró la URL firmada en la respuesta para el folder ${folder}`);
+        throw new Error(`No se encontró la URL firmada en la respuesta`);
       }
       
       const signedUrl = response.data.url_firmada;
@@ -382,59 +351,29 @@ export default function CasePreview({
 
       // Verificar si estamos en estado "Radicar" y viene del botón de radicar
       const isRadicarAction = localStorage.getItem(`case_${caseId}_radicar_action`) === 'true';
-      // Verificar si estamos cambiando el radicado en estado "Espera del juez"
-      const isChangeTutelaAction = localStorage.getItem(`case_${caseId}_change_tutela_action`) === 'true';
-      const isRadicarState = caseState === "Radicar";
-      const isEsperaJuezState = caseState === "Espera del juez";
+      
+      if (!internalUserId) {
+        throw new Error("No se encontró el ID del estudiante");
+      }
+      
+      // Utilizamos la función unificada para subir documentos de tutela
+      console.log("📤 Subiendo documento de tutela al endpoint unificado");
+      console.log("ID del estudiante:", internalUserId);
+      const result = await uploadTutelaDocument(formData, caseId, internalUserId);
       
       let tutelaDocId;
       
-      // Usar el endpoint específico para radicar tutelas cuando:
-      // 1. Estamos en estado Radicar y viene del botón de radicar, o
-      // 2. Estamos en estado Espera del juez y viene del botón de cambiar radicado
-      if ((isRadicarState && isRadicarAction) || (isEsperaJuezState && isChangeTutelaAction)) {
-        console.log("📤 Subiendo documento al endpoint /upload con folder=radicados");
-        const result = await uploadRadicadoDocument(formData, caseId);
-        
-        if (result.success && result.data) {
-          // Convertir DocumentResponse a TutelaResponse
-          const tutelaData: TutelaResponse = {
-            nombre_documento: result.data.nombre_documento || "",
-            enlace: result.data.enlace || "",
-            contenido_documento: "", // El endpoint /upload no devuelve contenido
-            ext_documento: result.data.ext_documento || "",
-            id_caso: result.data.id_caso || caseId, // Usamos caseId como fallback
-            id_documento: result.data.id_documento,
-            fecha_asigna: result.data.fecha_asigna
-          };
-          
-          setTutelaData(tutelaData);
-          tutelaDocId = result.data.id_documento;
-        } else {
-          setError(result.error || "Error desconocido al subir el documento");
-          addToast({
-            title: "Error",
-            description: result.error || "Error desconocido al subir el documento",
-            color: "danger",
-          });
-          return;
-        }
+      if (result.success && result.data) {
+        setTutelaData(result.data);
+        tutelaDocId = result.data.id_documento;
       } else {
-        console.log("📤 Subiendo tutela al endpoint /tutelas normal");
-        const result = await uploadTutelaDocument(formData, caseId);
-        
-        if (result.success && result.data) {
-          setTutelaData(result.data);
-          tutelaDocId = result.data.id_documento;
-        } else {
-          setError(result.error || "Error desconocido al subir el documento");
-          addToast({
-            title: "Error",
-            description: result.error || "Error desconocido al subir el documento",
-            color: "danger",
-          });
-          return;
-        }
+        setError(result.error || "Error desconocido al subir el documento");
+        addToast({
+          title: "Error",
+          description: result.error || "Error desconocido al subir el documento",
+          color: "danger",
+        });
+        return;
       }
       
       // Si llegamos aquí, la carga fue exitosa
@@ -752,7 +691,7 @@ export default function CasePreview({
           ) : (
             <div className="prose prose-sm max-w-none overflow-y-auto h-[500px]">
               <div className="text-sm whitespace-pre-line font-sans text-gray-800">
-                {tutelaData.contenido_documento}
+                {tutelaData.contenido}
               </div>
             </div>
           )}
