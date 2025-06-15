@@ -51,7 +51,7 @@ export async function uploadTutelaDocument(
           // Enviar parámetros como valores numéricos en la URL
           id_caso: caseId,
           id_estudiante: studentId,
-          tipo: "Radicado" // Con T mayúscula como solicitado
+          tipo: "Tutela" 
         }
       }
     );
@@ -218,7 +218,7 @@ export async function radicateTutelaDocument(
         params: {
           // Parámetros requeridos como query params
           id_caso: caseId,
-          tipo_documento: "Docx",  // Siempre será "Docx"
+          tipo_documento: "Radicado",  // Siempre será "Docx"
           subido_por: uploadedBy
         }
       }
