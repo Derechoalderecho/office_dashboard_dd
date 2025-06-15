@@ -374,7 +374,7 @@ export default function DocumentsModal({
           <div className="flex flex-col gap-3 mb-4">
             {/* Selector de tipo de documento, siempre visible */}
             <div>
-              <p className="text-sm text-gray-500 mb-2">Tipo de documento</p>
+              <p key="document-type-label" className="text-sm text-gray-500 mb-2">Tipo de documento</p>
               <div className="flex flex-wrap gap-2">
                 <Chip 
                   key="docx-chip"
@@ -470,12 +470,12 @@ export default function DocumentsModal({
               </p>
             </div>
           ) : (
-            <div className="flex flex-col gap-4">
+            <div key="filtered-documents-list" className="flex flex-col gap-4">
               {filteredDocuments.map((doc) => (
                 <div key={doc.id_documento} className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-                  <div className="flex items-start gap-3">
+                  <div key={`content-${doc.id_documento}`} className="flex items-start gap-3">
                     <DocumentTextIcon className="w-8 h-8 text-primary flex-shrink-0 mt-1" />
-                    <div>
+                    <div key={`info-${doc.id_documento}`}>
                       <p key={`title-${doc.id_documento}`} className="font-medium">{doc.nombre_documento}{doc.ext_documento || ''}</p>
                       <p key={`date-${doc.id_documento}`} className="text-sm text-gray-500">
                         Subido el {parseDateToLocal(doc.created_date || doc.fecha_asigna)}
@@ -483,7 +483,7 @@ export default function DocumentsModal({
                       <p key={`user-${doc.id_documento}`} className="text-sm text-gray-500">
                         {doc.subido_por && ` por ${userNames[doc.subido_por] || "Usuario..."}`}
                       </p>
-                      <div className="flex flex-wrap gap-1 mt-1">
+                      <div key={`chips-${doc.id_documento}`} className="flex flex-wrap gap-1 mt-1">
                         <Chip
                           key={`ext-${doc.id_documento}`}
                           size="sm"

@@ -4,7 +4,6 @@ import { useState, useRef, useCallback } from "react";
 import { Button, Spinner, addToast, Chip } from "@heroui/react";
 import { 
   CloudArrowUpIcon, 
-  DocumentTextIcon, 
   ArrowUpTrayIcon,
   ExclamationTriangleIcon 
 } from "@heroicons/react/24/outline";
@@ -12,7 +11,6 @@ import { AlertDialog } from "@/components/ui/alert-dialog";
 import { DocumentResponse } from "@/actions/uploadDocsActions";
 import { uploadDocument } from "@/services/uploadDocumentsService";
 import { useInternalUserId } from "@/hooks/useInternalUserId";
-import { parseDateToLocal } from "@/utils/date";
 import { useAppDispatch } from "@/store/hooks";
 import { fetchCase } from "@/store/slices/caseSlice";
 import { invalidateCache } from "@/utils/cacheUtils";
