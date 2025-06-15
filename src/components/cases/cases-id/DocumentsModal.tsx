@@ -296,7 +296,7 @@ export default function DocumentsModal({
   };
 
   const handleDownload = async (doc: DocumentResponse) => {
-    setDownloadingId(doc.id_documento);
+    setDownloadingId(doc.id_documento_caso ?? null);
     
     try {
       console.log(`Iniciando descarga del documento: ${doc.nombre_documento}`);
@@ -470,55 +470,54 @@ export default function DocumentsModal({
               </p>
             </div>
           ) : (
-            <div key="filtered-documents-list" className="flex flex-col gap-4">
-              {filteredDocuments.map((doc) => (
-                <div key={doc.id_documento} className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-                  <div key={`content-${doc.id_documento}`} className="flex items-start gap-3">
-                    <DocumentTextIcon key={`icon-${doc.id_documento}`} className="w-8 h-8 text-primary flex-shrink-0 mt-1" />
-                    <div key={`info-${doc.id_documento}`}>
-                      <p key={`title-${doc.id_documento}`} className="font-medium">{doc.nombre_documento}{doc.ext_documento || ''}</p>
-                      <p key={`date-${doc.id_documento}`} className="text-sm text-gray-500">
-                        Subido el {parseDateToLocal(doc.created_date || doc.fecha_asigna)}
-                      </p>
-                      <p key={`user-${doc.id_documento}`} className="text-sm text-gray-500">
-                        {doc.subido_por && ` por ${userNames[doc.subido_por] || "Usuario..."}`}
-                      </p>
-                      <div key={`chips-${doc.id_documento}`} className="flex flex-wrap gap-1 mt-1">
-                        <Chip
-                          key={`ext-${doc.id_documento}`}
-                          size="sm"
-                          variant="flat"
-                          color={(doc.ext_documento && doc.ext_documento === '.pdf') ? 'danger' : 'primary'}
-                        >
-                          {doc.ext_documento ? doc.ext_documento.substring(1).toUpperCase() : 'DESCONOCIDO'}
-                        </Chip>
-                        {doc.tipo_documento && (
+            <>
+              {filteredDocuments && filteredDocuments.length > 0 ? (
+                filteredDocuments.map((doc) => (
+                  <div key={`doc-item-${doc.id_documento_caso}`} className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-4">
+                    <div className="flex items-start gap-3">
+                      <DocumentTextIcon className="w-8 h-8 text-primary flex-shrink-0 mt-1" />
+                      <div>
+                        <p className="font-medium">{doc.nombre_documento}{doc.ext_documento || ''}</p>
+                        <p className="text-sm text-gray-500">
+                          Subido el {parseDateToLocal(doc.created_date || doc.fecha_asigna)}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {doc.subido_por && ` por ${userNames[doc.subido_por] || "Usuario..."}`}
+                        </p>
+                        <div className="flex flex-wrap gap-1 mt-1">
                           <Chip
-                            key={`tipo-${doc.id_documento}`}
                             size="sm"
                             variant="flat"
-                            color="secondary"
+                            color={(doc.ext_documento && doc.ext_documento === '.pdf') ? 'danger' : 'primary'}
                           >
-                            {doc.tipo_documento}
+                            {doc.ext_documento ? doc.ext_documento.substring(1).toUpperCase() : 'DESCONOCIDO'}
                           </Chip>
-                        )}
+                          {doc.tipo_documento && (
+                            <Chip
+                              size="sm"
+                              variant="flat"
+                              color="secondary"
+                            >
+                              {doc.tipo_documento}
+                            </Chip>
+                          )}
+                        </div>
                       </div>
                     </div>
+                    <Button
+                      color="primary"
+                      isLoading={downloadingId === doc.id_documento_caso}
+                      spinner={<Spinner size="sm" color="white" />}
+                      onPress={() => handleDownload(doc)}
+                      startContent={<ArrowDownTrayIcon className="w-5 h-5" />}
+                      className="sm:self-end"
+                    >
+                      Descargar
+                    </Button>
                   </div>
-                  <Button
-                    key={`download-btn-${doc.id_documento}`}
-                    color="primary"
-                    isLoading={downloadingId === doc.id_documento}
-                    spinner={<Spinner size="sm" color="white" />}
-                    onPress={() => handleDownload(doc)}
-                    startContent={<ArrowDownTrayIcon key={`download-icon-${doc.id_documento}`} className="w-5 h-5" />}
-                    className="sm:self-end"
-                  >
-                    Descargar
-                  </Button>
-                </div>
-              ))}
-            </div>
+                ))
+              ) : null}
+            </>
           )}
         </ModalBody>
         

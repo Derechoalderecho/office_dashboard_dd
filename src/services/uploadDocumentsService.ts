@@ -6,7 +6,6 @@ export type DocumentResponse = {
   ext_documento: string;
   enlace: string;
   url_firmada?: string;
-  id_documento: number;
   id_caso?: number;
   id_documento_caso?: number;
   fecha_asigna: string;
