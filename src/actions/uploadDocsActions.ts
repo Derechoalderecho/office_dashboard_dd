@@ -9,7 +9,7 @@ export type DocumentResponse = {
   enlace: string;
   url_firmada?: string;
   id_documento: number;
-  id_caso?: number; // Agregamos de vuelta este campo para compatibilidad
+  id_caso?: number; 
   id_documento_caso?: number;
   fecha_asigna: string;
   tipo_documento?: 'Docx' | 'MD' | 'Tutela' | 'Radicado' | 'Otro';

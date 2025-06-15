@@ -6,7 +6,8 @@ import {
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useEffect, useState, useRef } from "react";
-import { fetchCaseById, fetchCaseHistory, updateCaseStatus } from "@/services/caseService";
+import { fetchCaseHistory } from "@/services/caseService";
+import { updateCaseStatus } from "@/services/updateCaseStatus";
 import { fetchCompleteCaseById } from "@/services/completeUserCasesService";
 import CaseHeader from "@/components/cases/cases-id/CaseHeader";
 import CaseInfo from "@/components/cases/cases-id/CaseInfo";
