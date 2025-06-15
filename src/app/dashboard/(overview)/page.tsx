@@ -4,6 +4,7 @@ import PieChartCases from "@/components/dashboard/PieChartCases";
 import PieChartAcceptedCases from "@/components/dashboard/PieChartAcceptedCases";
 import PieChartGanadosPerdidos from "@/components/dashboard/PieChartGanadosPerdidos";
 import AreaChartTotalCases from "@/components/dashboard/AreaChartTotalCases";
+import AreaChartTiempoCasos from "@/components/dashboard/AreaChartTiempoCasos";
 import { CardsSkeleton } from "@/ui/Skeletons";
 import { Suspense } from "react";
 
@@ -21,7 +22,7 @@ export default async function DashboardPage() {
         </Suspense>
       </div>
       <div className="mb-6">
-        <AreaChartTotalCases />
+        <AreaChartTiempoCasos />
       </div>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
         <PieChartAcceptedCases />
