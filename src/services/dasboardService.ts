@@ -25,6 +25,13 @@ interface CasosAceptadosRecibidosResponse {
   porcentaje_recibidos: number;
 }
 
+interface CasosGanadosPerdidosResponse {
+  ganados: number;
+  perdidos: number;
+  porcentaje_ganados: number;
+  porcentaje_perdidos: number;
+}
+
 interface ChartDataPoint {
   date: string;
   count: number;
@@ -224,6 +231,28 @@ export async function fetchCasosAceptadosRecibidos(userId: number): Promise<{ace
   } catch (error) {
     logger.error("Error al obtener datos de casos aceptados y recibidos:", error);
     return { aceptados: 0, recibidos: 0 };
+  }
+}
+
+export async function fetchCasosGanadosPerdidos(userId: number): Promise<{ganados: number; perdidos: number}> {
+  try {
+    logger.debug(`Obteniendo datos de casos ganados y perdidos para el usuario ${userId}`);
+    
+    const response = await get<CasosGanadosPerdidosResponse>(`dim/casos-ganados-perdidos?user_id=${userId}`);
+    
+    if (!response) {
+      logger.warn("No se encontraron datos de casos ganados y perdidos");
+      return { ganados: 0, perdidos: 0 };
+    }
+    
+    logger.info(`Casos ganados: ${response.ganados}, casos perdidos: ${response.perdidos}`);
+    return {
+      ganados: response.ganados,
+      perdidos: response.perdidos
+    };
+  } catch (error) {
+    logger.error("Error al obtener datos de casos ganados y perdidos:", error);
+    return { ganados: 0, perdidos: 0 };
   }
 }
 
