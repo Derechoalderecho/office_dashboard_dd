@@ -4,12 +4,21 @@ import axios from "axios";
 import { API_BASE_URL } from "@/config/api";
 
 export type DocumentResponse = {
-  id_caso: number;
   nombre_documento: string;
   ext_documento: string;
   enlace: string;
+  url_firmada?: string;
   id_documento: number;
+  id_caso?: number; // Agregamos de vuelta este campo para compatibilidad
+  id_documento_caso?: number;
   fecha_asigna: string;
+  tipo_documento?: 'Docx' | 'MD' | 'Tutela' | 'Radicado' | 'Otro';
+  subido_por?: string;
+  status?: string;
+  created_date?: string;
+  modified_date?: string;
+  deleted_at?: string | null;
+  fecha_subida?: string;
 };
 
 export async function uploadDocument(
