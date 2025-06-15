@@ -18,6 +18,13 @@ interface CasosAtendidosResponse {
   variacion_semanal: number;
 }
 
+interface CasosAceptadosRecibidosResponse {
+  aceptados: number;
+  recibidos: number;
+  porcentaje_aceptados: number;
+  porcentaje_recibidos: number;
+}
+
 interface ChartDataPoint {
   date: string;
   count: number;
@@ -195,6 +202,28 @@ export async function fetchCasosAtendidos(userId: number): Promise<{total: numbe
   } catch (error) {
     logger.error("Error al obtener el total de casos atendidos:", error);
     return { total: 0, variacion: 0 };
+  }
+}
+
+export async function fetchCasosAceptadosRecibidos(userId: number): Promise<{aceptados: number; recibidos: number}> {
+  try {
+    logger.debug(`Obteniendo datos de casos aceptados y recibidos para el usuario ${userId}`);
+    
+    const response = await get<CasosAceptadosRecibidosResponse>(`dim/casos-aceptados-recibidos?user_id=${userId}`);
+    
+    if (!response) {
+      logger.warn("No se encontraron datos de casos aceptados y recibidos");
+      return { aceptados: 0, recibidos: 0 };
+    }
+    
+    logger.info(`Casos aceptados: ${response.aceptados}, casos recibidos: ${response.recibidos}`);
+    return {
+      aceptados: response.aceptados,
+      recibidos: response.recibidos
+    };
+  } catch (error) {
+    logger.error("Error al obtener datos de casos aceptados y recibidos:", error);
+    return { aceptados: 0, recibidos: 0 };
   }
 }
 

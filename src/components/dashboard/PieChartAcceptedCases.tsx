@@ -16,71 +16,62 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { useEffect, useMemo, useState } from "react";
-import { fetchAllCases } from "@/services/caseService";
-import { Cases } from "@/types/cases";
-import { Citizen } from "@/types/citizens";
+import { fetchCasosAceptadosRecibidos } from "@/services/dasboardService";
+import { useInternalUserId } from "@/hooks/useInternalUserId";
 
-// Define the CaseWithCitizen type locally
-type CaseWithCitizen = Cases & { ciudadano: Citizen };
-
-// Define colors for different status types
+// Define colors for the pie chart segments
 const STATUS_COLORS = {
-  "Viabilidad": "hsl(var(--chart-2))",
-  "No aprobado": "hsl(var(--chart-1))",
-  "Otros": "hsl(var(--chart-4))",
+  "Aceptados": "hsl(var(--chart-2))",
+  "Recibidos": "hsl(var(--chart-1))",
 };
 
+type CasosPieData = {
+  estado: string;
+  count: number;
+  fill: string;
+}
+
 export default function PieChartAcceptedCases() {
-  const [cases, setCases] = useState<CaseWithCitizen[]>([]);
+  const { internalUserId } = useInternalUserId();
+  const [data, setData] = useState<{ aceptados: number; recibidos: number }>({ aceptados: 0, recibidos: 0 });
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch all cases
+  // Fetch cases data
   useEffect(() => {
-    const loadCases = async () => {
+    const loadData = async () => {
+      if (!internalUserId) return;
+      
       try {
-        const casesData = await fetchAllCases();
-        setCases(casesData);
+        setIsLoading(true);
+        const casosData = await fetchCasosAceptadosRecibidos(internalUserId);
+        setData(casosData);
       } catch (error) {
-        console.error("Error loading cases for chart:", error);
+        console.error("Error loading casos aceptados vs recibidos:", error);
       } finally {
         setIsLoading(false);
       }
     };
     
-    loadCases();
-  }, []);
+    loadData();
+  }, [internalUserId]);
 
   // Process the data for the chart
-  const chartData = useMemo(() => {
-    if (!cases.length) return [];
+  const chartData = useMemo((): CasosPieData[] => {
+    if (data.aceptados === 0 && data.recibidos === 0) return [];
     
-    // Track cases by status
-    const statusCounts = {
-      "Viabilidad": 0,
-      "No aprobado": 0,
-      "Otros": 0
-    };
-    
-    cases.forEach(caseItem => {
-      // Check the case status
-      if (caseItem.estado === "Viabilidad") {
-        statusCounts["Viabilidad"]++;
-      } else if (caseItem.estado === "No aprobado") {
-        statusCounts["No aprobado"]++;
-      } else {
-        statusCounts["Otros"]++;
+    return [
+      {
+        estado: "Aceptados",
+        count: data.aceptados,
+        fill: STATUS_COLORS["Aceptados"]
+      },
+      {
+        estado: "Recibidos",
+        count: data.recibidos - data.aceptados, 
+        fill: STATUS_COLORS["Recibidos"]
       }
-    });
-    
-    // Convert to chart format
-    return Object.entries(statusCounts)
-      .filter(([_, count]) => count > 0) // Only include statuses that have cases
-      .map(([estado, count]) => ({
-        estado,
-        count,
-        fill: STATUS_COLORS[estado as keyof typeof STATUS_COLORS] || "#CCCCCC",
-      }));
-  }, [cases]);
+    ].filter(item => item.count > 0); 
+  }, [data]);
 
   // Create chart config dynamically
   const chartConfig = useMemo(() => {
@@ -103,14 +94,14 @@ export default function PieChartAcceptedCases() {
 
   // Calculate total cases
   const totalCases = useMemo(() => {
-    return chartData.reduce((acc, curr) => acc + curr.count, 0);
-  }, [chartData]);
+    return data.recibidos;
+  }, [data]);
 
   if (isLoading) {
     return (
       <Card className="flex flex-col">
         <CardHeader className="items-center pb-0">
-          <CardTitle>Distribución por Estado</CardTitle>
+          <CardTitle>Casos Aceptados vs Recibidos</CardTitle>
           <CardDescription>Cargando datos...</CardDescription>
         </CardHeader>
       </Card>
@@ -120,7 +111,7 @@ export default function PieChartAcceptedCases() {
   return (
     <Card className="flex flex-col">
       <CardHeader className="items-center pb-0">
-        <CardTitle>Distribución por Estado</CardTitle>
+        <CardTitle>Casos Aceptados vs Recibidos</CardTitle>
         <CardDescription>Total de casos: {totalCases}</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 pb-0">
