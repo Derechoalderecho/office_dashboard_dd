@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import axios from "axios";
+import { useState, useEffect } from "react";
 import { 
   Modal, 
   ModalContent, 
@@ -19,20 +18,16 @@ import {
 import { 
   ArrowsUpDownIcon, 
   MagnifyingGlassIcon, 
-  ExclamationCircleIcon, 
   ArrowPathIcon, 
   XCircleIcon, 
   DocumentTextIcon, 
   ArrowDownTrayIcon, 
   XMarkIcon
 } from "@heroicons/react/24/outline";
-import { DocumentResponse, downloadDocument } from "@/actions/uploadDocsActions";
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setDocuments } from '@/store/slices/documentSlice';
-import { fetchCase } from '@/store/slices/caseSlice';
 import { parseDateToLocal } from "@/utils/date";
-import { API_BASE_URL } from "@/config/api";
-import { getDocumentsByCaseIdAndType } from "@/services/documentService";
+import { DocumentResponse, getDocumentsByCaseIdAndType, downloadDocument } from "@/services/allDocumentsService";
 import { fetchUserDetails } from "@/services/userService";
 
 type SortOption = "newest" | "oldest" | "name" | "type";
@@ -300,56 +295,45 @@ export default function DocumentsModal({
     }
   };
 
-  const handleDownload = async (document: DocumentResponse) => {
-    setDownloadingId(document.id_documento);
+  const handleDownload = async (doc: DocumentResponse) => {
+    setDownloadingId(doc.id_documento);
     
     try {
-      // Obtener la URL firmada del API usando el nuevo endpoint
-      const idDocumentoCaso = document.id_documento_caso || document.id_documento;
-      const apiUrl = `${API_BASE_URL}/documentos/caso/${idDocumentoCaso}/download`;
-      console.log(`Descargando documento con id: ${idDocumentoCaso}. URL: ${apiUrl}`);
+      console.log(`Iniciando descarga del documento: ${doc.nombre_documento}`);
       
-      const response = await axios.get(apiUrl);
+      // Usar el nuevo servicio para descargar el documento
+      const result = await downloadDocument(doc);
       
-      if (response.status !== 200 || !response.data.url_firmada) {
-        throw new Error(`No se encontró la URL firmada en la respuesta`);
+      if (result.success && result.data && result.fileName) {
+        // Crear un objeto URL para el blob
+        const url = window.URL.createObjectURL(result.data);
+        
+        // Crear un elemento <a> temporal para la descarga
+        const a = window.document.createElement('a');
+        a.href = url;
+        a.download = result.fileName;
+        window.document.body.appendChild(a);
+        a.click();
+        
+        // Limpiar
+        window.URL.revokeObjectURL(url);
+        window.document.body.removeChild(a);
+        
+        addToast({
+          title: "Descarga iniciada",
+          description: `${doc.nombre_documento}${doc.ext_documento || ''} se está descargando`,
+          color: "success"
+        });
+      } else {
+        throw new Error(result.error || "Error desconocido al descargar el documento");
       }
-      
-      const signedUrl = response.data.url_firmada;
-      console.log('URL firmada obtenida:', signedUrl);
-      
-      // Abrir la URL firmada en una nueva pestaña
-      window.open(signedUrl, '_blank');
-      
-      addToast({
-        title: "Descarga iniciada",
-        description: `${document.nombre_documento}${document.ext_documento} se está descargando`,
-        color: "success"
-      });
       
       setDownloadingId(null);
     } catch (error: any) {
       console.error("Error en la descarga:", error);
       
-      // Mensaje más específico según el error
-      let errorMessage = "No se pudo descargar el documento";
-      
-      if (error.response) {
-        // Respuesta del servidor con un código de error
-        const statusCode = error.response.status;
-        console.error(`Error ${statusCode}:`, error.response.data);
-        
-        if (statusCode === 404) {
-          errorMessage = "El documento no fue encontrado en el servidor";
-        } else if (statusCode === 403) {
-          errorMessage = "No tienes permisos para descargar este documento";
-        } else if (statusCode >= 500) {
-          errorMessage = "Error en el servidor, intenta más tarde";
-        }
-      } else if (error.request) {
-        // No se recibió respuesta
-        errorMessage = "No se pudo conectar con el servidor, verifica tu conexión";
-      }
+      // Mensaje de error desde el servicio o uno genérico
+      const errorMessage = error.message || "No se pudo descargar el documento";
       
       addToast({
         title: "Error de descarga",
@@ -492,11 +476,11 @@ export default function DocumentsModal({
                   <div className="flex items-start gap-3">
                     <DocumentTextIcon className="w-8 h-8 text-primary flex-shrink-0 mt-1" />
                     <div>
-                      <p className="font-medium">{doc.nombre_documento}{doc.ext_documento || ''}</p>
-                      <p className="text-sm text-gray-500">
+                      <p key={`title-${doc.id_documento}`} className="font-medium">{doc.nombre_documento}{doc.ext_documento || ''}</p>
+                      <p key={`date-${doc.id_documento}`} className="text-sm text-gray-500">
                         Subido el {parseDateToLocal(doc.created_date || doc.fecha_asigna)}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p key={`user-${doc.id_documento}`} className="text-sm text-gray-500">
                         {doc.subido_por && ` por ${userNames[doc.subido_por] || "Usuario..."}`}
                       </p>
                       <div className="flex flex-wrap gap-1 mt-1">
