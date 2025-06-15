@@ -26,7 +26,8 @@ import {
   TutelaResponse, 
   getLatestTutelaFromDocuments, 
   getTutelaDocumentById, 
-  radicateTutelaDocument 
+  radicateTutelaDocument,
+  getLatestRadicadoDocument as getLatestRadicadoTutelaDocument 
 } from "@/services/tutelaService";
 import { uploadRadicadoDocument } from "@/actions/uploadDocsActions";
 import { getLatestRadicadoDocument } from "@/services/documentService";
@@ -73,22 +74,44 @@ export default function CasePreview({
       try {
         console.log("Intentando cargar tutela existente para caso:", caseId);
         
-        // Intentar recuperar el ID del documento de tutela desde localStorage
-        const savedTutelaDocId = localStorage.getItem(`case_${caseId}_tutela_doc_id`);
+        // Verificar si el caso está en estado "Espera del juez"
+        const isEsperaDelJuez = caseState === "Espera del juez";
         
-        if (savedTutelaDocId) {
-          console.log("📋 ID de tutela encontrado en localStorage:", savedTutelaDocId);
-          // Si tenemos un ID guardado, intentamos cargar ese documento específico
-          const result = await getTutelaDocumentById(parseInt(savedTutelaDocId, 10));
+        if (isEsperaDelJuez) {
+          // En estado "Espera del juez", cargamos el último documento radicado
+          console.log("📥 Caso en estado 'Espera del juez', buscando documento radicado");
+          const radicadoResult = await getLatestRadicadoTutelaDocument(caseId);
           
-          if (result.success && result.data) {
-            setTutelaData(result.data);
-            console.log("✅ Tutela cargada exitosamente desde ID guardado");
+          if (radicadoResult.success && radicadoResult.data) {
+            setTutelaData(radicadoResult.data);
+            console.log("✅ Documento radicado cargado exitosamente:", radicadoResult.data.nombre_documento);
+            
+            // Guardar el ID del documento para futuras cargas
+            if (radicadoResult.data.id_documento) {
+              localStorage.setItem(`case_${caseId}_tutela_doc_id`, radicadoResult.data.id_documento.toString());
+            }
+            
             setIsInitialLoading(false);
             return;
           } else {
-            console.log("⚠️ No se pudo cargar la tutela desde ID guardado:", result.error);
-            // Si falla, continuamos con el método alternativo
+            console.log("⚠️ No se encontró documento radicado:", radicadoResult.error);
+          }
+        } else {
+          // Para otros estados, intentamos primero con el ID guardado en localStorage
+          const savedTutelaDocId = localStorage.getItem(`case_${caseId}_tutela_doc_id`);
+          
+          if (savedTutelaDocId) {
+            console.log("📋 ID de tutela encontrado en localStorage:", savedTutelaDocId);
+            const result = await getTutelaDocumentById(parseInt(savedTutelaDocId, 10));
+            
+            if (result.success && result.data) {
+              setTutelaData(result.data);
+              console.log("✅ Tutela cargada exitosamente desde ID guardado");
+              setIsInitialLoading(false);
+              return;
+            } else {
+              console.log("⚠️ No se pudo cargar la tutela desde ID guardado:", result.error);
+            }
           }
         }
         

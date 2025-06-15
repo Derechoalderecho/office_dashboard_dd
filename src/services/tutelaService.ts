@@ -240,6 +240,74 @@ export async function radicateTutelaDocument(
   }
 }
 
+/**
+ * Obtiene el último documento radicado para un caso
+ * @param caseId - ID del caso
+ * @returns Promesa con el último documento radicado
+ */
+export async function getLatestRadicadoDocument(
+  caseId: number
+): Promise<{ success: boolean; data?: TutelaResponse; error?: string }> {
+  try {
+    // Endpoint para obtener el último documento radicado
+    const endpoint = `${API_BASE_URL}/documentos/caso/${caseId}/radicados`;
+    console.log(`📥 Obteniendo último documento radicado: ${endpoint}`);
+    
+    const response = await axios.get(endpoint, {
+      params: {
+        // Parámetro last=true para obtener solo el último documento
+        last: true
+      }
+    });
+
+    if (!response.data) {
+      return {
+        success: false,
+        error: "No hay documentos radicados disponibles para este caso",
+      };
+    }
+
+    // La respuesta puede ser un array o un objeto individual
+    const doc = Array.isArray(response.data) ? response.data[0] : response.data;
+    
+    if (!doc) {
+      return {
+        success: false,
+        error: "No se encontró ningún documento radicado",
+      };
+    }
+    
+    // Mostrar el contenido de la respuesta para depuración
+    console.log("Respuesta del servidor (radicado):", JSON.stringify(doc, null, 2));
+
+    // Format the document as TutelaResponse
+    const tutelaResponse: TutelaResponse = {
+      nombre_documento: doc.nombre_documento || doc.nombre || doc.titulo || "documento",
+      enlace: doc.enlace || "",
+      contenido: doc.contenido || "",
+      ext_documento: doc.ext_documento || doc.extension || "",
+      id_caso: caseId,
+      id_documento: doc.id_documento || doc.id_documento_generado,
+      fecha_asigna: doc.fecha_asigna || doc.created_date || doc.fecha_creacion || new Date().toISOString(),
+    };
+    
+    console.log("TutelaResponse procesada (radicado):", tutelaResponse);
+
+    return { success: true, data: tutelaResponse };
+  } catch (error: any) {
+    console.error("Error fetching radicado document:", error);
+    // Si es un 404, manejarlo específicamente
+    if (error.response?.status === 404) {
+      return {
+        success: false,
+        error: "No se encontró ningún documento radicado para este caso",
+      };
+    }
+    const errorMessage = error.message || "Error desconocido al obtener el documento radicado";
+    return { success: false, error: errorMessage };
+  }
+}
+
 export async function getTutelaDocumentById(
   documentId: number
 ): Promise<{ success: boolean; data?: TutelaResponse; error?: string }> {
