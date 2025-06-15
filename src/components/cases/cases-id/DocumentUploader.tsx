@@ -120,9 +120,9 @@ export default function DocumentUploader({
   const handleConfirmUpload = async () => {
     if (!selectedFile) return;
     
+    // Mantener el modal abierto durante la carga
     setIsUploading(true);
     setError(null);
-    setIsAlertOpen(false);
     
     if (!internalUserId) {
       setError("No se pudo obtener el ID del usuario actual. Por favor, intente nuevamente o contacte a soporte.");
@@ -169,9 +169,12 @@ export default function DocumentUploader({
       setError(errorMsg);
       showErrorToast(errorMsg);
     } finally {
+      // Completamos el proceso y cerramos el dialog
       setIsUploading(false);
-      setIsAlertOpen(false);
-      resetFileInput();
+      setTimeout(() => {
+        setIsAlertOpen(false);
+        resetFileInput();
+      }, 500); // Pequeño retraso para que el usuario vea la confirmación
     }
   };
 
@@ -255,11 +258,14 @@ export default function DocumentUploader({
 
       <AlertDialog
         isOpen={isAlertOpen}
-        onClose={handleCancelUpload}
+        onClose={isUploading ? () => {} : handleCancelUpload} // Deshabilitar el cierre durante la carga
         onConfirm={handleConfirmUpload}
-        title="Confirmar carga de archivo"
-        description={`¿Está seguro de subir este archivo? (${selectedFile?.name})`}
-        confirmText="Subir archivo"
+        title={isUploading ? "Cargando archivo" : "Confirmar carga de archivo"}
+        description={isUploading 
+          ? `Subiendo ${selectedFile?.name}. Por favor espere...` 
+          : `¿Está seguro de subir este archivo? (${selectedFile?.name})`
+        }
+        confirmText={isUploading ? "Cargando..." : "Subir archivo"}
         cancelText="Cancelar"
         type="info"
         isLoading={isUploading || isLoadingUserId}

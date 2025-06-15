@@ -474,7 +474,7 @@ export default function DocumentsModal({
               {filteredDocuments.map((doc) => (
                 <div key={doc.id_documento} className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                   <div key={`content-${doc.id_documento}`} className="flex items-start gap-3">
-                    <DocumentTextIcon className="w-8 h-8 text-primary flex-shrink-0 mt-1" />
+                    <DocumentTextIcon key={`icon-${doc.id_documento}`} className="w-8 h-8 text-primary flex-shrink-0 mt-1" />
                     <div key={`info-${doc.id_documento}`}>
                       <p key={`title-${doc.id_documento}`} className="font-medium">{doc.nombre_documento}{doc.ext_documento || ''}</p>
                       <p key={`date-${doc.id_documento}`} className="text-sm text-gray-500">
@@ -506,11 +506,12 @@ export default function DocumentsModal({
                     </div>
                   </div>
                   <Button
+                    key={`download-btn-${doc.id_documento}`}
                     color="primary"
                     isLoading={downloadingId === doc.id_documento}
                     spinner={<Spinner size="sm" color="white" />}
                     onPress={() => handleDownload(doc)}
-                    startContent={<ArrowDownTrayIcon className="w-5 h-5" />}
+                    startContent={<ArrowDownTrayIcon key={`download-icon-${doc.id_documento}`} className="w-5 h-5" />}
                     className="sm:self-end"
                   >
                     Descargar
