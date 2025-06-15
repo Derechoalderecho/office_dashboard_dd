@@ -58,7 +58,7 @@ export default function DocumentsModal({
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
-  const [selectedType, setSelectedType] = useState<'Docx' | 'MD' | 'Tutela' | 'Radicado' | 'Otro'>('Docx');
+  const [selectedType, setSelectedType] = useState<'Docx' | 'Tutela' | 'Radicado' | 'Otro'>('Docx');
   const [isLoading, setIsLoading] = useState(false);
   const [hasLoadingError, setHasLoadingError] = useState(false);
 
@@ -299,14 +299,7 @@ export default function DocumentsModal({
                 >
                   Docx
                 </Chip>
-                <Chip 
-                  variant={selectedType === 'MD' ? "solid" : "flat"}
-                  color="primary" 
-                  className="cursor-pointer"
-                  onClick={() => setSelectedType('MD')}
-                >
-                  MD
-                </Chip>
+
                 <Chip 
                   variant={selectedType === 'Tutela' ? "solid" : "flat"}
                   color="primary" 
@@ -401,6 +394,7 @@ export default function DocumentsModal({
                       </p>
                       <div className="flex flex-wrap gap-1 mt-1">
                         <Chip
+                          key={`ext-${doc.id_documento}`}
                           size="sm"
                           variant="flat"
                           color={(doc.ext_documento && doc.ext_documento === '.pdf') ? 'danger' : 'primary'}
@@ -409,6 +403,7 @@ export default function DocumentsModal({
                         </Chip>
                         {doc.tipo_documento && (
                           <Chip
+                            key={`tipo-${doc.id_documento}`}
                             size="sm"
                             variant="flat"
                             color="secondary"
