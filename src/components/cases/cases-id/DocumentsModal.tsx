@@ -393,6 +393,7 @@ export default function DocumentsModal({
               <p className="text-sm text-gray-500 mb-2">Tipo de documento</p>
               <div className="flex flex-wrap gap-2">
                 <Chip 
+                  key="docx-chip"
                   variant={selectedType === 'Docx' ? "solid" : "flat"}
                   color="primary" 
                   className="cursor-pointer"
@@ -402,6 +403,7 @@ export default function DocumentsModal({
                 </Chip>
 
                 <Chip 
+                  key="tutela-chip"
                   variant={selectedType === 'Tutela' ? "solid" : "flat"}
                   color="primary" 
                   className="cursor-pointer"
@@ -410,6 +412,7 @@ export default function DocumentsModal({
                   Tutela
                 </Chip>
                 <Chip 
+                  key="radicado-chip"
                   variant={selectedType === 'Radicado' ? "solid" : "flat"}
                   color="primary" 
                   className="cursor-pointer"
@@ -418,6 +421,7 @@ export default function DocumentsModal({
                   Radicado
                 </Chip>
                 <Chip 
+                  key="otro-chip"
                   variant={selectedType === 'Otro' ? "solid" : "flat"}
                   color="primary" 
                   className="cursor-pointer"
