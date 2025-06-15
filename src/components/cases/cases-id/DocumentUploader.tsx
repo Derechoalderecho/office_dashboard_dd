@@ -9,7 +9,9 @@ import {
   ExclamationTriangleIcon 
 } from "@heroicons/react/24/outline";
 import { AlertDialog } from "@/components/ui/alert-dialog";
-import { uploadDocument, getDocumentById, DocumentResponse } from "@/actions/uploadDocsActions";
+import { DocumentResponse } from "@/actions/uploadDocsActions";
+import { uploadDocument } from "@/services/uploadDocumentsService";
+import { useInternalUserId } from "@/hooks/useInternalUserId";
 import { parseDateToLocal } from "@/utils/date";
 import { useAppDispatch } from "@/store/hooks";
 import { fetchCase } from "@/store/slices/caseSlice";
@@ -33,6 +35,7 @@ export default function DocumentUploader({
   const dragCounter = useRef(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dispatch = useAppDispatch();
+  const { internalUserId, isLoading: isLoadingUserId, error: userIdError } = useInternalUserId();
 
   // Max file size in bytes (10MB)
   const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -121,41 +124,43 @@ export default function DocumentUploader({
     
     setIsUploading(true);
     setError(null);
+    setIsAlertOpen(false);
+    
+    if (!internalUserId) {
+      setError("No se pudo obtener el ID del usuario actual. Por favor, intente nuevamente o contacte a soporte.");
+      setIsUploading(false);
+      return;
+    }
     
     try {
-      const formData = new FormData();
-      formData.append('file', selectedFile);
+      console.log(`Iniciando subida de documento: ${selectedFile.name} para el caso ${caseId} por usuario ${internalUserId}`);
       
-      const uploadResult = await uploadDocument(formData, caseId);
+      const uploadResult = await uploadDocument(selectedFile, caseId, String(internalUserId));
       
       if (uploadResult.success && uploadResult.data) {
         // Invalidar caché inmediatamente
         invalidateCache('cases');
         
-        const documentId = uploadResult.data.id_documento;
-        const documentResult = await getDocumentById(documentId);
+        // Ya tenemos los datos del documento en la respuesta
+        const documentData = uploadResult.data;
+        setUploadedDocument(documentData);
         
-        if (documentResult.success && documentResult.data) {
-          setUploadedDocument(documentResult.data);
-          
-          // Mostrar toast de éxito primero
-          addToast({
-            title: "Archivo subido correctamente",
-            description: "El documento ha sido cargado con éxito",
-            color: "success",
-          });
-          
-          // Luego notificar al componente padre para actualizar la lista
-          console.log("Documento subido correctamente. ID:", documentResult.data.id_documento, "Nombre:", documentResult.data.nombre_documento);
-          if (onDocumentUploaded) {
-            // Sin retraso para permitir actualización inmediata
-            onDocumentUploaded(documentResult.data);
-          }
-        } else {
-          const errorMsg = documentResult.error || "Error al obtener detalles del documento";
-          setError(errorMsg);
-          showErrorToast(errorMsg);
+        // Mostrar toast de éxito
+        addToast({
+          title: "Archivo subido correctamente",
+          description: "El documento ha sido cargado con éxito",
+          color: "success",
+        });
+        
+        // Notificar al componente padre para actualizar la lista
+        console.log("Documento subido correctamente. ID:", documentData.id_documento, "Nombre:", documentData.nombre_documento);
+        if (onDocumentUploaded) {
+          // Sin retraso para permitir actualización inmediata
+          onDocumentUploaded(documentData);
         }
+        
+        // Actualizar el estado de Redux para reflejar los cambios
+        dispatch(fetchCase(caseId));
       } else {
         const errorMsg = uploadResult.error || "Error al subir el documento";
         setError(errorMsg);
@@ -259,7 +264,7 @@ export default function DocumentUploader({
         confirmText="Subir archivo"
         cancelText="Cancelar"
         type="info"
-        isLoading={isUploading}
+        isLoading={isUploading || isLoadingUserId}
       />
     </div>
   );

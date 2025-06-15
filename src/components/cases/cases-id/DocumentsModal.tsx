@@ -449,7 +449,7 @@ export default function DocumentsModal({
           ) : hasLoadingError ? (
             <div className="flex flex-col justify-center items-center py-12 gap-4">
               <XCircleIcon className="w-12 h-12 text-danger" />
-              <p>Error al cargar los documentos</p>
+              <p key="error-message">Error al cargar los documentos</p>
               <Button
                 color="primary"
                 variant="flat"
@@ -462,10 +462,10 @@ export default function DocumentsModal({
           ) : filteredDocuments.length === 0 ? (
             <div className="flex flex-col justify-center items-center py-12 gap-4">
               <DocumentTextIcon className="w-12 h-12 text-gray-400" />
-              <p className="text-center text-gray-600">
+              <p key="no-docs-message" className="text-center text-gray-600">
                 No hay documentos de tipo <span className="font-semibold">{selectedType}</span>
               </p>
-              <p className="text-sm text-gray-500 text-center">
+              <p key="select-other-type" className="text-sm text-gray-500 text-center">
                 Puedes seleccionar otro tipo de documento usando los botones de arriba
               </p>
             </div>
