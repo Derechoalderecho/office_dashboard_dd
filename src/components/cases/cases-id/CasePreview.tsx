@@ -24,8 +24,9 @@ import { AlertDialog } from "@/components/ui/alert-dialog";
 import { 
   uploadTutelaDocument, 
   TutelaResponse, 
-  getLatestTutelaFromDocuments,
-  getTutelaDocumentById
+  getLatestTutelaFromDocuments, 
+  getTutelaDocumentById, 
+  radicateTutelaDocument 
 } from "@/services/tutelaService";
 import { uploadRadicadoDocument } from "@/actions/uploadDocsActions";
 import { getLatestRadicadoDocument } from "@/services/documentService";
@@ -349,17 +350,27 @@ export default function CasePreview({
       const formData = new FormData();
       formData.append("file", selectedFile);
 
-      // Verificar si estamos en estado "Radicar" y viene del botón de radicar
+      // Verificar si estamos en estado "Radicar"
       const isRadicarAction = localStorage.getItem(`case_${caseId}_radicar_action`) === 'true';
+      const isRadicarState = caseState === "Radicar";
       
       if (!internalUserId) {
         throw new Error("No se encontró el ID del estudiante");
       }
       
-      // Utilizamos la función unificada para subir documentos de tutela
-      console.log("📤 Subiendo documento de tutela al endpoint unificado");
-      console.log("ID del estudiante:", internalUserId);
-      const result = await uploadTutelaDocument(formData, caseId, internalUserId);
+      let result;
+      
+      if (isRadicarState) {
+        // Si el caso está en estado de radicar, usamos el endpoint para radicar
+        console.log("📤 Radicando documento de tutela");
+        console.log("ID del estudiante:", internalUserId);
+        result = await radicateTutelaDocument(formData, caseId, internalUserId);
+      } else {
+        // Caso normal: subida de documentos de tutela al endpoint unificado
+        console.log("📤 Subiendo documento de tutela al endpoint unificado");
+        console.log("ID del estudiante:", internalUserId);
+        result = await uploadTutelaDocument(formData, caseId, internalUserId);
+      }
       
       let tutelaDocId;
       

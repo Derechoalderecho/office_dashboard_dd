@@ -51,7 +51,7 @@ export async function uploadTutelaDocument(
           // Enviar parámetros como valores numéricos en la URL
           id_caso: caseId,
           id_estudiante: studentId,
-          tipo: "Tutela" // Con T mayúscula como solicitado
+          tipo: "Radicado" // Con T mayúscula como solicitado
         }
       }
     );
@@ -181,6 +181,65 @@ export async function getLatestTutelaFromDocuments(
  * @param documentId
  * @returns
  */
+/**
+ * Radica un documento de tutela en el sistema
+ * @param formData - El FormData con el archivo
+ * @param caseId - ID del caso
+ * @param uploadedBy - ID del usuario que sube el documento
+ * @returns Promesa con el resultado de la radicación
+ */
+export async function radicateTutelaDocument(
+  formData: FormData,
+  caseId: number,
+  uploadedBy: number
+): Promise<{ success: boolean; data?: TutelaResponse; error?: string }> {
+  try {
+    // Endpoint para radicar documentos
+    const endpoint = `${API_BASE_URL}/documentos/caso/${caseId}/upload`;
+    console.log(`📤 Radicando documento en el endpoint: ${endpoint}`);
+    
+    // Crear un nuevo FormData para tener control total sobre los parámetros
+    const newFormData = new FormData();
+    
+    // Transferir el archivo desde el formData original
+    const file = formData.get('file');
+    if (!file) {
+      return { success: false, error: "No se proporcionó ningún archivo para radicar" };
+    }
+    newFormData.append('file', file);
+    
+    const response = await axios.post(
+      endpoint,
+      newFormData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        params: {
+          // Parámetros requeridos como query params
+          id_caso: caseId,
+          tipo_documento: "Docx",  // Siempre será "Docx"
+          subido_por: uploadedBy
+        }
+      }
+    );
+
+    if (response.status === 200 || response.status === 201) {
+      return { success: true, data: response.data };
+    } else {
+      return {
+        success: false,
+        error: `Error al radicar la tutela: ${response.statusText}`,
+      };
+    }
+  } catch (error: any) {
+    console.error("Error radicando tutela document:", error);
+    const errorMessage =
+      error.response?.data?.message || error.message || "Error desconocido";
+    return { success: false, error: errorMessage };
+  }
+}
+
 export async function getTutelaDocumentById(
   documentId: number
 ): Promise<{ success: boolean; data?: TutelaResponse; error?: string }> {
