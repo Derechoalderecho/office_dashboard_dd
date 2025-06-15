@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Tabs, Tab } from "@heroui/react"
+import { Tabs, Tab, Spinner } from "@heroui/react"
 import { fetchSerieTiempoCasos, Frecuencia, TipoCaso } from "@/services/dasboardService"
 import { useInternalUserId } from "@/hooks/useInternalUserId"
 
@@ -43,7 +43,7 @@ const configTodos = {
   },
   todos: {
     label: "Todos",
-    color: "var(--chart-2)",
+    color: "var(--chart-4)",
   },
 } satisfies ChartConfig;
 
@@ -164,7 +164,7 @@ export default function AreaChartTiempoCasos() {
   };
 
   return (
-    <Card>
+    <Card className={isLoading ? "opacity-80" : ""}>
       <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
         <div className="grid flex-1 gap-1">
           <CardTitle>Evolución de Casos</CardTitle>
@@ -175,7 +175,11 @@ export default function AreaChartTiempoCasos() {
             }
           </CardDescription>
         </div>
-        <Select value={frecuencia} onValueChange={(value) => setFrecuencia(value as Frecuencia)}>
+        <Select 
+          value={frecuencia} 
+          onValueChange={(value) => setFrecuencia(value as Frecuencia)}
+          disabled={isLoading}
+        >
           <SelectTrigger
             className="hidden w-[160px] rounded-lg sm:ml-auto sm:flex"
             aria-label="Seleccionar frecuencia"
@@ -199,6 +203,7 @@ export default function AreaChartTiempoCasos() {
           color="primary"
           selectedKey={activeTab}
           onSelectionChange={(key) => setActiveTab(key as TabKey)}
+          isDisabled={isLoading}
           classNames={{
             tabList: "border-b border-divider w-full mb-4",
             cursor: "w-full bg-primary"
@@ -209,7 +214,12 @@ export default function AreaChartTiempoCasos() {
         </Tabs>
       </div>
       
-      <CardContent className="px-2 pt-0 sm:px-6 sm:pt-2">
+      <CardContent className="px-2 pt-0 sm:px-6 sm:pt-2 relative">
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center z-10 bg-background/50">
+            <Spinner size="lg" color="primary" />
+          </div>
+        )}
         {activeTab === "todos" ? (
           <ChartContainer
             config={configTodos}
@@ -219,8 +229,8 @@ export default function AreaChartTiempoCasos() {
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="fillTodos" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--chart-2)" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="var(--chart-2)" stopOpacity={0.1} />
+                    <stop offset="5%" stopColor="var(--chart-4)" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="var(--chart-4)" stopOpacity={0.1} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid vertical={false} strokeDasharray="3 3" />
@@ -249,7 +259,7 @@ export default function AreaChartTiempoCasos() {
                 <Area
                   type="monotone"
                   dataKey="todos"
-                  stroke="var(--chart-2)"
+                  stroke="var(--chart-4)"
                   fill="url(#fillTodos)"
                 />
                 <ChartLegend content={<ChartLegendContent />} />
