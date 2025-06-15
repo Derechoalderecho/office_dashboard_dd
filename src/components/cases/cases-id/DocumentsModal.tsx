@@ -33,6 +33,7 @@ import { fetchCase } from '@/store/slices/caseSlice';
 import { parseDateToLocal } from "@/utils/date";
 import { API_BASE_URL } from "@/config/api";
 import { getDocumentsByCaseIdAndType } from "@/services/documentService";
+import { fetchUserDetails } from "@/services/userService";
 
 type SortOption = "newest" | "oldest" | "name" | "type";
 
@@ -42,6 +43,67 @@ interface DocumentsModalProps {
   caseId: string;
   refreshFlag?: boolean;
   onRefreshed?: () => void;
+}
+
+// Caché para almacenar información de usuarios y evitar múltiples consultas
+const userCache = new Map<string, {
+  nombre: string;
+  timestamp: number;
+}>();
+
+// Tiempo de validez de la caché: 1 hora
+const CACHE_TTL = 60 * 60 * 1000;
+
+/**
+ * Obtiene el nombre completo de un usuario a partir de su ID
+ */
+async function getUserFullName(userId: string): Promise<string> {
+  if (!userId) {
+    console.log("ID de usuario vacío");
+    return "Usuario desconocido";
+  }
+  
+  console.log(`Obteniendo nombre para usuario con ID: ${userId}`);
+  
+  // Comprobar si está en caché y no ha expirado
+  const cached = userCache.get(userId);
+  if (cached && (Date.now() - cached.timestamp) < CACHE_TTL) {
+    console.log(`Usando nombre en caché para ${userId}: ${cached.nombre}`);
+    return cached.nombre;
+  }
+  
+  try {
+    console.log(`Llamando a API para obtener detalles del usuario ${userId}`);
+    const userDetails = await fetchUserDetails(userId);
+    
+    if (!userDetails) {
+      console.log(`No se encontraron detalles para el usuario ${userId}`);
+      return "Usuario desconocido";
+    }
+    
+    console.log(`Detalles recibidos para usuario ${userId}:`, userDetails);
+    
+    // Formar el nombre completo
+    const nombreCompleto = [
+      userDetails.primer_nombre,
+      userDetails.segundo_nombre,
+      userDetails.primer_apellido,
+      userDetails.segundo_apellido
+    ].filter(Boolean).join(" ");
+    
+    console.log(`Nombre completo generado para ${userId}: ${nombreCompleto}`);
+    
+    // Guardar en caché
+    userCache.set(userId, {
+      nombre: nombreCompleto || "Usuario desconocido",
+      timestamp: Date.now()
+    });
+    
+    return nombreCompleto || "Usuario desconocido";
+  } catch (error) {
+    console.error(`Error al obtener detalles del usuario ${userId}:`, error);
+    return "Usuario desconocido";
+  }
 }
 
 export default function DocumentsModal({ 
@@ -61,6 +123,8 @@ export default function DocumentsModal({
   const [selectedType, setSelectedType] = useState<'Docx' | 'Tutela' | 'Radicado' | 'Otro'>('Docx');
   const [isLoading, setIsLoading] = useState(false);
   const [hasLoadingError, setHasLoadingError] = useState(false);
+  // Guardar los nombres de usuarios para cada documento
+  const [userNames, setUserNames] = useState<{[key: string]: string}>({});
 
   // Función para cargar documentos que se puede llamar cuando hay un error
   const reloadDocuments = async () => {
@@ -154,6 +218,7 @@ export default function DocumentsModal({
     }
   }, [currentCase, isOpen, dispatch, sortBy]);
 
+  // Effect para filtrar documentos basado en el término de búsqueda y ordenación
   useEffect(() => {
     if (documents.length > 0) {
       let filtered = documents;
@@ -170,7 +235,43 @@ export default function DocumentsModal({
     } else {
       setFilteredDocuments([]);
     }
-  }, [searchTerm, sortBy, documents]);
+  }, [documents, searchTerm, sortBy]);
+
+  // Effect para cargar los nombres de usuarios cuando cambia la lista de documentos
+  useEffect(() => {
+    const loadUserNames = async () => {
+      // Recolectamos los IDs de usuario únicos
+      const uniqueUserIds = [...new Set(
+        documents
+          .filter(doc => doc.subido_por) // Solo documentos con usuario
+          .map(doc => doc.subido_por!)
+      )];
+      
+      console.log("IDs de usuarios únicos:", uniqueUserIds);
+      
+      // Obtenemos los nombres para cada ID de usuario
+      const userPromises = uniqueUserIds.map(async (userId) => {
+        const fullName = await getUserFullName(userId);
+        return { userId, fullName };
+      });
+
+      const userResults = await Promise.all(userPromises);
+      const newUserNames: {[key: string]: string} = {};
+      
+      // Guardamos el nombre para cada ID de usuario
+      userResults.forEach(result => {
+        newUserNames[result.userId] = result.fullName;
+      });
+      
+      console.log("Nombres de usuarios obtenidos:", newUserNames);
+      
+      setUserNames(newUserNames);
+    };
+
+    if (documents.length > 0) {
+      loadUserNames();
+    }
+  }, [documents]);
 
   const sortDocuments = (docs: DocumentResponse[], sortOption: SortOption): DocumentResponse[] => {
     const sorted = [...docs];
@@ -389,8 +490,10 @@ export default function DocumentsModal({
                     <div>
                       <p className="font-medium">{doc.nombre_documento}{doc.ext_documento || ''}</p>
                       <p className="text-sm text-gray-500">
-                        Subido el {parseDateToLocal(doc.fecha_subida || doc.fecha_asigna)}
-                        {doc.subido_por && ` por ${doc.subido_por}`}
+                        Subido el {parseDateToLocal(doc.created_date || doc.fecha_asigna)}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {doc.subido_por && ` por ${userNames[doc.subido_por] || "Usuario..."}`}
                       </p>
                       <div className="flex flex-wrap gap-1 mt-1">
                         <Chip
