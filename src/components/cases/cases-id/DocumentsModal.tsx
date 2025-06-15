@@ -17,13 +17,14 @@ import {
   addToast
 } from "@heroui/react";
 import { 
+  ArrowsUpDownIcon, 
+  MagnifyingGlassIcon, 
+  ExclamationCircleIcon, 
+  ArrowPathIcon, 
+  XCircleIcon, 
   DocumentTextIcon, 
   ArrowDownTrayIcon, 
-  XMarkIcon,
-  ExclamationCircleIcon,
-  MagnifyingGlassIcon,
-  ArrowsUpDownIcon,
-  FunnelIcon
+  XMarkIcon
 } from "@heroicons/react/24/outline";
 import { DocumentResponse, downloadDocument } from "@/actions/uploadDocsActions";
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
@@ -61,9 +62,8 @@ export default function DocumentsModal({
   const [isLoading, setIsLoading] = useState(false);
   const [hasLoadingError, setHasLoadingError] = useState(false);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    
+  // Función para cargar documentos que se puede llamar cuando hay un error
+  const reloadDocuments = async () => {
     try {
       const numericCaseId = parseInt(caseId, 10);
       if (isNaN(numericCaseId)) {
@@ -73,28 +73,31 @@ export default function DocumentsModal({
       setIsLoading(true);
       setHasLoadingError(false);
       
-      (async () => {
-        try {
-          const docs = await getDocumentsByCaseIdAndType(numericCaseId, selectedType);
-          
-          dispatch(setDocuments(docs));
-          console.log(`Documentos cargados: ${docs.length} (tipo: ${selectedType})`);
-        } catch (error: any) {
-          console.error("Error al cargar documentos:", error);
-          if (error.status === 404 || (error.message && error.message.includes("404"))) {
-            dispatch(setDocuments([]));
-          } else {
-            setHasLoadingError(true);
-          }
-        } finally {
-          setIsLoading(false);
+      try {
+        const docs = await getDocumentsByCaseIdAndType(numericCaseId, selectedType);
+        dispatch(setDocuments(docs));
+        console.log(`Documentos cargados: ${docs.length} (tipo: ${selectedType})`);
+      } catch (error: any) {
+        console.error("Error al cargar documentos:", error);
+        if (error.status === 404 || (error.message && error.message.includes("404"))) {
+          // Para errores 404, mostramos una lista vacía en lugar de error
+          dispatch(setDocuments([]));
+        } else {
+          setHasLoadingError(true);
         }
-      })();
+      } finally {
+        setIsLoading(false);
+      }
     } catch (error: any) {
       console.error("Error obteniendo documentos:", error.message);
-      setHasLoadingError(true);
       setIsLoading(false);
+      setHasLoadingError(true);
     }
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    reloadDocuments();
   }, [isOpen, caseId, dispatch, selectedType]);
 
   useEffect(() => {
@@ -282,8 +285,57 @@ export default function DocumentsModal({
         </ModalHeader>
         
         <ModalBody className="overflow-y-auto max-h-[500px]">
-          {!loading && !isLoading && !hasLoadingError && documents.length > 0 && (
-            <div className="flex flex-col gap-3 mb-4">
+          {/* Siempre mostramos el selector de tipos, independientemente de si hay documentos */}
+          <div className="flex flex-col gap-3 mb-4">
+            {/* Selector de tipo de documento, siempre visible */}
+            <div>
+              <p className="text-sm text-gray-500 mb-2">Tipo de documento</p>
+              <div className="flex flex-wrap gap-2">
+                <Chip 
+                  variant={selectedType === 'Docx' ? "solid" : "flat"}
+                  color="primary" 
+                  className="cursor-pointer"
+                  onClick={() => setSelectedType('Docx')}
+                >
+                  Docx
+                </Chip>
+                <Chip 
+                  variant={selectedType === 'MD' ? "solid" : "flat"}
+                  color="primary" 
+                  className="cursor-pointer"
+                  onClick={() => setSelectedType('MD')}
+                >
+                  MD
+                </Chip>
+                <Chip 
+                  variant={selectedType === 'Tutela' ? "solid" : "flat"}
+                  color="primary" 
+                  className="cursor-pointer"
+                  onClick={() => setSelectedType('Tutela')}
+                >
+                  Tutela
+                </Chip>
+                <Chip 
+                  variant={selectedType === 'Radicado' ? "solid" : "flat"}
+                  color="primary" 
+                  className="cursor-pointer"
+                  onClick={() => setSelectedType('Radicado')}
+                >
+                  Radicado
+                </Chip>
+                <Chip 
+                  variant={selectedType === 'Otro' ? "solid" : "flat"}
+                  color="primary" 
+                  className="cursor-pointer"
+                  onClick={() => setSelectedType('Otro')}
+                >
+                  Otro
+                </Chip>
+              </div>
+            </div>
+
+            {/* Controles de búsqueda y ordenación, solo visibles si hay documentos */}
+            {documents.length > 0 && !loading && !isLoading && !hasLoadingError && (
               <div className="flex flex-col sm:flex-row gap-3">
                 <Input
                   placeholder="Buscar documentos..."
@@ -305,71 +357,35 @@ export default function DocumentsModal({
                   <SelectItem key="type">Tipo</SelectItem>
                 </Select>
               </div>
-              
-              <div>
-                <p className="text-sm text-gray-500 mb-2">Tipo de documento</p>
-                <div className="flex flex-wrap gap-2">
-                  <Chip 
-                    variant={selectedType === 'Docx' ? "solid" : "flat"}
-                    color="primary" 
-                    className="cursor-pointer"
-                    onClick={() => setSelectedType('Docx')}
-                  >
-                    Docx
-                  </Chip>
-                  <Chip 
-                    variant={selectedType === 'MD' ? "solid" : "flat"}
-                    color="primary" 
-                    className="cursor-pointer"
-                    onClick={() => setSelectedType('MD')}
-                  >
-                    MD
-                  </Chip>
-                  <Chip 
-                    variant={selectedType === 'Tutela' ? "solid" : "flat"}
-                    color="primary" 
-                    className="cursor-pointer"
-                    onClick={() => setSelectedType('Tutela')}
-                  >
-                    Tutela
-                  </Chip>
-                  <Chip 
-                    variant={selectedType === 'Radicado' ? "solid" : "flat"}
-                    color="primary" 
-                    className="cursor-pointer"
-                    onClick={() => setSelectedType('Radicado')}
-                  >
-                    Radicado
-                  </Chip>
-                  <Chip 
-                    variant={selectedType === 'Otro' ? "solid" : "flat"}
-                    color="primary" 
-                    className="cursor-pointer"
-                    onClick={() => setSelectedType('Otro')}
-                  >
-                    Otro
-                  </Chip>
-                </div>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
           
           {loading || isLoading ? (
             <div className="flex justify-center items-center py-12">
               <Spinner size="lg" color="primary" />
             </div>
           ) : hasLoadingError ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <ExclamationCircleIcon className="w-12 h-12 text-danger mb-4" />
-              <p className="text-danger">Error al cargar los documentos. Intente nuevamente.</p>
+            <div className="flex flex-col justify-center items-center py-12 gap-4">
+              <XCircleIcon className="w-12 h-12 text-danger" />
+              <p>Error al cargar los documentos</p>
+              <Button
+                color="primary"
+                variant="flat"
+                startContent={<ArrowPathIcon className="w-4 h-4" />}
+                onClick={reloadDocuments}
+              >
+                Reintentar
+              </Button>
             </div>
           ) : filteredDocuments.length === 0 ? (
-            <div className="text-center py-8">
-              {searchTerm ? (
-                <p className="text-gray-500">No se encontraron documentos con ese término de búsqueda</p>
-              ) : (
-                <p className="text-gray-500">No hay documentos disponibles para este caso</p>
-              )}
+            <div className="flex flex-col justify-center items-center py-12 gap-4">
+              <DocumentTextIcon className="w-12 h-12 text-gray-400" />
+              <p className="text-center text-gray-600">
+                No hay documentos de tipo <span className="font-semibold">{selectedType}</span>
+              </p>
+              <p className="text-sm text-gray-500 text-center">
+                Puedes seleccionar otro tipo de documento usando los botones de arriba
+              </p>
             </div>
           ) : (
             <div className="flex flex-col gap-4">
