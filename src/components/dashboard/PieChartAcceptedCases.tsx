@@ -16,6 +16,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { useEffect, useMemo, useState } from "react";
+import { Spinner } from "@heroui/react";
 import { fetchCasosAceptadosRecibidos } from "@/services/dasboardService";
 import { useInternalUserId } from "@/hooks/useInternalUserId";
 
@@ -97,24 +98,22 @@ export default function PieChartAcceptedCases() {
     return data.recibidos;
   }, [data]);
 
-  if (isLoading) {
-    return (
-      <Card className="flex flex-col">
-        <CardHeader className="items-center pb-0">
-          <CardTitle>Casos Aceptados vs Recibidos</CardTitle>
-          <CardDescription>Cargando datos...</CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
+  // No renderizamos un componente de carga separado, sino que mostramos el spinner dentro del gráfico
 
   return (
-    <Card className="flex flex-col">
+    <Card className={`flex flex-col ${isLoading ? "opacity-80" : ""}`}>
       <CardHeader className="items-center pb-0">
         <CardTitle>Casos Aceptados vs Recibidos</CardTitle>
-        <CardDescription>Total de casos: {totalCases}</CardDescription>
+        <CardDescription>
+          {isLoading ? "Cargando datos..." : `Total de casos: ${totalCases}`}
+        </CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 pb-0">
+      <CardContent className="flex-1 pb-0 relative">
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center z-10 bg-background/50">
+            <Spinner size="lg" color="primary" />
+          </div>
+        )}
         <ChartContainer
           config={chartConfig}
           className="mx-auto aspect-square max-h-[250px]"
