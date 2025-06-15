@@ -158,6 +158,14 @@ export default function DocumentsModal({
     if (!isOpen) return;
     reloadDocuments();
   }, [isOpen, caseId, dispatch, selectedType]);
+  
+  // Efecto para actualizar la lista cuando cambian los documentos en Redux
+  useEffect(() => {
+    if (isOpen && documents) {
+      console.log("Documentos actualizados desde Redux:", documents.length);
+      setFilteredDocuments(sortDocuments(documents, sortBy));
+    }
+  }, [documents, isOpen, sortBy]);
 
   useEffect(() => {
     if (isOpen && refreshFlag) {
