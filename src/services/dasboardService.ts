@@ -32,6 +32,11 @@ interface CasosGanadosPerdidosResponse {
   porcentaje_perdidos: number;
 }
 
+interface SerieTiempoCasosDataPoint {
+  fecha: string;
+  total_casos: number;
+}
+
 interface ChartDataPoint {
   date: string;
   count: number;
@@ -253,6 +258,36 @@ export async function fetchCasosGanadosPerdidos(userId: number): Promise<{ganado
   } catch (error) {
     logger.error("Error al obtener datos de casos ganados y perdidos:", error);
     return { ganados: 0, perdidos: 0 };
+  }
+}
+
+export type TipoCaso = "recibidos" | "todos" | "aceptados";
+export type Frecuencia = "semanal" | "diaria";
+
+export async function fetchSerieTiempoCasos(
+  userId: number,
+  frecuencia: Frecuencia = "semanal",
+  tipoCaso: TipoCaso = "todos"
+): Promise<SerieTiempoCasosDataPoint[]> {
+  try {
+    logger.debug(
+      `Obteniendo serie de tiempo para casos ${tipoCaso} con frecuencia ${frecuencia} (usuario ${userId})`
+    );
+    
+    const response = await get<SerieTiempoCasosDataPoint[]>(
+      `dim/serie-tiempo-casos?user_id=${userId}&frecuencia=${frecuencia}&tipo_caso=${tipoCaso}`
+    );
+    
+    if (!response || response.length === 0) {
+      logger.warn("No se encontraron datos de serie de tiempo de casos");
+      return [];
+    }
+    
+    logger.info(`Se obtuvieron ${response.length} puntos de datos para la serie de tiempo`);
+    return response;
+  } catch (error) {
+    logger.error("Error al obtener serie de tiempo de casos:", error);
+    return [];
   }
 }
 
