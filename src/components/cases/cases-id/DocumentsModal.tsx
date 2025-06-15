@@ -493,13 +493,36 @@ export default function DocumentsModal({
                           {doc.subido_por && ` por ${userNames[doc.subido_por] || "Usuario..."}`}
                         </p>
                         <div className="flex flex-wrap gap-1 mt-1">
-                          <Chip
-                            size="sm"
-                            variant="flat"
-                            color={(doc.ext_documento && doc.ext_documento === '.pdf') ? 'danger' : 'primary'}
-                          >
-                            {doc.ext_documento ? doc.ext_documento.substring(1).toUpperCase() : 'DESCONOCIDO'}
-                          </Chip>
+                          {/* Chip para la extensión del documento */}
+                          {(() => {
+                            // Intentamos obtener la extensión del documento
+                            let extension = '';
+                            
+                            // 1. Primero intentamos usar ext_documento si existe
+                            if (doc.ext_documento) {
+                              extension = doc.ext_documento;
+                            } 
+                            // 2. Si no, intentamos extraer la extensión del nombre del documento
+                            else if (doc.nombre_documento) {
+                              const match = doc.nombre_documento.match(/\.(\w+)$/i);
+                              if (match && match[0]) {
+                                extension = match[0];
+                              }
+                            }
+                            
+                            // Solo mostramos el chip si encontramos una extensión
+                            return extension ? (
+                              <Chip
+                                size="sm"
+                                variant="flat"
+                                color={(extension.toLowerCase().includes('pdf')) ? 'danger' : 'primary'}
+                              >
+                                {extension.startsWith('.') ? extension.substring(1).toUpperCase() : extension.toUpperCase()}
+                              </Chip>
+                            ) : null;
+                          })()} 
+                          
+                          {/* Chip para el tipo de documento */}
                           {doc.tipo_documento && (
                             <Chip
                               size="sm"
