@@ -63,7 +63,7 @@ export async function submitFormData(
         tipo_documento: formData.get("tipo_documento") || "",
         num_documento: formData.get("num_documento") || "",
         email: formData.get("email") || "",
-        num_fijo: formData.get("num_fijo") || "",
+        telefono_fijo: formData.get("telefono_fijo") || "",
         num_movil: formData.get("num_movil") || "",
         dane_municipio: formData.get("dane_municipio") || "05001",
         persona_modifica: Number(formData.get("persona_modifica")) || null,
@@ -72,16 +72,16 @@ export async function submitFormData(
         fecha_nacimiento: formData.get("fecha_nacimiento") 
           ? new Date(formData.get("fecha_nacimiento") as string).toISOString().split('T')[0] + "T00:00:00"
           : new Date().toISOString().split('T')[0] + "T00:00:00",
-        orient_sexual: formData.get("orient_sexual") || "",
+        orientacion_sexual: formData.get("orientacion_sexual") || "",
         nacionalidad: formData.get("nacionalidad") || "",
         estado_civil: formData.get("estado_civil") || "",
         escolaridad: formData.get("escolaridad") || "",
         etnia: formData.get("etnia") || "",
-        discapacidad: formData.get("discapacidad") || "",
-        sabe_leer_escribir: formData.get("sabe_leer_escribir") || "",
-        direccion: formData.get("direccion") || "",
-        zona: convertZonaToCode(formData.get("zona")?.toString() || ""),
-        estrato: formData.get("estrato") || "",
+        discapacidad: formData.get("discapacidad") === "true",
+        sabe_leer_escribir: formData.get("sabe_leer_escribir") === "true",
+        direccion_residencia: formData.get("direccion_residencia") || "",
+        zona_residencia: convertZonaToCode(formData.get("zona_residencia")?.toString() || ""),
+        estrato: Number(formData.get("estrato")) || 0,
       };
       
       console.log("Datos del ciudadano a crear:", JSON.stringify(ciudadanoData, null, 2));
@@ -167,14 +167,12 @@ export async function submitFormData(
     // Crear objeto con los tipos de datos correctos
     const caseData = {
       id_ciudadano: citizenId, // Número en lugar de string
-      tipo_proceso: formData.get("tipo_proceso")?.toString() || "Tutela",
-      estado: "Viabilidad", // Estado inicial
-      tiempo_respuesta: Number(formData.get("tiempo_respuesta")) || 48,
-      notas: formData.get("notas")?.toString() || "",
-      hechos: formData.get("hechos")?.toString() || "",
-      pretensiones: formData.get("pretensiones")?.toString() || "",
-      fundamentos: formData.get("fundamentos")?.toString() || "",
+      id_tipo_caso: Number(formData.get("id_tipo_caso")) || 1, // Usando valor numérico (1=Tutela como default)
+      estado_actual: "Viabilidad", // Estado inicial
       entidad: formData.get("entidad")?.toString() || "",
+      
+      // Solo agregamos tiempo_respuesta al caso principal
+      tiempo_respuesta: Number(formData.get("tiempo_respuesta")) || 48,
       persona_modifica: Number(formData.get("persona_modifica")) || null,
       calificacion1: null, // Número en lugar de string
       calificacion2: null, // Número en lugar de string
@@ -202,12 +200,18 @@ export async function submitFormData(
       const casesBeforeData = await casesBeforeResponse.json();
       console.log(`Total de casos existentes antes: ${casesBeforeData.length}`);
       
+      // Extraer los datos de tutela del formulario
+      const datosTutela = {
+        hechos: formData.get("hechos")?.toString() || "",
+        pretensiones: formData.get("pretensiones")?.toString() || "",
+        fundamentos_derecho: formData.get("fundamentos_derecho")?.toString() || ""
+      };
+      
       // Añadir una marca única para identificar el caso después
       const uniqueMark = `Test-${Date.now()}`;
-      caseData.notas = `${caseData.notas} ${uniqueMark}`;
-      caseData.hechos = `${caseData.hechos} ${uniqueMark}`;
-      caseData.pretensiones = `${caseData.pretensiones} ${uniqueMark}`;
-      caseData.fundamentos = `${caseData.fundamentos} ${uniqueMark}`;
+      datosTutela.hechos = `${datosTutela.hechos} ${uniqueMark}`;
+      datosTutela.pretensiones = `${datosTutela.pretensiones} ${uniqueMark}`;
+      datosTutela.fundamentos_derecho = `${datosTutela.fundamentos_derecho} ${uniqueMark}`;
       
       // URL directa para asegurar el funcionamiento
       const casosUrl = `${API_BASE_URL}/casos/`;
@@ -263,12 +267,10 @@ export async function submitFormData(
           newCases = casesAfterData.filter((c: any) => !beforeIds.has(c.id_caso));
           console.log(`Se encontraron ${newCases.length} casos nuevos`);
         } else {
-          // Buscar por la marca única
+          // Buscar por coincidencias básicas ya que ahora no buscamos en esos campos
           newCases = casesAfterData.filter((c: any) => 
-            c.notas?.includes(uniqueMark) || 
-            c.hechos?.includes(uniqueMark) || 
-            c.pretensiones?.includes(uniqueMark) || 
-            c.fundamentos?.includes(uniqueMark)
+            c.id_ciudadano === citizenId && 
+            c.id_tipo_caso === caseData.id_tipo_caso
           );
           console.log(`Se encontraron ${newCases.length} casos con la marca única`);
         }
@@ -368,22 +370,43 @@ export async function submitFormData(
         };
       }
       
+      // Ahora que tenemos el ID del caso, enviamos los datos de tutela al endpoint /dt/
+      try {
+        const idCaso = createdCase.id_caso;
+        const dtEndpoint = `${API_BASE_URL}/dt/`;
+        const dtData = {
+          id_caso: idCaso,
+          hechos: datosTutela.hechos,
+          pretensiones: datosTutela.pretensiones,
+          fundamentos_derecho: datosTutela.fundamentos_derecho
+        };
+        
+        console.log("Enviando datos de tutela:", dtData);
+        
+        const dtResponse = await fetch(dtEndpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(dtData)
+        });
+        
+        if (dtResponse.ok) {
+          const dtResult = await dtResponse.json();
+          console.log("Datos de tutela guardados exitosamente:", dtResult);
+        } else {
+          console.error("Error al guardar datos de tutela:", await dtResponse.text());
+        }
+      } catch (dtError) {
+        console.error("Error al enviar datos de tutela:", dtError);
+      }
+      
       // Guardar el ID del caso
       caseId = createdCase.id_caso;
-      console.log("Caso creado con ID:", caseId);
+      console.log("Caso creado exitosamente con ID:", caseId);
       
       // Invalidar caché
       invalidateCache("cases");
-      
-      // Verificar que tenemos un ID de caso válido
-      if (!caseId) {
-        return {
-          success: false,
-          error: "No se pudo obtener el ID del caso creado",
-        };
-      }
-      
-      console.log("Caso creado exitosamente con ID:", caseId);
       
       // PASO 3: Asignar usuarios al caso
       console.log("===== ASIGNANDO USUARIOS AL CASO =====");
@@ -450,7 +473,7 @@ export async function submitFormData(
             const assignmentData = {
               id_caso: caseId,
               id_usuario: userId,
-              rol: role
+              rol_en_caso: role
             };
             
             console.debug(`Enviando datos de asignación: ${JSON.stringify(assignmentData)}`);

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { getUserIdFromFirebase } from '@/services/userService';
+import { getUserIdFromFirebaseUid } from '@/services/userByFirebaseService';
 
 export const useInternalUserId = () => {
   const { user } = useAuth();
@@ -22,7 +23,7 @@ export const useInternalUserId = () => {
         setError(null);
         console.log(`Obteniendo ID interno para usuario Firebase: ${user.uid}`);
         
-        const userId = await getUserIdFromFirebase(user.uid);
+        const userId = await getUserIdFromFirebaseUid(user.uid);
         
         if (userId) {
           console.log(`ID interno obtenido: ${userId}`);

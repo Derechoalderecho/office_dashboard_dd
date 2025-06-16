@@ -43,10 +43,10 @@ export default function StepperForm() {
     segundo_apellido: "",
     sexo: "",
     genero: "",
-    orient_sexual: "",
+    orientacion_sexual: "",
     fecha_nacimiento: "",
     num_movil: "",
-    num_fijo: "",
+    telefono_fijo: "",
     email: "",
     nacionalidad: "",
     estado_civil: "",
@@ -54,21 +54,23 @@ export default function StepperForm() {
     etnia: "",
     discapacidad: "",
     sabe_leer_escribir: "",
-    direccion: "",
+    direccion_residencia: "",
     estrato: "",
-    zona: "",
+    zona_residencia: "",
     departamento: "",
     municipio: "",
     dane_municipio: "",
 
-    // Case information
-    notas: "",
-    tipo_proceso: "",
-    tiempo_respuesta: "48",
+    // Case information - Step 1
+    id_tipo_caso: "",
+    entidad: "",
     hechos: "",
     pretensiones: "",
-    fundamentos: "",
-    entidad: "",
+    fundamentos_derecho: "",
+    
+    // Case information - Step 2 (pendiente de implementar)
+    tiempo_respuesta: "48",
+    notas: "",
 
     // Administration information
     persona_modifica: "",
@@ -127,7 +129,7 @@ export default function StepperForm() {
       if (!data.primer_apellido) errors.primer_apellido = "El primer apellido es requerido";
       if (!data.sexo) errors.sexo = "El sexo es requerido";
       if (!data.genero) errors.genero = "El género es requerido";
-      if (!data.orient_sexual) errors.orient_sexual = "La orientación sexual es requerida";
+      if (!data.orientacion_sexual) errors.orientacion_sexual = "La orientación sexual es requerida";
       if (!data.num_movil) errors.num_movil = "El número móvil es requerido";
       if (!data.nacionalidad) errors.nacionalidad = "La nacionalidad es requerida";
       if (!data.estado_civil) errors.estado_civil = "El estado civil es requerido";
@@ -144,11 +146,16 @@ export default function StepperForm() {
       const errors: { [key: string]: string } = {};
       
       // General Information validation
-      if (!data.tipo_proceso) errors.tipo_proceso = "El tipo de proceso es requerido";
-      if (!data.tiempo_respuesta) errors.tiempo_respuesta = "El tiempo de respuesta es requerido";
-      if (!data.hechos) errors.hechos = "Los hechos son requeridos";
-      if (!data.pretensiones) errors.pretensiones = "Las pretensiones son requeridas";
-      if (!data.fundamentos) errors.fundamentos = "Los fundamentos de derecho son requeridos";
+      if (!data.id_tipo_caso) errors.id_tipo_caso = "El tipo de proceso es requerido";
+      // La validación de entidad solo si es un derecho de petición
+      if (data.id_tipo_caso === "2" && !data.entidad) errors.entidad = "La entidad es requerida";
+      
+      // Validaciones para los campos de datos de tutela/derecho de petición
+      if (["1", "2", "5", "6", "7"].includes(data.id_tipo_caso)) {
+        if (!data.hechos) errors.hechos = "Los hechos son requeridos";
+        if (!data.pretensiones) errors.pretensiones = "Las pretensiones son requeridas";
+        if (!data.fundamentos_derecho) errors.fundamentos_derecho = "Los fundamentos de derecho son requeridos";
+      }
       return errors;
     },
     2: (data: typeof formData) => {

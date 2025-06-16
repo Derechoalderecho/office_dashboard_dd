@@ -3,10 +3,9 @@ import { Column, StatusOption } from "@/types/sharedTypes";
 export const columns: Column[] = [
   { name: "ID", uid: "id_caso" },
   { name: "Estudiante Asignado", uid: "estudiante_asignado" },
-  { name: "Fecha de creación", uid: "fecha_crea" },
-  { name: "Fecha de actualización", uid: "fecha_actualiza" },
-  { name: "Tipo de proceso", uid: "tipo_proceso", sortable: true },
-  { name: "Estado", uid: "estado", sortable: true },
+  { name: "Fecha de creación", uid: "created_date" },
+  { name: "Tipo de proceso", uid: "tipo_caso", sortable: true },
+  { name: "Estado", uid: "estado_actual", sortable: true },
   { name: "Ciudadano", uid: "ciudadano" },
   { name: "Asignados", uid: "usuarios" },
   { name: "Calificación", uid: "calificacion" },
@@ -19,6 +18,13 @@ export const statusOptions: StatusOption[] = [
   { name: "Aprobado", uid: "Aprobado" },
   { name: "No aprobado", uid: "No aprobado" },
   { name: "Acción necesaria", uid: "Acción necesaria" },
+  { name: "Viabilidad", uid: "Viabilidad" },
+  { name: "Elaboración tutela", uid: "Elaboración tutela" },
+  { name: "Valoración del asesor", uid: "Valoración del asesor" },
+  { name: "Revisar tutela", uid: "Revisar tutela" },
+  { name: "Radicar", uid: "Radicar" },
+  { name: "Pendiente", uid: "Pendiente" },
+  { name: "Espera del juez", uid: "Espera del juez" },
 ];
 
 

@@ -2,7 +2,7 @@
 
 import { ClockIcon, EyeIcon, PencilIcon } from "@heroicons/react/24/outline";
 import { Chip, Tooltip, Button, Avatar, AvatarGroup } from "@heroui/react";
-import { parseDateToLocal } from "@/utils/date";
+import { parseDate, parseTime } from "@/utils/date";
 import { CaseWithKey } from "@/types/cases";
 import { transformStateByRole } from "@/utils/stateTransformer";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -30,30 +30,25 @@ export const TableCellRendererCases = ({
           <p className="font-medium text-sm text-blue-600">#{String(cellValue)}</p>
         </div>
       );
-    case "fecha_crea":
+    case "created_date":
       return (
         <div className="flex flex-col">
           <p className="font-medium text-sm">
-            {parseDateToLocal(cellValue as string | number | Date)}
+            {parseDate(cellValue as string | number | Date)}
+          </p>
+          <p className="text-xs text-gray-500">
+            {parseTime(cellValue as string | number | Date)}
           </p>
         </div>
       );
-    case "fecha_actualiza":
+    case "tipo_caso":
+      const tipoCaso = user.tipo_caso;
       return (
         <div className="flex flex-col">
-          <p className="text-sm font-medium">
-            {parseDateToLocal(cellValue as string | number | Date)}
-          </p>
+          <p className="text-sm">{String(tipoCaso?.nombre_tipo)}</p>
         </div>
       );
-    case "tipo_proceso":
-      return (
-        <div className="flex flex-col">
-          <p className="text-sm">{String(cellValue)}</p>
-        </div>
-      );
-    case "estado":
-      // Transformamos el estado según el rol del usuario
+    case "estado_actual":
       const originalState = String(cellValue);
       const displayState = transformStateByRole(originalState, role);
       
@@ -67,7 +62,7 @@ export const TableCellRendererCases = ({
               : displayState === "Acción necesaria"
               ? "bg-warning text-[#C4841D]"
               : displayState === "No aprobado"
-              ? "bg-error text-[#F31260]"
+              ? "bg-red-100 text-[#F31260]"
               : displayState === "Viabilidad"
               ? "bg-purple-100 text-purple-600"
               : displayState === "Elaboración tutela"
@@ -104,8 +99,9 @@ export const TableCellRendererCases = ({
         </div>
       );
     case "tiempo_respuesta":
-      const tiempo = Number(cellValue);
+      const tiempo = cellValue ? Number(cellValue) : null;
       const getColor = () => {
+        if (tiempo === null) return "text-gray-400";
         if (tiempo <= 24) return "text-[#F31260]";
         if (tiempo <= 48) return "text-[#C4841D]";
         if (tiempo <= 72) return "text-[#006FEE]";
@@ -115,7 +111,7 @@ export const TableCellRendererCases = ({
         <div className="flex gap-2 items-center">
           <ClockIcon className={`w-6 ${getColor()}`} />
           <p className={`text-sm font-semibold ${getColor()}`}>
-            {String(cellValue)} Horas
+            {tiempo === null ? "-" : `${String(tiempo)} Horas`}
           </p>
         </div>
       );

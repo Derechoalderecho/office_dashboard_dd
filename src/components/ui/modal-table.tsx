@@ -14,6 +14,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useState } from "react";
 import locations from "@/data/locations.json";
 import { parseDateToLocal } from "@/utils/date";
+import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 
 interface ModalTableProps {
   isOpen: boolean;
@@ -24,10 +25,11 @@ interface ModalTableProps {
 export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
   const { role } = useUserRole();
   const [showMore, setShowMore] = useState(false);
+  const [showUsers, setShowUsers] = useState(false);
 
   if (!caseData) return null;
 
-  const displayState = transformStateByRole(caseData.estado, role);
+  const displayState = transformStateByRole(caseData.estado_actual, role);
 
   return (
     <Modal isOpen={isOpen} onOpenChange={onClose}>
@@ -56,7 +58,7 @@ export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
                 </div>
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Tipo de Proceso</strong>
-                  <p>{caseData.tipo_proceso}</p>
+                  <p>{caseData.id_tipo_caso}</p>
                 </div>
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Estado</strong>
@@ -87,15 +89,10 @@ export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
                 </div>
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Tiempo de Respuesta</strong>
-                  <p>{caseData.tiempo_respuesta} Horas</p>
                 </div>
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Fecha de Creación</strong>
-                  <p>{new Date(caseData.fecha_crea).toLocaleDateString()}</p>
-                </div>
-                <div className="flex items-center justify-between border-b pb-3">
-                  <strong>Notas</strong>
-                  <p className="text-right">{caseData.notas}</p>
+                  <p>{new Date(caseData.created_date).toLocaleDateString()}</p>
                 </div>
 
                 {showMore && (
@@ -104,7 +101,7 @@ export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
                       <strong>Fecha de Actualización</strong>
                       <p>
                         {new Date(
-                          caseData.fecha_actualiza
+                          caseData.modified_date || caseData.created_date
                         ).toLocaleDateString()}
                       </p>
                     </div>
@@ -115,9 +112,49 @@ export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
                       </div>
                     )}
                     {caseData.usuarios && caseData.usuarios.length > 0 && (
-                      <div className="flex items-center justify-between border-b pb-3">
-                        <strong>Usuarios Asignados</strong>
-                        <p>{caseData.usuarios.length} usuarios</p>
+                      <div className="flex flex-col border-b pb-3">
+                        <div
+                          className="flex items-center justify-between cursor-pointer"
+                          onClick={() => setShowUsers(!showUsers)}
+                        >
+                          <strong>Usuarios Asignados</strong>
+                          <div className="flex items-center">
+                            <p className="mr-2">
+                              {caseData.usuarios.length} usuarios
+                            </p>
+                            {showUsers ? (
+                              <ChevronUpIcon className="w-4 h-4 text-gray-500" />
+                            ) : (
+                              <ChevronDownIcon className="w-4 h-4 text-gray-500" />
+                            )}
+                          </div>
+                        </div>
+
+                        {showUsers && (
+                          <div className="mt-3 bg-gray-50 p-3 rounded-md space-y-2 max-h-40 overflow-y-auto">
+                            {caseData.usuarios.map((usuario, index) => (
+                              <div
+                                key={index}
+                                className="flex justify-between items-center py-1 border-b border-gray-200 last:border-0"
+                              >
+                                <div>
+                                  <span className="font-medium">
+                                    {usuario.primer_nombre}{" "}
+                                    {usuario.primer_apellido}
+                                  </span>
+                                  <p className="text-xs text-gray-500">
+                                    {usuario.email}
+                                  </p>
+                                </div>
+                                <div>
+                                  <span className="text-sm px-2 py-1 rounded-full bg-blue-100 text-blue-800">
+                                    {usuario.rol}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </>
@@ -185,11 +222,12 @@ export function ModalCitizen({
                   <strong>Correo</strong>
                   <p>{citizenData.email}</p>
                 </div>
-                <div className="flex items-center justify-between border-b pb-3">
+                <div className="flex items-center border-b pb-3">
                   <strong>Documento</strong>
-                  <p>
-                    {citizenData.tipo_documento} {citizenData.num_documento}
-                  </p>
+                  <div className="flex gap-2 justify-end w-full">
+                    <p className="font-medium">{citizenData.tipo_documento}</p>
+                    <p>{citizenData.num_documento}</p>
+                  </div>
                 </div>
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Celular</strong>
@@ -197,15 +235,19 @@ export function ModalCitizen({
                 </div>
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Municipio</strong>
-                  <p>{getMunicipalityName(citizenData.dane_municipio)}</p>
+                  <p className="text-right">
+                    {getMunicipalityName(citizenData.dane_municipio)}
+                  </p>
                 </div>
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Dirección</strong>
-                  <p>{citizenData.direccion || "No especificado"}</p>
+                  <p className="text-right">
+                    {citizenData.direccion_residencia || "No especificado"}
+                  </p>
                 </div>
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Fecha de Creación</strong>
-                  <p>{new Date(citizenData.fecha_crea).toLocaleDateString()}</p>
+                  <p>{new Date(citizenData.created_date).toLocaleDateString()}</p>
                 </div>
 
                 {showMore && (
@@ -216,7 +258,7 @@ export function ModalCitizen({
                     </div>
                     <div className="flex items-center justify-between border-b pb-3">
                       <strong>Teléfono Fijo</strong>
-                      <p>{citizenData.num_fijo || "No especificado"}</p>
+                      <p>{citizenData.telefono_fijo || "No especificado"}</p>
                     </div>
                     <div className="flex items-center justify-between border-b pb-3">
                       <strong>Fecha de Nacimiento</strong>
@@ -229,7 +271,7 @@ export function ModalCitizen({
                       <strong>Fecha de Actualización</strong>
                       <p>
                         {new Date(
-                          citizenData.fecha_actualiza
+                          citizenData.modified_date || citizenData.created_date
                         ).toLocaleDateString()}
                       </p>
                     </div>
@@ -308,7 +350,7 @@ export function ModalUser({ isOpen, onClose, userData }: ModalUserProps) {
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Fecha de Creación</strong>
                   <p>
-                    {new Date(userData.fecha_creacion).toLocaleDateString()}
+                    {new Date(userData.created_date).toLocaleDateString()}
                   </p>
                 </div>
 
@@ -323,10 +365,6 @@ export function ModalUser({ isOpen, onClose, userData }: ModalUserProps) {
                       <p>{userData.segundo_apellido || "No especificado"}</p>
                     </div>
                     <div className="flex items-center justify-between border-b pb-3">
-                      <strong>Rama de Derecho</strong>
-                      <p>{userData.rama_derecho || "No especificada"}</p>
-                    </div>
-                    <div className="flex items-center justify-between border-b pb-3">
                       <strong>Nivel de Consultorio</strong>
                       <p>{userData.nivel_consultorio || "No especificado"}</p>
                     </div>
@@ -334,7 +372,7 @@ export function ModalUser({ isOpen, onClose, userData }: ModalUserProps) {
                       <strong>Fecha de Actualización</strong>
                       <p>
                         {new Date(
-                          userData.fecha_actualizacion
+                          userData.modified_date || userData.created_date
                         ).toLocaleDateString()}
                       </p>
                     </div>
@@ -361,33 +399,37 @@ export function ModalUser({ isOpen, onClose, userData }: ModalUserProps) {
   );
 }
 
+/*
 interface ModalCalificationDetailsProps {
   isOpen: boolean;
   onClose: () => void;
   caseData: CaseWithKey | null;
 }
 
-export function ModalCalificationDetails({ 
-  isOpen, 
-  onClose, 
-  caseData 
+
+export function ModalCalificationDetails({
+  isOpen,
+  onClose,
+  caseData,
 }: ModalCalificationDetailsProps) {
   if (!caseData) return null;
 
-  function formatCalification(value: string | number | undefined | null): string {
-    if (value === undefined || value === null || value === '') return "-";
-    
+  function formatCalification(
+    value: string | number | undefined | null
+  ): string {
+    if (value === undefined || value === null || value === "") return "-";
+
     // If the value is the string "null", return "-"
     if (value === "null") return "-";
-    
+
     const numValue = Number(value);
     if (isNaN(numValue)) return String(value);
-    
+
     // If it's in integer format (0-50), convert to decimal (0-5)
     if (numValue > 5) {
       return (numValue / 10).toFixed(1);
     }
-    
+
     // Ensure we return with one decimal place for consistency
     return numValue.toFixed(1);
   }
@@ -408,8 +450,10 @@ export function ModalCalificationDetails({
   }
 
   // Get the student assigned to the case
-  const estudiante = caseData.usuarios?.find(user => user.rol === "Estudiante");
-  const nombreEstudiante = estudiante 
+  const estudiante = caseData.usuarios?.find(
+    (user) => user.rol === "Estudiante"
+  );
+  const nombreEstudiante = estudiante
     ? `${estudiante.primer_nombre} ${estudiante.primer_apellido}`
     : "Sin estudiante asignado";
 
@@ -423,19 +467,21 @@ export function ModalCalificationDetails({
             </ModalHeader>
             <ModalBody>
               <div className="flex flex-col gap-4">
-                {/* Information header */}
+          
                 <div className="bg-blue-50 p-4 rounded-lg mb-3">
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center justify-between">
                       <span className="font-semibold">Tipo de Proceso:</span>
-                      <span>{caseData.tipo_proceso}</span>
+                      <span>{caseData.tipo_caso?.nombre_tipo}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="font-semibold">Estudiante:</span>
                       <span>{nombreEstudiante}</span>
                     </div>
                     <div className="flex items-center justify-between mt-2">
-                      <span className="font-semibold text-lg">Calificación Final:</span>
+                      <span className="font-semibold text-lg">
+                        Calificación Final:
+                      </span>
                       <span className="text-lg font-bold text-primary">
                         {formatCalification(caseData.calificacion)}
                       </span>
@@ -443,29 +489,39 @@ export function ModalCalificationDetails({
                   </div>
                 </div>
 
-                {/* Criteria list */}
+            
                 <div className="mt-2">
-                  <h3 className="text-base font-semibold mb-3">Detalle de criterios (25% cada uno)</h3>
-                  
+                  <h3 className="text-base font-semibold mb-3">
+                    Detalle de criterios (25% cada uno)
+                  </h3>
+
                   <div className="space-y-4">
                     <div className="flex items-center justify-between border-b pb-3">
                       <strong>Criterio 1: {getCriterioLabel(1)}</strong>
-                      <p className="font-medium">{formatCalification(caseData.calificacion1)}</p>
+                      <p className="font-medium">
+                        {formatCalification(caseData.calificacion1)}
+                      </p>
                     </div>
-                    
+
                     <div className="flex items-center justify-between border-b pb-3">
                       <strong>Criterio 2: {getCriterioLabel(2)}</strong>
-                      <p className="font-medium">{formatCalification(caseData.calificacion2)}</p>
+                      <p className="font-medium">
+                        {formatCalification(caseData.calificacion2)}
+                      </p>
                     </div>
-                    
+
                     <div className="flex items-center justify-between border-b pb-3">
                       <strong>Criterio 3: {getCriterioLabel(3)}</strong>
-                      <p className="font-medium">{formatCalification(caseData.calificacion3)}</p>
+                      <p className="font-medium">
+                        {formatCalification(caseData.calificacion3)}
+                      </p>
                     </div>
-                    
+
                     <div className="flex items-center justify-between border-b pb-3">
                       <strong>Criterio 4: {getCriterioLabel(4)}</strong>
-                      <p className="font-medium">{formatCalification(caseData.calificacion4)}</p>
+                      <p className="font-medium">
+                        {formatCalification(caseData.calificacion4)}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -482,3 +538,4 @@ export function ModalCalificationDetails({
     </Modal>
   );
 }
+*/

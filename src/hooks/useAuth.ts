@@ -3,7 +3,7 @@ import { signUp, signIn, logout, resetPassword, setUser, setUserRole, UserRole }
 import { useEffect } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { getUserRoleFromFirebase } from '@/services/userService';
+import { getUserRoleFromFirebaseUid } from '@/services/userRoleService';
 
 // Función para extraer solo las propiedades serializables del usuario
 const serializeUser = (user: User | null) => {
@@ -33,19 +33,25 @@ export const useAuth = () => {
   const { user, role, loading, error } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
+    console.log('useAuth: Estado inicial - Role:', role);
+    
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      console.log('useAuth: Firebase auth state changed:', firebaseUser ? `Usuario ID: ${firebaseUser.uid}` : 'No hay usuario');
       const serializedUser = serializeUser(firebaseUser);
       dispatch(setUser(serializedUser));
       
       // Si hay un usuario autenticado, obtener su rol
       if (firebaseUser) {
         try {
-          const userRole = await getUserRoleFromFirebase(firebaseUser.uid);
+          console.log('useAuth: Obteniendo rol para el usuario con UID:', firebaseUser.uid);
+          const userRole = await getUserRoleFromFirebaseUid(firebaseUser.uid);
+          console.log('useAuth: Rol obtenido del servicio:', userRole);
           dispatch(setUserRole(userRole as UserRole));
         } catch (error) {
           console.error('Error al obtener el rol del usuario:', error);
         }
       } else {
+        console.log('useAuth: No hay usuario, estableciendo rol como null');
         dispatch(setUserRole(null));
       }
     });

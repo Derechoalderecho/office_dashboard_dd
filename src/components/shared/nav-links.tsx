@@ -15,7 +15,7 @@ import Link from "next/link";
 import { addToast } from "@heroui/react";
 
 export const NAV_LINKS = [
-  /*{ href: "/dashboard", key: "dashboard", label: "Dashboard", icon: ChartPieIcon, enabled: true },*/
+  { href: "/dashboard", key: "dashboard", label: "Dashboard", icon: ChartPieIcon, enabled: true },
   {
     href: "/dashboard/cases",
     key: "cases",

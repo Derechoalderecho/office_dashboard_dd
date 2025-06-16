@@ -1,3 +1,4 @@
+/*
 import {
     MagnifyingGlassIcon,
     ChevronDownIcon,
@@ -105,4 +106,4 @@ import {
       </div>
     );
   }
-  
+*/

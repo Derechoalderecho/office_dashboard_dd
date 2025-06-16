@@ -51,10 +51,10 @@ type BasicInformationProps = {
     segundo_apellido: string;
     sexo: string;
     genero: string;
-    orient_sexual: string;
+    orientacion_sexual: string;
     fecha_nacimiento: string;
     num_movil: string;
-    num_fijo: string;
+    telefono_fijo: string;
     email: string;
     nacionalidad: string;
     estado_civil: string;
@@ -64,9 +64,9 @@ type BasicInformationProps = {
     sabe_leer_escribir: string;
     citizen_id: string;
     is_existing_citizen: string;
-    direccion: string;
+    direccion_residencia: string;
     estrato: string;
-    zona: string;
+    zona_residencia: string;
     departamento: string;
     municipio: string;
     dane_municipio: string;
@@ -81,10 +81,10 @@ type BasicInformationProps = {
       segundo_apellido: string;
       sexo: string;
       genero: string;
-      orient_sexual: string;
+      orientacion_sexual: string;
       fecha_nacimiento: string;
       num_movil: string;
-      num_fijo: string;
+      telefono_fijo: string;
       email: string;
       nacionalidad: string;
       estado_civil: string;
@@ -94,9 +94,9 @@ type BasicInformationProps = {
       sabe_leer_escribir: string;
       citizen_id: string;
       is_existing_citizen: string;
-      direccion: string;
+      direccion_residencia: string;
       estrato: string;
-      zona: string;
+      zona_residencia: string;
       departamento: string;
       municipio: string;
       dane_municipio: string;
@@ -294,21 +294,20 @@ export default function BasicInformationStep({
           segundo_apellido: citizen.segundo_apellido || "",
           email: citizen.email || "",
           num_movil: citizen.num_movil || "",
-          num_fijo: citizen.num_fijo || "",
+          telefono_fijo: citizen.telefono_fijo || "",
           fecha_nacimiento: citizen.fecha_nacimiento || "",
           sexo: citizen.sexo || "",
           genero: citizen.genero || "",
-          orient_sexual: citizen.orient_sexual || "",
+          orientacion_sexual: citizen.orientacion_sexual || "",
           nacionalidad: citizen.nacionalidad || "",
           estado_civil: citizen.estado_civil || "",
           escolaridad: citizen.escolaridad || "",
           etnia: citizen.etnia || "",
-          discapacidad: citizen.discapacidad || "",
-          sabe_leer_escribir: citizen.sabe_leer_escribir || "",
-          direccion:
-            typeof citizen.direccion === "string" ? citizen.direccion : "",
-          estrato: citizen.estrato || "",
-          zona: citizen.zona || "",
+          discapacidad: typeof citizen.discapacidad === "boolean" ? (citizen.discapacidad ? "true" : "false") : "",
+          sabe_leer_escribir: typeof citizen.sabe_leer_escribir === "boolean" ? (citizen.sabe_leer_escribir ? "true" : "false") : "",
+          direccion_residencia: citizen.direccion_residencia || "",
+          estrato: citizen.estrato.toString() || "",
+          zona_residencia: citizen.zona_residencia || "",
           departamento: citizen.departamento || "",
           municipio: citizen.municipio || "",
           citizen_id: citizen.id_ciudadano.toString(),
@@ -348,20 +347,20 @@ export default function BasicInformationStep({
           segundo_apellido: "",
           email: "",
           num_movil: "",
-          num_fijo: "",
+          telefono_fijo: "",
           fecha_nacimiento: "",
           sexo: "",
           genero: "",
-          orient_sexual: "",
+          orientacion_sexual: "",
           nacionalidad: "",
           estado_civil: "",
           escolaridad: "",
           etnia: "",
           discapacidad: "",
           sabe_leer_escribir: "",
-          direccion: "",
+          direccion_residencia: "",
           estrato: "",
-          zona: "",
+          zona_residencia: "",
           departamento: "",
           municipio: "",
           citizen_id: "",
@@ -460,7 +459,7 @@ export default function BasicInformationStep({
   // Save address
   const guardarDireccion = () => {
     const direccionCompleta = construirDireccion();
-    updateFormData({ direccion: direccionCompleta });
+    updateFormData({ direccion_residencia: direccionCompleta });
     setIsAddressPopoverOpen(false);
   };
 
@@ -667,17 +666,17 @@ export default function BasicInformationStep({
             </Select>
 
             <Select
-              id="orient_sexual"
-              name="orient_sexual"
+              id="orientacion_sexual"
+              name="orientacion_sexual"
               variant="bordered"
               label="Orientación sexual"
               labelPlacement="outside"
               placeholder="Seleccione su orientación sexual"
               selectedKeys={
-                formData.orient_sexual ? [formData.orient_sexual] : []
+                formData.orientacion_sexual ? [formData.orientacion_sexual] : []
               }
               onChange={(e) =>
-                updateFormData({ orient_sexual: e.target.value })
+                updateFormData({ orientacion_sexual: e.target.value })
               }
               isRequired
             >
@@ -709,8 +708,8 @@ export default function BasicInformationStep({
             />
 
             <NumberInput
-              id="num_fijo"
-              name="num_fijo"
+              id="telefono_fijo"
+              name="telefono_fijo"
               variant="bordered"
               label="Número fijo"
               labelPlacement="outside"
@@ -718,9 +717,9 @@ export default function BasicInformationStep({
               formatOptions={{
                 useGrouping: false,
               }}
-              value={formData.num_fijo ? Number(formData.num_fijo) : undefined}
+              value={formData.telefono_fijo ? Number(formData.telefono_fijo) : undefined}
               onValueChange={(value) =>
-                updateFormData({ num_fijo: value.toString() })
+                updateFormData({ telefono_fijo: value.toString() })
               }
               placeholder="Ingrese su número fijo"
             />
@@ -879,16 +878,16 @@ export default function BasicInformationStep({
               errorMessage={validationErrors?.estrato}
             />
             <Select
-              id="zona"
-              name="zona"
+              id="zona_residencia"
+              name="zona_residencia"
               label="Zona"
               variant="bordered"
               labelPlacement="outside"
               placeholder="Seleccione su zona"
-              selectedKeys={formData.zona ? [formData.zona] : []}
+              selectedKeys={formData.zona_residencia ? [formData.zona_residencia] : []}
               onSelectionChange={(keys) => {
                 const selectedKey = Array.from(keys)[0]?.toString() || "";
-                updateFormData({ zona: selectedKey });
+                updateFormData({ zona_residencia: selectedKey });
               }}
               errorMessage={validationErrors?.zona}
             >
@@ -959,8 +958,8 @@ export default function BasicInformationStep({
               onChange={(e) => updateFormData({ discapacidad: e.target.value })}
               isRequired
             >
-              <SelectItem key="SI">Sí</SelectItem>
-              <SelectItem key="NO">No</SelectItem>
+              <SelectItem key="true">Sí</SelectItem>
+              <SelectItem key="false">No</SelectItem>
             </Select>
 
             <Select
@@ -978,13 +977,13 @@ export default function BasicInformationStep({
               }
               isRequired
             >
-              <SelectItem key="SI">Sí</SelectItem>
-              <SelectItem key="NO">No</SelectItem>
+              <SelectItem key="true">Sí</SelectItem>
+              <SelectItem key="false">No</SelectItem>
             </Select>
 
             <div className="flex flex-col gap-1 justify-end">
               <p className="text-sm text-gray-500">
-                {formData.direccion ? formData.direccion : "No especificada"}
+                {formData.direccion_residencia ? formData.direccion_residencia : "No especificada"}
               </p>
               <Popover
                 isOpen={isAddressPopoverOpen}

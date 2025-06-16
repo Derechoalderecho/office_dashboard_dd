@@ -17,13 +17,13 @@ import {
 } from "@/components/ui/chart";
 import { useEffect, useMemo, useState } from "react";
 import { Spinner } from "@heroui/react";
-import { fetchCasosAceptadosRecibidos } from "@/services/dasboardService";
+import { fetchCasosGanadosPerdidos } from "@/services/dasboardService";
 import { useInternalUserId } from "@/hooks/useInternalUserId";
 
 // Define colors for the pie chart segments
 const STATUS_COLORS = {
-  "Aceptados": "hsl(var(--chart-2))",
-  "Recibidos": "hsl(var(--chart-1))",
+  "Ganados": "hsl(var(--chart-3))",
+  "Perdidos": "hsl(var(--chart-4))",
 };
 
 type CasosPieData = {
@@ -32,9 +32,9 @@ type CasosPieData = {
   fill: string;
 }
 
-export default function PieChartAcceptedCases() {
+export default function PieChartGanadosPerdidos() {
   const { internalUserId } = useInternalUserId();
-  const [data, setData] = useState<{ aceptados: number; recibidos: number }>({ aceptados: 0, recibidos: 0 });
+  const [data, setData] = useState<{ ganados: number; perdidos: number }>({ ganados: 0, perdidos: 0 });
   const [isLoading, setIsLoading] = useState(true);
 
   // Fetch cases data
@@ -44,10 +44,10 @@ export default function PieChartAcceptedCases() {
       
       try {
         setIsLoading(true);
-        const casosData = await fetchCasosAceptadosRecibidos(internalUserId);
+        const casosData = await fetchCasosGanadosPerdidos(internalUserId);
         setData(casosData);
       } catch (error) {
-        console.error("Error loading casos aceptados vs recibidos:", error);
+        console.error("Error loading casos ganados vs perdidos:", error);
       } finally {
         setIsLoading(false);
       }
@@ -58,20 +58,20 @@ export default function PieChartAcceptedCases() {
 
   // Process the data for the chart
   const chartData = useMemo((): CasosPieData[] => {
-    if (data.aceptados === 0 && data.recibidos === 0) return [];
+    if (data.ganados === 0 && data.perdidos === 0) return [];
     
     return [
       {
-        estado: "Aceptados",
-        count: data.aceptados,
-        fill: STATUS_COLORS["Aceptados"]
+        estado: "Ganados",
+        count: data.ganados,
+        fill: STATUS_COLORS["Ganados"]
       },
       {
-        estado: "Recibidos",
-        count: data.recibidos - data.aceptados, 
-        fill: STATUS_COLORS["Recibidos"]
+        estado: "Perdidos",
+        count: data.perdidos,
+        fill: STATUS_COLORS["Perdidos"]
       }
-    ].filter(item => item.count > 0); 
+    ].filter(item => item.count > 0);
   }, [data]);
 
   // Create chart config dynamically
@@ -95,7 +95,7 @@ export default function PieChartAcceptedCases() {
 
   // Calculate total cases
   const totalCases = useMemo(() => {
-    return data.recibidos;
+    return data.ganados + data.perdidos;
   }, [data]);
 
   // No renderizamos un componente de carga separado, sino que mostramos el spinner dentro del gráfico
@@ -103,7 +103,7 @@ export default function PieChartAcceptedCases() {
   return (
     <Card className={`flex flex-col ${isLoading ? "opacity-80" : ""}`}>
       <CardHeader className="items-center pb-0">
-        <CardTitle>Casos Aceptados vs Recibidos</CardTitle>
+        <CardTitle>Casos Ganados vs Perdidos</CardTitle>
         <CardDescription>
           {isLoading ? "Cargando datos..." : `Total de casos: ${totalCases}`}
         </CardDescription>

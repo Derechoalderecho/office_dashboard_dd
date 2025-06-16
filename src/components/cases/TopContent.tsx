@@ -20,6 +20,9 @@ import { CalendarDate } from "@internationalized/date";
 import { capitalize } from "@/utils/capitalize";
 import Link from "next/link";
 import { UserPlusIcon } from "lucide-react";
+import { useUserRole } from "@/hooks/useUserRole";
+import { transformStateByRole } from "@/utils/stateTransformer";
+import { UserRole } from "@/store/slices/authSlice";
 
 interface TopContentProps {
   usersLength: number;
@@ -34,9 +37,6 @@ interface TopContentProps {
   setShowAll: (value: boolean) => void;
   setStatusFilter: (value: Set<string>) => void;
   onResetFilters: () => void;
-  activeTab?: string;
-  onTabChange?: (key: string) => void;
-  showTabs?: boolean;
 }
 
 export default function TopContent({
@@ -52,10 +52,9 @@ export default function TopContent({
   handleDateRangeChange,
   setStatusFilter,
   onResetFilters,
-  activeTab,
-  onTabChange,
-  showTabs = false,
 }: TopContentProps) {
+  // Obtenemos el rol del usuario
+  const { role } = useUserRole();
   // Convert dateRange to RangeValue<CalendarDate>
   const convertToDateValue = (
     dateRange: DateRange | null
@@ -116,11 +115,18 @@ export default function TopContent({
                   setStatusFilter(keys as Set<string>)
                 }
               >
-                {statusOptions.map((status) => (
-                  <DropdownItem key={status.uid} className="capitalize">
-                    {capitalize(status.name)}
-                  </DropdownItem>
-                ))}
+                {statusOptions.map((status) => {
+                  // Si tenemos un rol, transformamos el estado para mostrarlo según el rol
+                  const displayName = role 
+                    ? transformStateByRole(status.name, role)
+                    : status.name;
+                    
+                  return (
+                    <DropdownItem key={status.uid} className="capitalize">
+                      {capitalize(displayName)}
+                    </DropdownItem>
+                  );
+                })}
               </DropdownMenu>
             </Dropdown>
           </div>
@@ -156,17 +162,7 @@ export default function TopContent({
         </Link>
       </div>
 
-      {showTabs && onTabChange && (
-        <Tabs
-          aria-label="Filtros de casos"
-          selectedKey={activeTab}
-          onSelectionChange={(key) => onTabChange(key as string)}
-          className="mt-6"
-        >
-          <Tab key="all" title="Todos los casos" />
-          <Tab key="my" title="Mis casos" />
-        </Tabs>
-      )}
+
       <div className="flex justify-between items-center mt-6">
         <span className="text-default-400 text-small">
           Total {usersLength} casos

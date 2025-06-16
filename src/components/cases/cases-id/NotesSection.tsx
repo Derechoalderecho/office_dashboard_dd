@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  Button,
-  Textarea,
-  Spinner,
-  addToast,
-  Avatar,
-  Divider,
-  Tooltip,
-} from "@heroui/react";
+import { Button, Textarea, Spinner, addToast, Avatar } from "@heroui/react";
 import {
   PaperAirplaneIcon,
   ClockIcon,
@@ -16,16 +8,17 @@ import {
 } from "@heroicons/react/24/outline";
 import { useState, useEffect } from "react";
 import { createNote } from "@/services/noteService";
-import { Nota } from "@/types/cases";
-import { parseDateToLocal } from "@/utils/date";
+import { ApiNota } from "@/types/cases";
+import { parseDate, parseTime } from "@/utils/date";
 import { useAuth } from "@/hooks/useAuth";
-import { getUserIdFromFirebase } from "@/services/userService";
 import { useInternalUserId } from "@/hooks/useInternalUserId";
 import { logger } from "@/utils/logUtils";
+import { fetchUserDetails } from "@/services/userService";
+import { Users } from "@/types/users";
 
 interface NotesSectionProps {
   caseId: number;
-  initialNotes?: Nota[];
+  initialNotes?: ApiNota[];
   onNoteAdded?: () => void;
 }
 
@@ -43,8 +36,10 @@ export default function NotesSection({
 
   const [noteText, setNoteText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [notes, setNotes] = useState<Nota[]>(initialNotes || []);
+  const [notes, setNotes] = useState<ApiNota[]>(initialNotes || []);
   const [error, setError] = useState<string | null>(null);
+  const [userCache, setUserCache] = useState<Record<number, Users>>({});
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   // Log user details for debugging
   useEffect(() => {
@@ -63,19 +58,87 @@ export default function NotesSection({
     }
   }, [user, internalUserId, userIdError]);
 
-  // Log initial notes
+  // Log initial notes and fetch user information
   useEffect(() => {
     if (initialNotes) {
       console.log(`Notas iniciales cargadas: ${initialNotes.length}`);
       // Ordenar notas por fecha (más recientes primero)
-      const sortedNotes = [...initialNotes].sort((a, b) => 
-        new Date(b.fecha_crea).getTime() - new Date(a.fecha_crea).getTime()
+      const sortedNotes = [...initialNotes].sort(
+        (a, b) =>
+          new Date(b.created_date).getTime() -
+          new Date(a.created_date).getTime()
       );
       setNotes(sortedNotes);
+
+      // Fetch user information for each note
+      fetchUsersForNotes(sortedNotes);
     } else {
       console.log("No hay notas iniciales disponibles");
     }
   }, [initialNotes]);
+
+  // Fetch user information for all notes
+  const fetchUsersForNotes = async (notesToProcess: ApiNota[]) => {
+    if (!notesToProcess.length) return;
+
+    setLoadingUsers(true);
+
+    try {
+      // Get unique user IDs from notes
+      const userIds = Array.from(
+        new Set(notesToProcess.map((note) => note.id_usuario))
+      );
+
+      // Create a new cache object
+      const newUserCache: Record<number, Users> = { ...userCache };
+
+      // Fetch user information for each unique user ID not already in cache
+      const fetchPromises = userIds
+        .filter((userId) => !newUserCache[userId])
+        .map(async (userId) => {
+          try {
+            const user = await fetchUserDetails(userId.toString());
+            if (user) {
+              newUserCache[userId] = user;
+            }
+            return user;
+          } catch (error) {
+            logger.error(`Error fetching user ${userId}:`, error);
+            return null;
+          }
+        });
+
+      await Promise.all(fetchPromises);
+      setUserCache(newUserCache);
+    } catch (error) {
+      logger.error("Error fetching users for notes:", error);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  // Get user name from cache
+  const getUserName = (userId: number): string => {
+    const user = userCache[userId];
+    if (user) {
+      return `${user.primer_nombre} ${user.primer_apellido}`;
+    }
+    return `Usuario ${userId}`;
+  };
+
+  // Get user initials from cache
+  const getUserInitials = (userId: number): string => {
+    const user = userCache[userId];
+
+    if (!user) {
+      return "U";
+    }
+
+    const firstName = user.primer_nombre || "";
+    const lastName = user.primer_apellido || "";
+
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  };
 
   const handleAddNote = async () => {
     // Validar que haya texto en la nota
@@ -83,7 +146,8 @@ export default function NotesSection({
 
     // Verificar que tenemos el ID de usuario interno
     if (!internalUserId) {
-      const errorMsg = "No se pudo identificar al usuario. Por favor, inicia sesión nuevamente.";
+      const errorMsg =
+        "No se pudo identificar al usuario. Por favor, inicia sesión nuevamente.";
       setError(errorMsg);
       logger.error(`[NotesSection] Error: ${errorMsg}`);
       addToast({
@@ -98,14 +162,19 @@ export default function NotesSection({
     setError(null);
 
     try {
-      logger.info(`[NotesSection] Enviando nota: caso=${caseId}, usuario=${internalUserId}, mensaje=${noteText.substring(0, 20)}...`);
-      
+      logger.info(
+        `[NotesSection] Enviando nota: caso=${caseId}, usuario=${internalUserId}, mensaje=${noteText.substring(
+          0,
+          20
+        )}...`
+      );
+
       // Llamar al servicio para crear la nota
       const newNote = await createNote(caseId, noteText.trim(), internalUserId);
 
       if (newNote) {
         logger.info(`[NotesSection] Nota creada exitosamente`);
-        
+
         // Actualizar la lista de notas en la interfaz (la nueva nota al principio)
         setNotes([newNote, ...notes]);
         setNoteText("");
@@ -143,16 +212,6 @@ export default function NotesSection({
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Get user initials for avatar
-  const getUserInitials = (user: any): string => {
-    if (!user) return "?";
-
-    const firstName = user.primer_nombre || "";
-    const lastName = user.primer_apellido || "";
-
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   };
 
   // Handle keyboard submit with Ctrl+Enter
@@ -236,30 +295,30 @@ export default function NotesSection({
               <div className="space-y-4 max-h-80 overflow-y-auto pr-1">
                 {notes.map((note) => (
                   <div
-                    key={note.id_nota}
+                    key={note.id_nota_caso}
                     className="bg-gray-50 rounded-lg p-3 shadow-sm"
                   >
                     <div className="flex items-start gap-3">
                       <Avatar
-                        name={getUserInitials(note.usuario)}
+                        name={getUserInitials(note.id_usuario)}
                         color="primary"
                         size="sm"
                         isBordered
                       />
                       <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-center mb-1">
-                          <p className="font-medium text-sm">
-                            {note.usuario
-                              ? `${note.usuario.primer_nombre} ${note.usuario.primer_apellido}`
-                              : `Usuario ${
-                                  note.id_usuario ||
-                                  note.id_usuario_crea ||
-                                  "desconocido"
-                                }`}
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-semibold">
+                            {getUserName(note.id_usuario)}
                           </p>
                           <div className="flex items-center text-gray-500 text-xs">
-                            <ClockIcon className="w-3 h-3 mr-1" />
-                            <span>{parseDateToLocal(note.fecha_crea)}</span>
+                            <div className="flex flex-col">
+                              <span>{parseDate(note.created_date)}</span>
+
+                              <div className="flex items-center">
+                                <ClockIcon className="w-3 h-3 mr-1" />
+                                <span>{parseTime(note.created_date)}</span>
+                              </div>
+                            </div>
                           </div>
                         </div>
                         <p className="text-sm text-gray-700 whitespace-pre-wrap break-words">

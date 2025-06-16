@@ -1,16 +1,17 @@
 import { useMemo } from 'react';
-import { Cases } from '@/types/cases';
+import { CaseWithKey } from '@/types/cases';
 import { DateRange } from '@/types/sharedTypes';
 import { statusOptions } from '@/constants/casesConstants';
+import { transformStateByRole } from '@/utils/stateTransformer';
+import { UserRole } from '@/store/slices/authSlice';
 
 interface UseFilteredItemsProps {
-  cases: (Cases & { key: string })[];
+  cases: CaseWithKey[];
   filterValue: string;
   statusFilter: string | Set<string>;
   dateRange: DateRange | null;
-  activeTab?: string;
-  userId?: number | null;
   onResetFilters?: () => void;
+  userRole?: UserRole;
 }
 
 export const useFilteredItems = ({
@@ -18,9 +19,8 @@ export const useFilteredItems = ({
   filterValue,
   statusFilter,
   dateRange,
-  activeTab,
-  userId,
   onResetFilters,
+  userRole,
 }: UseFilteredItemsProps) => {
   const hasSearchFilter = Boolean(filterValue);
 
@@ -41,9 +41,20 @@ export const useFilteredItems = ({
         return statusOption ? statusOption.name : null;
       });
 
-      filteredUsers = filteredUsers.filter((user) =>
-        selectedStatuses.includes(user.estado)
-      );
+      filteredUsers = filteredUsers.filter((user) => {
+        // Comprueba si el estado real coincide directamente
+        if (selectedStatuses.includes(user.estado_actual)) {
+          return true;
+        }
+        
+        // Si tenemos un rol, comprueba si el estado transformado según el rol coincide
+        if (userRole) {
+          const transformedState = transformStateByRole(user.estado_actual, userRole);
+          return selectedStatuses.includes(transformedState);
+        }
+        
+        return false;
+      });
     }
 
     // Date range filter
@@ -53,9 +64,9 @@ export const useFilteredItems = ({
       const endDate = new Date(end.year, end.month - 1, end.day);
 
       filteredUsers = filteredUsers.filter((user) => {
-        const userDate = new Date(user.fecha_crea);
+        const userDate = new Date(user.created_date);
         if (isNaN(userDate.getTime())) {
-          console.error(`Invalid date for user: ${user.id_caso}`, user.fecha_crea);
+          console.error(`Invalid date for user: ${user.id_caso}`, user.created_date);
           return false;
         }
 
@@ -63,15 +74,10 @@ export const useFilteredItems = ({
       });
     }
 
-    // Tab filter
-    if (activeTab === 'my' && userId) {
-      filteredUsers = filteredUsers.filter((user) => 
-        user.usuarios?.some(u => u.id_usuario === userId)
-      );
-    }
+    // Ya no hacemos filtrado por pestaña o usuario, siempre mostramos todos los casos
 
     return filteredUsers;
-  }, [cases, filterValue, statusFilter, dateRange, activeTab, userId]);
+  }, [cases, filterValue, statusFilter, dateRange]);
 
   const resetFilters = () => {
     if (onResetFilters) {

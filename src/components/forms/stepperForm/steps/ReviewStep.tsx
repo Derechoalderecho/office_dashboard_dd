@@ -13,10 +13,10 @@ type ReviewStepProps = {
     segundo_apellido: string;
     sexo: string;
     genero: string;
-    orient_sexual: string;
+    orientacion_sexual: string;
     fecha_nacimiento: string;
     num_movil: string;
-    num_fijo: string;
+    telefono_fijo: string;
     email: string;
     nacionalidad: string;
     estado_civil: string;
@@ -24,20 +24,18 @@ type ReviewStepProps = {
     etnia: string;
     discapacidad: string;
     sabe_leer_escribir: string;
-    direccion: string;
+    direccion_residencia: string;
     estrato: string;
-    zona: string;
+    zona_residencia: string;
     departamento: string;
     municipio: string;
     dane_municipio: string;
     // Case information
-    notas: string;
-    tipo_proceso: string;
-    tiempo_respuesta: string;
+    id_tipo_caso: string;
+    entidad: string;
     hechos: string;
     pretensiones: string;
-    fundamentos: string;
-    entidad: string;
+    fundamentos_derecho: string;
 
     // Administration information
     persona_modifica: string;
@@ -156,19 +154,19 @@ export default function ReviewStep({ formData }: ReviewStepProps) {
           </div>
           <div>
             <p className="text-sm text-gray-500">Teléfono fijo</p>
-            <p>{formData.num_fijo ? formData.num_fijo : "No especificado"}</p>
+            <p>{formData.telefono_fijo}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Dirección de residencia</p>
-            <p>{formData.direccion || "No especificada"}</p>
+            <p>{formData.direccion_residencia}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Estrato</p>
             <p>{formData.estrato}</p>
           </div>
           <div>
-            <p className="text-sm text-gray-500">Zona</p>
-            <p>{formData.zona}</p>
+            <p className="text-sm text-gray-500">Zona de residencia</p>
+            <p>{formData.zona_residencia}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Departamento</p>
@@ -192,7 +190,7 @@ export default function ReviewStep({ formData }: ReviewStepProps) {
           </div>
           <div>
             <p className="text-sm text-gray-500">Orientación sexual</p>
-            <p>{formData.orient_sexual}</p>
+            <p>{formData.orientacion_sexual}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Discapacidad</p>
@@ -226,21 +224,35 @@ export default function ReviewStep({ formData }: ReviewStepProps) {
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
             <p className="text-sm text-gray-500">Tipo de proceso</p>
-            <p>{formData.tipo_proceso}</p>
+            <p>
+              {(() => {
+                switch(formData.id_tipo_caso) {
+                  case "1": return "Tutela";
+                  case "2": return "Derecho de petición";
+                  case "5": return "Tutela primera instancia";
+                  case "6": return "Tutela segunda instancia";
+                  case "7": return "Tutela desacato";
+                  default: return formData.id_tipo_caso || "No especificado";
+                }
+              })()}
+            </p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Estado</p>
             <p>Viabilidad</p>
           </div>
           <div>
-            <p className="text-sm text-gray-500">Tiempo de respuesta (horas)</p>
-            <p>{formData.tiempo_respuesta}</p>
-          </div>
-          <div>
             <p className="text-sm text-gray-500">Usuario encargado</p>
             <p>{formData.persona_modifica}</p>
           </div>
         </div>
+        
+        {formData.entidad && (
+          <div className="mb-4">
+            <p className="text-sm text-gray-500">Entidad</p>
+            <p className="whitespace-pre-wrap">{formData.entidad}</p>
+          </div>
+        )}
         
         {formData.hechos && (
           <div className="mb-4">
@@ -256,24 +268,12 @@ export default function ReviewStep({ formData }: ReviewStepProps) {
           </div>
         )}
         
-        {formData.fundamentos && (
+        {formData.fundamentos_derecho && (
           <div className="mb-4">
             <p className="text-sm text-gray-500">Fundamentos de derecho</p>
-            <p className="whitespace-pre-wrap">{formData.fundamentos}</p>
+            <p className="whitespace-pre-wrap">{formData.fundamentos_derecho}</p>
           </div>
         )}
-        
-        {formData.entidad && (
-          <div className="mb-4">
-            <p className="text-sm text-gray-500">Entidad</p>
-            <p className="whitespace-pre-wrap">{formData.entidad}</p>
-          </div>
-        )}
-        
-        <div>
-          <p className="text-sm text-gray-500">Notas</p>
-          <p className="whitespace-pre-wrap">{formData.notas}</p>
-        </div>
       </div>
 
       <div className="border rounded-lg p-4">

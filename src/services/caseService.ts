@@ -338,15 +338,15 @@ export const fetchCasesByUserId = async (userId: number): CasesPromise => {
 /**
  * Updates the status of a specific case
  * @param id
- * @param estado
+ * @param estado_actual
  * @returns
  */
 export const updateCaseStatus = async (
   id: number,
-  estado: string
+  estado_actual: string
 ): Promise<boolean> => {
   try {
-    logger.info(`Actualizando estado del caso ${id} a "${estado}"`);
+    logger.info(`Actualizando estado del caso ${id} a "${estado_actual}"`);
 
     // Validate that the status is valid
     const validStatuses = [
@@ -360,12 +360,12 @@ export const updateCaseStatus = async (
       "Espera del juez",
     ];
 
-    if (!validStatuses.includes(estado)) {
-      logger.warn(`Estado "${estado}" no válido para el caso ${id}`);
+    if (!validStatuses.includes(estado_actual)) {
+      logger.warn(`Estado "${estado_actual}" no válido para el caso ${id}`);
       return false;
     }
 
-    await put<Cases>(`casos/${id}`, { estado });
+    await put<Cases>(`casos/${id}`, { estado_actual });
 
     // Invalidate caches more aggressively
     invalidateCacheItem(CASES_CACHE, id);
@@ -373,7 +373,7 @@ export const updateCaseStatus = async (
     invalidateCache(`${CASES_CACHE}_usuarios_${id}`);
 
     logger.info(
-      `Estado del caso ${id} actualizado correctamente a "${estado}"`
+      `Estado del caso ${id} actualizado correctamente a "${estado_actual}"`
     );
     return true;
   } catch (error) {

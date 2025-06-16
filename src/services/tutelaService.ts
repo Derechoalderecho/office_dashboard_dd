@@ -1,3 +1,5 @@
+//Servicio para subir todos los documentos del casePreview desde pendiente hasta radicar
+
 "use server";
 
 import axios from "axios";
@@ -6,31 +8,54 @@ import { API_BASE_URL } from "@/config/api";
 export interface TutelaResponse {
   nombre_documento: string;
   enlace: string;
-  contenido_documento: string;
+  contenido: string;
   ext_documento: string;
   id_caso: number;
   id_documento: number;
   fecha_asigna: string;
+  id_documento_caso: number;
 }
 
 /**
  * Uploads a tutela document to the server
- * @param formData
- * @param caseId
- * @returns
+ * @param formData - The form data with the file
+ * @param caseId - The case ID
+ * @param studentId - The student ID
+ * @returns A promise with the upload result
  */
 export async function uploadTutelaDocument(
   formData: FormData,
-  caseId: number
+  caseId: number,
+  studentId: number
 ): Promise<{ success: boolean; data?: TutelaResponse; error?: string }> {
   try {
+    // Endpoint para convertir y subir documentos
+    const endpoint = `${API_BASE_URL}/documentos/convert/docx-to-md`;
+    console.log(`📤 Subiendo documento al endpoint: ${endpoint}`);
+    
+    // Crear un nuevo FormData para tener control total sobre los parámetros
+    const newFormData = new FormData();
+    
+    // Primero, transferir el archivo desde el formData original
+    const file = formData.get('file');
+    if (file) {
+      newFormData.append('file', file);
+    }
+    
+    // Añadir los parámetros necesarios directamente como JSON en el query param
     const response = await axios.post(
-      `${API_BASE_URL}/tutelas/${caseId}`,
-      formData,
+      endpoint,
+      newFormData,
       {
         headers: {
           "Content-Type": "multipart/form-data",
         },
+        params: {
+          // Enviar parámetros como valores numéricos en la URL
+          id_caso: caseId,
+          id_estudiante: studentId,
+          tipo: "Tutela" 
+        }
       }
     );
 
@@ -87,72 +112,69 @@ export async function getLatestTutelaDocument(
 
 /**
  * Gets the latest tutela associated with a case using the documents service
- * @param caseId
- * @returns
+ * @param caseId - The case ID
+ * @returns A promise with the latest tutela document
  */
 export async function getLatestTutelaFromDocuments(
   caseId: number
 ): Promise<{ success: boolean; data?: TutelaResponse; error?: string }> {
   try {
-    const { getDocumentsByCaseId } = await import("./documentService");
+    // Endpoint para obtener el último documento de tutela generado
+    const endpoint = `${API_BASE_URL}/documentos/caso/${caseId}/generados`;
+    console.log(`📥 Obteniendo último documento de tutela: ${endpoint}`);
+    
+    const response = await axios.get(endpoint, {
+      params: {
+        // Parámetro last=true para obtener solo el último documento
+        last: true
+      }
+    });
 
-    const documents = await getDocumentsByCaseId(caseId);
-
-    if (!documents || documents.length === 0) {
+    if (!response.data) {
       return {
         success: false,
-        error: "No hay documentos disponibles para este caso",
+        error: "No hay documentos de tutela disponibles para este caso",
       };
     }
 
-    console.log("Documentos recibidos:", JSON.stringify(documents, null, 2));
+    // La respuesta puede ser un array o un objeto individual
+    const doc = Array.isArray(response.data) ? response.data[0] : response.data;
+    
+    if (!doc) {
+      return {
+        success: false,
+        error: "No se encontró ningún documento en la respuesta",
+      };
+    }
+    
+    // Mostrar el contenido de la respuesta para depuración
+    console.log("Respuesta del servidor:", JSON.stringify(doc, null, 2));
 
-    const sortedDocs = [...documents].sort((a, b) => {
-      const dateA = new Date(a.fecha_crea || a.fecha_asigna || 0).getTime();
-      const dateB = new Date(b.fecha_crea || b.fecha_asigna || 0).getTime();
-      return dateB - dateA;
-    });
+    // Format the document as TutelaResponse
+    const tutelaResponse: TutelaResponse = {
+      nombre_documento: doc.nombre_documento || doc.nombre || doc.titulo || "documento",
+      enlace: doc.enlace || "",
+      contenido: doc.contenido || "", // Usar el contenido de la respuesta
+      ext_documento: doc.ext_documento || doc.extension || "",
+      id_caso: caseId,
+      id_documento: doc.id_documento || doc.id_documento_generado,
+      fecha_asigna: doc.fecha_asigna || doc.created_date || doc.fecha_creacion || new Date().toISOString(),
+      id_documento_caso: doc.id_documento_caso || doc.id_documento || 0, // Agregar el campo faltante
+    };
+    
+    console.log("TutelaResponse procesada:", tutelaResponse);
 
-    const tutelaDoc = sortedDocs.find(
-      (doc) =>
-        doc.contenido_documento ||
-        doc.tipo === "tutela" ||
-        (doc.nombre && doc.nombre.toLowerCase().includes("tutela"))
-    );
-
-    if (!tutelaDoc) {
+    return { success: true, data: tutelaResponse };
+  } catch (error: any) {
+    console.error("Error fetching tutela document:", error);
+    // Si es un 404, manejarlo específicamente
+    if (error.response?.status === 404) {
       return {
         success: false,
         error: "No se encontró ningún documento de tutela para este caso",
       };
     }
-
-    console.log(
-      "Documento de tutela encontrado:",
-      JSON.stringify(tutelaDoc, null, 2)
-    );
-
-    // Format the document as TutelaResponse, handling cases where the fields may have different names
-    const tutelaResponse: TutelaResponse = {
-      nombre_documento:
-        tutelaDoc.nombre_documento || tutelaDoc.nombre || "documento",
-      enlace: tutelaDoc.enlace || "",
-      contenido_documento:
-        tutelaDoc.contenido_documento || tutelaDoc.contenido || "",
-      ext_documento: tutelaDoc.ext_documento || tutelaDoc.extension || "",
-      id_caso: caseId,
-      id_documento: tutelaDoc.id_documento,
-      fecha_asigna:
-        tutelaDoc.fecha_asigna ||
-        tutelaDoc.fecha_crea ||
-        new Date().toISOString(),
-    };
-
-    return { success: true, data: tutelaResponse };
-  } catch (error: any) {
-    console.error("Error fetching tutela document from documents:", error);
-    const errorMessage =
-      error.message || "Error desconocido al obtener la tutela";
+    const errorMessage = error.message || "Error desconocido al obtener la tutela";
     return { success: false, error: errorMessage };
   }
 }
@@ -162,6 +184,134 @@ export async function getLatestTutelaFromDocuments(
  * @param documentId
  * @returns
  */
+/**
+ * Radica un documento de tutela en el sistema
+ * @param formData - El FormData con el archivo
+ * @param caseId - ID del caso
+ * @param uploadedBy - ID del usuario que sube el documento
+ * @returns Promesa con el resultado de la radicación
+ */
+export async function radicateTutelaDocument(
+  formData: FormData,
+  caseId: number,
+  uploadedBy: number
+): Promise<{ success: boolean; data?: TutelaResponse; error?: string }> {
+  try {
+    // Endpoint para radicar documentos
+    const endpoint = `${API_BASE_URL}/documentos/caso/${caseId}/upload`;
+    console.log(`📤 Radicando documento en el endpoint: ${endpoint}`);
+    
+    // Crear un nuevo FormData para tener control total sobre los parámetros
+    const newFormData = new FormData();
+    
+    // Transferir el archivo desde el formData original
+    const file = formData.get('file');
+    if (!file) {
+      return { success: false, error: "No se proporcionó ningún archivo para radicar" };
+    }
+    newFormData.append('file', file);
+    
+    const response = await axios.post(
+      endpoint,
+      newFormData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        params: {
+          // Parámetros requeridos como query params
+          id_caso: caseId,
+          tipo_documento: "Radicado",  // Siempre será "Docx"
+          subido_por: uploadedBy
+        }
+      }
+    );
+
+    if (response.status === 200 || response.status === 201) {
+      return { success: true, data: response.data };
+    } else {
+      return {
+        success: false,
+        error: `Error al radicar la tutela: ${response.statusText}`,
+      };
+    }
+  } catch (error: any) {
+    console.error("Error radicando tutela document:", error);
+    const errorMessage =
+      error.response?.data?.message || error.message || "Error desconocido";
+    return { success: false, error: errorMessage };
+  }
+}
+
+/**
+ * Obtiene el último documento radicado para un caso
+ * @param caseId - ID del caso
+ * @returns Promesa con el último documento radicado
+ */
+export async function getLatestRadicadoDocument(
+  caseId: number
+): Promise<{ success: boolean; data?: TutelaResponse; error?: string }> {
+  try {
+    // Endpoint para obtener el último documento radicado
+    const endpoint = `${API_BASE_URL}/documentos/caso/${caseId}/radicados`;
+    console.log(`📥 Obteniendo último documento radicado: ${endpoint}`);
+    
+    const response = await axios.get(endpoint, {
+      params: {
+        // Parámetro last=true para obtener solo el último documento
+        last: true
+      }
+    });
+
+    if (!response.data) {
+      return {
+        success: false,
+        error: "No hay documentos radicados disponibles para este caso",
+      };
+    }
+
+    // La respuesta puede ser un array o un objeto individual
+    const doc = Array.isArray(response.data) ? response.data[0] : response.data;
+    
+    if (!doc) {
+      return {
+        success: false,
+        error: "No se encontró ningún documento radicado",
+      };
+    }
+    
+    // Mostrar el contenido de la respuesta para depuración
+    console.log("Respuesta del servidor (radicado):", JSON.stringify(doc, null, 2));
+
+    // Format the document as TutelaResponse
+    const tutelaResponse: TutelaResponse = {
+      nombre_documento: doc.nombre_documento || doc.nombre || doc.titulo || "documento",
+      enlace: doc.enlace || "",
+      contenido: doc.contenido || "", // Asegurar que conservamos el contenido
+      ext_documento: doc.ext_documento || doc.extension || "",
+      id_caso: caseId,
+      id_documento: doc.id_documento || doc.id_documento_generado,
+      fecha_asigna: doc.fecha_asigna || doc.created_date || doc.fecha_creacion || new Date().toISOString(),
+      id_documento_caso: doc.id_documento_caso || null, // Incluir el id_documento_caso para descargas
+    };
+    
+    console.log("TutelaResponse procesada (radicado):", tutelaResponse);
+
+    return { success: true, data: tutelaResponse };
+  } catch (error: any) {
+    console.error("Error fetching radicado document:", error);
+    // Si es un 404, manejarlo específicamente
+    if (error.response?.status === 404) {
+      return {
+        success: false,
+        error: "No se encontró ningún documento radicado para este caso",
+      };
+    }
+    const errorMessage = error.message || "Error desconocido al obtener el documento radicado";
+    return { success: false, error: errorMessage };
+  }
+}
+
 export async function getTutelaDocumentById(
   documentId: number
 ): Promise<{ success: boolean; data?: TutelaResponse; error?: string }> {
@@ -177,7 +327,7 @@ export async function getTutelaDocumentById(
       };
     }
 
-    if (!document.contenido_documento && !document.contenido) {
+    if (!document.enlace) {
       return {
         success: false,
         error: `El documento con ID ${documentId} no tiene contenido de tutela`,
@@ -188,14 +338,15 @@ export async function getTutelaDocumentById(
     const tutelaResponse: TutelaResponse = {
       nombre_documento: document.nombre_documento || "documento",
       enlace: document.enlace || "",
-      contenido_documento: document.contenido_documento || "",
+      contenido: document.contenido || "", // Intentar recuperar el contenido
       ext_documento: document.ext_documento || "",
       id_caso: document.id_caso || 0,
       id_documento: document.id_documento,
       fecha_asigna:
         document.fecha_asigna ||
-        document.fecha_crea ||
+        document.created_date ||
         new Date().toISOString(),
+      id_documento_caso: document.id_documento_caso || document.id_documento || 0,
     };
 
     return { success: true, data: tutelaResponse };

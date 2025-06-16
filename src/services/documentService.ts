@@ -1,6 +1,6 @@
 "use server";
 
-import { DocumentResponse } from "@/types/documents";
+import { DocumentResponse } from "@/actions/uploadDocsActions";
 import { get, post, del, downloadFile } from "@/utils/apiUtils";
 import {
   getWithCache,
@@ -28,11 +28,34 @@ export const getDocumentsByCaseId = async (
       `${CASE_DOCUMENTS_CACHE}_${caseId}`,
       async () => {
         logger.debug(`Obteniendo documentos para el caso ${caseId}`);
-        return await get<DocumentResponse[]>(`casos/${caseId}/documentos`);
+        // Por defecto, usamos Docx como tipo
+        return await get<DocumentResponse[]>(`documentos/caso/${caseId}/documentos/?tipo=Docx`);
       },
       (doc) => doc.id_documento.toString(),
       DOCUMENT_TTL
     );
+  } catch (error) {
+    logger.error(`Error al obtener documentos para el caso ${caseId}:`, error);
+    return [];
+  }
+};
+
+/**
+ * Obtiene documentos por caso y tipo
+ * @param caseId ID del caso
+ * @param documentType Tipo de documento (Docx por defecto)
+ * @returns Lista de documentos
+ */
+export const getDocumentsByCaseIdAndType = async (
+  caseId: number,
+  documentType: 'Docx' | 'MD' | 'Tutela' | 'Radicado' | 'Otro' = 'Docx'
+): Promise<DocumentResponse[]> => {
+  try {
+    logger.info(`Obteniendo documentos para el caso ${caseId} de tipo ${documentType}`);
+    
+    const url = `documentos/caso/${caseId}/documentos/?tipo=${documentType}`;
+    
+    return await get<DocumentResponse[]>(url);
   } catch (error) {
     logger.error(`Error al obtener documentos para el caso ${caseId}:`, error);
     return [];
@@ -151,8 +174,18 @@ export const getLatestRadicadoDocument = async (
 ): Promise<DocumentResponse | null> => {
   try {
     logger.info(`Obteniendo último documento radicado para el caso ${caseId}`);
-    const document = await get<DocumentResponse>(`documentos/${caseId}/radicados/`);
-    return document;
+    // Usar el nuevo endpoint con tipo=Radicado
+    const documents = await getDocumentsByCaseIdAndType(caseId, 'Radicado');
+    
+    // Retornar el documento más reciente
+    if (documents && documents.length > 0) {
+      // Ordenar por fecha y tomar el primero
+      return documents.sort((a, b) => 
+        new Date(b.fecha_subida || b.fecha_asigna).getTime() - 
+        new Date(a.fecha_subida || a.fecha_asigna).getTime()
+      )[0];
+    }
+    return null;
   } catch (error) {
     logger.error(`Error al obtener último documento radicado para el caso ${caseId}:`, error);
     return null;

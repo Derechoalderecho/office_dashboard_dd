@@ -1,20 +1,14 @@
 "use client";
 
-import { Chip, Button, Textarea, addToast, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/react";
+import { Button, addToast, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import {
-  PencilSquareIcon,
-  ClipboardDocumentCheckIcon,
-  DocumentArrowUpIcon,
-  CloudArrowUpIcon,
-  CloudArrowDownIcon,
-  LinkIcon,
   CheckCircleIcon,
-  XCircleIcon
 } from "@heroicons/react/24/outline";
 import { useEffect, useState, useRef } from "react";
-import { parseDateToLocal } from "@/utils/date";
-import { fetchCaseById, fetchCaseHistory, updateCaseStatus } from "@/services/caseService";
+import { fetchCaseHistory } from "@/services/caseService";
+import { updateCaseStatus } from "@/services/updateCaseStatus";
+import { fetchCompleteCaseById } from "@/services/completeUserCasesService";
 import CaseHeader from "@/components/cases/cases-id/CaseHeader";
 import CaseInfo from "@/components/cases/cases-id/CaseInfo";
 import CasePreview from "@/components/cases/cases-id/CasePreview";
@@ -23,7 +17,7 @@ import NotesSection from "@/components/cases/cases-id/NotesSection";
 import CaseHistoryLogs from "@/components/cases/cases-id/CaseHistoryLogs";
 import EditCaseModal from "@/components/cases/cases-id/EditCaseModal";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Cases } from "@/types/cases";
+import { CompleteCaseData } from "@/types/cases";
 import { useParams } from "next/navigation";
 
 interface CasePageProps {
@@ -38,7 +32,7 @@ export default function CasePage() {
   const router = useRouter();
   const { role } = useUserRole();
   
-  const [caseData, setCaseData] = useState<Cases | null>(null);
+  const [caseData, setCaseData] = useState<CompleteCaseData | null>(null);
   const [historyLogs, setHistoryLogs] = useState<any[]>([]);
   const [notasList, setNotasList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,13 +44,21 @@ export default function CasePage() {
 
   // Cargar datos del caso
   const loadCaseData = async () => {
+    console.log('Iniciando carga de datos para caso ID:', caseId);
     setLoading(true);
+    
     try {
-      const caseData = await fetchCaseById(caseId);
-      const historyLogs = await fetchCaseHistory(caseId);
+      console.log('Fetching case data for ID:', caseId);
+      const casesData = await fetchCompleteCaseById(caseId);
+      console.log('Received case data response:', casesData);
       
-      if (!caseData) {
-        console.error(`Caso con ID ${caseId} no encontrado`);
+      console.log('Fetching history logs for case ID:', caseId);
+      const historyLogs = await fetchCaseHistory(caseId);
+      console.log('Received history logs:', historyLogs?.length || 0, 'items');
+      
+      if (!casesData || casesData.length === 0) {
+        const errorMsg = `Caso con ID ${caseId} no encontrado`;
+        console.error(errorMsg);
         addToast({
           title: "Error",
           description: "No se pudo cargar el caso",
@@ -65,9 +67,52 @@ export default function CasePage() {
         return;
       }
       
+      // Tomamos el primer elemento del array ya que solo necesitamos un caso
+      const caseData = casesData[0];
+      console.log('Procesando case data:', typeof caseData, caseData ? 'con datos' : 'sin datos');
+      
+      // Verificar que caseData sea un objeto válido
+      if (!caseData) {
+        console.error('Los datos del caso no son válidos');
+        addToast({
+          title: "Error",
+          description: "Los datos del caso tienen un formato inválido",
+          color: "danger",
+        });
+        return;
+      }
+      
+      // Log para debug
+      if (caseData) {
+        console.log('Case data structure:', caseData);
+        console.log('Case data properties:', Object.keys(caseData));
+      }
+      
+      // Mostrar alerta para confirmar que los datos se cargaron
+      addToast({
+        title: "Éxito",
+        description: "Datos del caso cargados correctamente",
+        color: "success",
+      });
+      
       setCaseData(caseData);
       setHistoryLogs(historyLogs || []);
-      setNotasList(caseData.notas_list || []);
+      
+      // Verificar si hay notas antes de acceder a la propiedad
+      if (caseData && 'notas' in caseData && Array.isArray(caseData.notas)) {
+        console.log('Notas encontradas:', caseData.notas.length, 'items');
+        setNotasList(caseData.notas);
+      } else {
+        console.warn('No se encontraron notas en la respuesta del caso o el formato ha cambiado');
+        // Asegurarse de no intentar llamar a Object.keys en un objeto nulo
+        if (caseData) {
+          console.log('Estructura de caseData:', Object.keys(caseData));
+        } else {
+          console.log('caseData es nulo o indefinido');
+        }
+        // Inicializar con un array vacío para evitar errores
+        setNotasList([]);
+      }
       
     } catch (error) {
       console.error("Error al cargar datos del caso:", error);
@@ -88,12 +133,50 @@ export default function CasePage() {
       return;
     }
     
-    loadCaseData();
+    // Añadir un test directo a la API para diagnóstico
+    const testAPIEndpoint = async () => {
+      try {
+        console.log('Testing direct API connection...');
+        const endpoint = `/casos/full/${caseId}/`;
+        console.log(`Testing endpoint: ${endpoint}`);
+        
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}${endpoint}`);
+        console.log('API Test Response status:', response.status);
+        
+        if (!response.ok) {
+          console.error(`API test failed with status: ${response.status}`);
+          console.error('Response text:', await response.text());
+          return;
+        }
+        
+        const data = await response.json();
+        console.log('API Test Data received:', data);
+        
+        // Verificar estructura de datos
+        if (Array.isArray(data) && data.length > 0) {
+          console.log('API Data structure:', Object.keys(data[0]));
+          
+          // Verificar especificamente el campo notas
+          if ('notas' in data[0]) {
+            console.log('Notas found in API response:', data[0].notas);
+          } else {
+            console.error('No notas field in API response:', data[0]);
+          }
+        }
+      } catch (error) {
+        console.error('API Test ERROR:', error);
+      }
+    };
+    
+    // Ejecutar test y luego cargar los datos normalmente
+    testAPIEndpoint().then(() => {
+      loadCaseData();
+    });
   }, [caseId, id]);
 
   // Efecto para mostrar notificación cuando el caso está en estado 'Radicar'
   useEffect(() => {
-    if (caseData && caseData.estado === "Radicar") {
+    if (caseData && caseData.estado_actual === "Radicar") {
       // Mostrar la notificación siempre que el caso esté en estado 'Radicar'
       setShowRadicarNotification(true);
     } else {
@@ -145,7 +228,7 @@ export default function CasePage() {
     
     // Si el estado es "Radicar", no permitir cambio directo a "Espera del juez"
     // Solo debe cambiar cuando se sube la tutela desde el botón de radicar
-    if (caseData.estado === "Radicar") {
+    if (caseData.estado_actual === "Radicar") {
       addToast({
         title: "Acción requerida",
         description: "Para completar este caso debe radicar la tutela usando el botón 'Radicar Tutela'",
@@ -160,7 +243,7 @@ export default function CasePage() {
     setStatusChangeLoading(true);
     try {
       // Ahora solo aplica al estado "Revisar tutela"
-      const newStatus = caseData.estado === "Revisar tutela" ? "Radicar" : "Espera del juez";
+      const newStatus = caseData.estado_actual === "Revisar tutela" ? "Radicar" : "Espera del juez";
       const success = await updateCaseStatus(caseId, newStatus);
       
       if (success) {
@@ -241,22 +324,22 @@ export default function CasePage() {
       // Determinar el nuevo estado según el estado actual
       let newStatus = "";
       
-      switch (caseData.estado) {
+      switch (caseData.estado_actual) {
         case "Pendiente":
           newStatus = "Revisar tutela";
           break;
         case "Radicar":
           // Solo cambiar a "Espera del juez" si viene del botón de radicar
-          newStatus = isFromRadicarButton ? "Espera del juez" : caseData.estado;
+          newStatus = isFromRadicarButton ? "Espera del juez" : caseData.estado_actual;
           break;
         default:
           // Si no es ninguno de los casos específicos, mantener el estado actual
-          newStatus = caseData.estado;
+          newStatus = caseData.estado_actual;
           break;
       }
       
       // Solo actualizar si hay un cambio de estado
-      if (newStatus !== caseData.estado) {
+      if (newStatus !== caseData.estado_actual) {
         const success = await updateCaseStatus(caseId, newStatus);
         
         if (success) {
@@ -310,7 +393,7 @@ export default function CasePage() {
   const canUploadTutela = () => {
     if (!caseData) return false;
     
-    const estado = caseData.estado;
+    const estado = caseData.estado_actual;
     
     // Permitir subir tutelas en varios estados
     switch (estado) {
@@ -658,7 +741,7 @@ export default function CasePage() {
                 <h2 className="text-xl font-medium">
                   Caso n# - {caseData?.id_caso}
                 </h2>
-                <EditCaseModal caseData={caseData!} onSuccess={loadCaseData} />
+                { /* <EditCaseModal caseData={caseData!} onSuccess={loadCaseData} />*/}
               </div>
               <hr className="my-4" />
          
@@ -672,7 +755,7 @@ export default function CasePage() {
                   caseId={caseData?.id_caso || caseId} 
                   onTutelaUploaded={handleTutelaUploaded}
                   canUpload={canUploadTutela()}
-                  caseState={caseData?.estado}
+                  caseState={caseData?.estado_actual}
                 />
               </div>
            

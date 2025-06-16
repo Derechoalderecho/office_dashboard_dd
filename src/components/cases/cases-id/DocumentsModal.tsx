@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import axios from "axios";
+import { useState, useEffect } from "react";
 import { 
   Modal, 
   ModalContent, 
@@ -17,19 +16,19 @@ import {
   addToast
 } from "@heroui/react";
 import { 
+  ArrowsUpDownIcon, 
+  MagnifyingGlassIcon, 
+  ArrowPathIcon, 
+  XCircleIcon, 
   DocumentTextIcon, 
   ArrowDownTrayIcon, 
-  XMarkIcon,
-  ExclamationCircleIcon,
-  MagnifyingGlassIcon,
-  ArrowsUpDownIcon
+  XMarkIcon
 } from "@heroicons/react/24/outline";
-import { DocumentResponse, downloadDocument } from "@/actions/uploadDocsActions";
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setDocuments } from '@/store/slices/documentSlice';
-import { fetchCase } from '@/store/slices/caseSlice';
 import { parseDateToLocal } from "@/utils/date";
-import { API_BASE_URL } from "@/config/api";
+import { DocumentResponse, getDocumentsByCaseIdAndType, downloadDocument } from "@/services/allDocumentsService";
+import { fetchUserDetails } from "@/services/userService";
 
 type SortOption = "newest" | "oldest" | "name" | "type";
 
@@ -39,6 +38,67 @@ interface DocumentsModalProps {
   caseId: string;
   refreshFlag?: boolean;
   onRefreshed?: () => void;
+}
+
+// Caché para almacenar información de usuarios y evitar múltiples consultas
+const userCache = new Map<string, {
+  nombre: string;
+  timestamp: number;
+}>();
+
+// Tiempo de validez de la caché: 1 hora
+const CACHE_TTL = 60 * 60 * 1000;
+
+/**
+ * Obtiene el nombre completo de un usuario a partir de su ID
+ */
+async function getUserFullName(userId: string): Promise<string> {
+  if (!userId) {
+    console.log("ID de usuario vacío");
+    return "Usuario desconocido";
+  }
+  
+  console.log(`Obteniendo nombre para usuario con ID: ${userId}`);
+  
+  // Comprobar si está en caché y no ha expirado
+  const cached = userCache.get(userId);
+  if (cached && (Date.now() - cached.timestamp) < CACHE_TTL) {
+    console.log(`Usando nombre en caché para ${userId}: ${cached.nombre}`);
+    return cached.nombre;
+  }
+  
+  try {
+    console.log(`Llamando a API para obtener detalles del usuario ${userId}`);
+    const userDetails = await fetchUserDetails(userId);
+    
+    if (!userDetails) {
+      console.log(`No se encontraron detalles para el usuario ${userId}`);
+      return "Usuario desconocido";
+    }
+    
+    console.log(`Detalles recibidos para usuario ${userId}:`, userDetails);
+    
+    // Formar el nombre completo
+    const nombreCompleto = [
+      userDetails.primer_nombre,
+      userDetails.segundo_nombre,
+      userDetails.primer_apellido,
+      userDetails.segundo_apellido
+    ].filter(Boolean).join(" ");
+    
+    console.log(`Nombre completo generado para ${userId}: ${nombreCompleto}`);
+    
+    // Guardar en caché
+    userCache.set(userId, {
+      nombre: nombreCompleto || "Usuario desconocido",
+      timestamp: Date.now()
+    });
+    
+    return nombreCompleto || "Usuario desconocido";
+  } catch (error) {
+    console.error(`Error al obtener detalles del usuario ${userId}:`, error);
+    return "Usuario desconocido";
+  }
 }
 
 export default function DocumentsModal({ 
@@ -55,86 +115,87 @@ export default function DocumentsModal({
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const [selectedType, setSelectedType] = useState<'Docx' | 'Tutela' | 'Radicado' | 'Otro'>('Docx');
+  const [isLoading, setIsLoading] = useState(false);
   const [hasLoadingError, setHasLoadingError] = useState(false);
+  // Guardar los nombres de usuarios para cada documento
+  const [userNames, setUserNames] = useState<{[key: string]: string}>({});
 
-  useEffect(() => {
-    if (!isOpen) return;
-    
+  // Función para cargar documentos que se puede llamar cuando hay un error
+  const reloadDocuments = async () => {
     try {
-      // Convertir caseId a número y obtener documentos a través de Redux
       const numericCaseId = parseInt(caseId, 10);
       if (isNaN(numericCaseId)) {
         throw new Error('ID de caso inválido');
       }
       
-      // Cargar el caso y sus documentos sin usar caché
-      (async () => {
-        try {
-          // Importar dinámicamente para evitar problemas de circular import
-          const { fetchCaseByIdFresh } = await import('@/services/caseService');
-          const freshCase = await fetchCaseByIdFresh(numericCaseId);
-          
-          if (freshCase?.documentos) {
-            // Actualizar documentos en Redux
-            dispatch(setDocuments(freshCase.documentos));
-            console.log("Documentos cargados (fresh):", freshCase.documentos.length);
-            setHasLoadingError(false);
-          }
-        } catch (error: any) {
-          console.error("Error al cargar caso:", error);
-          // Si el error es 404, simplemente establecemos una lista vacía de documentos
-          if (error.status === 404 || (error.message && error.message.includes("404"))) {
-            dispatch(setDocuments([]));
-            setHasLoadingError(false);
-          } else {
-            setHasLoadingError(true);
-          }
+      setIsLoading(true);
+      setHasLoadingError(false);
+      
+      try {
+        const docs = await getDocumentsByCaseIdAndType(numericCaseId, selectedType);
+        dispatch(setDocuments(docs));
+        console.log(`Documentos cargados: ${docs.length} (tipo: ${selectedType})`);
+      } catch (error: any) {
+        console.error("Error al cargar documentos:", error);
+        if (error.status === 404 || (error.message && error.message.includes("404"))) {
+          // Para errores 404, mostramos una lista vacía en lugar de error
+          dispatch(setDocuments([]));
+        } else {
+          setHasLoadingError(true);
         }
-      })();
+      } finally {
+        setIsLoading(false);
+      }
     } catch (error: any) {
       console.error("Error obteniendo documentos:", error.message);
+      setIsLoading(false);
       setHasLoadingError(true);
     }
-  }, [isOpen, caseId, dispatch]);
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    reloadDocuments();
+  }, [isOpen, caseId, dispatch, selectedType]);
+  
+  // Efecto para actualizar la lista cuando cambian los documentos en Redux
+  useEffect(() => {
+    if (isOpen && documents) {
+      console.log("Documentos actualizados desde Redux:", documents.length);
+      setFilteredDocuments(sortDocuments(documents, sortBy));
+    }
+  }, [documents, isOpen, sortBy]);
 
   useEffect(() => {
     if (isOpen && refreshFlag) {
       try {
         console.log("Refrescando documentos del caso...");
         
-        // Recargar el caso para obtener los documentos actualizados
         const numericCaseId = parseInt(caseId, 10);
         if (!isNaN(numericCaseId)) {
-          // Forzar refresco ignorando la caché
+          setIsLoading(true);
+          setHasLoadingError(false);
+          
           (async () => {
             try {
-              // Usar fetchCaseByIdFresh para obtener datos sin caché
-              const { fetchCaseByIdFresh } = await import('@/services/caseService');
-              try {
-                const updatedCase = await fetchCaseByIdFresh(numericCaseId);
-                
-                if (updatedCase?.documentos) {
-                  console.log("Caso actualizado con éxito:", 
-                    updatedCase.documentos.length, "documentos");
-                    
-                  // Actualizamos directamente los documentos sin esperar otro efecto
-                  dispatch(setDocuments(updatedCase.documentos));
-                  setFilteredDocuments(sortDocuments(updatedCase.documentos, sortBy));
-                  setHasLoadingError(false);
-                }
-              } catch (error: any) {
-                console.error("Error al actualizar caso:", error);
-                // Si el error es 404, simplemente establecemos una lista vacía de documentos
-                if (error.status === 404 || (error.message && error.message.includes("404"))) {
-                  dispatch(setDocuments([]));
-                  setFilteredDocuments([]);
-                  setHasLoadingError(false);
-                } else {
-                  setHasLoadingError(true);
-                }
+              const docs = await getDocumentsByCaseIdAndType(numericCaseId, selectedType);
+              
+              console.log(`Documentos actualizados: ${docs.length} (tipo: ${selectedType})`);
+              
+              dispatch(setDocuments(docs));
+              setFilteredDocuments(sortDocuments(docs, sortBy));
+            } catch (error: any) {
+              console.error("Error al actualizar documentos:", error);
+              if (error.status === 404 || (error.message && error.message.includes("404"))) {
+                dispatch(setDocuments([]));
+                setFilteredDocuments([]);
+              } else {
+                setHasLoadingError(true);
               }
             } finally {
-              // Notificar que se ha completado el refresco
+              setIsLoading(false);
+              
               if (onRefreshed) {
                 onRefreshed();
               }
@@ -146,10 +207,11 @@ export default function DocumentsModal({
       } catch (error) {
         console.error("Error al refrescar documentos:", error);
         setHasLoadingError(true);
+        setIsLoading(false);
         if (onRefreshed) onRefreshed();
       }
     }
-  }, [isOpen, refreshFlag, caseId, dispatch, onRefreshed, sortBy]);
+  }, [isOpen, refreshFlag, caseId, dispatch, onRefreshed, sortBy, selectedType]);
 
   useEffect(() => {
     if (currentCase?.documentos && isOpen) {
@@ -159,6 +221,7 @@ export default function DocumentsModal({
     }
   }, [currentCase, isOpen, dispatch, sortBy]);
 
+  // Effect para filtrar documentos basado en el término de búsqueda y ordenación
   useEffect(() => {
     if (documents.length > 0) {
       let filtered = documents;
@@ -166,8 +229,8 @@ export default function DocumentsModal({
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
         filtered = documents.filter(doc => 
-          doc.nombre_documento.toLowerCase().includes(term) ||
-          doc.ext_documento.toLowerCase().includes(term)
+          doc.nombre_documento?.toLowerCase().includes(term) ||
+          (doc.ext_documento ? doc.ext_documento.toLowerCase().includes(term) : false)
         );
       }
       
@@ -175,7 +238,43 @@ export default function DocumentsModal({
     } else {
       setFilteredDocuments([]);
     }
-  }, [searchTerm, sortBy, documents]);
+  }, [documents, searchTerm, sortBy]);
+
+  // Effect para cargar los nombres de usuarios cuando cambia la lista de documentos
+  useEffect(() => {
+    const loadUserNames = async () => {
+      // Recolectamos los IDs de usuario únicos
+      const uniqueUserIds = [...new Set(
+        documents
+          .filter(doc => doc.subido_por) // Solo documentos con usuario
+          .map(doc => doc.subido_por!)
+      )];
+      
+      console.log("IDs de usuarios únicos:", uniqueUserIds);
+      
+      // Obtenemos los nombres para cada ID de usuario
+      const userPromises = uniqueUserIds.map(async (userId) => {
+        const fullName = await getUserFullName(userId);
+        return { userId, fullName };
+      });
+
+      const userResults = await Promise.all(userPromises);
+      const newUserNames: {[key: string]: string} = {};
+      
+      // Guardamos el nombre para cada ID de usuario
+      userResults.forEach(result => {
+        newUserNames[result.userId] = result.fullName;
+      });
+      
+      console.log("Nombres de usuarios obtenidos:", newUserNames);
+      
+      setUserNames(newUserNames);
+    };
+
+    if (documents.length > 0) {
+      loadUserNames();
+    }
+  }, [documents]);
 
   const sortDocuments = (docs: DocumentResponse[], sortOption: SortOption): DocumentResponse[] => {
     const sorted = [...docs];
@@ -194,82 +293,59 @@ export default function DocumentsModal({
           a.nombre_documento.localeCompare(b.nombre_documento)
         );
       case "type":
-        return sorted.sort((a, b) => 
-          a.ext_documento.localeCompare(b.ext_documento)
-        );
+        return sorted.sort((a, b) => {
+          const extA = a.ext_documento || '';
+          const extB = b.ext_documento || '';
+          return extA.localeCompare(extB);
+        });
       default:
         return sorted;
     }
   };
 
-  const handleDownload = async (document: DocumentResponse) => {
-    setDownloadingId(document.id_documento);
+  const handleDownload = async (doc: DocumentResponse) => {
+    setDownloadingId(doc.id_documento_caso ?? null);
     
     try {
-      // Determinar el folder correcto basado en el enlace original del documento
-      let folder = 'documentos_casos'; // Valor por defecto
+      console.log(`Iniciando descarga del documento: ${doc.nombre_documento}`);
       
-      // Si el documento tiene un enlace, intentamos extraer el folder de la URL
-      if (document.enlace) {
-        const urlParts = document.enlace.split('/');
-        // Buscamos el índice de 'bucket_consultorios' y tomamos el siguiente elemento
-        const bucketIndex = urlParts.findIndex(part => part === 'bucket_consultorios');
-        if (bucketIndex !== -1 && bucketIndex + 1 < urlParts.length) {
-          const extractedFolder = urlParts[bucketIndex + 1];
-          // Si el folder contiene un signo de interrogación, lo eliminamos
-          if (extractedFolder.includes('?')) {
-            folder = extractedFolder.split('?')[0];
-          } else {
-            folder = extractedFolder;
-          }
-          console.log('Folder extraído de la URL:', folder);
-        }
-      } 
-      // Si no hay enlace o no pudimos extraer el folder, usamos el nombre del documento
-      else if (document.nombre_documento) {
-        const nombre = document.nombre_documento.toLowerCase();
-        if (nombre.includes('radicado')) {
-          folder = 'radicados';
-        } else if (nombre.includes('tutela')) {
-          folder = 'tutelas';
-        }
+      // Usar el nuevo servicio para descargar el documento
+      const result = await downloadDocument(doc);
+      
+      if (result.success && result.data && result.fileName) {
+        // Crear un objeto URL para el blob
+        const url = window.URL.createObjectURL(result.data);
+        
+        // Crear un elemento <a> temporal para la descarga
+        const a = window.document.createElement('a');
+        a.href = url;
+        a.download = result.fileName;
+        window.document.body.appendChild(a);
+        a.click();
+        
+        // Limpiar
+        window.URL.revokeObjectURL(url);
+        window.document.body.removeChild(a);
+        
+        addToast({
+          title: "Descarga iniciada",
+          description: `${doc.nombre_documento}${doc.ext_documento || ''} se está descargando`,
+          color: "success"
+        });
+      } else {
+        throw new Error(result.error || "Error desconocido al descargar el documento");
       }
-      console.log('Folder determinado por el nombre del documento:', folder);
-      
-      // Verificar que el folder sea válido (solo 'documentos_casos', 'radicados' o 'tutelas')
-      if (folder !== 'documentos_casos' && folder !== 'radicados' && folder !== 'tutelas') {
-        console.warn(`Folder no válido: ${folder}, usando documentos_casos`);
-        folder = 'documentos_casos';
-      }
-      
-      // Obtener la URL firmada del API
-      const apiUrl = `${API_BASE_URL}/documentos/${document.id_documento}/download?folder=${folder}`;
-      console.log(`Descargando documento con folder: ${folder}. URL: ${apiUrl}`);
-      
-      const response = await axios.get(apiUrl);
-      
-      if (response.status !== 200 || !response.data.url_firmada) {
-        throw new Error(`No se encontró la URL firmada en la respuesta para el folder ${folder}`);
-      }
-      
-      const signedUrl = response.data.url_firmada;
-      console.log('URL firmada obtenida:', signedUrl);
-      
-      // Abrir la URL firmada en una nueva pestaña
-      window.open(signedUrl, '_blank');
-      
-      addToast({
-        title: "Descarga iniciada",
-        description: `${document.nombre_documento}${document.ext_documento} se está descargando`,
-        color: "success"
-      });
       
       setDownloadingId(null);
     } catch (error: any) {
       console.error("Error en la descarga:", error);
+      
+      // Mensaje de error desde el servicio o uno genérico
+      const errorMessage = error.message || "No se pudo descargar el documento";
+      
       addToast({
         title: "Error de descarga",
-        description: error.message || "No se pudo descargar el documento",
+        description: errorMessage,
         color: "danger"
       });
       setDownloadingId(null);
@@ -287,7 +363,7 @@ export default function DocumentsModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="3xl" scrollBehavior="inside">
       <ModalContent>
-        {loading && (
+        {(loading || isLoading) && (
           <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 z-50 flex items-center justify-center rounded-lg">
             <Spinner size="lg" color="primary" />
           </div>
@@ -302,81 +378,177 @@ export default function DocumentsModal({
         </ModalHeader>
         
         <ModalBody className="overflow-y-auto max-h-[500px]">
-          {!loading && !hasLoadingError && documents.length > 0 && (
-            <div className="flex flex-col sm:flex-row gap-3 mb-4">
-              <Input
-                placeholder="Buscar documentos..."
-                value={searchTerm}
-                onValueChange={handleSearch}
-                startContent={<MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />}
-                className="flex-grow"
-              />
-              <Select
-                label="Ordenar por"
-                onChange={(e) => handleSortChange(e.target.value)}
-                startContent={<ArrowsUpDownIcon className="w-4 h-4 text-gray-400" />}
-                className="w-full sm:w-auto sm:min-w-[180px]"
-                defaultSelectedKeys={["newest"]}
-              >
-                <SelectItem key="newest">Más recientes</SelectItem>
-                <SelectItem key="oldest">Más antiguos</SelectItem>
-                <SelectItem key="name">Nombre</SelectItem>
-                <SelectItem key="type">Tipo</SelectItem>
-              </Select>
+          {/* Siempre mostramos el selector de tipos, independientemente de si hay documentos */}
+          <div className="flex flex-col gap-3 mb-4">
+            {/* Selector de tipo de documento, siempre visible */}
+            <div>
+              <p key="document-type-label" className="text-sm text-gray-500 mb-2">Tipo de documento</p>
+              <div className="flex flex-wrap gap-2">
+                <Chip 
+                  key="docx-chip"
+                  variant={selectedType === 'Docx' ? "solid" : "flat"}
+                  color="primary" 
+                  className="cursor-pointer"
+                  onClick={() => setSelectedType('Docx')}
+                >
+                  Docx
+                </Chip>
+
+                <Chip 
+                  key="tutela-chip"
+                  variant={selectedType === 'Tutela' ? "solid" : "flat"}
+                  color="primary" 
+                  className="cursor-pointer"
+                  onClick={() => setSelectedType('Tutela')}
+                >
+                  Tutela
+                </Chip>
+                <Chip 
+                  key="radicado-chip"
+                  variant={selectedType === 'Radicado' ? "solid" : "flat"}
+                  color="primary" 
+                  className="cursor-pointer"
+                  onClick={() => setSelectedType('Radicado')}
+                >
+                  Radicado
+                </Chip>
+                <Chip 
+                  key="otro-chip"
+                  variant={selectedType === 'Otro' ? "solid" : "flat"}
+                  color="primary" 
+                  className="cursor-pointer"
+                  onClick={() => setSelectedType('Otro')}
+                >
+                  Otro
+                </Chip>
+              </div>
             </div>
-          )}
+
+            {/* Controles de búsqueda y ordenación, solo visibles si hay documentos */}
+            {documents.length > 0 && !loading && !isLoading && !hasLoadingError && (
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Input
+                  placeholder="Buscar documentos..."
+                  value={searchTerm}
+                  onValueChange={handleSearch}
+                  startContent={<MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />}
+                  className="flex-grow"
+                />
+                <Select
+                  label="Ordenar por"
+                  onChange={(e) => handleSortChange(e.target.value)}
+                  startContent={<ArrowsUpDownIcon className="w-4 h-4 text-gray-400" />}
+                  className="w-full sm:w-auto sm:min-w-[180px]"
+                  defaultSelectedKeys={["newest"]}
+                >
+                  <SelectItem key="newest">Más recientes</SelectItem>
+                  <SelectItem key="oldest">Más antiguos</SelectItem>
+                  <SelectItem key="name">Nombre</SelectItem>
+                  <SelectItem key="type">Tipo</SelectItem>
+                </Select>
+              </div>
+            )}
+          </div>
           
-          {loading ? (
+          {loading || isLoading ? (
             <div className="flex justify-center items-center py-12">
               <Spinner size="lg" color="primary" />
             </div>
           ) : hasLoadingError ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <ExclamationCircleIcon className="w-12 h-12 text-danger mb-4" />
-              <p className="text-danger">Error al cargar los documentos. Intente nuevamente.</p>
+            <div className="flex flex-col justify-center items-center py-12 gap-4">
+              <XCircleIcon className="w-12 h-12 text-danger" />
+              <p key="error-message">Error al cargar los documentos</p>
+              <Button
+                color="primary"
+                variant="flat"
+                startContent={<ArrowPathIcon className="w-4 h-4" />}
+                onClick={reloadDocuments}
+              >
+                Reintentar
+              </Button>
             </div>
           ) : filteredDocuments.length === 0 ? (
-            <div className="text-center py-8">
-              {searchTerm ? (
-                <p className="text-gray-500">No se encontraron documentos con ese término de búsqueda</p>
-              ) : (
-                <p className="text-gray-500">No hay documentos disponibles para este caso</p>
-              )}
+            <div className="flex flex-col justify-center items-center py-12 gap-4">
+              <DocumentTextIcon className="w-12 h-12 text-gray-400" />
+              <p key="no-docs-message" className="text-center text-gray-600">
+                No hay documentos de tipo <span className="font-semibold">{selectedType}</span>
+              </p>
+              <p key="select-other-type" className="text-sm text-gray-500 text-center">
+                Puedes seleccionar otro tipo de documento usando los botones de arriba
+              </p>
             </div>
           ) : (
-            <div className="flex flex-col gap-4">
-              {filteredDocuments.map((doc) => (
-                <div key={doc.id_documento} className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-                  <div className="flex items-start gap-3">
-                    <DocumentTextIcon className="w-8 h-8 text-primary flex-shrink-0 mt-1" />
-                    <div>
-                      <p className="font-medium">{doc.nombre_documento}{doc.ext_documento}</p>
-                      <p className="text-sm text-gray-500">
-                        Subido el {parseDateToLocal(doc.fecha_asigna)}
-                      </p>
-                      <Chip
-                        size="sm"
-                        variant="flat"
-                        color={doc.ext_documento === '.pdf' ? 'danger' : 'primary'}
-                        className="mt-1"
-                      >
-                        {doc.ext_documento.substring(1).toUpperCase()}
-                      </Chip>
+            <>
+              {filteredDocuments && filteredDocuments.length > 0 ? (
+                filteredDocuments.map((doc) => (
+                  <div key={`doc-item-${doc.id_documento_caso}`} className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-4">
+                    <div className="flex items-start gap-3">
+                      <DocumentTextIcon className="w-8 h-8 text-primary flex-shrink-0 mt-1" />
+                      <div>
+                        <p className="font-medium">{doc.nombre_documento}{doc.ext_documento || ''}</p>
+                        <p className="text-sm text-gray-500">
+                          Subido el {parseDateToLocal(doc.created_date || doc.fecha_asigna)}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {doc.subido_por && ` por ${userNames[doc.subido_por] || "Usuario..."}`}
+                        </p>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {/* Chip para la extensión del documento */}
+                          {(() => {
+                            // Intentamos obtener la extensión del documento
+                            let extension = '';
+                            
+                            // 1. Primero intentamos usar ext_documento si existe
+                            if (doc.ext_documento) {
+                              extension = doc.ext_documento;
+                            } 
+                            // 2. Si no, intentamos extraer la extensión del nombre del documento
+                            else if (doc.nombre_documento) {
+                              const match = doc.nombre_documento.match(/\.(\w+)$/i);
+                              if (match && match[0]) {
+                                extension = match[0];
+                              }
+                            }
+                            
+                            // Solo mostramos el chip si encontramos una extensión
+                            return extension ? (
+                              <Chip
+                                size="sm"
+                                variant="flat"
+                                color={(extension.toLowerCase().includes('pdf')) ? 'danger' : 'primary'}
+                              >
+                                {extension.startsWith('.') ? extension.substring(1).toUpperCase() : extension.toUpperCase()}
+                              </Chip>
+                            ) : null;
+                          })()} 
+                          
+                          {/* Chip para el tipo de documento */}
+                          {doc.tipo_documento && (
+                            <Chip
+                              size="sm"
+                              variant="flat"
+                              color="secondary"
+                            >
+                              {doc.tipo_documento}
+                            </Chip>
+                          )}
+                        </div>
+                      </div>
                     </div>
+                    <Button
+                      color="primary"
+                      isLoading={downloadingId === doc.id_documento_caso}
+                      spinner={<Spinner size="sm" color="white" />}
+                      onPress={() => handleDownload(doc)}
+                      startContent={<ArrowDownTrayIcon className="w-5 h-5" />}
+                      className="sm:self-end"
+                    >
+                      Descargar
+                    </Button>
                   </div>
-                  <Button
-                    color="primary"
-                    isLoading={downloadingId === doc.id_documento}
-                    spinner={<Spinner size="sm" color="white" />}
-                    onPress={() => handleDownload(doc)}
-                    startContent={<ArrowDownTrayIcon className="w-5 h-5" />}
-                    className="sm:self-end"
-                  >
-                    Descargar
-                  </Button>
-                </div>
-              ))}
-            </div>
+                ))
+              ) : null}
+            </>
           )}
         </ModalBody>
         

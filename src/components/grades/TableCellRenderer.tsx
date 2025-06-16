@@ -1,3 +1,5 @@
+/*
+
 "use client";
 
 import { EyeIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
@@ -111,7 +113,6 @@ export const TableCellRendererGrades = ({
       
       return (
         <div className="relative flex items-center gap-2">
-          {/* View button - always visible if there's a calification */}
           {hasCalification && (
             <Tooltip content="Ver detalle de calificación">
               <Button
@@ -124,7 +125,6 @@ export const TableCellRendererGrades = ({
             </Tooltip>
           )}
           
-          {/* Edit button - only visible for users with permission */}
           {canGradeStudents && (
             <Tooltip content="Calificar estudiante">
               <Button
@@ -143,3 +143,4 @@ export const TableCellRendererGrades = ({
       return <div className="text-sm">{String(cellValue)}</div>;
   }
 };
+*/

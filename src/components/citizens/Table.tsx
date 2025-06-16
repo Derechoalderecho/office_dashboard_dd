@@ -26,7 +26,7 @@ import { fetchAllCitizens } from "@/services/citizenService";
 import { ModalCitizen } from "../ui/modal-table";
 
 const INITIAL_VISIBLE_COLUMNS = [
-  "fecha_crea",
+  "created_date",
   "primer_nombre",
   "email",
   "num_movil",

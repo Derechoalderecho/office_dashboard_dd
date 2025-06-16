@@ -45,9 +45,13 @@ export async function apiRequest<T>(
     ? fullUrl.replace('http:', 'https:') 
     : fullUrl;
   
+  console.log(`API REQUEST: [${method.toUpperCase()}] ${secureUrl}`);
+  
   while (retries <= maxRetries) {
     try {
       let response: AxiosResponse;
+      
+      const startTime = Date.now();
       
       switch (method) {
         case 'get':
@@ -66,10 +70,30 @@ export async function apiRequest<T>(
           throw new Error(`Método HTTP no soportado: ${method}`);
       }
       
+      const requestTime = Date.now() - startTime;
+      
+      // Log response basics
+      console.log(`API RESPONSE: [${method.toUpperCase()}] ${secureUrl} - Status: ${response.status} (${requestTime}ms)`);
+      
+      if (!response.data) {
+        console.warn(`API WARNING: Empty response data from ${secureUrl}`);
+        return {} as T;
+      }
+      
       return response.data as T;
       
-    } catch (error) {
+    } catch (error: any) {
       lastError = error as AxiosError | Error;
+      
+      console.error(`API ERROR [${method.toUpperCase()}] ${secureUrl}:`, error);
+      
+      if (error.response) {
+        console.error(`Status: ${error.response.status}`, error.response.data);
+      } else if (error.request) {
+        console.error('No se recibió respuesta del servidor', error.request);
+      } else {
+        console.error('Error al configurar la solicitud:', error.message);
+      }
       
       if (
         retries < maxRetries && 
