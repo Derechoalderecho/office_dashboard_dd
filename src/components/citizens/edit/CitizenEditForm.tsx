@@ -44,7 +44,7 @@ export default function CitizenEditForm({ citizenId }: CitizenEditFormProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [citizen, setCitizen] = useState<Citizen | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Partial<Citizen>>({
     num_documento: "",
     tipo_documento: "",
     primer_nombre: "",
@@ -53,22 +53,24 @@ export default function CitizenEditForm({ citizenId }: CitizenEditFormProps) {
     segundo_apellido: "",
     sexo: "",
     genero: "",
-    orient_sexual: "",
+    orientacion_sexual: "",
     fecha_nacimiento: "",
     num_movil: "",
-    num_fijo: "",
+    telefono_fijo: "",
     email: "",
     nacionalidad: "",
+    otra_nacionalidad: "",
     estado_civil: "",
     escolaridad: "",
     etnia: "",
-    discapacidad: "",
-    sabe_leer_escribir: "",
-    direccion: "",
-    estrato: "",
-    zona: "",
+    discapacidad: false,
+    sabe_leer_escribir: false,
+    direccion_residencia: "",
+    estrato: 0,
+    zona_residencia: "",
     departamento: "",
     municipio: "",
+    dane_municipio: "",
   });
   const [validationErrors, setValidationErrors] = useState<{
     [key: string]: string;
@@ -122,25 +124,24 @@ export default function CitizenEditForm({ citizenId }: CitizenEditFormProps) {
             segundo_apellido: citizenData.segundo_apellido || "",
             sexo: citizenData.sexo || "",
             genero: citizenData.genero || "",
-            orient_sexual: citizenData.orient_sexual || "",
+            orientacion_sexual: citizenData.orientacion_sexual || "",
             fecha_nacimiento: citizenData.fecha_nacimiento || "",
             num_movil: citizenData.num_movil || "",
-            num_fijo: citizenData.num_fijo || "",
+            telefono_fijo: citizenData.telefono_fijo || "",
             email: citizenData.email || "",
             nacionalidad: citizenData.nacionalidad || "",
+            otra_nacionalidad: citizenData.otra_nacionalidad || "",
             estado_civil: citizenData.estado_civil || "",
             escolaridad: citizenData.escolaridad || "",
             etnia: citizenData.etnia || "",
-            discapacidad: citizenData.discapacidad || "",
-            sabe_leer_escribir: citizenData.sabe_leer_escribir || "",
-            direccion:
-              typeof citizenData.direccion === "string"
-                ? citizenData.direccion
-                : "",
-            estrato: citizenData.estrato || "",
-            zona: citizenData.zona || "",
+            discapacidad: Boolean(citizenData.discapacidad),
+            sabe_leer_escribir: Boolean(citizenData.sabe_leer_escribir),
+            direccion_residencia: citizenData.direccion_residencia || "",
+            estrato: typeof citizenData.estrato === 'number' ? citizenData.estrato : 0,
+            zona_residencia: citizenData.zona_residencia || "",
             departamento: citizenData.departamento || "",
             municipio: citizenData.municipio || "",
+            dane_municipio: citizenData.dane_municipio || "",
           });
 
           // Inicializar fechaNacimiento si existe
@@ -234,8 +235,22 @@ export default function CitizenEditForm({ citizenId }: CitizenEditFormProps) {
   }, [formData.departamento, locations]);
 
   // Función para actualizar el estado del formulario
-  const updateFormData = (data: Partial<typeof formData>) => {
-    setFormData((prev) => ({ ...prev, ...data }));
+  const updateFormData = (data: Partial<Citizen>) => {
+    // Asegurar que los valores numéricos sean tratados como números
+    const processedData = Object.entries(data).reduce((acc, [key, value]) => {
+      // Convertir valores específicos al tipo esperado
+      if (key === 'estrato' && typeof value === 'number') {
+        (acc as any)[key] = value;
+      } else {
+        (acc as any)[key] = value;
+      }
+      return acc;
+    }, {} as Partial<Citizen>);
+
+    setFormData((prevData) => ({
+      ...prevData,
+      ...processedData,
+    }));
   };
 
   // Gestionar cambio de nacionalidad
@@ -337,7 +352,7 @@ export default function CitizenEditForm({ citizenId }: CitizenEditFormProps) {
   // Guardar la dirección
   const guardarDireccion = () => {
     const direccionCompleta = construirDireccion();
-    updateFormData({ direccion: direccionCompleta });
+    updateFormData({ direccion_residencia: direccionCompleta });
     setIsAddressPopoverOpen(false);
   };
 
@@ -352,7 +367,7 @@ export default function CitizenEditForm({ citizenId }: CitizenEditFormProps) {
     }
 
     // Filtrar campos vacíos o no seleccionados para no enviarlos
-    const filteredFormData: Record<string, string> = {};
+    const filteredFormData: Record<string, any> = {};
     Object.entries(formDataToSubmit).forEach(([key, value]) => {
       // Solo incluye campos con valores (no vacíos)
       if (value !== undefined && value !== null && value !== "") {
@@ -431,9 +446,7 @@ export default function CitizenEditForm({ citizenId }: CitizenEditFormProps) {
               label="Tipo de documento"
               labelPlacement="outside"
               placeholder="Seleccione su tipo de documento"
-              selectedKeys={
-                formData.tipo_documento ? [formData.tipo_documento] : []
-              }
+              selectedKeys={formData.tipo_documento ? [formData.tipo_documento] : []}
               onChange={handleTipoDocumentoChange}
               isRequired
               errorMessage={validationErrors.tipo_documento}
@@ -484,7 +497,7 @@ export default function CitizenEditForm({ citizenId }: CitizenEditFormProps) {
               variant="bordered"
               label="Segundo nombre"
               labelPlacement="outside"
-              value={formData.segundo_nombre}
+              value={formData.segundo_nombre || ""}
               onChange={(e) =>
                 updateFormData({ segundo_nombre: e.target.value })
               }
@@ -531,7 +544,7 @@ export default function CitizenEditForm({ citizenId }: CitizenEditFormProps) {
               variant="bordered"
               label="Segundo apellido"
               labelPlacement="outside"
-              value={formData.segundo_apellido}
+              value={formData.segundo_apellido || ""}
               onChange={(e) =>
                 updateFormData({ segundo_apellido: e.target.value })
               }
@@ -578,20 +591,18 @@ export default function CitizenEditForm({ citizenId }: CitizenEditFormProps) {
             </Select>
 
             <Select
-              id="orient_sexual"
-              name="orient_sexual"
+              id="orientacion_sexual"
+              name="orientacion_sexual"
               variant="bordered"
               label="Orientación sexual"
               labelPlacement="outside"
               placeholder="Seleccione su orientación sexual"
-              selectedKeys={
-                formData.orient_sexual ? [formData.orient_sexual] : []
-              }
+              selectedKeys={formData.orientacion_sexual ? [formData.orientacion_sexual] : []}
               onChange={(e) =>
-                updateFormData({ orient_sexual: e.target.value })
+                updateFormData({ orientacion_sexual: e.target.value })
               }
               isRequired
-              errorMessage={validationErrors.orient_sexual}
+              errorMessage={validationErrors.orientacion_sexual}
             >
               <SelectItem key="HE">Heterosexual</SelectItem>
               <SelectItem key="HO">Homosexual</SelectItem>
@@ -619,15 +630,15 @@ export default function CitizenEditForm({ citizenId }: CitizenEditFormProps) {
             />
 
             <NumberInput
-              id="num_fijo"
-              name="num_fijo"
+              id="telefono_fijo"
+              name="telefono_fijo"
               variant="bordered"
               label="Número fijo"
               labelPlacement="outside"
               hideStepper
-              value={formData.num_fijo ? Number(formData.num_fijo) : undefined}
+              value={formData.telefono_fijo ? Number(formData.telefono_fijo) : undefined}
               onValueChange={(value) =>
-                updateFormData({ num_fijo: value.toString() })
+                updateFormData({ telefono_fijo: value.toString() })
               }
               placeholder="Ingrese su número fijo"
             />
@@ -653,7 +664,7 @@ export default function CitizenEditForm({ citizenId }: CitizenEditFormProps) {
               selectedKeys={
                 showNacionalidadInput
                   ? ["Otro"]
-                  : formData.nacionalidad
+                  : formData.nacionalidad 
                   ? [formData.nacionalidad]
                   : []
               }
@@ -773,14 +784,14 @@ export default function CitizenEditForm({ citizenId }: CitizenEditFormProps) {
             <NumberInput
               id="estrato"
               name="estrato"
-              label="Estrato"
               variant="bordered"
+              label="Estrato"
               labelPlacement="outside"
-              placeholder="Ingrese su estrato"
-              hideStepper
-              value={formData.estrato ? Number(formData.estrato) : undefined}
+              min={0}
+              max={6}
+              value={formData.estrato !== undefined ? Number(formData.estrato) : undefined}
               onValueChange={(value) =>
-                updateFormData({ estrato: value.toString() })
+                updateFormData({ estrato: value })
               }
               minValue={1}
               maxValue={6}
@@ -788,18 +799,17 @@ export default function CitizenEditForm({ citizenId }: CitizenEditFormProps) {
             />
 
             <Select
-              id="zona"
-              name="zona"
+              id="zona_residencia"
+              name="zona_residencia"
               label="Zona"
               variant="bordered"
               labelPlacement="outside"
               placeholder="Seleccione su zona"
-              selectedKeys={mapZonaForSelect(formData.zona)}
-              onSelectionChange={(keys) => {
-                const selectedKey = Array.from(keys)[0]?.toString() || "";
-                updateFormData({ zona: selectedKey });
+              selectedKeys={formData.zona_residencia ? [formData.zona_residencia] : []}
+              onChange={(e) => {
+                updateFormData({ zona_residencia: e.target.value });
               }}
-              errorMessage={validationErrors.zona}
+              errorMessage={validationErrors.zona_residencia}
             >
               <SelectItem key="UR">Urbana</SelectItem>
               <SelectItem key="RU">Rural</SelectItem>
@@ -852,15 +862,13 @@ export default function CitizenEditForm({ citizenId }: CitizenEditFormProps) {
               label="¿Tiene alguna discapacidad?"
               labelPlacement="outside"
               placeholder="Seleccione una opción"
-              selectedKeys={
-                formData.discapacidad ? [formData.discapacidad] : []
-              }
-              onChange={(e) => updateFormData({ discapacidad: e.target.value })}
+              selectedKeys={[formData.discapacidad === true ? 'true' : 'false']}
+              onChange={(e) => updateFormData({ discapacidad: e.target.value === 'true' })}
               isRequired
               errorMessage={validationErrors.discapacidad}
             >
-              <SelectItem key="SI">Sí</SelectItem>
-              <SelectItem key="NO">No</SelectItem>
+              <SelectItem key="true">Sí</SelectItem>
+              <SelectItem key="false">No</SelectItem>
             </Select>
 
             <Select
@@ -870,22 +878,20 @@ export default function CitizenEditForm({ citizenId }: CitizenEditFormProps) {
               label="¿Sabe leer y escribir?"
               labelPlacement="outside"
               placeholder="Seleccione una opción"
-              selectedKeys={
-                formData.sabe_leer_escribir ? [formData.sabe_leer_escribir] : []
-              }
+              selectedKeys={[formData.sabe_leer_escribir === true ? 'true' : 'false']}
               onChange={(e) =>
-                updateFormData({ sabe_leer_escribir: e.target.value })
+                updateFormData({ sabe_leer_escribir: e.target.value === 'true' })
               }
               isRequired
               errorMessage={validationErrors.sabe_leer_escribir}
             >
-              <SelectItem key="SI">Sí</SelectItem>
-              <SelectItem key="NO">No</SelectItem>
+              <SelectItem key="true">Sí</SelectItem>
+              <SelectItem key="false">No</SelectItem>
             </Select>
 
             <div className="flex flex-col gap-1 justify-end">
               <p className="text-sm text-gray-500">
-                {formData.direccion ? formData.direccion : "No especificada"}
+                {formData.direccion_residencia ? formData.direccion_residencia : "No especificada"}
               </p>
               <Popover
                 isOpen={isAddressPopoverOpen}
