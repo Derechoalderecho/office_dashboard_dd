@@ -66,17 +66,90 @@ export async function downloadDocument(
       fileName += document.ext_documento;
     }
 
-    // Usar el ID de documento del caso si está disponible
-    const idDocumentoCaso = document.id_documento_caso || document.id_documento;
-    const apiUrl = `${API_BASE_URL}/documentos/caso/${idDocumentoCaso}/download`;
+    // Primero, obtener la URL firmada si no la tenemos aún
+    let urlFirmada = document.url_firmada || document.enlace;
+    
+    // Si no tenemos URL firmada, necesitamos obtenerla primero
+    if (!urlFirmada) {
+      const idDocumentoCaso = document.id_documento_caso || document.id_documento;
+      console.log(`Obteniendo URL firmada para el documento ${idDocumentoCaso}`);
+      
+      try {
+        const urlResponse = await axios.get(`${API_BASE_URL}/documentos/${idDocumentoCaso}/download`);
+        
+        if (urlResponse.status === 200 && urlResponse.data) {
+          urlFirmada = urlResponse.data.url_firmada || urlResponse.data.enlace || urlResponse.data;
+          console.log('URL firmada obtenida:', urlFirmada);
+        } else {
+          return { 
+            success: false, 
+            error: 'No se pudo obtener el enlace de descarga'
+          };
+        }
+      } catch (urlError: any) {
+        console.error('Error al obtener la URL firmada:', urlError);
+        return { 
+          success: false, 
+          error: urlError.message || 'Error al obtener el enlace de descarga'
+        };
+      }
+    }
+    
+    // Asegurarnos de que tenemos una URL
+    if (!urlFirmada || typeof urlFirmada !== 'string') {
+      return { 
+        success: false, 
+        error: 'No se pudo obtener una URL válida para la descarga'
+      };
+    }
+    
+    console.log(`Descargando archivo desde URL: ${urlFirmada}`);
     
     try {
-      const response = await axios.get(apiUrl, {
+      // Descargar el archivo real usando la URL firmada
+      const response = await axios.get(urlFirmada, {
         responseType: 'blob'
       });
       
       if (response.status === 200) {
-        const blob = new Blob([response.data], { type: response.headers['content-type'] });
+        // Determinar el tipo MIME basado en la extensión del archivo
+        // Usar el Content-Type de la respuesta o inferirlo de la extensión
+        let mimeType = response.headers['content-type'];
+        
+        // Si el mime type indica que es JSON, necesitamos inferirlo de la extensión
+        if (mimeType.includes('application/json') || mimeType.includes('text/plain')) {
+          // Si la extensión está en el documento, usarla para determinar el tipo MIME
+          const extension = document.ext_documento?.toLowerCase() || fileName.split('.').pop()?.toLowerCase();
+          
+          // Mapeo de extensiones comunes a tipos MIME
+          if (extension) {
+            const mimeTypes: Record<string, string> = {
+              'pdf': 'application/pdf',
+              'doc': 'application/msword',
+              'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+              'xls': 'application/vnd.ms-excel',
+              'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+              'ppt': 'application/vnd.ms-powerpoint',
+              'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+              'txt': 'text/plain',
+              'jpg': 'image/jpeg',
+              'jpeg': 'image/jpeg',
+              'png': 'image/png',
+              'gif': 'image/gif'
+            };
+            
+            // Limpiar la extensión de cualquier punto o espacio
+            const cleanExt = extension.replace(/^\.|\.$/g, '').trim();
+            
+            if (mimeTypes[cleanExt]) {
+              mimeType = mimeTypes[cleanExt];
+              console.log(`Usando tipo MIME ${mimeType} para archivo con extensión ${cleanExt}`);
+            }
+          }
+        }
+        
+        // Crear el blob con el tipo MIME adecuado
+        const blob = new Blob([response.data], { type: mimeType });
         return { 
           success: true, 
           data: blob,
