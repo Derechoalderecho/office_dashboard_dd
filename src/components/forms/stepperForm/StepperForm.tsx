@@ -61,14 +61,16 @@ export default function StepperForm() {
     municipio: "",
     dane_municipio: "",
 
-    // Case information
-    notas: "",
+    // Case information - Step 1
     id_tipo_caso: "",
-    tiempo_respuesta: "48",
+    entidad: "",
     hechos: "",
     pretensiones: "",
-    fundamentos: "",
-    entidad: "",
+    fundamentos_derecho: "",
+    
+    // Case information - Step 2 (pendiente de implementar)
+    tiempo_respuesta: "48",
+    notas: "",
 
     // Administration information
     persona_modifica: "",
@@ -145,10 +147,15 @@ export default function StepperForm() {
       
       // General Information validation
       if (!data.id_tipo_caso) errors.id_tipo_caso = "El tipo de proceso es requerido";
-      if (!data.tiempo_respuesta) errors.tiempo_respuesta = "El tiempo de respuesta es requerido";
-      if (!data.hechos) errors.hechos = "Los hechos son requeridos";
-      if (!data.pretensiones) errors.pretensiones = "Las pretensiones son requeridas";
-      if (!data.fundamentos) errors.fundamentos = "Los fundamentos de derecho son requeridos";
+      // La validación de entidad solo si es un derecho de petición
+      if (data.id_tipo_caso === "2" && !data.entidad) errors.entidad = "La entidad es requerida";
+      
+      // Validaciones para los campos de datos de tutela/derecho de petición
+      if (["1", "2", "5", "6", "7"].includes(data.id_tipo_caso)) {
+        if (!data.hechos) errors.hechos = "Los hechos son requeridos";
+        if (!data.pretensiones) errors.pretensiones = "Las pretensiones son requeridas";
+        if (!data.fundamentos_derecho) errors.fundamentos_derecho = "Los fundamentos de derecho son requeridos";
+      }
       return errors;
     },
     2: (data: typeof formData) => {

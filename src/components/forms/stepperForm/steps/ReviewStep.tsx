@@ -31,13 +31,11 @@ type ReviewStepProps = {
     municipio: string;
     dane_municipio: string;
     // Case information
-    notas: string;
     id_tipo_caso: string;
-    tiempo_respuesta: string;
+    entidad: string;
     hechos: string;
     pretensiones: string;
-    fundamentos: string;
-    entidad: string;
+    fundamentos_derecho: string;
 
     // Administration information
     persona_modifica: string;
@@ -244,14 +242,17 @@ export default function ReviewStep({ formData }: ReviewStepProps) {
             <p>Viabilidad</p>
           </div>
           <div>
-            <p className="text-sm text-gray-500">Tiempo de respuesta (horas)</p>
-            <p>{formData.tiempo_respuesta}</p>
-          </div>
-          <div>
             <p className="text-sm text-gray-500">Usuario encargado</p>
             <p>{formData.persona_modifica}</p>
           </div>
         </div>
+        
+        {formData.entidad && (
+          <div className="mb-4">
+            <p className="text-sm text-gray-500">Entidad</p>
+            <p className="whitespace-pre-wrap">{formData.entidad}</p>
+          </div>
+        )}
         
         {formData.hechos && (
           <div className="mb-4">
@@ -267,24 +268,12 @@ export default function ReviewStep({ formData }: ReviewStepProps) {
           </div>
         )}
         
-        {formData.fundamentos && (
+        {formData.fundamentos_derecho && (
           <div className="mb-4">
             <p className="text-sm text-gray-500">Fundamentos de derecho</p>
-            <p className="whitespace-pre-wrap">{formData.fundamentos}</p>
+            <p className="whitespace-pre-wrap">{formData.fundamentos_derecho}</p>
           </div>
         )}
-        
-        {formData.entidad && (
-          <div className="mb-4">
-            <p className="text-sm text-gray-500">Entidad</p>
-            <p className="whitespace-pre-wrap">{formData.entidad}</p>
-          </div>
-        )}
-        
-        <div>
-          <p className="text-sm text-gray-500">Notas</p>
-          <p className="whitespace-pre-wrap">{formData.notas}</p>
-        </div>
       </div>
 
       <div className="border rounded-lg p-4">

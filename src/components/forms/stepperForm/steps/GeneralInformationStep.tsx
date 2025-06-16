@@ -1,24 +1,20 @@
-import { Input, Select, SelectItem, Textarea } from "@heroui/react";
+import { Select, SelectItem, Textarea } from "@heroui/react";
 
 type GeneralInformationProps = {
   formData: {
-    notas: string;
     id_tipo_caso: string;
-    tiempo_respuesta: string;
+    entidad: string;
     hechos: string;
     pretensiones: string;
-    fundamentos: string;
-    entidad: string;
+    fundamentos_derecho: string;
   };
   updateFormData: (
     data: Partial<{
-      notas: string;
       id_tipo_caso: string;
-      tiempo_respuesta: string;
+      entidad: string;
       hechos: string;
       pretensiones: string;
-      fundamentos: string;
-      entidad: string;
+      fundamentos_derecho: string;
     }>
   ) => void;
 };
@@ -40,12 +36,10 @@ export default function GeneralInformationStep({
   const showPretensiones = selectedInSelect && (isTutela || isDerechoPeticion || isTutelaPrimeraInstancia || isTutelaSegundaInstancia || isTutelaDesacato);
   const showFundamentos = selectedInSelect && (isTutela || isDerechoPeticion || isTutelaPrimeraInstancia || isTutelaSegundaInstancia || isTutelaDesacato);
   const showEntidad = selectedInSelect && isDerechoPeticion;
-  
-  const showAdditionalFields = selectedInSelect;
 
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 gap-4 mb-6">
         <Select
           id="id_tipo_caso"
           name="id_tipo_caso"
@@ -63,99 +57,68 @@ export default function GeneralInformationStep({
           <SelectItem key="7">Tutela desacato</SelectItem>
           <SelectItem key="2">Derecho de petición</SelectItem>
         </Select>
-
-        <Input
-          id="tiempo_respuesta"
-          name="tiempo_respuesta"
-          type="number"
-          variant="bordered"
-          label="Tiempo de respuesta (horas)"
-          labelPlacement="outside"
-          placeholder="Ingrese el tiempo de respuesta"
-          value={formData.tiempo_respuesta}
-          onChange={(e) => updateFormData({ tiempo_respuesta: e.target.value })}
-          isRequired
-        />
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        {/* Muestra los campos adicionales solo si se ha seleccionado un tipo de proceso */}
-        {showAdditionalFields && (
-          <>
-            {showHechos && (
-              <Textarea
-                id="hechos"
-                name="hechos"
-                variant="bordered"
-                label="Hechos"
-                labelPlacement="outside"
-                size="lg"
-                isRequired
-                value={formData.hechos || ""}
-                onChange={(e) => updateFormData({ hechos: e.target.value })}
-                placeholder="Ingrese los hechos"
-              />
-            )}
-
-            {showPretensiones && (
-              <Textarea
-                id="pretensiones"
-                name="pretensiones"
-                variant="bordered"
-                label="Pretensiones"
-                labelPlacement="outside"
-                size="lg"
-                isRequired
-                value={formData.pretensiones || ""}
-                onChange={(e) => updateFormData({ pretensiones: e.target.value })}
-                placeholder="Ingrese las pretensiones"
-              />
-            )}
-
-            {showFundamentos && (
-              <Textarea
-                id="fundamentos"
-                name="fundamentos"
-                variant="bordered"
-                label="Fundamentos de derecho"
-                labelPlacement="outside"
-                size="lg"
-                isRequired
-                value={formData.fundamentos || ""}
-                onChange={(e) => updateFormData({ fundamentos: e.target.value })}
-                placeholder="Ingrese los fundamentos de derecho"
-              />
-            )}
-
-            {showEntidad && (
-              <Textarea
-                id="entidad"
-                name="entidad"
-                variant="bordered"
-                label="Entidad"
-                labelPlacement="outside"
-                size="lg"
-                isRequired
-                value={formData.entidad || ""}
-                onChange={(e) => updateFormData({ entidad: e.target.value })}
-                placeholder="Ingrese la entidad"
-              />
-            )}
-          </>
+        {showEntidad && (
+          <Textarea
+            id="entidad"
+            name="entidad"
+            variant="bordered"
+            label="Entidad"
+            labelPlacement="outside"
+            size="lg"
+            isRequired
+            value={formData.entidad || ""}
+            onChange={(e) => updateFormData({ entidad: e.target.value })}
+            placeholder="Ingrese la entidad"
+          />
+        )}
+        
+        {showHechos && (
+          <Textarea
+            id="hechos"
+            name="hechos"
+            variant="bordered"
+            label="Hechos"
+            labelPlacement="outside"
+            size="lg"
+            isRequired
+            value={formData.hechos || ""}
+            onChange={(e) => updateFormData({ hechos: e.target.value })}
+            placeholder="Ingrese los hechos"
+          />
         )}
 
-        {/* El campo de notas siempre se muestra */}
-        <Textarea
-          id="notas"
-          name="notas"
-          variant="bordered"
-          label="Notas"
-          labelPlacement="outside"
-          size="lg"  
-          value={formData.notas}
-          onChange={(e) => updateFormData({ notas: e.target.value })}
-          placeholder="Ingrese las notas"
-        />
+        {showPretensiones && (
+          <Textarea
+            id="pretensiones"
+            name="pretensiones"
+            variant="bordered"
+            label="Pretensiones"
+            labelPlacement="outside"
+            size="lg"
+            isRequired
+            value={formData.pretensiones || ""}
+            onChange={(e) => updateFormData({ pretensiones: e.target.value })}
+            placeholder="Ingrese las pretensiones"
+          />
+        )}
+
+        {showFundamentos && (
+          <Textarea
+            id="fundamentos_derecho"
+            name="fundamentos_derecho"
+            variant="bordered"
+            label="Fundamentos de derecho"
+            labelPlacement="outside"
+            size="lg"
+            isRequired
+            value={formData.fundamentos_derecho || ""}
+            onChange={(e) => updateFormData({ fundamentos_derecho: e.target.value })}
+            placeholder="Ingrese los fundamentos de derecho"
+          />
+        )}
       </div>
     </div>
   );
