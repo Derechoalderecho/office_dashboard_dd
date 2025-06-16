@@ -37,13 +37,18 @@ interface ChartDataPoint {
 
 type TabKey = "todos" | "aceptados-recibidos";
 
+// Definir colores HSL concretos
+const COLOR_TODOS = "hsl(220, 70%, 50%)"; // Azul intenso
+const COLOR_ACEPTADOS = "hsl(145, 63%, 42%)"; // Verde
+const COLOR_RECIBIDOS = "hsl(345, 82%, 63%)"; // Rojo cereza
+
 const configTodos = {
   count: {
     label: "Casos",
   },
   todos: {
     label: "Todos",
-    color: "var(--chart-4)",
+    color: COLOR_TODOS,
   },
 } satisfies ChartConfig;
 
@@ -53,11 +58,11 @@ const configAceptadosRecibidos = {
   },
   aceptados: {
     label: "Aceptados",
-    color: "var(--chart-3)",
+    color: COLOR_ACEPTADOS,
   },
   recibidos: {
     label: "Recibidos",
-    color: "var(--chart-1)",
+    color: COLOR_RECIBIDOS,
   },
 } satisfies ChartConfig;
 
@@ -229,8 +234,8 @@ export default function AreaChartTiempoCasos() {
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="fillTodos" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--chart-4)" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="var(--chart-4)" stopOpacity={0.1} />
+                    <stop offset="5%" stopColor={COLOR_TODOS} stopOpacity={0.8} />
+                    <stop offset="95%" stopColor={COLOR_TODOS} stopOpacity={0.1} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid vertical={false} strokeDasharray="3 3" />
@@ -259,7 +264,7 @@ export default function AreaChartTiempoCasos() {
                 <Area
                   type="monotone"
                   dataKey="todos"
-                  stroke="var(--chart-4)"
+                  stroke={COLOR_TODOS}
                   fill="url(#fillTodos)"
                 />
                 <ChartLegend content={<ChartLegendContent />} />
@@ -275,12 +280,12 @@ export default function AreaChartTiempoCasos() {
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="fillAceptados" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--chart-3)" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="var(--chart-3)" stopOpacity={0.1} />
+                    <stop offset="5%" stopColor={COLOR_ACEPTADOS} stopOpacity={0.8} />
+                    <stop offset="95%" stopColor={COLOR_ACEPTADOS} stopOpacity={0.1} />
                   </linearGradient>
                   <linearGradient id="fillRecibidos" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0.1} />
+                    <stop offset="5%" stopColor={COLOR_RECIBIDOS} stopOpacity={0.8} />
+                    <stop offset="95%" stopColor={COLOR_RECIBIDOS} stopOpacity={0.1} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid vertical={false} strokeDasharray="3 3" />
@@ -309,14 +314,14 @@ export default function AreaChartTiempoCasos() {
                 <Area
                   type="monotone"
                   dataKey="recibidos"
-                  stroke="var(--chart-1)"
+                  stroke={COLOR_RECIBIDOS}
                   fill="url(#fillRecibidos)"
                   stackId="1"
                 />
                 <Area
                   type="monotone"
                   dataKey="aceptados"
-                  stroke="var(--chart-3)"
+                  stroke={COLOR_ACEPTADOS}
                   fill="url(#fillAceptados)"
                   stackId="1"
                 />
