@@ -367,9 +367,11 @@ export default function CasePreview({
       const formData = new FormData();
       formData.append("file", selectedFile);
 
-      // Verificar si estamos en estado "Radicar"
+      // Verificar si estamos en estado "Radicar" o si estamos cambiando un documento radicado
       const isRadicarAction = localStorage.getItem(`case_${caseId}_radicar_action`) === 'true';
+      const isChangeTutelaAction = localStorage.getItem(`case_${caseId}_change_tutela_action`) === 'true';
       const isRadicarState = caseState === "Radicar";
+      const isEsperaJuezState = caseState === "Espera del juez";
       
       if (!internalUserId) {
         throw new Error("No se encontró el ID del estudiante");
@@ -377,9 +379,12 @@ export default function CasePreview({
       
       let result;
       
-      if (isRadicarState) {
-        // Si el caso está en estado de radicar, usamos el endpoint para radicar
-        console.log("📤 Radicando documento de tutela");
+      // Usar radicateTutelaDocument en dos casos:
+      // 1. Cuando el caso está en estado "Radicar"
+      // 2. Cuando estamos cambiando un documento en estado "Espera del juez"
+      if (isRadicarState || (isEsperaJuezState && isChangeTutelaAction)) {
+        // Si es radicar nuevo o cambiar radicado existente, usamos el endpoint para radicar
+        console.log("📤 Radicando documento de tutela" + (isChangeTutelaAction ? " (reemplazo)" : ""));
         console.log("ID del estudiante:", internalUserId);
         result = await radicateTutelaDocument(formData, caseId, internalUserId);
       } else {
