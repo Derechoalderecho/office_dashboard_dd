@@ -168,7 +168,7 @@ export async function submitFormData(
     const caseData = {
       id_ciudadano: citizenId, // Número en lugar de string
       id_tipo_caso: Number(formData.get("id_tipo_caso")) || 1, // Usando valor numérico (1=Tutela como default)
-      estado: "Viabilidad", // Estado inicial
+      estado_actual: "Viabilidad", // Estado inicial
       entidad: formData.get("entidad")?.toString() || "",
       
       // Solo agregamos tiempo_respuesta al caso principal
