@@ -13,10 +13,10 @@ type ReviewStepProps = {
     segundo_apellido: string;
     sexo: string;
     genero: string;
-    orient_sexual: string;
+    orientacion_sexual: string;
     fecha_nacimiento: string;
     num_movil: string;
-    num_fijo: string;
+    telefono_fijo: string;
     email: string;
     nacionalidad: string;
     estado_civil: string;
@@ -24,9 +24,9 @@ type ReviewStepProps = {
     etnia: string;
     discapacidad: string;
     sabe_leer_escribir: string;
-    direccion: string;
+    direccion_residencia: string;
     estrato: string;
-    zona: string;
+    zona_residencia: string;
     departamento: string;
     municipio: string;
     dane_municipio: string;
@@ -156,19 +156,19 @@ export default function ReviewStep({ formData }: ReviewStepProps) {
           </div>
           <div>
             <p className="text-sm text-gray-500">Teléfono fijo</p>
-            <p>{formData.num_fijo ? formData.num_fijo : "No especificado"}</p>
+            <p>{formData.telefono_fijo}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Dirección de residencia</p>
-            <p>{formData.direccion || "No especificada"}</p>
+            <p>{formData.direccion_residencia}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Estrato</p>
             <p>{formData.estrato}</p>
           </div>
           <div>
-            <p className="text-sm text-gray-500">Zona</p>
-            <p>{formData.zona}</p>
+            <p className="text-sm text-gray-500">Zona de residencia</p>
+            <p>{formData.zona_residencia}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Departamento</p>
@@ -192,7 +192,7 @@ export default function ReviewStep({ formData }: ReviewStepProps) {
           </div>
           <div>
             <p className="text-sm text-gray-500">Orientación sexual</p>
-            <p>{formData.orient_sexual}</p>
+            <p>{formData.orientacion_sexual}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Discapacidad</p>

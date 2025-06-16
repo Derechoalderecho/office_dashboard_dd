@@ -22,11 +22,14 @@ export interface Citizen {
   discapacidad: boolean;
   sabe_leer_escribir: boolean;
   direccion_residencia: string;
+  fecha_nacimiento: string;
   id_ciudadano: number;
   created_date: string;
   modified_date: string | null;
   deleted_at: string | null;
   status: boolean;
+  departamento: string;
+  municipio: string;
   key?: string;
   actions?: string;
 }

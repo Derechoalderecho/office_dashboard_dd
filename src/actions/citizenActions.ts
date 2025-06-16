@@ -63,7 +63,7 @@ export async function submitFormData(
         tipo_documento: formData.get("tipo_documento") || "",
         num_documento: formData.get("num_documento") || "",
         email: formData.get("email") || "",
-        num_fijo: formData.get("num_fijo") || "",
+        telefono_fijo: formData.get("telefono_fijo") || "",
         num_movil: formData.get("num_movil") || "",
         dane_municipio: formData.get("dane_municipio") || "05001",
         persona_modifica: Number(formData.get("persona_modifica")) || null,
@@ -72,16 +72,16 @@ export async function submitFormData(
         fecha_nacimiento: formData.get("fecha_nacimiento") 
           ? new Date(formData.get("fecha_nacimiento") as string).toISOString().split('T')[0] + "T00:00:00"
           : new Date().toISOString().split('T')[0] + "T00:00:00",
-        orient_sexual: formData.get("orient_sexual") || "",
+        orientacion_sexual: formData.get("orientacion_sexual") || "",
         nacionalidad: formData.get("nacionalidad") || "",
         estado_civil: formData.get("estado_civil") || "",
         escolaridad: formData.get("escolaridad") || "",
         etnia: formData.get("etnia") || "",
-        discapacidad: formData.get("discapacidad") || "",
-        sabe_leer_escribir: formData.get("sabe_leer_escribir") || "",
-        direccion: formData.get("direccion") || "",
-        zona: convertZonaToCode(formData.get("zona")?.toString() || ""),
-        estrato: formData.get("estrato") || "",
+        discapacidad: formData.get("discapacidad") === "true",
+        sabe_leer_escribir: formData.get("sabe_leer_escribir") === "true",
+        direccion_residencia: formData.get("direccion_residencia") || "",
+        zona_residencia: convertZonaToCode(formData.get("zona_residencia")?.toString() || ""),
+        estrato: Number(formData.get("estrato")) || 0,
       };
       
       console.log("Datos del ciudadano a crear:", JSON.stringify(ciudadanoData, null, 2));
