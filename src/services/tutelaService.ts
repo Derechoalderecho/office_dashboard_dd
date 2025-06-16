@@ -1,3 +1,5 @@
+//Servicio para subir todos los documentos del casePreview desde pendiente hasta radicar
+
 "use server";
 
 import axios from "axios";
@@ -11,6 +13,7 @@ export interface TutelaResponse {
   id_caso: number;
   id_documento: number;
   fecha_asigna: string;
+  id_documento_caso: number;
 }
 
 /**
@@ -289,6 +292,7 @@ export async function getLatestRadicadoDocument(
       id_caso: caseId,
       id_documento: doc.id_documento || doc.id_documento_generado,
       fecha_asigna: doc.fecha_asigna || doc.created_date || doc.fecha_creacion || new Date().toISOString(),
+      id_documento_caso: doc.id_documento_caso || null, // Incluir el id_documento_caso para descargas
     };
     
     console.log("TutelaResponse procesada (radicado):", tutelaResponse);

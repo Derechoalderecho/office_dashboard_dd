@@ -1,3 +1,5 @@
+//Servicio para obtener el rol del usuario que ha ingresado y posteriormente ser usado en el hook useUserRole
+
 "use server";
 
 import { logger } from '@/utils/logUtils';

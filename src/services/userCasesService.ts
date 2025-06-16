@@ -1,3 +1,7 @@
+//Servicio para obtener TODOS los casos asignados a un usuario
+
+"use server";
+
 import { get } from '@/utils/apiUtils';
 import { CompleteCaseData } from '@/types/cases';
 import { logger } from '@/utils/logUtils';

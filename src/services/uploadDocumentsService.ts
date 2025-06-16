@@ -1,3 +1,7 @@
+//Servicio para subir documentos de solo anexos al caso
+
+"use server";
+
 import axios from "axios";
 import { API_BASE_URL } from "@/config/api";
 

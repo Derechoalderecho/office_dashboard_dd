@@ -1,3 +1,5 @@
+//Servicio para actualizar el estado del caso
+
 "use server";
 
 import { Cases } from "@/types/cases";

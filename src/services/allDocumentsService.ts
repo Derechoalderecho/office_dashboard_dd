@@ -1,3 +1,7 @@
+//Servicio para obtener todos los documentos de un caso en solo los anexos
+
+"use server";
+
 import axios from "axios";
 import { API_BASE_URL } from "@/config/api";
 

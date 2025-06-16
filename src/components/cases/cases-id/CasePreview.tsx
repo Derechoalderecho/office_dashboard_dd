@@ -33,6 +33,7 @@ import { uploadRadicadoDocument } from "@/actions/uploadDocsActions";
 import { getLatestRadicadoDocument } from "@/services/documentService";
 import axios from "axios";
 import { API_BASE_URL } from "@/config/api";
+import { downloadLastRadicado } from "@/services/radicadoService";
 
 interface CasePreviewProps {
   previewText?: string;
@@ -283,45 +284,38 @@ export default function CasePreview({
     fileInputRef.current?.click();
   };
 
-  // Función para descargar el documento usando URL firmada
-  const handleDownloadDocument = async () => {
-    if (!tutelaData || !tutelaData.id_documento) return;
+  function handleDownloadDocument() {
+    if (!caseId) return;
     
-    try {
-      setIsLoading(true);
-      
-      // Usar un endpoint unificado para obtener la URL firmada del documento
-      const apiUrl = `${API_BASE_URL}/documentos/${tutelaData.id_documento}/download`;
-      console.log(`Descargando documento. URL: ${apiUrl}`);
-      
-      const response = await axios.get(apiUrl);
-      
-      if (response.status !== 200 || !response.data.url_firmada) {
-        throw new Error(`No se encontró la URL firmada en la respuesta`);
-      }
-      
-      const signedUrl = response.data.url_firmada;
-      console.log('URL firmada obtenida:', signedUrl);
-      
-      // Abrir la URL firmada en una nueva pestaña
-      window.open(signedUrl, '_blank');
-      
-      addToast({
-        title: "Descarga iniciada",
-        description: `El documento se está abriendo en una nueva pestaña`,
-        color: "success",
+    setIsLoading(true);
+    
+    downloadLastRadicado(caseId)
+      .then(result => {
+        if (result.success && result.signedUrl) {
+          // Abrir la URL firmada en una nueva pestaña
+          window.open(result.signedUrl, '_blank');
+          
+          addToast({
+            title: "Descarga iniciada",
+            description: "El documento se está abriendo en una nueva pestaña",
+            color: "success",
+          });
+        } else {
+          throw new Error(result.error || "No se pudo obtener la URL de descarga");
+        }
+      })
+      .catch(err => {
+        console.error("Error al descargar documento:", err);
+        addToast({
+          title: "Error",
+          description: err.message || "Ocurrió un error al intentar descargar el documento",
+          color: "danger",
+        });
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
-    } catch (err) {
-      console.error("Error al descargar documento:", err);
-      addToast({
-        title: "Error",
-        description: "Ocurrió un error al intentar descargar el documento",
-        color: "danger",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }
 
   // Manejar el cambio de tutela existente
   const handleChangeTutela = () => {
