@@ -46,10 +46,10 @@ export default function CasePage() {
   const loadCaseData = async () => {
     setLoading(true);
     try {
-      const caseData = await fetchCompleteCaseById(caseId);
+      const casesData = await fetchCompleteCaseById(caseId);
       const historyLogs = await fetchCaseHistory(caseId);
       
-      if (!caseData) {
+      if (!casesData || casesData.length === 0) {
         console.error(`Caso con ID ${caseId} no encontrado`);
         addToast({
           title: "Error",
@@ -58,6 +58,9 @@ export default function CasePage() {
         });
         return;
       }
+      
+      // Tomamos el primer elemento del array ya que solo necesitamos un caso
+      const caseData = casesData[0];
       
       setCaseData(caseData);
       setHistoryLogs(historyLogs || []);
@@ -652,7 +655,7 @@ export default function CasePage() {
                 <h2 className="text-xl font-medium">
                   Caso n# - {caseData?.id_caso}
                 </h2>
-                <EditCaseModal caseData={caseData!} onSuccess={loadCaseData} />
+                { /* <EditCaseModal caseData={caseData!} onSuccess={loadCaseData} />*/}
               </div>
               <hr className="my-4" />
          

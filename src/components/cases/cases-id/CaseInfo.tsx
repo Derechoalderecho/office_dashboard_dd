@@ -1,11 +1,10 @@
 "use client";
 
 import { parseDateToLocal } from "@/utils/date";
-import { CompleteCaseData } from "@/types/cases";
-import { Citizen } from "@/types/citizens";
+import { CompleteCaseData, ApiCiudadano } from "@/types/cases";
 
 interface CaseInfoProps {
-  caseData: CompleteCaseData & { ciudadano: Citizen };
+  caseData: CompleteCaseData;
 }
 
 export default function CaseInfo({ caseData }: CaseInfoProps) {
