@@ -473,7 +473,7 @@ export async function submitFormData(
             const assignmentData = {
               id_caso: caseId,
               id_usuario: userId,
-              rol: role
+              rol_en_caso: role
             };
             
             console.debug(`Enviando datos de asignación: ${JSON.stringify(assignmentData)}`);
