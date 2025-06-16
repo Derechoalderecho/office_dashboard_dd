@@ -154,7 +154,7 @@ export async function getLatestTutelaFromDocuments(
     const tutelaResponse: TutelaResponse = {
       nombre_documento: doc.nombre_documento || doc.nombre || doc.titulo || "documento",
       enlace: doc.enlace || "",
-      contenido: "", // DocumentResponse no tiene propiedad contenido
+      contenido: doc.contenido || "", // Usar el contenido de la respuesta
       ext_documento: doc.ext_documento || doc.extension || "",
       id_caso: caseId,
       id_documento: doc.id_documento || doc.id_documento_generado,
@@ -287,7 +287,7 @@ export async function getLatestRadicadoDocument(
     const tutelaResponse: TutelaResponse = {
       nombre_documento: doc.nombre_documento || doc.nombre || doc.titulo || "documento",
       enlace: doc.enlace || "",
-      contenido: doc.contenido || "",
+      contenido: doc.contenido || "", // Asegurar que conservamos el contenido
       ext_documento: doc.ext_documento || doc.extension || "",
       id_caso: caseId,
       id_documento: doc.id_documento || doc.id_documento_generado,
@@ -338,7 +338,7 @@ export async function getTutelaDocumentById(
     const tutelaResponse: TutelaResponse = {
       nombre_documento: document.nombre_documento || "documento",
       enlace: document.enlace || "",
-      contenido: "", // DocumentResponse no tiene propiedad contenido
+      contenido: document.contenido || "", // Intentar recuperar el contenido
       ext_documento: document.ext_documento || "",
       id_caso: document.id_caso || 0,
       id_documento: document.id_documento,

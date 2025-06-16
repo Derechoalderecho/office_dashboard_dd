@@ -19,6 +19,7 @@ export type DocumentResponse = {
   modified_date?: string;
   deleted_at?: string | null;
   fecha_subida?: string;
+  contenido?: string;
 };
 
 export async function uploadDocument(
