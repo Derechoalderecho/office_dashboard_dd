@@ -44,13 +44,21 @@ export default function CasePage() {
 
   // Cargar datos del caso
   const loadCaseData = async () => {
+    console.log('Iniciando carga de datos para caso ID:', caseId);
     setLoading(true);
+    
     try {
+      console.log('Fetching case data for ID:', caseId);
       const casesData = await fetchCompleteCaseById(caseId);
+      console.log('Received case data response:', casesData);
+      
+      console.log('Fetching history logs for case ID:', caseId);
       const historyLogs = await fetchCaseHistory(caseId);
+      console.log('Received history logs:', historyLogs?.length || 0, 'items');
       
       if (!casesData || casesData.length === 0) {
-        console.error(`Caso con ID ${caseId} no encontrado`);
+        const errorMsg = `Caso con ID ${caseId} no encontrado`;
+        console.error(errorMsg);
         addToast({
           title: "Error",
           description: "No se pudo cargar el caso",
@@ -61,10 +69,50 @@ export default function CasePage() {
       
       // Tomamos el primer elemento del array ya que solo necesitamos un caso
       const caseData = casesData[0];
+      console.log('Procesando case data:', typeof caseData, caseData ? 'con datos' : 'sin datos');
+      
+      // Verificar que caseData sea un objeto válido
+      if (!caseData) {
+        console.error('Los datos del caso no son válidos');
+        addToast({
+          title: "Error",
+          description: "Los datos del caso tienen un formato inválido",
+          color: "danger",
+        });
+        return;
+      }
+      
+      // Log para debug
+      if (caseData) {
+        console.log('Case data structure:', caseData);
+        console.log('Case data properties:', Object.keys(caseData));
+      }
+      
+      // Mostrar alerta para confirmar que los datos se cargaron
+      addToast({
+        title: "Éxito",
+        description: "Datos del caso cargados correctamente",
+        color: "success",
+      });
       
       setCaseData(caseData);
       setHistoryLogs(historyLogs || []);
-      setNotasList(caseData.notas || []);
+      
+      // Verificar si hay notas antes de acceder a la propiedad
+      if (caseData && 'notas' in caseData && Array.isArray(caseData.notas)) {
+        console.log('Notas encontradas:', caseData.notas.length, 'items');
+        setNotasList(caseData.notas);
+      } else {
+        console.warn('No se encontraron notas en la respuesta del caso o el formato ha cambiado');
+        // Asegurarse de no intentar llamar a Object.keys en un objeto nulo
+        if (caseData) {
+          console.log('Estructura de caseData:', Object.keys(caseData));
+        } else {
+          console.log('caseData es nulo o indefinido');
+        }
+        // Inicializar con un array vacío para evitar errores
+        setNotasList([]);
+      }
       
     } catch (error) {
       console.error("Error al cargar datos del caso:", error);
@@ -85,7 +133,45 @@ export default function CasePage() {
       return;
     }
     
-    loadCaseData();
+    // Añadir un test directo a la API para diagnóstico
+    const testAPIEndpoint = async () => {
+      try {
+        console.log('Testing direct API connection...');
+        const endpoint = `/casos/full/${caseId}/`;
+        console.log(`Testing endpoint: ${endpoint}`);
+        
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}${endpoint}`);
+        console.log('API Test Response status:', response.status);
+        
+        if (!response.ok) {
+          console.error(`API test failed with status: ${response.status}`);
+          console.error('Response text:', await response.text());
+          return;
+        }
+        
+        const data = await response.json();
+        console.log('API Test Data received:', data);
+        
+        // Verificar estructura de datos
+        if (Array.isArray(data) && data.length > 0) {
+          console.log('API Data structure:', Object.keys(data[0]));
+          
+          // Verificar especificamente el campo notas
+          if ('notas' in data[0]) {
+            console.log('Notas found in API response:', data[0].notas);
+          } else {
+            console.error('No notas field in API response:', data[0]);
+          }
+        }
+      } catch (error) {
+        console.error('API Test ERROR:', error);
+      }
+    };
+    
+    // Ejecutar test y luego cargar los datos normalmente
+    testAPIEndpoint().then(() => {
+      loadCaseData();
+    });
   }, [caseId, id]);
 
   // Efecto para mostrar notificación cuando el caso está en estado 'Radicar'
