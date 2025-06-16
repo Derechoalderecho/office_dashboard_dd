@@ -399,11 +399,13 @@ export function ModalUser({ isOpen, onClose, userData }: ModalUserProps) {
   );
 }
 
+/*
 interface ModalCalificationDetailsProps {
   isOpen: boolean;
   onClose: () => void;
   caseData: CaseWithKey | null;
 }
+
 
 export function ModalCalificationDetails({
   isOpen,
@@ -465,7 +467,7 @@ export function ModalCalificationDetails({
             </ModalHeader>
             <ModalBody>
               <div className="flex flex-col gap-4">
-                {/* Information header */}
+          
                 <div className="bg-blue-50 p-4 rounded-lg mb-3">
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center justify-between">
@@ -487,7 +489,7 @@ export function ModalCalificationDetails({
                   </div>
                 </div>
 
-                {/* Criteria list */}
+            
                 <div className="mt-2">
                   <h3 className="text-base font-semibold mb-3">
                     Detalle de criterios (25% cada uno)
@@ -536,3 +538,4 @@ export function ModalCalificationDetails({
     </Modal>
   );
 }
+*/

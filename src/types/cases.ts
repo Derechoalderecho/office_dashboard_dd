@@ -173,7 +173,7 @@ export interface Cases {
   usuarios: Users[];
   actions?: string;
   key?: string;
-  notas_list?: Nota[];
+  notas_list?: ApiNota[];
   documentos?: DocumentResponse[];
   pretensiones?: string;
   concepto_estudiante?: string;

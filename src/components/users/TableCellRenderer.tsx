@@ -58,18 +58,6 @@ export const TableCellRendererUsers = ({
           </p>
         </div>
       );
-    case "rama_derecho":
-      return (
-        <div className="flex flex-col">
-          <p className="text-base">
-            {String(cellValue)
-              ? cellValue === null
-                ? "-"
-                : cellValue
-              : "-"}
-          </p>
-        </div>
-      );
     case "nivel_consultorio":
       return (
         <div className="flex flex-col">

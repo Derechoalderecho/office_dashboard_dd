@@ -1,7 +1,20 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { Nota } from "@/types/cases";
+import { Nota, ApiNota } from "@/types/cases";
 import { createNote } from "@/services/noteService";
 import { logger } from "@/utils/logUtils";
+
+// Función para convertir ApiNota a Nota
+function mapApiNotaToNota(apiNota: ApiNota): Nota {
+  return {
+    id_nota: apiNota.id_nota_caso,
+    id_caso: apiNota.id_caso,
+    id_usuario: apiNota.id_usuario,
+    mensaje: apiNota.mensaje,
+    fecha_crea: apiNota.created_date,
+    fecha_actualiza: apiNota.modified_date || apiNota.created_date,
+    usuario: apiNota.usuario
+  };
+}
 
 interface NoteState {
   notes: Nota[];
@@ -31,7 +44,7 @@ export const addNote = createAsyncThunk(
       const newNote = await createNote(caseId, content, userId);
       
       if (newNote) {
-        logger.info(`[Redux] Nota creada exitosamente: ID=${newNote.id_nota}`);
+        logger.info(`[Redux] Nota creada exitosamente: ID=${newNote.id_nota_caso}`);
       } else {
         logger.warn(`[Redux] La función createNote devolvió null`);
       }
@@ -69,8 +82,8 @@ const noteSlice = createSlice({
       })
       .addCase(addNote.fulfilled, (state, action) => {
         if (action.payload) {
-          logger.debug(`[Redux] Añadiendo nota ID=${action.payload.id_nota} al estado`);
-          state.notes.push(action.payload);
+          logger.debug(`[Redux] Añadiendo nota ID=${action.payload.id_nota_caso} al estado`);
+          state.notes.push(mapApiNotaToNota(action.payload));
         } else {
           logger.warn(`[Redux] No se recibió payload en addNote.fulfilled`);
         }

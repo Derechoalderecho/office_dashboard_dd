@@ -154,12 +154,12 @@ export async function getLatestTutelaFromDocuments(
     const tutelaResponse: TutelaResponse = {
       nombre_documento: doc.nombre_documento || doc.nombre || doc.titulo || "documento",
       enlace: doc.enlace || "",
-      // Asegurarnos de capturar el contenido correctamente
-      contenido: doc.contenido || "",
+      contenido: "", // DocumentResponse no tiene propiedad contenido
       ext_documento: doc.ext_documento || doc.extension || "",
       id_caso: caseId,
       id_documento: doc.id_documento || doc.id_documento_generado,
       fecha_asigna: doc.fecha_asigna || doc.created_date || doc.fecha_creacion || new Date().toISOString(),
+      id_documento_caso: doc.id_documento_caso || doc.id_documento || 0, // Agregar el campo faltante
     };
     
     console.log("TutelaResponse procesada:", tutelaResponse);
@@ -327,7 +327,7 @@ export async function getTutelaDocumentById(
       };
     }
 
-    if (!document.contenido && !document.contenido) {
+    if (!document.enlace) {
       return {
         success: false,
         error: `El documento con ID ${documentId} no tiene contenido de tutela`,
@@ -338,14 +338,15 @@ export async function getTutelaDocumentById(
     const tutelaResponse: TutelaResponse = {
       nombre_documento: document.nombre_documento || "documento",
       enlace: document.enlace || "",
-      contenido: document.contenido || "",
+      contenido: "", // DocumentResponse no tiene propiedad contenido
       ext_documento: document.ext_documento || "",
       id_caso: document.id_caso || 0,
       id_documento: document.id_documento,
       fecha_asigna:
         document.fecha_asigna ||
-        document.fecha_crea ||
+        document.created_date ||
         new Date().toISOString(),
+      id_documento_caso: document.id_documento_caso || document.id_documento || 0,
     };
 
     return { success: true, data: tutelaResponse };

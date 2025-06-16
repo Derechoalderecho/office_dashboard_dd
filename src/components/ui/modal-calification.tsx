@@ -1,3 +1,4 @@
+/*
 "use client";
 
 import { useState, useEffect } from "react";
@@ -307,4 +308,4 @@ export function ModalCalification({
       </ModalContent>
     </Modal>
   );
-} 
+} */

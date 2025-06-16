@@ -1,3 +1,4 @@
+/*
 "use client";
 
 import { Selection } from "@heroui/react";
@@ -37,4 +38,4 @@ export function BulkActionsBar({
       </div>
     </div>
   );
-} 
+} */
