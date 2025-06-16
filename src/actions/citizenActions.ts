@@ -167,7 +167,7 @@ export async function submitFormData(
     // Crear objeto con los tipos de datos correctos
     const caseData = {
       id_ciudadano: citizenId, // Número en lugar de string
-      tipo_proceso: formData.get("tipo_proceso")?.toString() || "Tutela",
+      id_tipo_caso: Number(formData.get("id_tipo_caso")) || 1, // Usando valor numérico (1=Tutela como default)
       estado: "Viabilidad", // Estado inicial
       tiempo_respuesta: Number(formData.get("tiempo_respuesta")) || 48,
       notas: formData.get("notas")?.toString() || "",

@@ -3,7 +3,7 @@ import { Input, Select, SelectItem, Textarea } from "@heroui/react";
 type GeneralInformationProps = {
   formData: {
     notas: string;
-    tipo_proceso: string;
+    id_tipo_caso: string;
     tiempo_respuesta: string;
     hechos: string;
     pretensiones: string;
@@ -13,7 +13,7 @@ type GeneralInformationProps = {
   updateFormData: (
     data: Partial<{
       notas: string;
-      tipo_proceso: string;
+      id_tipo_caso: string;
       tiempo_respuesta: string;
       hechos: string;
       pretensiones: string;
@@ -27,18 +27,14 @@ export default function GeneralInformationStep({
   formData,
   updateFormData,
 }: GeneralInformationProps) {
-  const isTutela = formData.tipo_proceso === "Tutela";
-  const isDerechoPeticion = formData.tipo_proceso === "Derecho de petición";
-  const isTutelaPrimeraInstancia = formData.tipo_proceso === "Tutela primera instancia";
-  const isTutelaSegundaInstancia = formData.tipo_proceso === "Tutela segunda instancia";
-  const isTutelaDesacato = formData.tipo_proceso === "Tutela desacato";
+  const isTutela = formData.id_tipo_caso === "1";
+  const isDerechoPeticion = formData.id_tipo_caso === "2";
+  const isTutelaPrimeraInstancia = formData.id_tipo_caso === "5";
+  const isTutelaSegundaInstancia = formData.id_tipo_caso === "6";
+  const isTutelaDesacato = formData.id_tipo_caso === "7";
   
-  const selectedInSelect = !!formData.tipo_proceso && 
-    (formData.tipo_proceso === "Tutela" || 
-     formData.tipo_proceso === "Tutela primera instancia" || 
-     formData.tipo_proceso === "Tutela segunda instancia" || 
-     formData.tipo_proceso === "Tutela desacato" || 
-     formData.tipo_proceso === "Derecho de petición");
+  const selectedInSelect = !!formData.id_tipo_caso && 
+    (["1", "2", "5", "6", "7"].includes(formData.id_tipo_caso));
   
   const showHechos = selectedInSelect && (isTutela || isDerechoPeticion || isTutelaPrimeraInstancia || isTutelaSegundaInstancia || isTutelaDesacato);
   const showPretensiones = selectedInSelect && (isTutela || isDerechoPeticion || isTutelaPrimeraInstancia || isTutelaSegundaInstancia || isTutelaDesacato);
@@ -51,21 +47,21 @@ export default function GeneralInformationStep({
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <Select
-          id="tipo_proceso"
-          name="tipo_proceso"
+          id="id_tipo_caso"
+          name="id_tipo_caso"
           variant="bordered"
           label="Tipo de proceso"
           labelPlacement="outside"
           placeholder="Seleccione un tipo de proceso"
-          value={formData.tipo_proceso}
-          onChange={(e) => updateFormData({ tipo_proceso: e.target.value })}
+          value={formData.id_tipo_caso}
+          onChange={(e) => updateFormData({ id_tipo_caso: e.target.value })}
           isRequired
         >
-          <SelectItem key="Tutela">Tutela</SelectItem>
-          <SelectItem key="Tutela primera instancia">Tutela primera instancia</SelectItem>
-          <SelectItem key="Tutela segunda instancia">Tutela segunda instancia</SelectItem>
-          <SelectItem key="Tutela desacato">Tutela desacato</SelectItem>
-          <SelectItem key="Derecho de petición">Derecho de petición</SelectItem>
+          <SelectItem key="1">Tutela</SelectItem>
+          <SelectItem key="5">Tutela primera instancia</SelectItem>
+          <SelectItem key="6">Tutela segunda instancia</SelectItem>
+          <SelectItem key="7">Tutela desacato</SelectItem>
+          <SelectItem key="2">Derecho de petición</SelectItem>
         </Select>
 
         <Input

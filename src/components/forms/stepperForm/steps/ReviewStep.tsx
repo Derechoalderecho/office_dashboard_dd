@@ -32,7 +32,7 @@ type ReviewStepProps = {
     dane_municipio: string;
     // Case information
     notas: string;
-    tipo_proceso: string;
+    id_tipo_caso: string;
     tiempo_respuesta: string;
     hechos: string;
     pretensiones: string;
@@ -226,7 +226,18 @@ export default function ReviewStep({ formData }: ReviewStepProps) {
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
             <p className="text-sm text-gray-500">Tipo de proceso</p>
-            <p>{formData.tipo_proceso}</p>
+            <p>
+              {(() => {
+                switch(formData.id_tipo_caso) {
+                  case "1": return "Tutela";
+                  case "2": return "Derecho de petición";
+                  case "5": return "Tutela primera instancia";
+                  case "6": return "Tutela segunda instancia";
+                  case "7": return "Tutela desacato";
+                  default: return formData.id_tipo_caso || "No especificado";
+                }
+              })()}
+            </p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Estado</p>
