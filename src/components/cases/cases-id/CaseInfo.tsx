@@ -68,12 +68,6 @@ export default function CaseInfo({ caseData }: CaseInfoProps) {
             {parseDateToLocal(caseData.modified_date)}
           </span>
         </article>
-        <article className="flex items-center gap-8">
-          <p className="text-secondary w-28 max-w-28 text-sm">
-            Notas
-          </p>
-          <span className="text-sm">-</span>
-        </article>
       </div>
     </section>
   );

@@ -8,17 +8,16 @@ import {
 } from "@heroicons/react/24/outline";
 import { useState, useEffect } from "react";
 import { createNote } from "@/services/noteService";
-import { ApiNota } from "@/types/cases";
+import { Nota } from "@/types/notas";
 import { parseDate, parseTime } from "@/utils/date";
 import { useAuth } from "@/hooks/useAuth";
-import { useInternalUserId } from "@/hooks/useInternalUserId";
 import { logger } from "@/utils/logUtils";
 import { fetchUserDetails } from "@/services/userService";
 import { Users } from "@/types/users";
 
 interface NotesSectionProps {
   caseId: number;
-  initialNotes?: ApiNota[];
+  initialNotes?: Nota[];
   onNoteAdded?: () => void;
 }
 
@@ -27,38 +26,16 @@ export default function NotesSection({
   initialNotes,
   onNoteAdded,
 }: NotesSectionProps) {
-  const { user } = useAuth();
-  const {
-    internalUserId,
-    isLoading: isLoadingUserId,
-    error: userIdError,
-  } = useInternalUserId();
+  const { internalUserId, loading: isLoadingUserId, error: userIdError } = useAuth();
 
   const [noteText, setNoteText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [notes, setNotes] = useState<ApiNota[]>(initialNotes || []);
+  const [notes, setNotes] = useState<Nota[]>(initialNotes || []);
   const [error, setError] = useState<string | null>(null);
   const [userCache, setUserCache] = useState<Record<number, Users>>({});
   const [loadingUsers, setLoadingUsers] = useState(false);
 
-  // Log user details for debugging
-  useEffect(() => {
-    if (user) {
-      console.log(`Usuario Firebase actual: ${user.uid}, Email: ${user.email}`);
-    } else {
-      console.warn("No hay usuario autenticado");
-    }
-
-    if (internalUserId) {
-      console.log(`ID interno del usuario: ${internalUserId}`);
-    }
-
-    if (userIdError) {
-      console.error(`Error al obtener ID interno: ${userIdError}`);
-    }
-  }, [user, internalUserId, userIdError]);
-
-  // Log initial notes and fetch user information
+  // Logs iniciales de notas y fetch de usuarios
   useEffect(() => {
     if (initialNotes) {
       console.log(`Notas iniciales cargadas: ${initialNotes.length}`);
@@ -70,29 +47,29 @@ export default function NotesSection({
       );
       setNotes(sortedNotes);
 
-      // Fetch user information for each note
+      // Fetch usuarios para notas
       fetchUsersForNotes(sortedNotes);
     } else {
       console.log("No hay notas iniciales disponibles");
     }
   }, [initialNotes]);
 
-  // Fetch user information for all notes
-  const fetchUsersForNotes = async (notesToProcess: ApiNota[]) => {
+  // Fetch usuarios para notas
+  const fetchUsersForNotes = async (notesToProcess: Nota[]) => {
     if (!notesToProcess.length) return;
 
     setLoadingUsers(true);
 
     try {
-      // Get unique user IDs from notes
+      // Obtiene IDs únicos de usuarios
       const userIds = Array.from(
         new Set(notesToProcess.map((note) => note.id_usuario))
       );
 
-      // Create a new cache object
+      // Crea un nuevo objeto de cache
       const newUserCache: Record<number, Users> = { ...userCache };
 
-      // Fetch user information for each unique user ID not already in cache
+      // Fetch de usuarios con información única de notas no en cache
       const fetchPromises = userIds
         .filter((userId) => !newUserCache[userId])
         .map(async (userId) => {
@@ -117,7 +94,7 @@ export default function NotesSection({
     }
   };
 
-  // Get user name from cache
+  // Obtiene nombre de usuario desde cache
   const getUserName = (userId: number): string => {
     const user = userCache[userId];
     if (user) {
@@ -126,7 +103,7 @@ export default function NotesSection({
     return `Usuario ${userId}`;
   };
 
-  // Get user initials from cache
+  // Obtiene iniciales de usuario desde cache
   const getUserInitials = (userId: number): string => {
     const user = userCache[userId];
 
@@ -214,9 +191,9 @@ export default function NotesSection({
     }
   };
 
-  // Handle keyboard submit with Ctrl+Enter
+  // Maneja la tecla Enter para enviar el mensaje rápido
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && noteText.trim()) {
+    if (e.key === "Enter" && noteText.trim()) {
       e.preventDefault();
       handleAddNote();
     }
