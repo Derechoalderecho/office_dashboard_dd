@@ -1,3 +1,5 @@
+//Service para obtener los datos del usuario que está logeado
+
 "use server";
 
 import { get } from '@/utils/apiUtils';

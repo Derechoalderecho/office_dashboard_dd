@@ -1,5 +1,3 @@
-//Servicio para obtener el el ID del usuario para ser usado en el hook
-
 "use server";
 
 import { get } from '@/utils/apiUtils';
