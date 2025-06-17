@@ -25,8 +25,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Tabs, Tab, Spinner } from "@heroui/react"
-import { fetchSerieTiempoCasos, Frecuencia, TipoCaso } from "@/services/dasboardService"
-import { useInternalUserId } from "@/hooks/useInternalUserId"
+import { fetchSerieTiempoCasos, Frecuencia } from "@/services/dasboardService"
+import { useAuth } from "@/hooks/useAuth"
 
 interface ChartDataPoint {
   fecha: string;
@@ -67,7 +67,7 @@ const configAceptadosRecibidos = {
 } satisfies ChartConfig;
 
 export default function AreaChartTiempoCasos() {
-  const { internalUserId } = useInternalUserId();
+  const { internalUserId } = useAuth();
   const [frecuencia, setFrecuencia] = React.useState<Frecuencia>("semanal");
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [chartData, setChartData] = React.useState<ChartDataPoint[]>([]);

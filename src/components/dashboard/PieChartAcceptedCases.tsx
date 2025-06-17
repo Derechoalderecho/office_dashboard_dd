@@ -18,7 +18,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { Spinner } from "@heroui/react";
 import { fetchCasosAceptadosRecibidos } from "@/services/dasboardService";
-import { useInternalUserId } from "@/hooks/useInternalUserId";
+import { useAuth } from "@/hooks/useAuth";
 
 // Define colors for the pie chart segments
 const STATUS_COLORS = {
@@ -33,7 +33,7 @@ type CasosPieData = {
 }
 
 export default function PieChartAcceptedCases() {
-  const { internalUserId } = useInternalUserId();
+  const { internalUserId } = useAuth();
   const [data, setData] = useState<{ aceptados: number; recibidos: number }>({ aceptados: 0, recibidos: 0 });
   const [isLoading, setIsLoading] = useState(true);
 

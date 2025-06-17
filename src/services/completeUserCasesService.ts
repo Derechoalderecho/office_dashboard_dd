@@ -1,3 +1,5 @@
+//Servicio para obtener todos los casos completos asignados a un usuario y de paso para obtener un caso especifico
+
 "use server";
 
 import { get } from '@/utils/apiUtils';

@@ -10,7 +10,7 @@ import {
 } from "@heroicons/react/24/solid";
 import { fetchTotalUsuariosConsultorio, fetchCiudadanosAtendidos, fetchCasosAtendidos } from "@/services/dasboardService";
 import { Card, CardContent } from "@/components/ui/card";
-import { useInternalUserId } from "@/hooks/useInternalUserId";
+import { useAuth } from "@/hooks/useAuth";
 
 const iconMap = {
   students: UserPlusIcon,
@@ -73,7 +73,7 @@ async function calculateWeeklyChange(type: "students" | "citizens" | "cases", us
 }
 
 export default function CardCountsWrapper() {
-  const { internalUserId } = useInternalUserId();
+  const { internalUserId } = useAuth();
 
   const [studentsData, setStudentsData] = useState({ currentCount: 0, percentChange: 0 });
   const [citizensData, setCitizensData] = useState({ currentCount: 0, percentChange: 0 });

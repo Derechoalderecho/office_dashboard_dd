@@ -1,9 +1,6 @@
 import CardCountsWrapper from "@/components/dashboard/CardCounts";
-import PieChartsWrapper from "@/components/dashboard/PieChartProcedures";
-import PieChartCases from "@/components/dashboard/PieChartCases";
 import PieChartAcceptedCases from "@/components/dashboard/PieChartAcceptedCases";
 import PieChartGanadosPerdidos from "@/components/dashboard/PieChartGanadosPerdidos";
-import AreaChartTotalCases from "@/components/dashboard/AreaChartTotalCases";
 import AreaChartTiempoCasos from "@/components/dashboard/AreaChartTiempoCasos";
 import { CardsSkeleton } from "@/ui/Skeletons";
 import { Suspense } from "react";
