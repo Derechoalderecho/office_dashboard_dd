@@ -28,8 +28,6 @@ import { BulkActionsBar } from "./BulkActionsBar";
 import { deleteCasesByIds } from "@/services/caseService";
 import { ModalCase } from "../ui/modal-table";
 import { useAuth } from "@/hooks/useAuth";
-import { useUserRole } from "@/hooks/useUserRole";
-import { getUserIdFromFirebase } from "@/services/userService";
 import { fetchUserCasesFull } from "@/services/userCasesService";
 
 const INITIAL_VISIBLE_COLUMNS = [
@@ -58,13 +56,12 @@ export default function TableCases() {
   const [page, setPage] = useState(1);
   const [showAll, setShowAll] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
-  const [selectedUser, setSelectedUser] = useState<number | null>(null); // Estado de la tabla
+  const [selectedUser, setSelectedUser] = useState<number | null>(null);
   const [cases, setCases] = useState<CaseWithKey[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [selectedCase, setSelectedCase] = useState<CaseWithKey | null>(null);
-  const { user } = useAuth();
-  const { role } = useUserRole();
+  const { user, role, internalUserId } = useAuth();
 
   // Función para reiniciar todos los filtros
   const handleResetAllFilters = useCallback(() => {
@@ -93,11 +90,7 @@ export default function TableCases() {
       
       // Limpiar las selecciones actuales
       setSelectedKeys(new Set([]));
-      
-      if (!userId && user?.uid) {
-        userId = await getUserIdFromFirebase(user.uid);
-      }
-      
+ 
       if (!userId) {
         setIsLoading(false);
         return;
@@ -135,26 +128,20 @@ export default function TableCases() {
     }
   };
 
-  // Fetch cases from API when component mounts
+  // Fetch casos del usuario como useEffect para obtener los casos del usuario
   useEffect(() => {
-    async function loadUserAndCases() {
-      if (user?.uid) {
-        const userId = await getUserIdFromFirebase(user.uid);
-        if (userId) {
-          fetchCases(false, userId);
-        }
-      }
+    if (internalUserId) {
+      setSelectedUser(internalUserId);
+      fetchCases(false, internalUserId);
     }
-    
-    loadUserAndCases();
-  }, [user?.uid]);
+  }, [internalUserId]);
 
-  // Handle delete cases
+  // Botón de eliminar casos
   const handleDeleteCases = async (ids: number[]): Promise<boolean> => {
     try {
       const success = await deleteCasesByIds(ids);
       if (success) {
-        // Update cases list after deletion
+        // Actualizar la lista de casos después de eliminar
         const updatedCases = cases.filter(
           (caseItem) => !ids.includes(caseItem.id_caso)
         );
@@ -169,7 +156,7 @@ export default function TableCases() {
     }
   };
 
-  // Handle date range change
+  // Cambiar rango de fechas
   const handleDateRangeChange = (newValue: RangeValue<CalendarDate> | null) => {
     if (!newValue) {
       setDateRange(null);
@@ -192,7 +179,7 @@ export default function TableCases() {
     setDateRange(newDateRange);
   };
 
-  // Handle Bulk Actions Bar selection change
+  // Abrir la selección del Bulk Actions Bar al seleccionar un caso
   const onSelectionChangeMasiveMenu = (keys: Selection) => {
     setSelectedKeys(keys);
   };
@@ -206,7 +193,7 @@ export default function TableCases() {
 
 
 
-  // Filters
+  // Filtros de la tabla
   const { filteredItems, hasSearchFilter } = useFilteredItems({
     cases,
     filterValue,
@@ -218,12 +205,12 @@ export default function TableCases() {
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
-  // Paginate
+  // Paginado de la tabla
   const items = useMemo(() => {
     return paginateItems(filteredItems, page, rowsPerPage);
   }, [page, filteredItems, rowsPerPage]);
 
-  //Sort items
+  // Ordenar los items de la tabla
   const sortedItems = useMemo(() => {
     return sortItems(items, sortDescriptor);
   }, [sortDescriptor, items]);
@@ -236,7 +223,7 @@ export default function TableCases() {
     []
   );
 
-  // Clear search filter
+  // Cambiar el filtro de búsqueda
   const onSearchChange = useCallback((value?: string) => {
     if (value) {
       setFilterValue(value);
