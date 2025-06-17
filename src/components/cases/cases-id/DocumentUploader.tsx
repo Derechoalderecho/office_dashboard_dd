@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { Button, Spinner, addToast, Chip } from "@heroui/react";
+import { addToast } from "@heroui/react";
 import { 
   CloudArrowUpIcon, 
   ArrowUpTrayIcon,
@@ -10,7 +10,7 @@ import {
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import { DocumentResponse } from "@/actions/uploadDocsActions";
 import { uploadDocument } from "@/services/uploadDocumentsService";
-import { useInternalUserId } from "@/hooks/useInternalUserId";
+import { useAuth } from "@/hooks/useAuth";
 import { useAppDispatch } from "@/store/hooks";
 import { fetchCase } from "@/store/slices/caseSlice";
 import { invalidateCache } from "@/utils/cacheUtils";
@@ -33,9 +33,8 @@ export default function DocumentUploader({
   const dragCounter = useRef(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dispatch = useAppDispatch();
-  const { internalUserId, isLoading: isLoadingUserId, error: userIdError } = useInternalUserId();
+  const { internalUserId, isLoadingId: isLoadingUserId, idError: userIdError } = useAuth();
 
-  // Max file size in bytes (10MB)
   const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
   const showErrorToast = (message: string) => {
@@ -199,7 +198,7 @@ export default function DocumentUploader({
               ? 'border-primary bg-blue-50 scale-[1.02] shadow-lg' 
               : 'border-gray-300 bg-gray-50 hover:bg-gray-100'}`}
         >
-          {/* Overlay when dragging - now with absolute positioning and full coverage */}
+          {/* Overlya mientras se arrastra el archivo */}
           <div 
             className={`absolute inset-0 bg-primary/10 backdrop-blur-[2px] flex flex-col items-center justify-center z-10 transition-opacity duration-300 ease-in-out ${
               isDragging ? 'opacity-100' : 'opacity-0 pointer-events-none'
@@ -214,7 +213,7 @@ export default function DocumentUploader({
             </div>
           </div>
           
-          {/* Normal content - fades out during drag */}
+          {/* Contenido de fade-out */}
           <div 
             className={`absolute inset-0 flex flex-col items-center justify-center p-5 transition-opacity duration-300 ease-in-out ${
               isDragging ? 'opacity-0' : 'opacity-100'
