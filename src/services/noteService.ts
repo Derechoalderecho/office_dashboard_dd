@@ -10,7 +10,7 @@ import {
   invalidateCacheItem
 } from "@/utils/cacheUtils";
 import { logger } from "@/utils/logUtils";
-import { fetchUserDetails, fetchAllUsers } from "./userService";
+import { fetchUserDetails } from "./userService";
 
 const NOTES_CACHE = 'notes';
 const USERS_CACHE = 'users';
@@ -19,54 +19,6 @@ const CASES_CACHE = 'cases';
 const NOTES_TTL = 5 * 60 * 1000;
 const USERS_CACHE_TTL = 30 * 60 * 1000;
 const CASES_CACHE_TTL = 5 * 60 * 1000;
-
-/**
- * Enrich notes with user information efficiently
- * using the centralized cache to avoid unnecessary requests
- */
-export async function enrichNotesWithUserInfo(notes: ApiNota[]): Promise<ApiNota[]> {
-  if (!notes || notes.length === 0) {
-    return [];
-  }
-  
-  const userIds = Array.from(new Set(
-    notes
-      .map(nota => nota.id_usuario)
-      .filter(Boolean) as number[]
-  ));
-  
-  const uncachedUserIds = userIds.filter(userId => 
-    !getCachedItem(USERS_CACHE, userId, USERS_CACHE_TTL)
-  );
-  
-  if (uncachedUserIds.length > 0) {
-    logger.debug(`Cargando información de ${uncachedUserIds.length} usuarios para notas`);
-    
-    await fetchAllUsers();
-  }
-  
-  return await Promise.all(notes.map(async nota => {
-    const userId = nota.id_usuario || nota.id_usuario;
-    
-    if (!userId) return nota;
-    
-    const user = await getWithCache<Users | null>(
-      USERS_CACHE,
-      userId,
-      async () => {
-        logger.debug(`Obteniendo detalles de usuario ${userId} para nota ${nota.id_nota_caso}`);
-        return await fetchUserDetails(userId.toString());
-      },
-      USERS_CACHE_TTL
-    );
-    
-    if (user) {
-      return { ...nota, usuario: user };
-    }
-    
-    return nota;
-  }));
-}
 
 /**
  * Creates a new note for a case
