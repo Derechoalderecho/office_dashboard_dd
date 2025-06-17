@@ -1,7 +1,7 @@
 "use client";
 
 import { parseDateToLocal } from "@/utils/date";
-import { CompleteCaseData, ApiCiudadano } from "@/types/cases";
+import { CompleteCaseData } from "@/types/cases";
 
 interface CaseInfoProps {
   caseData: CompleteCaseData;

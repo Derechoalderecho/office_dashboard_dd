@@ -15,6 +15,7 @@ import { transformStateByRole } from "@/utils/stateTransformer";
 import { UserRole } from "@/store/slices/authSlice";
 import { useState } from "react";
 import { AlertDialog } from "@/components/ui/alert-dialog";
+import { getCaseStatusStyles } from "@/utils/caseStatusStyles";
 
 interface CaseHeaderProps {
   caseData: CompleteCaseData;
@@ -43,6 +44,7 @@ export default function CaseHeader({
   const [isRadicarInfoOpen, setIsRadicarInfoOpen] = useState(false);
   const [isChangeTutelaDialogOpen, setIsChangeTutelaDialogOpen] = useState(false);
 
+  //Botón para radicar tutela
   const handleRadicarClick = () => {
     if (onRadicarClick) {
       onRadicarClick();
@@ -52,13 +54,14 @@ export default function CaseHeader({
     }
   };
 
+  //Botón para cambiar radicado tutela
   const handleChangeTutelaClick = () => {
-    // Mostrar diálogo de confirmación
+    // Mostrar alert dialog de confirmación
     setIsChangeTutelaDialogOpen(true);
   };
 
   const confirmChangeTutela = () => {
-    // Cerrar diálogo
+    // Cerrar alert dialog
     setIsChangeTutelaDialogOpen(false);
     
     // Llamar a la función del componente padre
@@ -93,57 +96,10 @@ export default function CaseHeader({
         <div className="flex gap-4 items-center mb-1">
           <h1 className="text-4xl font-medium">INV4257-09-011</h1>
           <div
-            className={`w-fit flex gap-2 items-center rounded-full py-1 px-3 
-            ${
-              displayState === "Aprobado"
-                ? "bg-success text-[#12A150]"
-                : displayState === "Seguimiento"
-                ? "bg-followed text-[#006FEE]"
-                : displayState === "Acción necesaria"
-                ? "bg-warning text-[#C4841D]"
-                : displayState === "No aprobado"
-                ? "bg-error text-[#F31260]"
-                : displayState === "Viabilidad"
-                ? "bg-purple-100 text-purple-600"
-                : displayState === "Elaboración tutela"
-                ? "bg-indigo-100 text-indigo-600"
-                : displayState === "Valoración del asesor"
-                ? "bg-teal-100 text-teal-600"
-                : displayState === "Revisar tutela"
-                ? "bg-amber-100 text-amber-600"
-                : displayState === "Radicar"
-                ? "bg-emerald-100 text-emerald-600"
-                : displayState === "Pendiente"
-                ? "bg-rose-100 text-rose-600"
-                : displayState === "Espera del juez"
-                ? "bg-sky-100 text-sky-600"
-                : ""
-            }`}
+            className={`w-fit flex gap-2 items-center rounded-full py-1 px-3 ${getCaseStatusStyles(displayState, 'badge')}`}
           >
             <div
-              className={`w-2 h-2 rounded-full ${
-                displayState === "Aprobado"
-                  ? "bg-[#12A150]"
-                  : displayState === "Seguimiento"
-                  ? "bg-[#006FEE]"
-                  : displayState === "No aprobado"
-                  ? "bg-[#F31260]"
-                  : displayState === "Viabilidad"
-                  ? "bg-purple-600"
-                  : displayState === "Elaboración tutela"
-                  ? "bg-indigo-600"
-                  : displayState === "Valoración del asesor"
-                  ? "bg-teal-600"
-                  : displayState === "Revisar tutela"
-                  ? "bg-amber-600"
-                  : displayState === "Radicar"
-                  ? "bg-emerald-600"
-                  : displayState === "Pendiente"
-                  ? "bg-rose-600"
-                  : displayState === "Espera del juez"
-                  ? "bg-sky-600"
-                  : "bg-[#C4841D]"
-              }`}
+              className={`w-2 h-2 rounded-full ${getCaseStatusStyles(displayState, 'indicator')}`}
             ></div>
             <span className="text-sm font-medium capitalize">
               {displayState}
