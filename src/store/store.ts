@@ -1,7 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { persistStore, persistReducer } from 'redux-persist';
-import storage from 'redux-persist/lib/storage';
 import { authReducer, caseReducer, noteReducer, documentReducer } from './slices';
+
+// Configuración condicional de storage para cliente y servidor
+const storage = typeof window !== 'undefined'
+  ? require('redux-persist/lib/storage').default
+  : require('../utils/reduxPersistNoopStorage').default();
 
 const persistConfig = {
   key: 'root',
