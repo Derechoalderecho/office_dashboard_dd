@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { getUserIdFromFirebase } from '@/services/userService';
 import { getUserIdFromFirebaseUid } from '@/services/userByFirebaseService';
 
 export const useInternalUserId = () => {
