@@ -75,7 +75,7 @@ export async function downloadDocument(
       console.log(`Obteniendo URL firmada para el documento ${idDocumentoCaso}`);
       
       try {
-        const urlResponse = await axios.get(`${API_BASE_URL}/documentos/${idDocumentoCaso}/download`);
+        const urlResponse = await axios.get(`${API_BASE_URL}/documentos/caso/${idDocumentoCaso}/download`);
         
         if (urlResponse.status === 200 && urlResponse.data) {
           urlFirmada = urlResponse.data.url_firmada || urlResponse.data.enlace || urlResponse.data;
