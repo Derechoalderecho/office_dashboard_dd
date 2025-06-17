@@ -1,7 +1,6 @@
 "use client";
 
 import { Button, addToast, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/react";
-import { useRouter } from "next/navigation";
 import {
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
@@ -16,7 +15,7 @@ import DocumentsSection from "@/components/cases/cases-id/DocumentsSection";
 import NotesSection from "@/components/cases/cases-id/NotesSection";
 import CaseHistoryLogs from "@/components/cases/cases-id/CaseHistoryLogs";
 import EditCaseModal from "@/components/cases/cases-id/EditCaseModal";
-import { useUserRole } from "@/hooks/useUserRole";
+import { useAuth } from "@/hooks/useAuth";
 import { CompleteCaseData } from "@/types/cases";
 import { useParams } from "next/navigation";
 
@@ -29,8 +28,7 @@ interface CasePageProps {
 export default function CasePage() {
   const { id } = useParams<{ id: string }>();
   const caseId = parseInt(id as string, 10);
-  const router = useRouter();
-  const { role } = useUserRole();
+  const { role } = useAuth();
   
   const [caseData, setCaseData] = useState<CompleteCaseData | null>(null);
   const [historyLogs, setHistoryLogs] = useState<any[]>([]);
