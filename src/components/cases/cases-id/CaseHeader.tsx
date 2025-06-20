@@ -99,7 +99,7 @@ export default function CaseHeader({
             className={`w-fit flex gap-2 items-center rounded-full py-1 px-3 ${getCaseStatusStyles(displayState, 'badge')}`}
           >
             <div
-              className={`w-2 h-2 rounded-full ${getCaseStatusStyles(displayState, 'indicator')}`}
+              className={`w-2 h-2 rounded-full bg-indigo-600`}
             ></div>
             <span className="text-sm font-medium capitalize">
               {displayState}
