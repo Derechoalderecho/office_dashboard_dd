@@ -92,7 +92,7 @@ export const TableCellRendererGrades = ({
       };
       
       return (
-        <div className="flex justify-center items-center">
+        <div className="flex">
           {calificaciones && calificaciones.length > 0 && calificaciones[0].promedio != null ? (
             <Chip 
               color={getGradeColor(calificaciones[0].promedio) as any}
@@ -110,7 +110,7 @@ export const TableCellRendererGrades = ({
       );
     case "actions":
       return (
-        <div className="relative flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <Tooltip content="Ver calificaciones del caso">
             <Button
               isIconOnly
@@ -120,15 +120,17 @@ export const TableCellRendererGrades = ({
               <EyeIcon className="w-6" />
             </Button>
           </Tooltip>
-          <Tooltip content="Calificar caso">
-            <Button
-              isIconOnly
-              className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
-              onPress={() => onGradeCase?.(caseData)}
-            >
+          {userRole === 'Docente' || userRole === 'Director' || userRole === 'Monitor' ? (
+            <Tooltip content="Calificar caso">
+              <Button
+                isIconOnly
+                className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
+                onPress={() => onGradeCase?.(caseData)}
+              >
               <PencilSquareIcon className="w-6" />
             </Button>
           </Tooltip>
+          ) : null}
         </div>
       );
       
