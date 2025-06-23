@@ -34,6 +34,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   "ciudadano",
   "estudiante_asignado",
   "calificacion",
+  "assignedUsers",
   "actions",
 ];
 
@@ -294,6 +295,7 @@ export default function TableGrades() {
                     columnKey={columnKey as keyof CaseWithKey}
                     onPreviewCase={handlePreviewCase}
                     onGradeCase={handleGradeCase}
+                    userRole={role}
                   />
                 </TableCell>
               )}

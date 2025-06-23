@@ -1,16 +1,16 @@
-
-
 "use client";
 
 import { EyeIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
 import { Chip, Tooltip, Button } from "@heroui/react";
 import { CaseWithKey } from "@/types/cases";
+import { UserRole } from "@/store/slices/authSlice";
 
 interface TableCellRendererProps {
   case: CaseWithKey;
   columnKey: string;
   onPreviewCase?: (caseData: CaseWithKey) => void;
   onGradeCase?: (caseData: CaseWithKey) => void;
+  userRole?: UserRole;
 }
 
 export const TableCellRendererGrades = ({
@@ -18,6 +18,7 @@ export const TableCellRendererGrades = ({
   columnKey,
   onPreviewCase,
   onGradeCase,
+  userRole,
 }: TableCellRendererProps) => {
   // Acceder al valor de forma segura
   const cellValue = columnKey in caseData ? caseData[columnKey as keyof CaseWithKey] : undefined;
@@ -128,6 +129,51 @@ export const TableCellRendererGrades = ({
               <PencilSquareIcon className="w-6" />
             </Button>
           </Tooltip>
+        </div>
+      );
+      
+    case "assignedUsers":
+      const assignedStudent = caseData.usuarios?.find(
+        user => user.rol === "Estudiante"
+      );
+      const assignedTeacher = caseData.usuarios?.find(
+        user => user.rol === "Docente"
+      );
+      
+      return (
+        <div className="flex flex-col">
+          {userRole === 'Docente' || userRole === 'Director' || userRole === 'Monitor' ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Estudiante:</span>
+              <span className="text-sm">
+                {assignedStudent ? `${assignedStudent.primer_nombre} ${assignedStudent.primer_apellido}` : "Sin asignar"}
+              </span>
+            </div>
+          ) : null}
+          {userRole === 'Estudiante' || userRole === 'Director' || userRole === 'Monitor' ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Docente:</span>
+              <span className="text-sm">
+                {assignedTeacher ? `${assignedTeacher.primer_nombre} ${assignedTeacher.primer_apellido}` : "Sin asignar"}
+              </span>
+            </div>
+          ) : null}
+          {!userRole && (
+            <>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Estudiante:</span>
+                <span className="text-sm">
+                  {assignedStudent ? `${assignedStudent.primer_nombre} ${assignedStudent.primer_apellido}` : "Sin asignar"}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Docente:</span>
+                <span className="text-sm">
+                  {assignedTeacher ? `${assignedTeacher.primer_nombre} ${assignedTeacher.primer_apellido}` : "Sin asignar"}
+                </span>
+              </div>
+            </>
+          )}
         </div>
       );
       
