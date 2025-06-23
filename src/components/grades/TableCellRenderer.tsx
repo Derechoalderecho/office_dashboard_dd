@@ -23,27 +23,6 @@ export const TableCellRendererGrades = ({
   const cellValue = columnKey in caseData ? caseData[columnKey as keyof CaseWithKey] : undefined;
 
   switch (columnKey) {
-    case "calificacion":
-      // Verificar si hay calificaciones
-      if (caseData.calificaciones && caseData.calificaciones.length > 0) {
-        // Calcular el promedio de todas las calificaciones
-        const promedio = caseData.calificaciones.reduce((sum, cal) => sum + cal.promedio, 0) / caseData.calificaciones.length;
-        return (
-          <div className="flex justify-center items-center">
-            <Chip color="primary" variant="flat" className="font-semibold">
-              {promedio.toFixed(1)}
-            </Chip>
-          </div>
-        );
-      } else {
-        return (
-          <div className="flex justify-center items-center">
-            <Chip color="default" variant="flat" className="text-gray-500">
-              Sin calificar
-            </Chip>
-          </div>
-        );
-      }
     case "id_caso":
       return (
         <div className="flex flex-col">
@@ -103,14 +82,28 @@ export const TableCellRendererGrades = ({
       );
     case "calificacion":
       const calificaciones = caseData.calificaciones;
+      
+      // Determinar el color según el valor de la calificación
+      const getGradeColor = (grade: number) => {
+        if (grade >= 4.0) return "success";
+        if (grade >= 3.0) return "warning";
+        return "danger";
+      };
+      
       return (
-        <div className="flex flex-col">
-          {calificaciones && calificaciones.length > 0 ? (
-            <p className="text-sm font-medium">
-              {String(calificaciones[0].promedio)}
-          </p>
+        <div className="flex justify-center items-center">
+          {calificaciones && calificaciones.length > 0 && calificaciones[0].promedio != null ? (
+            <Chip 
+              color={getGradeColor(calificaciones[0].promedio) as any}
+              variant="flat"
+              className="font-semibold"
+            >
+              {calificaciones[0].promedio.toFixed(1)}
+            </Chip>
           ) : (
-            <p className="text-sm text-gray-500">Sin calificar</p>
+            <Chip color="default" variant="flat" className="text-gray-500">
+              Sin calificar
+            </Chip>
           )}
         </div>
       );
