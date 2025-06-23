@@ -61,10 +61,9 @@ export default function CaseHeader({
   };
 
   const confirmChangeTutela = () => {
-    // Cerrar alert dialog
     setIsChangeTutelaDialogOpen(false);
     
-    // Llamar a la función del componente padre
+    // Llamar al manejador de cambio de tutela
     if (onChangeTutelaInEsperaJuez) {
       onChangeTutelaInEsperaJuez();
     }

@@ -185,8 +185,7 @@ export default function CasePage() {
 
   // Manejador para el botón de radicar tutela
   const handleRadicarClick = () => {
-    // Establecer una bandera en localStorage para indicar que la carga viene del botón de radicar
-    localStorage.setItem(`case_${caseId}_radicar_action`, 'true');
+    if (!caseData) return;
     
     // Referencia al input de archivo en CasePreview
     const fileInput = document.querySelector('#tutela-file-input') as HTMLInputElement;
@@ -197,7 +196,7 @@ export default function CasePage() {
       
       addToast({
         title: "Radicar tutela",
-        description: "Seleccione el documento de tutela para radicar el caso",
+        description: "Seleccione el documento para radicar la tutela",
         color: "primary",
       });
     } else {
@@ -213,7 +212,7 @@ export default function CasePage() {
         
         addToast({
           title: "Radicar tutela",
-          description: "Por favor, cargue o actualice el documento de tutela para radicar el caso",
+          description: "Desplácese hasta la sección de tutela para cargar el documento",
           color: "primary",
         });
       }
@@ -406,8 +405,7 @@ export default function CasePage() {
         return true;
       case "Espera del juez":
         // En espera del juez, permitir cambiar la tutela si se solicita explícitamente
-        // La bandera se establecerá cuando se haga clic en el botón de cambiar tutela
-        return localStorage.getItem(`case_${caseData.id_caso}_allow_change_tutela`) === 'true';
+        return true;
       default:
         return false;
     }
@@ -484,15 +482,10 @@ export default function CasePage() {
       setStatusChangeLoading(false);
     }
   };
+
   // Manejador para permitir cambiar tutela en estado "Espera del juez"
   const handleChangeTutelaInEsperaJuez = () => {
     if (!caseData) return;
-    
-    // Establecer bandera para permitir cambiar la tutela
-    localStorage.setItem(`case_${caseId}_allow_change_tutela`, 'true');
-    
-    // Establecer bandera para indicar que la acción viene del botón de cambiar tutela en Espera del juez
-    localStorage.setItem(`case_${caseId}_change_tutela_action`, 'true');
     
     // Referencia al input de archivo en CasePreview
     const fileInput = document.querySelector('#tutela-file-input') as HTMLInputElement;
