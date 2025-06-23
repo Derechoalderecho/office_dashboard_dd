@@ -13,7 +13,7 @@ import {
 } from "@heroui/react";
 import { CaseWithKey } from "@/types/cases";
 import { gradesService } from "@/services/gradesService";
-import { CreateGradeParams } from "@/types/grades";
+import { CreateGradeParams, UpdateGradeParams } from "@/types/grades";
 
 interface ModalCalificationProps {
   isOpen: boolean;
@@ -198,19 +198,48 @@ export function ModalCalification({
         throw new Error("El caso debe tener asignado un estudiante y un docente para calificarlo");
       }
       
-      // Crear el objeto de calificación
-      const gradeData: CreateGradeParams = {
-        id_caso: caseData.id_caso,
-        id_estudiante: estudiante.id_usuario,
-        id_docente: docente.id_usuario,
-        criterio_1: criteriosNumericos[0],
-        criterio_2: criteriosNumericos[1],
-        criterio_3: criteriosNumericos[2],
-        criterio_4: criteriosNumericos[3]
-      };
+      // Verificar si ya existe una calificación para este caso
+      const existingGrade = caseData.calificaciones && caseData.calificaciones.length > 0 ? caseData.calificaciones[0] : null;
       
-      // Enviar la calificación al servidor
-      await gradesService.createGrade(gradeData);
+      console.log('Calificación existente:', existingGrade);
+      
+      // Obtener el ID de la calificación, manejando posibles inconsistencias en el nombre del campo
+      const gradeId = existingGrade && (
+        // Intentar con ambas versiones del nombre del campo
+        existingGrade.id_califiaciones_caso || 
+        (existingGrade as any).id_calificaciones_caso
+      );
+      
+      if (existingGrade && gradeId) {
+        // Si ya existe una calificación, preparar datos para actualizar
+        const updateData: UpdateGradeParams = {
+          criterio_1: criteriosNumericos[0],
+          criterio_2: criteriosNumericos[1],
+          criterio_3: criteriosNumericos[2],
+          criterio_4: criteriosNumericos[3],
+          ganado: false // Valor por defecto para cumplir con el tipo
+        };
+        
+        console.log('Actualizando calificación con ID:', gradeId);
+        
+        // Actualizar la calificación existente
+        await gradesService.updateGrade(gradeId, updateData);
+      } else {
+        // Si no existe, crear una nueva calificación
+        const createData: CreateGradeParams = {
+          id_caso: caseData.id_caso,
+          id_estudiante: estudiante.id_usuario,
+          id_docente: docente.id_usuario,
+          criterio_1: criteriosNumericos[0],
+          criterio_2: criteriosNumericos[1],
+          criterio_3: criteriosNumericos[2],
+          criterio_4: criteriosNumericos[3]
+        };
+        
+        await gradesService.createGrade(createData);
+      }
+      
+
       
       setIsSubmitting(false);
       onClose();

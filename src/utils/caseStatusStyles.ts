@@ -32,8 +32,8 @@ const statusStyleMap: Record<string, StatusStyles> = {
     indicator: "bg-purple-100",
   },
   "Pendiente": {
-    badge: "bg-rose-100 text-rose-600",
-    indicator: "bg-rose-100",
+    badge: "bg-orange-100 text-orange-600",
+    indicator: "bg-orange-100",
   },
   "Revisar tutela": {
     badge: "bg-amber-100 text-amber-600",
