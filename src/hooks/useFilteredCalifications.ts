@@ -1,15 +1,18 @@
-/*
+
 
 import { useMemo } from 'react';
 import { CaseWithKey } from '@/types/cases';
 import { statusOptions } from '@/constants/casesConstants';
 import { Selection } from '@heroui/react';
+import { transformStateByRole } from '@/utils/stateTransformer';
+import { UserRole } from '@/store/slices/authSlice';
 
 interface UseFilteredCalificationsProps {
   cases: CaseWithKey[];
   filterValue: string;
   statusFilter: Selection;
   onResetFilters?: () => void;
+  role: UserRole;
 }
 
 export function useFilteredCalifications({
@@ -17,6 +20,7 @@ export function useFilteredCalifications({
   filterValue,
   statusFilter,
   onResetFilters,
+  role,
 }: UseFilteredCalificationsProps) {
   const hasSearchFilter = Boolean(filterValue);
 
@@ -32,16 +36,14 @@ export function useFilteredCalifications({
         const firstName = caseItem.ciudadano?.primer_nombre?.toLowerCase() || '';
         const lastName = caseItem.ciudadano?.primer_apellido?.toLowerCase() || '';
         const fullName = `${firstName} ${lastName}`.trim();
-        const tipoProcesoLower = caseItem.tipo_proceso?.toLowerCase() || '';
-        const calificacionLower = typeof caseItem.calificacion === 'string' ? caseItem.calificacion.toLowerCase() : '';
+        const estadoLower = caseItem.estado_actual?.toLowerCase() || '';
         
         // Check if the search term is contained in any of the fields
         return (
           fullName.includes(searchTerm) || 
           firstName.includes(searchTerm) || 
           lastName.includes(searchTerm) || 
-          tipoProcesoLower.includes(searchTerm) || 
-          calificacionLower.includes(searchTerm)
+          estadoLower.includes(searchTerm)
         );
       });
     }
@@ -53,9 +55,11 @@ export function useFilteredCalifications({
         return statusOption ? statusOption.uid : null;
       }).filter(Boolean);
 
-      filteredCases = filteredCases.filter((caseItem) =>
-        selectedStatuses.includes(caseItem.estado)
-      );
+      filteredCases = filteredCases.filter((caseItem) => {
+        // Transformar el estado según el rol para comparar
+        const transformedState = transformStateByRole(caseItem.estado_actual, role);
+        return selectedStatuses.includes(caseItem.estado_actual) || selectedStatuses.includes(transformedState);
+      });
     }
 
     return filteredCases;
@@ -74,4 +78,3 @@ export function useFilteredCalifications({
   };
 } 
 
-*/

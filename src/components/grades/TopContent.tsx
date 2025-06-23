@@ -1,4 +1,4 @@
-/*
+
 import {
     MagnifyingGlassIcon,
     ChevronDownIcon,
@@ -44,7 +44,7 @@ import {
             <Input
               isClearable
               className="w-full sm:max-w-[100%]"
-              placeholder="Buscar por nombre completo o tipo de proceso..."
+              placeholder="Buscar por nombre, tipo de proceso o estado..."
               startContent={<MagnifyingGlassIcon className="w-6" />}
               value={filterValue}
               onClear={() => onClear()}
@@ -89,7 +89,7 @@ import {
         </div>
         <div className="flex justify-between items-center mt-6">
           <span className="text-default-400 text-small">
-            Total {usersLength} calificaciones
+            Total {usersLength} casos
           </span>
           <label className="flex items-center text-default-400 text-small">
             Fila por pagina:
@@ -106,4 +106,3 @@ import {
       </div>
     );
   }
-*/

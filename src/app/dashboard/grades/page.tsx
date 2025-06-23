@@ -1,14 +1,13 @@
 "use client";
 
 import dynamic from "next/dynamic";
-/*
 const TableGrades = dynamic(
   () => import("@/components/grades/Table"),
   {
     ssr: false,
   }
 );
-*/
+
 export default function GradesPage() {
   return (
     <>
@@ -17,7 +16,7 @@ export default function GradesPage() {
         <p className="text-[#808080] text-sm">
           Filtra los estudiantes por su caso
         </p>
-       {/* <TableGrades />*/}
+       <TableGrades />
       </section>
     </>
   );

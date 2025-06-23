@@ -1,5 +1,3 @@
-
-/*
 "use client";
 
 import {
@@ -23,21 +21,16 @@ import { sortItems } from "@/utils/sortItems";
 import { paginateItems } from "@/utils/paginateItems";
 import { CaseWithKey } from "@/types/cases";
 import { TableCellRendererGrades } from "./TableCellRenderer";
-import { fetchAllCases, fetchCasesByUserId } from "@/services/caseService";
+import { fetchCompleteUserCases } from "@/services/completeUserCasesService";
 import { useFilteredCalifications } from "@/hooks/useFilteredCalifications";
-import { ModalCalification } from "../ui/modal-calification";
-import { useUserRole } from "@/hooks/useUserRole";
 import { useAuth } from "@/hooks/useAuth";
-import { getUserIdFromFirebase } from "@/services/userService";
-import { ModalCalificationDetails } from "../ui/modal-table";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "id_caso",
   "tipo_proceso",
-  "estado",
+  "estado_actual",
   "ciudadano",
   "estudiante_asignado",
-  "calificacion",
   "actions",
 ];
 
@@ -61,47 +54,19 @@ export default function TableGrades() {
   
   // Modal controls
   const previewModal = useDisclosure();
-  const calificationModal = useDisclosure();
-  const calificationDetailsModal = useDisclosure();
 
   // Role y auth
-  const { role } = useUserRole();
-  const { user } = useAuth();
-  const [userId, setUserId] = useState<number | null>(null);
-
-  // Función para obtener el ID del usuario desde Firebase
-  const fetchUserId = async () => {
-    if (user?.uid) {
-      const id = await getUserIdFromFirebase(user.uid);
-      setUserId(id);
-    }
-  };
-
-  // Efecto para obtener el ID del usuario cuando cambia el usuario o el rol
-  useEffect(() => {
-    if (user?.uid) {
-      fetchUserId();
-    }
-  }, [user?.uid]);
-
-  // Determinar si el usuario actual puede calificar
-  const canGradeStudents = role === 'Docente' || role === 'Director' || role === 'Monitor';
+  const { internalUserId, role } = useAuth();
 
   // Fetch cases from API
   const fetchCasesData = async () => {
     setIsLoading(true);
     try {
-      let casesList;
-      
-      // Si es estudiante, solo mostrar sus casos asignados
-      if (role === 'Estudiante' && userId) {
-        casesList = await fetchCasesByUserId(userId);
-      } else {
-        // Para docentes y otros roles, mostrar todos los casos
-        casesList = await fetchAllCases();
+      // Obtener casos del usuario actual
+      if (internalUserId) {
+        const casesList = await fetchCompleteUserCases(internalUserId);
+        setCases(casesList as CaseWithKey[]);
       }
-      
-      setCases(casesList as CaseWithKey[]);
     } catch (error) {
       console.error("Error al obtener casos:", error);
       addToast({
@@ -115,12 +80,11 @@ export default function TableGrades() {
   };
 
   useEffect(() => {
-    // Solo cargar casos si ya tenemos el ID para estudiantes
-    if (role === 'Estudiante' && !userId) {
-      return;
+    // Solo cargar casos si ya tenemos el ID del usuario
+    if (internalUserId) {
+      fetchCasesData();
     }
-    fetchCasesData();
-  }, [role, userId]);
+  }, [internalUserId]);
 
   // Handle Bulk Actions Bar selection change
   const onSelectionChangeMasiveMenu = (keys: Selection) => {
@@ -143,11 +107,12 @@ export default function TableGrades() {
   }, []);
 
   // Use the custom hook for filtering
-  const { filteredItems, hasSearchFilter } = useFilteredCalifications({
+  const { filteredItems, hasSearchFilter, resetFilters } = useFilteredCalifications({
     cases,
     filterValue,
     statusFilter,
-    onResetFilters: handleResetAllFilters
+    onResetFilters: handleResetAllFilters,
+    role,
   });
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
@@ -230,55 +195,14 @@ export default function TableGrades() {
     previewModal.onOpen();
   };
 
-  const handleCalificateCase = (caseData: CaseWithKey) => {
-    // Solo permitir calificar a usuarios con permiso
-    if (!canGradeStudents) {
-      addToast({
-        title: "Acceso denegado",
-        description: "No tienes permisos para calificar estudiantes",
-        color: "danger",
-      });
-      return;
-    }
-    
-    setSelectedCase(caseData);
-    calificationModal.onOpen();
-  };
 
-  const handleViewCalification = (caseData: CaseWithKey) => {
-    setSelectedCase(caseData);
-    calificationDetailsModal.onOpen();
-  };
-
-  const handleCalificationSuccess = () => {
-    addToast({
-      title: "Calificación guardada",
-      description: "La calificación ha sido guardada correctamente",
-      color: "success",
-    });
-    // Refresh the data
-    fetchCasesData();
-  };
 
   return (
     <>
-      <ModalCalification
-        isOpen={calificationModal.isOpen}
-        onClose={calificationModal.onClose}
-        caseData={selectedCase}
-        onSuccess={handleCalificationSuccess}
-      />
-
-      <ModalCalificationDetails
-        isOpen={calificationDetailsModal.isOpen}
-        onClose={calificationDetailsModal.onClose}
-        caseData={selectedCase}
-      />
-
       <Table
         suppressHydrationWarning
         isHeaderSticky
-        aria-label="Tabla de calificaciones"
+        aria-label="Tabla de casos"
         bottomContent={bottomContent}
         bottomContentPlacement="outside"
         classNames={{
@@ -305,7 +229,7 @@ export default function TableGrades() {
           )}
         </TableHeader>
         <TableBody
-          emptyContent={"Calificaciones no encontradas"}
+          emptyContent={"Casos no encontrados"}
           items={sortedItems}
           isLoading={isLoading}
           loadingContent={
@@ -324,9 +248,6 @@ export default function TableGrades() {
                     case={item as CaseWithKey}
                     columnKey={columnKey as keyof CaseWithKey}
                     onPreviewCase={handlePreviewCase}
-                    onCalificateCase={handleCalificateCase}
-                    onViewCalification={handleViewCalification}
-                    canGradeStudents={canGradeStudents}
                   />
                 </TableCell>
               )}
@@ -337,4 +258,3 @@ export default function TableGrades() {
     </>
   );
 }
-*/

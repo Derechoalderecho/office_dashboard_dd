@@ -1,29 +1,24 @@
-/*
+
 
 "use client";
 
-import { EyeIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
+import { EyeIcon } from "@heroicons/react/24/outline";
 import { Chip, Tooltip, Button } from "@heroui/react";
-import { CaseWithKey } from "@/types/cases";
+import { CaseWithKey, CompleteCaseData } from "@/types/cases";
 
 interface TableCellRendererProps {
   case: CaseWithKey;
-  columnKey: keyof CaseWithKey;
+  columnKey: string;
   onPreviewCase?: (caseData: CaseWithKey) => void;
-  onCalificateCase?: (caseData: CaseWithKey) => void;
-  onViewCalification?: (caseData: CaseWithKey) => void;
-  canGradeStudents?: boolean;
 }
 
 export const TableCellRendererGrades = ({
   case: caseData,
   columnKey,
   onPreviewCase,
-  onCalificateCase,
-  onViewCalification,
-  canGradeStudents = true, // Por defecto permitir calificar para compatibilidad
 }: TableCellRendererProps) => {
-  const cellValue = caseData[columnKey];
+  // Acceder al valor de forma segura
+  const cellValue = columnKey in caseData ? caseData[columnKey as keyof CaseWithKey] : undefined;
 
   switch (columnKey) {
     case "id_caso":
@@ -38,7 +33,7 @@ export const TableCellRendererGrades = ({
           <p className="text-base font-medium">{String(cellValue)}</p>
         </div>
       );
-    case "estado":
+    case "estado_actual":
       return (
         <Chip
           className={`capitalize ${
@@ -83,64 +78,21 @@ export const TableCellRendererGrades = ({
           )}
         </div>
       );
-    case "calificacion":
-      // Format the calificacion value
-      let displayValue = "Sin calificar";
-      if (cellValue !== null && cellValue !== undefined) {
-        // If it's a numeric string, parse it
-        const numValue = Number(cellValue);
-        if (!isNaN(numValue)) {
-          // If it's in integer format (0-50), convert to decimal (0-5)
-          if (numValue > 5) {
-            displayValue = (numValue / 10).toFixed(1);
-          } else {
-            displayValue = numValue.toString();
-          }
-        } else {
-          displayValue = String(cellValue);
-        }
-      }
-      
-      return (
-        <div className="flex flex-col">
-          <p className="text-base font-medium text-primary">
-            {displayValue}
-          </p>
-        </div>
-      );
     case "actions":
-      const hasCalification = caseData.calificacion !== undefined && caseData.calificacion !== null;
-      
       return (
         <div className="relative flex items-center gap-2">
-          {hasCalification && (
-            <Tooltip content="Ver detalle de calificación">
-              <Button
-                isIconOnly
-                className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
-                onPress={() => onViewCalification?.(caseData)}
-              >
-                <EyeIcon className="w-6" />
-              </Button>
-            </Tooltip>
-          )}
-          
-          {canGradeStudents && (
-            <Tooltip content="Calificar estudiante">
-              <Button
-                isIconOnly
-                className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
-                onPress={() => onCalificateCase?.(caseData)}
-                isDisabled={!caseData.usuarios?.some(user => user.rol === "Estudiante")}
-              >
-                <PencilSquareIcon className="w-6" />
-              </Button>
-            </Tooltip>
-          )}
+          <Tooltip content="Ver detalles del caso">
+            <Button
+              isIconOnly
+              className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
+              onPress={() => onPreviewCase?.(caseData)}
+            >
+              <EyeIcon className="w-6" />
+            </Button>
+          </Tooltip>
         </div>
       );
     default:
       return <div className="text-sm">{String(cellValue)}</div>;
   }
 };
-*/
