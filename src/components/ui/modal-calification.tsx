@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -13,7 +12,8 @@ import {
   useDisclosure,
 } from "@heroui/react";
 import { CaseWithKey } from "@/types/cases";
-import { updateCaseCalification } from "@/services/caseService";
+import { gradesService } from "@/services/gradesService";
+import { CreateGradeParams } from "@/types/grades";
 
 interface ModalCalificationProps {
   isOpen: boolean;
@@ -68,42 +68,46 @@ export function ModalCalification({
       const newCriterios = [...criterios];
       let valuesLoaded = false;
       
-      // Cargar criterios individuales si existen
-      if (caseData.calificacion1) {
-        newCriterios[0].valor = formatCriterioValue(caseData.calificacion1);
-        valuesLoaded = true;
-      }
-      
-      if (caseData.calificacion2) {
-        newCriterios[1].valor = formatCriterioValue(caseData.calificacion2);
-        valuesLoaded = true;
-      }
-      
-      if (caseData.calificacion3) {
-        newCriterios[2].valor = formatCriterioValue(caseData.calificacion3);
-        valuesLoaded = true;
-      }
-      
-      if (caseData.calificacion4) {
-        newCriterios[3].valor = formatCriterioValue(caseData.calificacion4);
-        valuesLoaded = true;
-      }
-      
-      if (valuesLoaded) {
-        console.log("Cargando criterios existentes:", newCriterios);
-        setCriterios(newCriterios);
-      }
-      
-      // Si hay calificación final, también la cargamos
-      if (caseData.calificacion) {
-        const numCalificacion = Number(caseData.calificacion);
-        if (!isNaN(numCalificacion)) {
-          // Si está en formato 0-50, convertir a 0-5
-          const finalValue = numCalificacion > 5 
-            ? (numCalificacion / 10).toFixed(1)
-            : numCalificacion.toString();
-          console.log("Cargando calificación final:", finalValue);
-          setCalificacionFinal(finalValue);
+      // Cargar criterios individuales si existen en el array de calificaciones
+      if (caseData.calificaciones && caseData.calificaciones.length > 0) {
+        const calificacion = caseData.calificaciones[0];
+        
+        if (calificacion.criterio_1) {
+          newCriterios[0].valor = formatCriterioValue(calificacion.criterio_1.toString());
+          valuesLoaded = true;
+        }
+        
+        if (calificacion.criterio_2) {
+          newCriterios[1].valor = formatCriterioValue(calificacion.criterio_2.toString());
+          valuesLoaded = true;
+        }
+        
+        if (calificacion.criterio_3) {
+          newCriterios[2].valor = formatCriterioValue(calificacion.criterio_3.toString());
+          valuesLoaded = true;
+        }
+        
+        if (calificacion.criterio_4) {
+          newCriterios[3].valor = formatCriterioValue(calificacion.criterio_4.toString());
+          valuesLoaded = true;
+        }
+        
+        if (valuesLoaded) {
+          console.log("Cargando criterios existentes:", newCriterios);
+          setCriterios(newCriterios);
+        }
+        
+        // Si hay promedio, también lo cargamos
+        if (calificacion.promedio) {
+          const numCalificacion = Number(calificacion.promedio);
+          if (!isNaN(numCalificacion)) {
+            // Si está en formato 0-50, convertir a 0-5
+            const finalValue = numCalificacion > 5 
+              ? (numCalificacion / 10).toFixed(1)
+              : numCalificacion.toFixed(1);
+            console.log("Cargando calificación final:", finalValue);
+            setCalificacionFinal(finalValue);
+          }
         }
       }
     }
@@ -173,23 +177,40 @@ export function ModalCalification({
 
   const handleSubmit = async () => {
     if (!caseData) return;
-    
-    if (!validarCriterios() || !calificacionFinal) {
-      setError("Por favor complete todos los criterios correctamente");
+
+    // Validar los criterios
+    if (!validarCriterios()) {
       return;
     }
 
     setIsSubmitting(true);
+    setError("");
+
     try {
-      // Enviar cada criterio individual junto con la calificación final
-      await updateCaseCalification(
-        caseData.id_caso, 
-        calificacionFinal,
-        criterios[0].valor,
-        criterios[1].valor,
-        criterios[2].valor,
-        criterios[3].valor
-      );
+      // Convertir los valores a números
+      const criteriosNumericos = criterios.map(c => parseFloat(c.valor) || 0);
+      
+      // Encontrar el estudiante y docente asignados al caso
+      const estudiante = caseData.usuarios?.find(user => user.rol === "Estudiante");
+      const docente = caseData.usuarios?.find(user => user.rol === "Docente");
+      
+      if (!estudiante || !docente) {
+        throw new Error("El caso debe tener asignado un estudiante y un docente para calificarlo");
+      }
+      
+      // Crear el objeto de calificación
+      const gradeData: CreateGradeParams = {
+        id_caso: caseData.id_caso,
+        id_estudiante: estudiante.id_usuario,
+        id_docente: docente.id_usuario,
+        criterio_1: criteriosNumericos[0],
+        criterio_2: criteriosNumericos[1],
+        criterio_3: criteriosNumericos[2],
+        criterio_4: criteriosNumericos[3]
+      };
+      
+      // Enviar la calificación al servidor
+      await gradesService.createGrade(gradeData);
       
       setIsSubmitting(false);
       onClose();
@@ -247,14 +268,16 @@ export function ModalCalification({
                 </div>
                 <div className="mt-1">
                   <span className="font-semibold mr-2">Tipo de proceso:</span>
-                  <span>{caseData?.tipo_proceso || "-"}</span>
+                  <span>{caseData?.tipo_caso?.nombre_tipo || "-"}</span>
                 </div>
               </div>
               
               <p className="text-sm text-gray-500 mb-4">
                 Ingrese la calificación para cada criterio del estudiante asignado al caso{" "}
                 <span className="font-semibold">
-                  {caseData?.estudiante_asignado || "Sin asignar"}
+                  {caseData?.usuarios?.find(user => user.rol === "Estudiante") ? 
+                    `${caseData.usuarios.find(user => user.rol === "Estudiante")?.primer_nombre} ${caseData.usuarios.find(user => user.rol === "Estudiante")?.primer_apellido}` : 
+                    "Sin asignar"}
                 </span>
               </p>
               

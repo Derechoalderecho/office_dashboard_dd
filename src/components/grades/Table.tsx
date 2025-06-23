@@ -11,7 +11,7 @@ import {
   SortDescriptor,
   Spinner,
   useDisclosure,
-  addToast,
+  addToast
 } from "@heroui/react";
 import { useState, useCallback, useMemo, useEffect, ChangeEvent } from "react";
 import { columns } from "@/constants/gradesConstants";
@@ -25,6 +25,7 @@ import { fetchCompleteUserCases } from "@/services/completeUserCasesService";
 import { useFilteredCalifications } from "@/hooks/useFilteredCalifications";
 import { useAuth } from "@/hooks/useAuth";
 import { ModalCalificationDetails } from "@/components/ui/modal-table";
+import { ModalCalification } from "@/components/ui/modal-calification";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "id_caso",
@@ -56,6 +57,7 @@ export default function TableGrades() {
   
   // Modal controls
   const previewModal = useDisclosure();
+  const gradeModal = useDisclosure();
 
   // Role y auth
   const { internalUserId, role } = useAuth();
@@ -197,6 +199,34 @@ export default function TableGrades() {
     previewModal.onOpen();
   };
 
+  const handleGradeCase = (caseData: CaseWithKey) => {
+    // Verificar si el caso tiene un estudiante y un docente asignados
+    const hasStudent = caseData.usuarios?.some(user => user.rol === "Estudiante");
+    const hasTeacher = caseData.usuarios?.some(user => user.rol === "Docente");
+    
+    if (!hasStudent || !hasTeacher) {
+      addToast({
+        title: "No se puede calificar",
+        description: "El caso debe tener asignado al menos un estudiante y un docente para poder calificarlo.",
+        color: "warning",
+      });
+      return;
+    }
+    
+    setSelectedCase(caseData);
+    gradeModal.onOpen();
+  };
+  
+  // Función para actualizar la tabla después de calificar
+  const handleGradeSuccess = () => {
+    fetchCasesData();
+    addToast({
+      title: "Calificación guardada",
+      description: "La calificación ha sido guardada correctamente.",
+      color: "success",
+    });
+  };
+
 
 
   return (
@@ -205,6 +235,13 @@ export default function TableGrades() {
         isOpen={previewModal.isOpen}
         onClose={previewModal.onClose}
         caseData={selectedCase}
+      />
+      
+      <ModalCalification
+        isOpen={gradeModal.isOpen}
+        onClose={gradeModal.onClose}
+        caseData={selectedCase}
+        onSuccess={handleGradeSuccess}
       />
       
       <Table
@@ -256,6 +293,7 @@ export default function TableGrades() {
                     case={item as CaseWithKey}
                     columnKey={columnKey as keyof CaseWithKey}
                     onPreviewCase={handlePreviewCase}
+                    onGradeCase={handleGradeCase}
                   />
                 </TableCell>
               )}

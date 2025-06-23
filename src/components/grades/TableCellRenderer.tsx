@@ -2,7 +2,7 @@
 
 "use client";
 
-import { EyeIcon } from "@heroicons/react/24/outline";
+import { EyeIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
 import { Chip, Tooltip, Button } from "@heroui/react";
 import { CaseWithKey } from "@/types/cases";
 
@@ -10,12 +10,14 @@ interface TableCellRendererProps {
   case: CaseWithKey;
   columnKey: string;
   onPreviewCase?: (caseData: CaseWithKey) => void;
+  onGradeCase?: (caseData: CaseWithKey) => void;
 }
 
 export const TableCellRendererGrades = ({
   case: caseData,
   columnKey,
   onPreviewCase,
+  onGradeCase,
 }: TableCellRendererProps) => {
   // Acceder al valor de forma segura
   const cellValue = columnKey in caseData ? caseData[columnKey as keyof CaseWithKey] : undefined;
@@ -49,14 +51,14 @@ export const TableCellRendererGrades = ({
         </div>
       );
     case "tipo_proceso":
-      return (
-        <div className="flex flex-col">
+        return (
+          <div className="flex flex-col">
           <p className="text-base font-medium">{String(cellValue)}</p>
         </div>
       );
     case "estado_actual":
       return (
-        <Chip
+            <Chip
           className={`capitalize ${
             cellValue === "Aprobado"
               ? "bg-success text-[#12A150]"
@@ -68,11 +70,11 @@ export const TableCellRendererGrades = ({
               ? "bg-error text-[#F31260]"
               : ""
           }`}
-          size="sm"
-          variant="flat"
-        >
+              size="sm"
+              variant="flat"
+            >
           {String(cellValue)}
-        </Chip>
+            </Chip>
       );
     case "ciudadano":
       const ciudadano = caseData.ciudadano;
@@ -82,8 +84,8 @@ export const TableCellRendererGrades = ({
             {ciudadano?.primer_nombre} {ciudadano?.primer_apellido}
           </p>
           {ciudadano?.email && <p className="text-sm">{ciudadano.email}</p>}
-        </div>
-      );
+          </div>
+        );
     case "estudiante_asignado":
       const estudiante = caseData.usuarios?.find(
         user => user.rol === "Estudiante"
@@ -106,7 +108,7 @@ export const TableCellRendererGrades = ({
           {calificaciones && calificaciones.length > 0 ? (
             <p className="text-sm font-medium">
               {String(calificaciones[0].promedio)}
-            </p>
+          </p>
           ) : (
             <p className="text-sm text-gray-500">Sin calificar</p>
           )}
@@ -124,9 +126,19 @@ export const TableCellRendererGrades = ({
               <EyeIcon className="w-6" />
             </Button>
           </Tooltip>
+          <Tooltip content="Calificar caso">
+            <Button
+              isIconOnly
+              className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"
+              onPress={() => onGradeCase?.(caseData)}
+            >
+              <PencilSquareIcon className="w-6" />
+            </Button>
+          </Tooltip>
         </div>
       );
+      
     default:
-      return <div className="text-sm">{String(cellValue)}</div>;
+      return <span>{String(cellValue)}</span>;
   }
 };
