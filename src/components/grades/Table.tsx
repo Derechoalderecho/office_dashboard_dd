@@ -24,6 +24,7 @@ import { TableCellRendererGrades } from "./TableCellRenderer";
 import { fetchCompleteUserCases } from "@/services/completeUserCasesService";
 import { useFilteredCalifications } from "@/hooks/useFilteredCalifications";
 import { useAuth } from "@/hooks/useAuth";
+import { ModalCalificationDetails } from "@/components/ui/modal-table";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "id_caso",
@@ -200,6 +201,12 @@ export default function TableGrades() {
 
   return (
     <>
+      <ModalCalificationDetails
+        isOpen={previewModal.isOpen}
+        onClose={previewModal.onClose}
+        caseData={selectedCase}
+      />
+      
       <Table
         suppressHydrationWarning
         isHeaderSticky

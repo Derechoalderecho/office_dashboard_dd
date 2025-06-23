@@ -115,7 +115,7 @@ export const TableCellRendererGrades = ({
     case "actions":
       return (
         <div className="relative flex items-center gap-2">
-          <Tooltip content="Ver detalles del caso">
+          <Tooltip content="Ver calificaciones del caso">
             <Button
               isIconOnly
               className="bg-transparent text-lg text-default-400 cursor-pointer active:opacity-50"

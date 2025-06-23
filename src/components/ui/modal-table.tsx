@@ -399,7 +399,6 @@ export function ModalUser({ isOpen, onClose, userData }: ModalUserProps) {
   );
 }
 
-/*
 interface ModalCalificationDetailsProps {
   isOpen: boolean;
   onClose: () => void;
@@ -419,20 +418,27 @@ export function ModalCalificationDetails({
   ): string {
     if (value === undefined || value === null || value === "") return "-";
 
-    // If the value is the string "null", return "-"
-    if (value === "null") return "-";
-
     const numValue = Number(value);
     if (isNaN(numValue)) return String(value);
 
-    // If it's in integer format (0-50), convert to decimal (0-5)
+    // Si está en formato 0-50, convertir a 0-5
     if (numValue > 5) {
       return (numValue / 10).toFixed(1);
+    } else {
+      // Asegurar que siempre tenga un decimal (para mantener consistencia)
+      return numValue.toFixed(1);
     }
-
-    // Ensure we return with one decimal place for consistency
-    return numValue.toFixed(1);
   }
+
+  // Obtener los valores de calificación del array de calificaciones
+  const calificacion = caseData.calificaciones && caseData.calificaciones.length > 0
+    ? caseData.calificaciones[0] : null;
+
+  const promedio = calificacion?.promedio;
+  const criterio1 = calificacion?.criterio_1;
+  const criterio2 = calificacion?.criterio_2;
+  const criterio3 = calificacion?.criterio_3;
+  const criterio4 = calificacion?.criterio_4;
 
   function getCriterioLabel(index: number): string {
     switch (index) {
@@ -483,7 +489,7 @@ export function ModalCalificationDetails({
                         Calificación Final:
                       </span>
                       <span className="text-lg font-bold text-primary">
-                        {formatCalification(caseData.calificacion)}
+                        {formatCalification(promedio)}
                       </span>
                     </div>
                   </div>
@@ -499,28 +505,28 @@ export function ModalCalificationDetails({
                     <div className="flex items-center justify-between border-b pb-3">
                       <strong>Criterio 1: {getCriterioLabel(1)}</strong>
                       <p className="font-medium">
-                        {formatCalification(caseData.calificacion1)}
+                        {formatCalification(criterio1)}
                       </p>
                     </div>
 
                     <div className="flex items-center justify-between border-b pb-3">
                       <strong>Criterio 2: {getCriterioLabel(2)}</strong>
                       <p className="font-medium">
-                        {formatCalification(caseData.calificacion2)}
+                        {formatCalification(criterio2)}
                       </p>
                     </div>
 
                     <div className="flex items-center justify-between border-b pb-3">
                       <strong>Criterio 3: {getCriterioLabel(3)}</strong>
                       <p className="font-medium">
-                        {formatCalification(caseData.calificacion3)}
+                        {formatCalification(criterio3)}
                       </p>
                     </div>
 
                     <div className="flex items-center justify-between border-b pb-3">
                       <strong>Criterio 4: {getCriterioLabel(4)}</strong>
                       <p className="font-medium">
-                        {formatCalification(caseData.calificacion4)}
+                        {formatCalification(criterio4)}
                       </p>
                     </div>
                   </div>
@@ -538,4 +544,3 @@ export function ModalCalificationDetails({
     </Modal>
   );
 }
-*/
