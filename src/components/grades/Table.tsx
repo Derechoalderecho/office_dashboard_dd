@@ -14,7 +14,7 @@ import {
   addToast,
 } from "@heroui/react";
 import { useState, useCallback, useMemo, useEffect, ChangeEvent } from "react";
-import { columns } from "@/constants/casesConstants";
+import { columns } from "@/constants/gradesConstants";
 import TopContent from "./TopContent";
 import BottomContent from "../shared/BottomContentTable";
 import { sortItems } from "@/utils/sortItems";
@@ -31,6 +31,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   "estado_actual",
   "ciudadano",
   "estudiante_asignado",
+  "calificacion",
   "actions",
 ];
 

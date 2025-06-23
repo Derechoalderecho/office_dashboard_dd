@@ -4,7 +4,7 @@
 
 import { EyeIcon } from "@heroicons/react/24/outline";
 import { Chip, Tooltip, Button } from "@heroui/react";
-import { CaseWithKey, CompleteCaseData } from "@/types/cases";
+import { CaseWithKey } from "@/types/cases";
 
 interface TableCellRendererProps {
   case: CaseWithKey;
@@ -21,6 +21,27 @@ export const TableCellRendererGrades = ({
   const cellValue = columnKey in caseData ? caseData[columnKey as keyof CaseWithKey] : undefined;
 
   switch (columnKey) {
+    case "calificacion":
+      // Verificar si hay calificaciones
+      if (caseData.calificaciones && caseData.calificaciones.length > 0) {
+        // Calcular el promedio de todas las calificaciones
+        const promedio = caseData.calificaciones.reduce((sum, cal) => sum + cal.promedio, 0) / caseData.calificaciones.length;
+        return (
+          <div className="flex justify-center items-center">
+            <Chip color="primary" variant="flat" className="font-semibold">
+              {promedio.toFixed(1)}
+            </Chip>
+          </div>
+        );
+      } else {
+        return (
+          <div className="flex justify-center items-center">
+            <Chip color="default" variant="flat" className="text-gray-500">
+              Sin calificar
+            </Chip>
+          </div>
+        );
+      }
     case "id_caso":
       return (
         <div className="flex flex-col">
@@ -75,6 +96,19 @@ export const TableCellRendererGrades = ({
             </p>
           ) : (
             <p className="text-sm text-gray-500">Sin estudiante asignado</p>
+          )}
+        </div>
+      );
+    case "calificacion":
+      const calificaciones = caseData.calificaciones;
+      return (
+        <div className="flex flex-col">
+          {calificaciones && calificaciones.length > 0 ? (
+            <p className="text-sm font-medium">
+              {String(calificaciones[0].promedio)}
+            </p>
+          ) : (
+            <p className="text-sm text-gray-500">Sin calificar</p>
           )}
         </div>
       );

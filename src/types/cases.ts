@@ -115,6 +115,23 @@ export interface ApiDatosTipoCaso {
   status: boolean;
 }
 
+export interface apiCalificacion {
+  id_caso: number;
+  id_estudiante: number;
+  id_docente: number;
+  criterio_1: number;
+  criterio_2: number;
+  criterio_3: number;
+  criterio_4: number;
+  id_califiaciones_caso: number;
+  created_date: string;
+  modified_date: string | null;
+  deleted_at: string | null;
+  status: boolean;
+  promedio: number;
+}
+
+//Casos data completa
 export interface CompleteCaseData {
   id_ciudadano: number;
   id_tipo_caso: number;
@@ -132,6 +149,7 @@ export interface CompleteCaseData {
   historial_estados: any[];
   datos_tutela?: ApiDatosTutela;
   tipo_caso?: ApiDatosTipoCaso;
+  calificaciones?: apiCalificacion[];
   tiempo_respuesta?: number;
   actions?: string;
   key?: string;
