@@ -99,7 +99,7 @@ export default function CaseHeader({
             className={`w-fit flex gap-2 items-center rounded-full py-1 px-3 ${getCaseStatusStyles(displayState, 'badge')}`}
           >
             <div
-              className={`w-2 h-2 rounded-full bg-indigo-600`}
+              className={`w-2 h-2 rounded-full ${getCaseStatusStyles(displayState, 'indicator')}`}
             ></div>
             <span className="text-sm font-medium capitalize">
               {displayState}
@@ -112,7 +112,7 @@ export default function CaseHeader({
       </div>
       <div className="flex gap-2 items-center">
         {/* Botones de Viabilidad */}
-        {showViabilityButtons && (
+        {showViabilityButtons && (role === "Estudiante" || role === "Docente") && (
           <>
             <Button
               className="text-white bg-[#12A150]"
@@ -163,7 +163,7 @@ export default function CaseHeader({
         )}
 
         {/* Botón de Aprobar (para estados "Revisar tutela" y "Radicar") */}
-        {showApproveButton && (
+        {showApproveButton && (role === "Docente") && (
           <Button
             className="text-white bg-[#12A150]"
             isDisabled={!onApproveSubmission || isStatusChangeLoading}
@@ -176,7 +176,7 @@ export default function CaseHeader({
         )}
 
         {/* Botón de Rechazar (para varios estados) */}
-        {showRejectButton && onRejectSubmission && (
+        {showRejectButton && (role === "Docente") && onRejectSubmission && (
           <Button
             variant="bordered"
             color="danger"
