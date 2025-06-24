@@ -139,20 +139,20 @@ export const assignUserToCase = async (
 
 /**
  * Elimina la asignación de un usuario a un caso
- * @param assignmentId ID de la asignación caso-usuario a eliminar
+ * @param caseId ID del caso
  * @returns Verdadero si la eliminación fue exitosa, falso en caso contrario
  */
 export const deleteUserCaseAssignment = async (
-  assignmentId: number
+  caseId: number
 ): Promise<boolean> => {
   try {
-    logger.info(`Eliminando asignación de usuario-caso con ID ${assignmentId}`);
+    logger.info(`Eliminando asignación de usuario-caso con ID ${caseId}`);
     
-    await del(`/caso-usuario/${assignmentId}`);
+    await del(`/caso-usuario/${caseId}`);
     
     return true;
   } catch (error) {
-    logger.error(`Error al eliminar asignación de usuario-caso ${assignmentId}:`, error);
+    logger.error(`Error al eliminar asignación de usuario-caso ${caseId}:`, error);
     return false;
   }
 };
