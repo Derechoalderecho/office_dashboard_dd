@@ -1,9 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { Cases } from '@/types/cases';
-import { fetchCaseById } from '@/services/caseService';
+import { Cases, CompleteCaseData } from '@/types/cases';
+import { fetchCompleteCaseById } from '@/services/completeUserCasesService';
 
 interface CaseState {
-  currentCase: Cases | null;
+  currentCase: CompleteCaseData | null;
   loading: boolean;
   error: string | null;
 }
@@ -18,8 +18,9 @@ export const fetchCase = createAsyncThunk(
   'case/fetchCase',
   async (caseId: number, { rejectWithValue }) => {
     try {
-      const caseData = await fetchCaseById(caseId);
-      return caseData;
+      const casesData = await fetchCompleteCaseById(caseId);
+      // fetchCompleteCaseById devuelve un array, tomamos el primer elemento
+      return casesData[0] || null;
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
