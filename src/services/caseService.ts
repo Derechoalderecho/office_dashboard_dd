@@ -280,58 +280,51 @@ export const assignUserToCase = async (
   try {
     logger.info(`Asignando usuario ${userId} como ${role} al caso ${caseId}`);
 
-    // Obtener usuarios actuales asignados al caso
-    let currentUsers = [];
+    // PASO 1: Siempre intentar eliminar asignaciones existentes primero
     try {
-      currentUsers = await fetchUsersByCaseId(caseId);
-      console.log("currentUsers", currentUsers);
-    } catch (fetchError) {
-      logger.warn(
-        `No se pudieron obtener usuarios actuales del caso ${caseId}: ${fetchError}`
+      // Buscar todos los casos-usuarios para este caso
+      const allCaseUsers = await get<any[]>(`casos-usuarios?id_caso=${caseId}`);
+      logger.debug(`Asignaciones encontradas para caso ${caseId}: ${JSON.stringify(allCaseUsers || [])}`);
+      
+      // Buscar cualquier asignación que coincida con el rol (sin importar el usuario)
+      const matchingRoleAssignments = allCaseUsers?.filter(cu => 
+        (cu.rol_en_caso?.toLowerCase() === role.toLowerCase()) || 
+        (cu.rol?.toLowerCase() === role.toLowerCase())
       );
-      // Continuamos con la asignación aunque no podamos obtener los usuarios actuales
-    }
-
-    logger.debug(`Buscando asignaciones existentes para rol ${role} en ${currentUsers.length} usuarios`);
-    
-    // Imprimir todos los roles para depuración
-    currentUsers.forEach((user, index) => {
-      logger.debug(`Usuario ${index}: id=${user.id_usuario}, rol=${user.rol}`);
-    });
-    
-    // Buscar coincidencia de rol insensible a mayúsculas/minúsculas
-    const existingAssignment = currentUsers.find(
-      (user) => user.rol && user.rol.toLowerCase() === role.toLowerCase()
-    );
-    
-    logger.debug(`Asignación existente encontrada para rol ${role}: ${JSON.stringify(existingAssignment || 'ninguna')}`);
-
-    // Eliminar asignación existente si se encontró
-    if (existingAssignment) {
-      logger.info(
-        `Eliminando asignación existente: caso ${caseId}, usuario ${existingAssignment.id_usuario}, rol ${existingAssignment.rol}`
-      );
-
-      try {
-        // Asegurarnos de que la URL no tenga slash al final
-        const deleteUrl = `casos-usuarios?id_caso=${caseId}&id_usuario=${existingAssignment.id_usuario}`;
-        logger.debug(`URL para eliminar asignación: ${deleteUrl}`);
+      
+      // Eliminar todas las asignaciones encontradas para este rol
+      if (matchingRoleAssignments && matchingRoleAssignments.length > 0) {
+        logger.info(`Encontradas ${matchingRoleAssignments.length} asignaciones para el rol ${role} en caso ${caseId}. Eliminando todas.`);
         
-        const deleteResponse = await del(deleteUrl);
-        logger.debug(`Respuesta al eliminar asignación: ${JSON.stringify(deleteResponse || 'sin respuesta')}`);
-        
-        // Esperar un momento para asegurar que la eliminación se complete
-        await new Promise(resolve => setTimeout(resolve, 5000));
-      } catch (deleteError) {
-        logger.error(`Error al eliminar asignación existente: ${deleteError}`);
-        // Continuamos con la nueva asignación a pesar del error en la eliminación
+        for (const assignment of matchingRoleAssignments) {
+          if (assignment.id_caso_usuario) {
+            // Usar el formato de endpoint para eliminar: /caso-usuario/{id_caso_usuario}
+            const deleteUrl = `caso-usuario/${assignment.id_caso_usuario}`;
+            logger.debug(`Eliminando asignación: ${deleteUrl}`);
+            
+            try {
+              await del(deleteUrl);
+              logger.debug(`Asignación eliminada correctamente: ${assignment.id_caso_usuario}`);
+            } catch (deleteError) {
+              logger.error(`Error al eliminar asignación ${assignment.id_caso_usuario}: ${deleteError}`);
+              // Continuamos con las siguientes eliminaciones a pesar del error
+            }
+          }
+        }
+      } else {
+        logger.info(`No se encontraron asignaciones existentes para el rol ${role} en caso ${caseId}`);
       }
+    } catch (fetchError) {
+      logger.warn(`Error al buscar asignaciones existentes para el caso ${caseId}: ${fetchError}`);
+      // Continuamos con la nueva asignación a pesar del error
     }
 
-    // Crear la nueva asignación
+    // Crear la nueva asignación con los campos requeridos
     const assignmentData = {
       id_caso: caseId,
       id_usuario: userId,
+      rol_en_caso: role.charAt(0).toUpperCase() + role.slice(1), // Primera letra en mayúscula
+      status: true
     };
 
     logger.debug(

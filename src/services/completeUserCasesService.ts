@@ -2,7 +2,7 @@
 
 "use server";
 
-import { get } from '@/utils/apiUtils';
+import { get, post, del } from '@/utils/apiUtils';
 import { CompleteCaseData } from '@/types/cases';
 import { logger } from '@/utils/logUtils';
 
@@ -106,3 +106,53 @@ export const fetchCompleteCaseById = async (caseId: number): Promise<CompleteCas
   }
 };
   
+/**
+ * Asigna un usuario a un caso
+ * @param caseId ID del caso
+ * @param userId ID del usuario
+ * @param role Rol del usuario en el caso
+ * @returns Resultado de la asignación
+ */
+export const assignUserToCase = async (
+  caseId: number,
+  userId: number,
+  role: string
+): Promise<boolean> => {
+  try {
+    logger.info(`Asignando usuario ${userId} como ${role} al caso ${caseId}`);
+    
+    const requestBody = {
+      id_caso: caseId,
+      id_usuario: userId,
+      rol_en_caso: role,
+      status: true
+    };
+    
+    await post('/casos-usuarios/', requestBody);
+    
+    return true;
+  } catch (error) {
+    logger.error(`Error al asignar usuario ${userId} al caso ${caseId}:`, error);
+    return false;
+  }
+};
+
+/**
+ * Elimina la asignación de un usuario a un caso
+ * @param assignmentId ID de la asignación caso-usuario a eliminar
+ * @returns Verdadero si la eliminación fue exitosa, falso en caso contrario
+ */
+export const deleteUserCaseAssignment = async (
+  assignmentId: number
+): Promise<boolean> => {
+  try {
+    logger.info(`Eliminando asignación de usuario-caso con ID ${assignmentId}`);
+    
+    await del(`/caso-usuario/${assignmentId}`);
+    
+    return true;
+  } catch (error) {
+    logger.error(`Error al eliminar asignación de usuario-caso ${assignmentId}:`, error);
+    return false;
+  }
+};
