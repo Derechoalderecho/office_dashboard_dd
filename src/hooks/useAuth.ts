@@ -1,7 +1,7 @@
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { signUp, signIn, logout, resetPassword, setUser, setUserRole, UserRole } from '@/store/slices/authSlice';
+import { signUp, signIn, logout, resetPassword, setUser, setUserRole, setToken, UserRole } from '@/store/slices/authSlice';
 import { useEffect, useState } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { onAuthStateChanged, User, getIdToken } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { getUserRoleFromFirebaseUid, getUserIdFromFirebaseUid } from '@/services/userAuthService';
 
@@ -30,7 +30,7 @@ const serializeUser = (user: User | null) => {
 
 export const useAuth = () => {
   const dispatch = useAppDispatch();
-  const { user, role, loading, error } = useAppSelector((state) => state.auth);
+  const { user, role, loading, error, token } = useAppSelector((state) => state.auth);
   
   // Estados para el ID interno del usuario (similar a useInternalUserId)
   const [internalUserId, setInternalUserId] = useState<number | null>(null);
@@ -44,6 +44,19 @@ export const useAuth = () => {
       console.log('useAuth: Firebase auth state changed:', firebaseUser ? `Usuario ID: ${firebaseUser.uid}` : 'No hay usuario');
       const serializedUser = serializeUser(firebaseUser);
       dispatch(setUser(serializedUser));
+      
+      // Obtener y guardar el token de autenticación
+      if (firebaseUser) {
+        try {
+          const idToken = await getIdToken(firebaseUser);
+          dispatch(setToken(idToken));
+          console.log('useAuth: Token de autenticación obtenido:', idToken);
+        } catch (error) {
+          console.error('useAuth: Error al obtener token de autenticación:', error);
+        }
+      } else {
+        dispatch(setToken(null));
+      }
       
       // Si hay un usuario autenticado, obtener su rol e ID interno
       if (firebaseUser) {
@@ -130,6 +143,7 @@ export const useAuth = () => {
     role,
     loading,
     error,
+    token,
     signUp: handleSignUp,
     signIn: handleSignIn,
     logout: handleLogout,

@@ -34,6 +34,7 @@ interface AuthState {
   role: UserRole;
   loading: boolean;
   error: string | null;
+  token: string | null;
 }
 
 const initialState: AuthState = {
@@ -41,6 +42,7 @@ const initialState: AuthState = {
   role: null,
   loading: true,
   error: null,
+  token: null,
 };
 
 // Function to serialize the user after authentication
@@ -128,6 +130,9 @@ const authSlice = createSlice({
     setUserRole: (state, action) => {
       state.role = action.payload;
     },
+    setToken: (state, action) => {
+      state.token = action.payload;
+    },
     setLoading: (state, action) => {
       state.loading = action.payload;
     },
@@ -198,5 +203,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser, setUserRole, setLoading, setError, clearError } = authSlice.actions;
+export const { setUser, setUserRole, setToken, setLoading, setError, clearError } = authSlice.actions;
 export default authSlice.reducer; 

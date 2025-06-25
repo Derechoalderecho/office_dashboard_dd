@@ -1,20 +1,20 @@
 "use client";
 
-import { fetchCasesByCitizenId } from "@/services/caseService"
-import { fetchAllCases } from "@/services/caseService";
-import { fetchCaseById } from "@/services/caseService";
-import { fetchCasesByUserId } from "@/services/caseService";
 import { fetchCompleteUserCases } from "@/services/completeUserCasesService";
 import { fetchUserByFirebaseUid } from "@/services/userByFirebaseService";
 import { getUserIdFromFirebaseUid } from "@/services/userByFirebaseService";
 import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
 
 export default function page() {
 
-    const { user, role, loading, error } = useAuth();
+    const { user, role, token, loading, error } = useAuth();
 
-    console.log(user);
-    console.log(role);
+   useEffect(() => {
+       console.log('=== TOKEN DE AUTENTICACIÓN FIREBASE ===');
+       console.log(token);
+       console.log('======================================');
+     }, [token]);
 
   return (
     <div>page</div>

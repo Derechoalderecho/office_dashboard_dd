@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore } from "firebase/firestore";
-import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, User, getIdToken } from 'firebase/auth';
 import { useEffect, useState } from 'react';
 
 const firebaseConfig = {
@@ -18,13 +18,23 @@ const auth = getAuth(app);
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUser(user);
+        // Get the user's token
+        try {
+          const idToken = await getIdToken(user);
+          setToken(idToken);
+          console.log('Firebase Auth Token:', idToken);
+        } catch (error) {
+          console.error('Error getting auth token:', error);
+        }
       } else {
         setUser(null);
+        setToken(null);
       }
       setLoading(false);
     });
@@ -32,7 +42,7 @@ export function useAuth() {
     return () => unsubscribe();
   }, []);
 
-  return { user, loading };
+  return { user, loading, token };
 }
 
 export { db, auth };
