@@ -14,7 +14,7 @@ import {
 import { Users } from "@/types/users";
 import { logger } from "@/utils/logUtils";
 import { fetchAllUsers } from "@/services/userService";
-import { deleteUserCaseAssignment, assignUserToCase } from "@/services/completeUserCasesService";
+import { deleteUserCaseAssignment, assignUserToCase, fetchCaseUsers } from "@/services/completeUserCasesService";
 
 interface CaseUser {
   id_caso: number;
@@ -95,20 +95,29 @@ export const UserAssignmentModal: React.FC<UserAssignmentModalProps> = ({
 
     try {
       setIsLoading(true);
-      
-      // Primero eliminar las asignaciones existentes para cada caso
-      for (const caseId of selectedCaseIds) {
-        console.log(`Eliminando asignaciones existentes para el caso ID: ${caseId}`);
-        await deleteUserCaseAssignment(caseId);
-      }
-      
       const assignments: {caseId: number, userId: number, role: string}[] = [];
       const assignmentResults: boolean[] = [];
 
       // Para cada caso seleccionado
       for (const caseId of selectedCaseIds) {
-        // Asignar usuarios para cada rol seleccionado
+        // Obtener los usuarios actuales asignados a este caso
+        const currentUsers = await fetchCaseUsers(caseId);
+        console.log(`Usuarios actuales del caso ${caseId}:`, currentUsers);
+        
+        // Gestionar estudiante
         if (selectedStudent) {
+          // Buscar si ya existe un estudiante asignado
+          const existingStudent = currentUsers.find(
+            user => user.rol?.toLowerCase() === ROLES.STUDENT.toLowerCase()
+          );
+          
+          if (existingStudent) {
+            // Eliminar el estudiante existente
+            console.log(`Eliminando estudiante existente ${existingStudent.id_usuario} del caso ${caseId}`);
+            await deleteUserCaseAssignment(caseId, existingStudent.id_usuario);
+          }
+          
+          // Asignar nuevo estudiante
           console.log(`Asignando estudiante ${selectedStudent.id_usuario} al caso ${caseId}`);
           const result = await assignUserToCase(
             caseId,
@@ -124,7 +133,20 @@ export const UserAssignmentModal: React.FC<UserAssignmentModalProps> = ({
           });
         }
 
+        // Gestionar docente
         if (selectedTeacher) {
+          // Buscar si ya existe un docente asignado
+          const existingTeacher = currentUsers.find(
+            user => user.rol?.toLowerCase() === ROLES.TEACHER.toLowerCase()
+          );
+          
+          if (existingTeacher) {
+            // Eliminar el docente existente
+            console.log(`Eliminando docente existente ${existingTeacher.id_usuario} del caso ${caseId}`);
+            await deleteUserCaseAssignment(caseId, existingTeacher.id_usuario);
+          }
+          
+          // Asignar nuevo docente
           console.log(`Asignando docente ${selectedTeacher.id_usuario} al caso ${caseId}`);
           const result = await assignUserToCase(
             caseId,
@@ -140,7 +162,20 @@ export const UserAssignmentModal: React.FC<UserAssignmentModalProps> = ({
           });
         }
 
+        // Gestionar monitor
         if (selectedMonitor) {
+          // Buscar si ya existe un monitor asignado
+          const existingMonitor = currentUsers.find(
+            user => user.rol?.toLowerCase() === ROLES.MONITOR.toLowerCase()
+          );
+          
+          if (existingMonitor) {
+            // Eliminar el monitor existente
+            console.log(`Eliminando monitor existente ${existingMonitor.id_usuario} del caso ${caseId}`);
+            await deleteUserCaseAssignment(caseId, existingMonitor.id_usuario);
+          }
+          
+          // Asignar nuevo monitor
           console.log(`Asignando monitor ${selectedMonitor.id_usuario} al caso ${caseId}`);
           const result = await assignUserToCase(
             caseId,

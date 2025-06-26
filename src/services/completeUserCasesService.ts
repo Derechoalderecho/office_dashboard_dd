@@ -138,21 +138,42 @@ export const assignUserToCase = async (
 };
 
 /**
- * Elimina la asignación de un usuario a un caso
+ * Elimina la asignación de un usuario a un caso específico
  * @param caseId ID del caso
+ * @param userId ID del usuario
  * @returns Verdadero si la eliminación fue exitosa, falso en caso contrario
  */
 export const deleteUserCaseAssignment = async (
-  caseId: number
+  caseId: number,
+  userId: number
 ): Promise<boolean> => {
   try {
-    logger.info(`Eliminando asignación de usuario-caso con ID ${caseId}`);
+    logger.info(`Eliminando asignación del usuario ${userId} en el caso ${caseId}`);
     
-    await del(`/caso-usuario/${caseId}`);
+    await del(`/caso-usuario/${caseId}/${userId}/`);
     
     return true;
   } catch (error) {
-    logger.error(`Error al eliminar asignación de usuario-caso ${caseId}:`, error);
+    logger.error(`Error al eliminar asignación del usuario ${userId} en el caso ${caseId}:`, error);
     return false;
+  }
+};
+
+/**
+ * Obtiene los usuarios asignados a un caso específico
+ * @param caseId ID del caso para el que se quieren obtener los usuarios asignados
+ * @returns Lista de usuarios asignados al caso con sus roles
+ */
+export const fetchCaseUsers = async (caseId: number): Promise<any[]> => {
+  try {
+    logger.info(`Obteniendo usuarios asignados al caso ${caseId}`);
+    
+    const response = await get<any[]>(`/casos/${caseId}/usuarios/`);
+    logger.info(`Se encontraron ${response.length} usuarios asignados al caso ${caseId}`);
+    
+    return response;
+  } catch (error) {
+    logger.error(`Error al obtener usuarios del caso ${caseId}:`, error);
+    return [];
   }
 };
