@@ -15,7 +15,7 @@ import { transformStateByRole } from "@/utils/stateTransformer";
 import { UserRole } from "@/store/slices/authSlice";
 import { useState } from "react";
 import { AlertDialog } from "@/components/ui/alert-dialog";
-import { getCaseStatusStyles } from "@/utils/caseStatusStyles";
+import classNames from "classnames";
 
 interface CaseHeaderProps {
   caseData: CompleteCaseData;
@@ -43,6 +43,76 @@ export default function CaseHeader({
   const displayState = transformStateByRole(caseData.estado_actual, role);
   const [isRadicarInfoOpen, setIsRadicarInfoOpen] = useState(false);
   const [isChangeTutelaDialogOpen, setIsChangeTutelaDialogOpen] = useState(false);
+  
+  const getStatusBadgeStyle = (status: string): string => {
+    switch (status) {
+      case "Aprobado":
+        return "bg-success text-[#12A150]";
+      case "Seguimiento":
+        return "bg-followed text-[#006FEE]";
+      case "Acción necesaria":
+        return "bg-warning text-[#C4841D]";
+      case "No aprobado":
+        return "bg-error text-[#F31260]";
+      case "Viabilidad":
+        return "bg-purple-100 text-purple-600";
+      case "Pendiente":
+        return "bg-orange-100 text-orange-600";
+      case "Revisar tutela":
+        return "bg-amber-100 text-amber-600";
+      case "Radicar":
+        return "bg-emerald-100 text-emerald-600";
+      case "Espera del juez":
+        return "bg-sky-100 text-sky-600";
+      case "Valoración del asesor":
+        return "bg-teal-100 text-teal-600";
+      case "Revisión de viabilidad":
+        return "bg-amber-100 text-amber-600";
+      case "Elaboración tutela":
+        return "bg-indigo-100 text-indigo-600";
+      case "En revisión":
+        return "bg-amber-100 text-amber-600";
+      case "Pendiente de radicación":
+        return "bg-emerald-100 text-emerald-600";
+      default:
+        return "bg-warning text-[#C4841D]";
+    }
+  };
+  
+  const getStatusIndicatorStyle = (status: string): string => {
+    switch (status) {
+      case "Aprobado":
+        return "bg-[#12A150]";
+      case "Seguimiento":
+        return "bg-[#006FEE]";
+      case "Acción necesaria":
+        return "bg-[#C4841D]";
+      case "No aprobado":
+        return "bg-[#F31260]";
+      case "Viabilidad":
+        return "bg-purple-600";
+      case "Pendiente":
+        return "bg-orange-600";
+      case "Revisar tutela":
+        return "bg-amber-600";
+      case "Radicar":
+        return "bg-emerald-600";
+      case "Espera del juez":
+        return "bg-sky-600";
+      case "Valoración del asesor":
+        return "bg-teal-600";
+      case "Revisión de viabilidad":
+        return "bg-amber-600";
+      case "Elaboración tutela":
+        return "bg-indigo-600";
+      case "En revisión":
+        return "bg-amber-600";
+      case "Pendiente de radicación":
+        return "bg-emerald-600";
+      default:
+        return "bg-[#C4841D]";
+    }
+  };
 
   //Botón para radicar tutela
   const handleRadicarClick = () => {
@@ -95,10 +165,16 @@ export default function CaseHeader({
         <div className="flex gap-4 items-center mb-1">
           <h1 className="text-4xl font-medium">INV4257-09-011</h1>
           <div
-            className={`w-fit flex gap-2 items-center rounded-full py-1 px-3 ${getCaseStatusStyles(displayState, 'badge')}`}
+            className={classNames(
+              "w-fit flex gap-2 items-center rounded-full py-1 px-3",
+              getStatusBadgeStyle(displayState)
+            )}
           >
             <div
-              className={`w-2 h-2 rounded-full ${getCaseStatusStyles(displayState, 'indicator')}`}
+              className={classNames(
+                "w-2 h-2 rounded-full",
+                getStatusIndicatorStyle(displayState)
+              )}
             ></div>
             <span className="text-sm font-medium capitalize">
               {displayState}
