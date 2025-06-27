@@ -32,9 +32,9 @@ export function getBadgeStyle(status: string): string {
     case "Valoración del asesor":
       return "bg-teal-100 text-teal-600";
     case "Revisión de viabilidad":
-      return "bg-amber-100 text-amber-600";
+      return "bg-purple-100 text-purple-600";
     case "Elaboración tutela":
-      return "bg-indigo-100 text-indigo-600";
+      return "bg-orange-100 text-orange-600";
     case "En revisión":
       return "bg-amber-100 text-amber-600";
     case "Pendiente de radicación":
@@ -72,9 +72,9 @@ export function getIndicatorStyle(status: string): string {
     case "Valoración del asesor":
       return "bg-teal-600";
     case "Revisión de viabilidad":
-      return "bg-amber-600";
+      return "bg-purple-600";
     case "Elaboración tutela":
-      return "bg-indigo-600";
+      return "bg-orange-600";
     case "En revisión":
       return "bg-amber-600";
     case "Pendiente de radicación":
@@ -112,9 +112,9 @@ export function getHistoryIndicatorStyle(status: string): string {
     case "Valoración del asesor":
       return "bg-teal-600";
     case "Revisión de viabilidad":
-      return "bg-amber-600";
+      return "bg-purple-600";
     case "Elaboración tutela":
-      return "bg-indigo-600";
+      return "bg-orange-600";
     case "En revisión":
       return "bg-amber-600";
     case "Pendiente de radicación":
