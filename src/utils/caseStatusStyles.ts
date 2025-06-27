@@ -2,106 +2,146 @@
  * Utility to provide consistent styling for case status displays
  */
 
-type StatusStyleTypes = "badge" | "indicator" | "historyIndicator";
+export type StatusStyleTypes = "badge" | "indicator" | "historyIndicator";
 
-interface StatusStyles {
-  badge: string;
-  indicator: string;
-  historyIndicator: string;
+/**
+ * Get the CSS classes for badge style based on case status
+ * @param status The case status string
+ * @returns CSS class string for badge
+ */
+export function getBadgeStyle(status: string): string {
+  switch (status) {
+    case "Aprobado":
+      return "bg-success text-[#12A150]";
+    case "Seguimiento":
+      return "bg-followed text-[#006FEE]";
+    case "Acción necesaria":
+      return "bg-warning text-[#C4841D]";
+    case "No aprobado":
+      return "bg-error text-[#F31260]";
+    case "Viabilidad":
+      return "bg-purple-100 text-purple-600";
+    case "Pendiente":
+      return "bg-orange-100 text-orange-600";
+    case "Revisar tutela":
+      return "bg-amber-100 text-amber-600";
+    case "Radicar":
+      return "bg-emerald-100 text-emerald-600";
+    case "Espera del juez":
+      return "bg-sky-100 text-sky-600";
+    case "Valoración del asesor":
+      return "bg-teal-100 text-teal-600";
+    case "Revisión de viabilidad":
+      return "bg-amber-100 text-amber-600";
+    case "Elaboración tutela":
+      return "bg-indigo-100 text-indigo-600";
+    case "En revisión":
+      return "bg-amber-100 text-amber-600";
+    case "Pendiente de radicación":
+      return "bg-emerald-100 text-emerald-600";
+    default:
+      return "bg-warning text-[#C4841D]";
+  }
 }
 
-const statusStyleMap: Record<string, StatusStyles> = {
-  //docente
-  "Aprobado": {
-    badge: "bg-success text-[#12A150]",
-    indicator: "bg-[#12A150]",
-    historyIndicator: "bg-green-600",
-  },
-  "Seguimiento": {
-    badge: "bg-followed text-[#006FEE]",
-    indicator: "bg-[#006FEE]",
-    historyIndicator: "bg-blue-600",
-  },
-  "Acción necesaria": {
-    badge: "bg-warning text-[#C4841D]",
-    indicator: "bg-[#C4841D]",
-    historyIndicator: "bg-yellow-600",
-  },
-  "No aprobado": {
-    badge: "bg-error text-[#F31260]",
-    indicator: "bg-[#F31260]",
-    historyIndicator: "bg-red-600",
-  },
-  "Viabilidad": {
-    badge: "bg-purple-100 text-purple-600",
-    indicator: "bg-purple-100",
-    historyIndicator: "bg-purple-600",
-  },
-  "Pendiente": {
-    badge: "bg-orange-100 text-orange-600",
-    indicator: "bg-orange-100",
-    historyIndicator: "bg-orange-600",
-  },
-  "Revisar tutela": {
-    badge: "bg-amber-100 text-amber-600",
-    indicator: "bg-amber-100",
-    historyIndicator: "bg-amber-600",
-  },
-  "Radicar": {
-    badge: "bg-emerald-100 text-emerald-600",
-    indicator: "bg-emerald-100",
-    historyIndicator: "bg-emerald-600",
-  },
-  "Espera del juez": {
-    badge: "bg-sky-100 text-sky-600",
-    indicator: "bg-sky-100",
-    historyIndicator: "bg-sky-600",
-  },
-  "Valoración del asesor": {
-    badge: "bg-teal-100 text-teal-600",
-    indicator: "bg-teal-100",
-    historyIndicator: "bg-teal-600",
-  },
-  //Estudiante
-  "Revisión de viabilidad": {
-    badge: "bg-amber-100 text-amber-600",
-    indicator: "bg-amber-100",
-    historyIndicator: "bg-amber-600",
-  },
-  "Elaboración tutela": {
-    badge: "bg-indigo-100 text-indigo-600",
-    indicator: "bg-indigo-100",
-    historyIndicator: "bg-indigo-600",
-  },
-  "En revisión": {
-    badge: "bg-amber-100 text-amber-600",
-    indicator: "bg-amber-100",
-    historyIndicator: "bg-amber-600",
-  },
-  "Pendiente de radicación": {
-    badge: "bg-emerald-100 text-emerald-600",
-    indicator: "bg-emerald-100",
-    historyIndicator: "bg-emerald-600",
-  },
-};
+/**
+ * Get the CSS classes for indicator style based on case status
+ * @param status The case status string
+ * @returns CSS class string for indicator
+ */
+export function getIndicatorStyle(status: string): string {
+  switch (status) {
+    case "Aprobado":
+      return "bg-[#12A150]";
+    case "Seguimiento":
+      return "bg-[#006FEE]";
+    case "Acción necesaria":
+      return "bg-[#C4841D]";
+    case "No aprobado":
+      return "bg-[#F31260]";
+    case "Viabilidad":
+      return "bg-purple-600";
+    case "Pendiente":
+      return "bg-orange-600";
+    case "Revisar tutela":
+      return "bg-amber-600";
+    case "Radicar":
+      return "bg-emerald-600";
+    case "Espera del juez":
+      return "bg-sky-600";
+    case "Valoración del asesor":
+      return "bg-teal-600";
+    case "Revisión de viabilidad":
+      return "bg-amber-600";
+    case "Elaboración tutela":
+      return "bg-indigo-600";
+    case "En revisión":
+      return "bg-amber-600";
+    case "Pendiente de radicación":
+      return "bg-emerald-600";
+    default:
+      return "bg-[#C4841D]";
+  }
+}
 
-// Default styles as fallback
-const defaultStyles: StatusStyles = {
-  badge: "bg-warning text-[#C4841D]",
-  indicator: "bg-[#C4841D]",
-  historyIndicator: "bg-gray-600",
-};
+/**
+ * Get the CSS classes for history indicator style based on case status
+ * @param status The case status string
+ * @returns CSS class string for history indicator
+ */
+export function getHistoryIndicatorStyle(status: string): string {
+  switch (status) {
+    case "Aprobado":
+      return "bg-green-600";
+    case "Seguimiento":
+      return "bg-blue-600";
+    case "Acción necesaria":
+      return "bg-yellow-600";
+    case "No aprobado":
+      return "bg-red-600";
+    case "Viabilidad":
+      return "bg-purple-600";
+    case "Pendiente":
+      return "bg-orange-600";
+    case "Revisar tutela":
+      return "bg-amber-600";
+    case "Radicar":
+      return "bg-emerald-600";
+    case "Espera del juez":
+      return "bg-sky-600";
+    case "Valoración del asesor":
+      return "bg-teal-600";
+    case "Revisión de viabilidad":
+      return "bg-amber-600";
+    case "Elaboración tutela":
+      return "bg-indigo-600";
+    case "En revisión":
+      return "bg-amber-600";
+    case "Pendiente de radicación":
+      return "bg-emerald-600";
+    default:
+      return "bg-gray-600";
+  }
+}
 
 /**
  * Get the CSS classes for a specific case status and style type
  * @param status The case status string
- * @param type The style type ('badge' or 'indicator')
+ * @param type The style type ('badge', 'indicator', or 'historyIndicator')
  * @returns CSS class string
  */
 export function getCaseStatusStyles(
   status: string,
   type: StatusStyleTypes
 ): string {
-  const styles = statusStyleMap[status] || defaultStyles;
-  return styles[type];
+  switch (type) {
+    case "badge":
+      return getBadgeStyle(status);
+    case "indicator":
+      return getIndicatorStyle(status);
+    case "historyIndicator":
+      return getHistoryIndicatorStyle(status);
+    default:
+      return "";
+  }
 }
