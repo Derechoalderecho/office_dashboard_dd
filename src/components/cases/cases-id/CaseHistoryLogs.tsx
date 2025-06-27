@@ -14,7 +14,7 @@ export default function CaseHistoryLogs({ historyLogs }: CaseHistoryLogsProps) {
     <section className="pl-3">
       <ol className="relative border-s border-gray-200">
         {historyLogs && historyLogs.length > 0 ? (
-          historyLogs.map((history) => (
+          [...historyLogs].reverse().map((history) => (
             <li key={history.id_historial_estado_caso} className="mb-16 ms-10">
               <span
                 className={classNames(
