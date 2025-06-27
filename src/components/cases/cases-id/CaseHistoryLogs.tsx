@@ -1,10 +1,11 @@
 "use client";
 
 import { parseDateToLocal } from "@/utils/date";
-import { CaseHistoryLog } from "@/types/cases";
+import { ApiHistoryLog } from "@/types/cases";
+import { getCaseStatusStyles } from "@/utils/caseStatusStyles";
 
 interface CaseHistoryLogsProps {
-  historyLogs: CaseHistoryLog[];
+  historyLogs: ApiHistoryLog[];
 }
 
 export default function CaseHistoryLogs({ historyLogs }: CaseHistoryLogsProps) {
@@ -13,25 +14,15 @@ export default function CaseHistoryLogs({ historyLogs }: CaseHistoryLogsProps) {
       <ol className="relative border-s border-gray-200">
         {historyLogs && historyLogs.length > 0 ? (
           historyLogs.map((history) => (
-            <li key={history.id_historial} className="mb-16 ms-10">
+            <li key={history.id_historial_estado_caso} className="mb-16 ms-10">
               <span
-                className={`${
-                  history.estado_nuevo === "Aprobado"
-                    ? "bg-[#12A150]"
-                    : history.estado_nuevo === "Seguimiento"
-                    ? "bg-primary"
-                    : history.estado_nuevo === "Acción necesaria"
-                    ? "bg-[#C4841D]"
-                    : history.estado_nuevo === "No aprobado"
-                    ? "bg-[#F31260]"
-                    : "bg-primary"
-                } absolute flex items-center justify-center w-7 h-7 rounded-full -start-[14px] ring-4 ring-[#e7e7e7da]`}
+                className={`${getCaseStatusStyles(history.estado_actual, "indicator")} absolute flex items-center justify-center w-7 h-7 rounded-full -start-[14px] ring-4 ring-[#e7e7e7da]`}
               ></span>
               <h3 className="flex items-center mb-1 text-sm font-semibold">
-                {history.estado_nuevo}
+                {history.estado_actual}
               </h3>
               <time className="block mb-2 text-sm font-normal leading-none text-gray-400">
-                {parseDateToLocal(history.fecha_cambio)}
+                {parseDateToLocal(history.created_date)}
               </time>
             </li>
           ))

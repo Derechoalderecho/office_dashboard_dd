@@ -5,7 +5,7 @@ import {
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useEffect, useState, useRef } from "react";
-import { fetchCaseHistory } from "@/services/caseService";
+// Ya no necesitamos importar fetchCaseHistory porque los datos vienen en fetchCompleteCaseById
 import { updateCaseStatus } from "@/services/updateCaseStatus";
 import { fetchCompleteCaseById } from "@/services/completeUserCasesService";
 import CaseHeader from "@/components/cases/cases-id/CaseHeader";
@@ -51,9 +51,7 @@ export default function CasePage() {
       const casesData = await fetchCompleteCaseById(caseId);
       console.log('Received case data response:', casesData);
       
-      console.log('Fetching history logs for case ID:', caseId);
-      const historyLogs = await fetchCaseHistory(caseId);
-      console.log('Received history logs:', historyLogs?.length || 0, 'items');
+      // Los logs de historial vienen incluidos en los datos del caso
       
       if (!casesData || casesData.length === 0) {
         const errorMsg = `Caso con ID ${caseId} no encontrado`;
@@ -95,7 +93,14 @@ export default function CasePage() {
       });
       
       setCaseData(caseData);
-      setHistoryLogs(historyLogs || []);
+      // Usar los logs de historial que vienen en los datos del caso
+      if (caseData && 'historial_estados' in caseData && Array.isArray(caseData.historial_estados)) {
+        console.log('History logs found in case data:', caseData.historial_estados.length, 'items');
+        setHistoryLogs(caseData.historial_estados.filter(log => log.status === true));
+      } else {
+        console.log('No history logs found in case data');
+        setHistoryLogs([]);
+      }
       
       // Verificar si hay notas antes de acceder a la propiedad
       if (caseData && 'notas' in caseData && Array.isArray(caseData.notas)) {
@@ -132,45 +137,8 @@ export default function CasePage() {
       return;
     }
     
-    // Añadir un test directo a la API para diagnóstico
-    const testAPIEndpoint = async () => {
-      try {
-        console.log('Testing direct API connection...');
-        const endpoint = `/casos/full/${caseId}/`;
-        console.log(`Testing endpoint: ${endpoint}`);
-        
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}${endpoint}`);
-        console.log('API Test Response status:', response.status);
-        
-        if (!response.ok) {
-          console.error(`API test failed with status: ${response.status}`);
-          console.error('Response text:', await response.text());
-          return;
-        }
-        
-        const data = await response.json();
-        console.log('API Test Data received:', data);
-        
-        // Verificar estructura de datos
-        if (Array.isArray(data) && data.length > 0) {
-          console.log('API Data structure:', Object.keys(data[0]));
-          
-          // Verificar especificamente el campo notas
-          if ('notas' in data[0]) {
-            console.log('Notas found in API response:', data[0].notas);
-          } else {
-            console.error('No notas field in API response:', data[0]);
-          }
-        }
-      } catch (error) {
-        console.error('API Test ERROR:', error);
-      }
-    };
-    
-    // Ejecutar test y luego cargar los datos normalmente
-    testAPIEndpoint().then(() => {
-      loadCaseData();
-    });
+    // Cargar los datos del caso directamente
+    loadCaseData();
   }, [caseId, id]);
 
   // Efecto para mostrar notificación cuando el caso está en estado 'Radicar'

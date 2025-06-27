@@ -1,7 +1,7 @@
 "use server";
 
 import { Citizen } from "@/types/citizens";
-import { Cases, CaseHistoryLog } from "@/types/cases";
+import { Cases } from "@/types/cases";
 import { get, del, batchRequests, put, post } from "@/utils/apiUtils";
 import {
   getWithCache,
@@ -22,41 +22,7 @@ const CITIZEN_CACHE = "citizens";
 
 // Time to live for each type of cache
 const CASES_TTL = 5 * 60 * 1000;
-const HISTORY_TTL = 10 * 60 * 1000;
 const CITIZENS_TTL = 15 * 60 * 1000;
-
-/**
- * Gets the history records for a specific case
- * @param caseId
- * @returns
- */
-export const fetchCaseHistory = async (
-  caseId: number
-): Promise<CaseHistoryLog[]> => {
-  try {
-    const allHistoryLogs = await getCollectionWithCache<CaseHistoryLog>(
-      HISTORY_CACHE,
-      async () => {
-        logger.debug("Obteniendo todos los registros de historial");
-        return await get<CaseHistoryLog[]>("historial");
-      },
-      (log) => log.id_historial,
-      HISTORY_TTL
-    );
-
-    const caseHistoryLogs = allHistoryLogs.filter(
-      (log) => log.id_caso === caseId
-    );
-
-    return caseHistoryLogs.sort(
-      (a, b) =>
-        new Date(b.fecha_cambio).getTime() - new Date(a.fecha_cambio).getTime()
-    );
-  } catch (error) {
-    logger.error(`Error al obtener historial para el caso ${caseId}:`, error);
-    return [];
-  }
-};
 
 /**
  * Gets all users assigned to a specific case

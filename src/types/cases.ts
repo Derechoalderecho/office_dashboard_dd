@@ -131,6 +131,19 @@ export interface apiCalificacion {
   promedio: number;
 }
 
+export interface ApiHistoryLog {
+  id_caso: number;
+  id_usuario: number;
+  estado_actual: string;
+  estado_anterior: string;
+  observacion: string;
+  id_historial_estado_caso: number;
+  created_date: string;
+  modified_date: string | null;
+  deleted_at: string | null;
+  status: boolean;
+}
+
 //Casos data completa
 export interface CompleteCaseData {
   id_ciudadano: number;
@@ -156,14 +169,6 @@ export interface CompleteCaseData {
 }
 
 // Lo viejo
-export interface CaseHistoryLog {
-  id_caso: number;
-  estado_anterior: string;
-  estado_nuevo: string;
-  id_historial: number;
-  fecha_cambio: string;
-}
-
 export interface Nota {
   id_nota: number;
   id_caso: number;
