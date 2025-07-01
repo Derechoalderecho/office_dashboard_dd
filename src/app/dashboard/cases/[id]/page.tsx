@@ -29,7 +29,7 @@ interface CasePageProps {
 export default function CasePage() {
   const { id } = useParams<{ id: string }>();
   const caseId = parseInt(id as string, 10);
-  const { role } = useAuth();
+  const { role, internalUserId } = useAuth();
   
   const [caseData, setCaseData] = useState<CompleteCaseData | null>(null);
   const [historyLogs, setHistoryLogs] = useState<any[]>([]);
@@ -208,9 +208,19 @@ export default function CasePage() {
     
     setStatusChangeLoading(true);
     try {
+      // Verificar que tenemos un userId válido
+      if (!internalUserId) {
+        addToast({
+          title: "Error",
+          description: "No se pudo identificar al usuario actual",
+          color: "danger",
+        });
+        return;
+      }
+      
       // Ahora solo aplica al estado "Revisar tutela"
       const newStatus = caseData.estado_actual === "Revisar tutela" ? "Radicar" : "Espera del juez";
-      const success = await updateCaseStatus(caseId, newStatus);
+      const success = await updateCaseStatus(caseId, newStatus, internalUserId);
       
       if (success) {
         addToast({
@@ -248,9 +258,19 @@ export default function CasePage() {
     
     setStatusChangeLoading(true);
     try {
+      // Verificar que tenemos un userId válido
+      if (!internalUserId) {
+        addToast({
+          title: "Error",
+          description: "No se pudo identificar al usuario actual",
+          color: "danger",
+        });
+        return;
+      }
+      
       // Siempre vuelve a "Pendiente" al rechazar
       const newStatus = "Pendiente";
-      const success = await updateCaseStatus(caseId, newStatus);
+      const success = await updateCaseStatus(caseId, newStatus, internalUserId);
       
       if (success) {
         addToast({
@@ -304,9 +324,19 @@ export default function CasePage() {
           break;
       }
       
+      // Verificar que tenemos un userId válido
+      if (!internalUserId) {
+        addToast({
+          title: "Error",
+          description: "No se pudo identificar al usuario actual",
+          color: "danger",
+        });
+        return;
+      }
+      
       // Solo actualizar si hay un cambio de estado
       if (newStatus !== caseData.estado_actual) {
-        const success = await updateCaseStatus(caseId, newStatus);
+        const success = await updateCaseStatus(caseId, newStatus, internalUserId);
         
         if (success) {
           let message = "";
@@ -386,7 +416,17 @@ export default function CasePage() {
     
     setStatusChangeLoading(true);
     try {
-      const success = await updateCaseStatus(caseId, "Pendiente");
+      // Verificar que tenemos un userId válido
+      if (!internalUserId) {
+        addToast({
+          title: "Error",
+          description: "No se pudo identificar al usuario actual",
+          color: "danger",
+        });
+        return;
+      }
+      
+      const success = await updateCaseStatus(caseId, "Pendiente", internalUserId);
       
       if (success) {
         addToast({
@@ -422,7 +462,18 @@ export default function CasePage() {
     
     setStatusChangeLoading(true);
     try {
-      const success = await updateCaseStatus(caseId, "No aprobado");
+      // Verificar que tenemos un userId válido
+      if (!internalUserId) {
+        addToast({
+          title: "Error",
+          description: "No se pudo identificar al usuario actual",
+          color: "danger",
+        });
+        return;
+      }
+      
+      const newStatus = "No aprobado";
+      const success = await updateCaseStatus(caseId, newStatus, internalUserId);
       
       if (success) {
         addToast({
