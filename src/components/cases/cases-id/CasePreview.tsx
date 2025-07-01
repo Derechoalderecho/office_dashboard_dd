@@ -12,7 +12,7 @@ import {
   ModalFooter,
   Tooltip
 } from "@heroui/react";
-import { useInternalUserId } from "@/hooks/useInternalUserId";
+import { useAuth } from "@/hooks/useAuth";
 import {
   CloudArrowUpIcon,
   DocumentTextIcon,
@@ -25,14 +25,9 @@ import {
   uploadTutelaDocument, 
   TutelaResponse, 
   getLatestTutelaFromDocuments, 
-  getTutelaDocumentById, 
   radicateTutelaDocument,
   getLatestRadicadoDocument as getLatestRadicadoTutelaDocument 
 } from "@/services/tutelaService";
-import { uploadRadicadoDocument } from "@/actions/uploadDocsActions";
-import { getLatestRadicadoDocument } from "@/services/documentService";
-import axios from "axios";
-import { API_BASE_URL } from "@/config/api";
 import { downloadLastRadicado } from "@/services/radicadoService";
 
 interface CasePreviewProps {
@@ -51,7 +46,7 @@ export default function CasePreview({
   onTutelaUploaded,
 }: CasePreviewProps) {
   // Obtener el ID del estudiante actualmente logueado
-  const { internalUserId } = useInternalUserId();
+  const { internalUserId } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isAlertOpen, setIsAlertOpen] = useState(false);

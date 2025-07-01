@@ -7,7 +7,6 @@ import { Users } from "@/types/users";
 import { post } from "@/utils/apiUtils";
 import { 
   getWithCache, 
-  getCachedItem,
   invalidateCache,
   invalidateCacheItem
 } from "@/utils/cacheUtils";
@@ -18,9 +17,7 @@ const NOTES_CACHE = 'notes';
 const USERS_CACHE = 'users';
 const CASES_CACHE = 'cases';
 
-const NOTES_TTL = 5 * 60 * 1000;
 const USERS_CACHE_TTL = 30 * 60 * 1000;
-const CASES_CACHE_TTL = 5 * 60 * 1000;
 
 /**
  * Creates a new note for a case

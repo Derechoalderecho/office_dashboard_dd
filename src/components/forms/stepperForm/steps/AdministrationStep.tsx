@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { Users } from "@/types/users";
 import { fetchAllUsers } from "@/services/userService";
 import { useAuth } from "@/hooks/useAuth";
-import { useInternalUserId } from "@/hooks/useInternalUserId";
 
 type AdministrationProps = {
   formData: {
@@ -33,7 +32,7 @@ export default function AdministrationStep({
   const [users, setUsers] = useState<Users[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { role } = useAuth();
-  const { internalUserId } = useInternalUserId();
+  const { internalUserId } = useAuth();
   const isStudent = role === "Estudiante";
 
   useEffect(() => {

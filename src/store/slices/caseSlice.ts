@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { Cases, CompleteCaseData } from '@/types/cases';
+import { CompleteCaseData } from '@/types/cases';
 import { fetchCompleteCaseById } from '@/services/completeUserCasesService';
 
 interface CaseState {

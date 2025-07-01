@@ -23,7 +23,6 @@ import { useDeleteRows } from "@/hooks/useDeleteRows";
 import { getDeleteAlertMessage } from "@/utils/alertMessage";
 import { updateCaseStatus } from "@/services/updateCaseStatus";
 import { UserAssignmentModal } from "./UserAssignmentModal";
-import { useUserRole } from "@/hooks/useUserRole";
 import { useAuth } from "@/hooks/useAuth";
 
 interface BulkActionsBarProps {
@@ -72,8 +71,7 @@ export const BulkActionsBar = ({
   const [isStatusLoading, setIsStatusLoading] = useState(false);
   const [isUserAssignmentModalOpen, setIsUserAssignmentModalOpen] = useState(false);
   const { handleDelete, isLoading: isDeleteLoading } = useDeleteRows(onDeleteCases);
-  const { role } = useUserRole();
-  const { internalUserId } = useAuth(); // Obtener el ID del usuario autenticado
+  const { internalUserId, role } = useAuth(); // Obtener el ID del usuario autenticado
 
   const convertSelection = (selection: Selection): Set<number> | "all" => {
     if (selection === "all") return "all";

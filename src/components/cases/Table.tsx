@@ -28,7 +28,7 @@ import { BulkActionsBar } from "./BulkActionsBar";
 import { deleteCasesByIds } from "@/services/caseService";
 import { ModalCase } from "../ui/modal-table";
 import { useAuth } from "@/hooks/useAuth";
-import { fetchUserCasesFull } from "@/services/userCasesService";
+import { fetchCompleteUserCases } from "@/services/completeUserCasesService";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "id_caso",
@@ -97,7 +97,7 @@ export default function TableCases() {
       }
       
       // Obtener todos los casos del usuario
-      const userCases = await fetchUserCasesFull(userId);
+      const userCases = await fetchCompleteUserCases(userId);
       const casesList = userCases.map(caseItem => ({
         ...caseItem,
         key: caseItem.id_caso.toString(),

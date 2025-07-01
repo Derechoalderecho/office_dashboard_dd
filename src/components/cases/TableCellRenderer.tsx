@@ -5,7 +5,7 @@ import { Chip, Tooltip, Button, Avatar, AvatarGroup } from "@heroui/react";
 import { parseDate, parseTime } from "@/utils/date";
 import { CaseWithKey } from "@/types/cases";
 import { transformStateByRole } from "@/utils/stateTransformer";
-import { useUserRole } from "@/hooks/useUserRole";
+import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 
 interface TableCellRendererProps {
@@ -21,7 +21,7 @@ export const TableCellRendererCases = ({
 }: TableCellRendererProps) => {
   const cellValue = user[columnKey as keyof CaseWithKey];
   // Obtenemos el rol del usuario
-  const { role } = useUserRole();
+  const { role } = useAuth();
 
   switch (columnKey) {
     case "id_caso":

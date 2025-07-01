@@ -10,7 +10,7 @@ import { CaseWithKey } from "@/types/cases";
 import { CitizenWithKey } from "@/types/citizens";
 import { UserWithKey } from "@/types/users";
 import { transformStateByRole } from "@/utils/stateTransformer";
-import { useUserRole } from "@/hooks/useUserRole";
+import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 import locations from "@/data/locations.json";
 import { parseDateToLocal } from "@/utils/date";
@@ -23,7 +23,7 @@ interface ModalTableProps {
 }
 
 export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
-  const { role } = useUserRole();
+  const { role } = useAuth();
   const [showMore, setShowMore] = useState(false);
   const [showUsers, setShowUsers] = useState(false);
 

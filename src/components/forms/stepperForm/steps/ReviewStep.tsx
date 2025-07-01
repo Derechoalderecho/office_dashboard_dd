@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { fetchUserDetails } from "@/services/userService";
-import { Users } from "@/types/users";
 
 type ReviewStepProps = {
   formData: {

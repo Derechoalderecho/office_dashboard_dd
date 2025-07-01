@@ -1,7 +1,8 @@
+//Servicio para obtener los datos del dashboard
+
 "use server";
 
 import { get } from "@/utils/apiUtils";
-import { Cases } from "@/types/cases";
 import { logger } from "@/utils/logUtils";
 
 interface TotalUsuariosResponse {

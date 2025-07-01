@@ -1,7 +1,6 @@
 "use server";
 
 import { Users } from "@/types/users";
-import { API_BASE_URL } from "@/config/api";
 import { get, post, put } from "@/utils/apiUtils";
 import { 
   getWithCache, 

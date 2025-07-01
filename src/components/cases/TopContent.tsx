@@ -20,7 +20,7 @@ import { CalendarDate } from "@internationalized/date";
 import { capitalize } from "@/utils/capitalize";
 import Link from "next/link";
 import { UserPlusIcon } from "lucide-react";
-import { useUserRole } from "@/hooks/useUserRole";
+import { useAuth } from "@/hooks/useAuth";
 import { transformStateByRole } from "@/utils/stateTransformer";
 import { UserRole } from "@/store/slices/authSlice";
 
@@ -54,7 +54,7 @@ export default function TopContent({
   onResetFilters,
 }: TopContentProps) {
   // Obtenemos el rol del usuario
-  const { role } = useUserRole();
+  const { role } = useAuth();
   // Convert dateRange to RangeValue<CalendarDate>
   const convertToDateValue = (
     dateRange: DateRange | null

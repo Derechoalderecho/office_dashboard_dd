@@ -15,17 +15,14 @@ import {
   PopoverContent,
   NumberInput,
   Checkbox,
-  useDisclosure,
 } from "@heroui/react";
-import { useState, useEffect, Key } from "react";
+import { useState, useEffect } from "react";
 import {
   fetchAllCitizens,
   findCitizenByDocument,
 } from "@/services/citizenService";
 import { Citizen } from "@/types/citizens";
 import {
-  PlusIcon,
-  UserIcon,
   XIcon,
   SearchIcon,
   AlertCircleIcon,
@@ -39,7 +36,7 @@ import {
   getDaneMunicipioByName,
   Location,
 } from "@/services/locationService";
-import { parseDate, CalendarDate } from "@internationalized/date";
+import { parseDate } from "@internationalized/date";
 
 type BasicInformationProps = {
   formData: {

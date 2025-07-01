@@ -1,3 +1,5 @@
+//Servicio para obtener todos los ciudadanos
+
 "use server";
 
 import { Citizen } from "@/types/citizens";

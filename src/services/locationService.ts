@@ -1,9 +1,6 @@
-import { get } from '@/utils/apiUtils';
-import { 
-  getCollectionWithCache,
-  invalidateCache
-} from '@/utils/cacheUtils';
-import { Divipola } from '@/types/divipola';
+//Servicio para obtener las ubicaciones de los municipios divipola
+
+import { invalidateCache } from '@/utils/cacheUtils';
 import { logger } from '@/utils/logUtils';
 import locationData from '@/data/locations.json';
 
@@ -18,8 +15,6 @@ export interface Location {
 }
 
 const LOCATION_CACHE = 'locations';
-
-const LOCATION_TTL = 30 * 60 * 1000;
 
 export const fetchLocations = async (): Promise<Location[]> => {
   try {
