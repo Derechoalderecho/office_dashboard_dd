@@ -97,14 +97,16 @@ export const fetchCasesByUserId = async (userId: number): CasesPromise => {
 };
 
 /**
- * Updates the status of a specific case
- * @param id
- * @param estado_actual
- * @returns
+ * Updates the status of a specific case and records the change in history
+ * @param id - Case ID
+ * @param estado_actual - New status
+ * @param userId - ID of the user making the change
+ * @returns Promise<boolean> indicating success or failure
  */
 export const updateCaseStatus = async (
   id: number,
-  estado_actual: string
+  estado_actual: string,
+  userId: number
 ): Promise<boolean> => {
   try {
     logger.info(`Actualizando estado del caso ${id} a "${estado_actual}"`);
@@ -126,12 +128,48 @@ export const updateCaseStatus = async (
       return false;
     }
 
+    // Get the current case to know the previous status
+    let currentCase;
+    try {
+      currentCase = await get<Cases>(`casos/${id}`);
+    } catch (fetchError) {
+      logger.error(`Error al obtener el estado actual del caso ${id}:`, fetchError);
+      return false;
+    }
+
+    if (!currentCase) {
+      logger.error(`No se pudo obtener el caso ${id} para actualizar su estado`);
+      return false;
+    }
+
+    const estado_anterior = currentCase.estado; // Usar el campo 'estado' en lugar de 'estado_actual'
+
+    // Update the case status
     await put<Cases>(`casos/${id}`, { estado_actual });
+
+    // Record the status change in history
+    try {
+      const historyData = {
+        id_caso: id,
+        id_usuario: userId,
+        estado_actual,
+        estado_anterior,
+        observaciones: "string"
+      };
+
+      logger.debug(`Registrando cambio de estado en historial: ${JSON.stringify(historyData)}`);
+      await post<any>("historial/", historyData);
+      logger.info(`Cambio de estado registrado en historial para caso ${id}`);
+    } catch (historyError) {
+      logger.error(`Error al registrar historial para caso ${id}:`, historyError);
+      // We continue even if history recording fails, as the status was already updated
+    }
 
     // Invalidate caches more aggressively
     invalidateCacheItem(CASES_CACHE, id);
     invalidateCache(CASES_CACHE); // Invalidate entire collection
     invalidateCache(`${CASES_CACHE}_usuarios_${id}`);
+    invalidateCache(HISTORY_CACHE); // Invalidate history cache
 
     logger.info(
       `Estado del caso ${id} actualizado correctamente a "${estado_actual}"`

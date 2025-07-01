@@ -21,9 +21,10 @@ import { useCallback, useState } from "react";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import { useDeleteRows } from "@/hooks/useDeleteRows";
 import { getDeleteAlertMessage } from "@/utils/alertMessage";
-import { updateCaseStatus } from "@/services/caseService";
+import { updateCaseStatus } from "@/services/updateCaseStatus";
 import { UserAssignmentModal } from "./UserAssignmentModal";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useAuth } from "@/hooks/useAuth";
 
 interface BulkActionsBarProps {
   selectedKeys: Selection;
@@ -72,6 +73,7 @@ export const BulkActionsBar = ({
   const [isUserAssignmentModalOpen, setIsUserAssignmentModalOpen] = useState(false);
   const { handleDelete, isLoading: isDeleteLoading } = useDeleteRows(onDeleteCases);
   const { role } = useUserRole();
+  const { internalUserId } = useAuth(); // Obtener el ID del usuario autenticado
 
   const convertSelection = (selection: Selection): Set<number> | "all" => {
     if (selection === "all") return "all";
@@ -122,10 +124,42 @@ export const BulkActionsBar = ({
         }
       }
       
+      // Verificar que tenemos un ID de usuario válido
+      if (!internalUserId) {
+        addToast({
+          title: "Error",
+          description: "No se pudo obtener el ID del usuario para registrar el cambio de estado.",
+          color: "danger",
+        });
+        setIsStatusLoading(false);
+        setIsStatusAlertOpen(false);
+        return;
+      }
+      
       // Crear promesas para actualizar cada caso seleccionado
-      const updatePromises = Array.from(selection).map(id => 
-        updateCaseStatus(id, selectedStatus)
-      );
+      // Necesitamos encontrar los casos seleccionados para obtener su estado actual
+      const updatePromises = Array.from(selection).map(async id => {
+        // Buscar el caso en el array de casos proporcionado por props
+        const selectedCase = cases.find(c => c.id_caso === id || c.id === id);
+        
+        if (!selectedCase) {
+          console.error(`No se encontró el caso con ID ${id} en los datos disponibles`);
+          return Promise.resolve(false);
+        }
+
+        // Obtener el estado actual del caso para usarlo como estado_anterior
+        const currentStatus = selectedCase.estado || selectedCase.estado_actual;
+        
+        if (!currentStatus) {
+          console.error(`No se pudo determinar el estado actual del caso ${id}`);
+          return Promise.resolve(false);
+        }
+        
+        console.log(`Actualizando caso ${id} de estado ${currentStatus} a ${selectedStatus}`);
+        
+        // Llamar a updateCaseStatus con el ID del caso, el nuevo estado y el ID del usuario
+        return updateCaseStatus(id, selectedStatus, internalUserId);
+      });
       
       // Ejecutar todas las actualizaciones
       const results = await Promise.allSettled(updatePromises);
