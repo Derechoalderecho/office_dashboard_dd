@@ -290,7 +290,17 @@ export default function TableCases() {
 
   // Función para actualizar datos después de cambios de estado
   const handleStatusUpdated = () => {
-    fetchCases(true); // Mostrar toast al actualizar después de cambio de estado
+    console.log("Actualizando datos después de cambio de estado, userId:", internalUserId);
+    if (internalUserId) {
+      fetchCases(true, internalUserId); // Mostrar toast al actualizar después de cambio de estado
+    } else {
+      console.error("No se pudo actualizar la tabla: userId no disponible");
+      addToast({
+        title: "Error al actualizar",
+        description: "No se pudieron actualizar los datos. Intente nuevamente.",
+        color: "danger",
+      });
+    }
   };
 
   return (

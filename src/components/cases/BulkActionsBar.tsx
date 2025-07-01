@@ -176,9 +176,13 @@ export const BulkActionsBar = ({
         });
         
         // Notificar al componente padre para actualizar los datos
-        if (onStatusUpdated) {
-          onStatusUpdated();
-        }
+        // Asegurarnos de que la actualización se ejecute después de que todas las operaciones hayan terminado
+        setTimeout(() => {
+          if (onStatusUpdated) {
+            console.log("Notificando actualización de datos al componente padre");
+            onStatusUpdated();
+          }
+        }, 500); // Pequeño retraso para asegurar que todas las operaciones asíncronas hayan terminado
       } else {
         addToast({
           title: "Error al actualizar",
