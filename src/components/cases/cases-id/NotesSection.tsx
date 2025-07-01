@@ -269,7 +269,10 @@ export default function NotesSection({
                 No hay notas para este caso
               </div>
             ) : (
-              <div className="space-y-4 max-h-80 overflow-y-auto pr-1">
+              <div className="relative">
+                <div className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-white to-transparent z-10 pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white to-transparent z-10 pointer-events-none"></div>
+                <div className="space-y-4 max-h-80 overflow-y-auto pr-1 py-4">
                 {notes.map((note) => (
                   <div
                     key={note.id_nota_caso}
@@ -305,6 +308,7 @@ export default function NotesSection({
                     </div>
                   </div>
                 ))}
+                </div>
               </div>
             )}
           </div>

@@ -44,33 +44,40 @@ export default function CaseHistoryLogs({ historyLogs }: CaseHistoryLogsProps) {
     }
   };
   return (
-    <section className="pl-3">
-      <ol className="relative border-s border-gray-200">
-        {historyLogs && historyLogs.length > 0 ? (
-          [...historyLogs].reverse().map((history) => (
-            <li key={history.id_historial_estado_caso} className="mb-16 ms-10">
-              <span
-                className={classNames(
-                  getStatusColor(history.estado_actual),
-                  "absolute flex items-center justify-center w-7 h-7 rounded-full -start-[14px] ring-4 ring-[#e7e7e7da]"
-                )}
-              ></span>
-              <h3 className="flex items-center mb-1 text-sm font-semibold">
-                {history.estado_actual}
-              </h3>
-              <time className="block mb-2 text-sm font-normal leading-none text-gray-400">
-                {parseDateToLocal(history.created_date)}
-              </time>
+    <section className="relative">
+      <div className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-white to-transparent z-10 pointer-events-none"></div>
+      <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white to-transparent z-10 pointer-events-none"></div>
+      <div className="space-y-4 max-h-[30rem] overflow-y-auto py-4 pl-4">
+        <ol className="relative border-s border-gray-200">
+          {historyLogs && historyLogs.length > 0 ? (
+            [...historyLogs].reverse().map((history) => (
+              <li
+                key={history.id_historial_estado_caso}
+                className="mb-16 ms-10"
+              >
+                <span
+                  className={classNames(
+                    getStatusColor(history.estado_actual),
+                    "absolute flex items-center justify-center w-7 h-7 rounded-full -start-[14px] ring-4 ring-[#e7e7e7da]"
+                  )}
+                ></span>
+                <h3 className="flex items-center mb-1 text-sm font-semibold">
+                  {history.estado_actual}
+                </h3>
+                <time className="block mb-2 text-sm font-normal leading-none text-gray-400">
+                  {parseDateToLocal(history.created_date)}
+                </time>
+              </li>
+            ))
+          ) : (
+            <li className="ms-10">
+              <p className="text-sm text-gray-500">
+                No hay registros de cambios de estado
+              </p>
             </li>
-          ))
-        ) : (
-          <li className="ms-10">
-            <p className="text-sm text-gray-500">
-              No hay registros de cambios de estado
-            </p>
-          </li>
-        )}
-      </ol>
+          )}
+        </ol>
+      </div>
     </section>
   );
-} 
+}
