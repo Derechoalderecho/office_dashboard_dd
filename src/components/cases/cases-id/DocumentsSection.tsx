@@ -5,7 +5,7 @@ import DocumentUploader from "./DocumentUploader";
 import DocumentDownloader from "./DocumentDownloader";
 import { DocumentResponse } from "@/actions/uploadDocsActions";
 import { useAppDispatch } from "@/store/hooks";
-import { fetchCaseByIdFresh } from "@/services/caseService";
+import { fetchCompleteCaseById } from "@/services/completeUserCasesService";
 import { setDocuments } from "@/store/slices/documentSlice";
 import { invalidateCache } from "@/utils/cacheUtils";
 
@@ -29,13 +29,32 @@ export default function DocumentsSection({ caseId }: DocumentsSectionProps) {
         invalidateCache("cases");
 
         // 2. Obtener datos frescos directamente de la API
-        const freshCase = await fetchCaseByIdFresh(caseId);
+        const casesData = await fetchCompleteCaseById(caseId);
+        const freshCase = casesData && casesData.length > 0 ? casesData[0] : null;
 
-        // 3. Si se obtuvieron documentos actualizados, actualizarlos en Redux
-        if (freshCase?.documentos) {
+        // 3. Si se obtuvieron documentos actualizados, convertirlos al formato correcto y actualizarlos en Redux
+        if (freshCase?.documentos && freshCase.documentos.length > 0) {
+          // Convertir ApiDocumento a DocumentResponse
+          const convertedDocs = freshCase.documentos.map(doc => ({
+            nombre_documento: doc.nombre_documento,
+            ext_documento: doc.nombre_documento.split('.').pop() || '',
+            enlace: doc.url_archivo,
+            id_documento: doc.id_documento_caso,
+            id_caso: doc.id_caso,
+            id_documento_caso: doc.id_documento_caso,
+            fecha_asigna: doc.created_date,
+            tipo_documento: doc.tipo_documento as any,
+            subido_por: doc.subido_por?.toString(),
+            status: doc.status ? 'active' : 'inactive',
+            created_date: doc.created_date,
+            modified_date: doc.modified_date || undefined,
+            deleted_at: doc.deleted_at,
+            fecha_subida: doc.fecha_subida || undefined
+          }));
+          
           // Actualizar los documentos en el estado global
-          dispatch(setDocuments(freshCase.documentos));
-          console.log("Documentos actualizados:", freshCase.documentos.length);
+          dispatch(setDocuments(convertedDocs));
+          console.log("Documentos actualizados:", convertedDocs.length);
         }
 
         // 4. Incrementar el trigger para forzar actualización
