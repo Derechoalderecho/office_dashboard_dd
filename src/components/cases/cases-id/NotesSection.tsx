@@ -5,6 +5,7 @@ import {
   PaperAirplaneIcon,
   ClockIcon,
   ExclamationCircleIcon,
+  PaperClipIcon,
 } from "@heroicons/react/24/outline";
 import { useState, useEffect } from "react";
 import { createNote } from "@/services/noteService";
@@ -26,7 +27,11 @@ export default function NotesSection({
   initialNotes,
   onNoteAdded,
 }: NotesSectionProps) {
-  const { internalUserId, loading: isLoadingUserId, error: userIdError } = useAuth();
+  const {
+    internalUserId,
+    loading: isLoadingUserId,
+    error: userIdError,
+  } = useAuth();
 
   const [noteText, setNoteText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -94,7 +99,7 @@ export default function NotesSection({
     }
   };
 
-  // Obtiene nombre de usuario desde cache
+  // Obtiene nombre de usuario
   const getUserName = (userId: number): string => {
     const user = userCache[userId];
     if (user) {
@@ -103,7 +108,7 @@ export default function NotesSection({
     return `Usuario ${userId}`;
   };
 
-  // Obtiene iniciales de usuario desde cache
+  // Obtiene iniciales de usuario
   const getUserInitials = (userId: number): string => {
     const user = userCache[userId];
 
@@ -222,16 +227,16 @@ export default function NotesSection({
         </div>
       ) : (
         <>
-          <div className="border rounded-lg mb-4">
+          <div className="border rounded-xl mb-4">
             <Textarea
               minRows={3}
-              placeholder="Escribe tu nota... (Ctrl+Enter para enviar)"
+              placeholder="Escribe tu nota... (Enter para enviar)"
               value={noteText}
               onChange={(e) => setNoteText(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="border-0 focus:ring-0 rounded-t-lg"
+              className="border-0 focus:ring-0"
             />
-            <div className="flex justify-between items-center p-2 bg-gray-50 rounded-b-lg">
+            <div className="flex justify-between items-center pr-2 py-2 bg-gray-50 rounded-b-xl">
               <span className="text-xs text-gray-500 ml-2">
                 {error ? (
                   <span className="text-danger flex items-center">
@@ -239,13 +244,22 @@ export default function NotesSection({
                     {error}
                   </span>
                 ) : (
-                  "Ctrl+Enter para enviar rápido"
+                  <Button
+                    variant="light"
+                    startContent={
+                      <PaperClipIcon className="w-4 h-4 text-gray-500" />
+                    }
+                    size="sm"
+                    className="text-gray-500"
+                  >
+                    Adjuntar archivo
+                  </Button>
                 )}
               </span>
               <Button
                 color="primary"
                 isDisabled={!noteText.trim() || isLoading || !internalUserId}
-                isLoading={isLoading}
+                isLoading={isLoading || !internalUserId}
                 spinner={<Spinner size="sm" color="white" />}
                 onPress={handleAddNote}
                 startContent={<PaperAirplaneIcon className="w-4 h-4" />}
@@ -273,41 +287,41 @@ export default function NotesSection({
                 <div className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-white to-transparent z-10 pointer-events-none"></div>
                 <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white to-transparent z-10 pointer-events-none"></div>
                 <div className="space-y-4 max-h-80 overflow-y-auto pr-1 py-4">
-                {notes.map((note) => (
-                  <div
-                    key={note.id_nota_caso}
-                    className="bg-gray-50 rounded-lg p-3 shadow-sm"
-                  >
-                    <div className="flex items-start gap-3">
-                      <Avatar
-                        name={getUserInitials(note.id_usuario)}
-                        color="primary"
-                        size="sm"
-                        isBordered
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-semibold">
-                            {getUserName(note.id_usuario)}
-                          </p>
-                          <div className="flex items-center text-gray-500 text-xs">
-                            <div className="flex flex-col">
-                              <span>{parseDate(note.created_date)}</span>
-
-                              <div className="flex items-center">
-                                <ClockIcon className="w-3 h-3 mr-1" />
-                                <span>{parseTime(note.created_date)}</span>
-                              </div>
+                  {notes.map((note) => (
+                    <div
+                      key={note.id_nota_caso}
+                      className="bg-gray-50 rounded-xl p-4 shadow-sm gap-5 flex flex-col border"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <Avatar
+                            name={getUserInitials(note.id_usuario)}
+                            size="sm"
+                            isBordered
+                          />
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-semibold">
+                              {getUserName(note.id_usuario)}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center text-gray-500 text-xs">
+                          <div className="flex flex-col">
+                            <span>{parseDate(note.created_date)}</span>
+                            <div className="flex items-center">
+                              <ClockIcon className="w-3 h-3 mr-1" />
+                              <span>{parseTime(note.created_date)}</span>
                             </div>
                           </div>
                         </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
                         <p className="text-sm text-gray-700 whitespace-pre-wrap break-words">
                           {note.mensaje}
                         </p>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
                 </div>
               </div>
             )}
