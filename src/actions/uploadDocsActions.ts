@@ -5,9 +5,10 @@ import { API_BASE_URL } from "@/config/api";
 
 export type DocumentResponse = {
   nombre_documento: string;
-  ext_documento: string;
+  ext_documento?: string;
   enlace: string;
   url_firmada?: string;
+  id_nota?: number;
   id_documento: number;
   id_caso?: number; 
   id_documento_caso?: number;

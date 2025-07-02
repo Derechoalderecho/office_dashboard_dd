@@ -1,4 +1,5 @@
 import { Users } from "./users";
+import { DocumentResponse } from "@/actions/uploadDocsActions";
 
 export interface Nota {
   id_caso: number;
@@ -10,4 +11,5 @@ export interface Nota {
   deleted_at: string | null;
   status: boolean;
   usuario?: Users;
+  documentos?: DocumentResponse[];
 }
