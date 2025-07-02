@@ -40,6 +40,7 @@ export interface ApiNota {
   deleted_at: string | null;
   status: boolean;
   usuario?: Users;
+  documentos?: DocumentResponse[];
 }
 
 export interface ApiCiudadano {

@@ -1,4 +1,4 @@
-//Servicio para subir documentos de solo anexos al caso
+//Servicio para subir documentos de solo anexos al caso y a notas
 
 "use server";
 
@@ -49,12 +49,14 @@ const determineDocumentType = (fileName: string): 'Docx' | 'Otro' => {
  * @param file Archivo a subir
  * @param caseId ID del caso
  * @param userId ID del usuario que sube el documento
+ * @param id_nota ID de la nota a la que se asociará el documento (opcional)
  * @returns Resultado de la operación
  */
 export async function uploadDocument(
   file: File,
   caseId: number,
-  userId: string
+  userId: string,
+  id_nota?: number
 ): Promise<UploadDocumentResult> {
   try {
     console.log(`Subiendo documento ${file.name} al caso ${caseId} por el usuario ${userId}`);
@@ -67,9 +69,17 @@ export async function uploadDocument(
     const tipoDocumento = determineDocumentType(file.name);
     console.log(`Tipo de documento determinado: ${tipoDocumento}`);
     
-    // Realizar la petición al nuevo endpoint con los parámetros requeridos
+    // Construir la URL con los parámetros requeridos y opcionales
+    let uploadUrl = `${API_BASE_URL}/documentos/caso/${caseId}/upload?tipo_documento=${tipoDocumento}&subido_por=${userId}`;
+    
+    // Agregar el id_nota como parámetro opcional si está presente
+    if (id_nota) {
+      uploadUrl += `&id_nota=${id_nota}`;
+    }
+    
+    // Realizar la petición al endpoint
     const response = await axios.post(
-      `${API_BASE_URL}/documentos/caso/${caseId}/upload?tipo_documento=${tipoDocumento}&subido_por=${userId}`,
+      uploadUrl,
       formData,
       {
         headers: {

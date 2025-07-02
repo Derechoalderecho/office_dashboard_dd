@@ -6,8 +6,10 @@ import {
   ClockIcon,
   ExclamationCircleIcon,
   PaperClipIcon,
+  DocumentIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createNote } from "@/services/noteService";
 import { Nota } from "@/types/notas";
 import { parseDate, parseTime } from "@/utils/date";
@@ -15,6 +17,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { logger } from "@/utils/logUtils";
 import { fetchUserDetails } from "@/services/userService";
 import { Users } from "@/types/users";
+import { uploadDocument } from "@/services/uploadDocumentsService";
+import { DocumentResponse } from "@/actions/uploadDocsActions";
 
 interface NotesSectionProps {
   caseId: number;
@@ -39,6 +43,9 @@ export default function NotesSection({
   const [error, setError] = useState<string | null>(null);
   const [userCache, setUserCache] = useState<Record<number, Users>>({});
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Logs iniciales de notas y fetch de usuarios
   useEffect(() => {
@@ -122,6 +129,60 @@ export default function NotesSection({
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   };
 
+  const handleFileSelect = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      // Validar tamaño del archivo (10MB máximo)
+      if (file.size > 10 * 1024 * 1024) {
+        setError("El archivo es demasiado grande. El tamaño máximo es 10 MB.");
+        return;
+      }
+      setSelectedFile(file);
+      setError(null);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const uploadFileForNote = async (noteId: number): Promise<DocumentResponse | null> => {
+    if (!selectedFile || !internalUserId) return null;
+    
+    setIsUploadingFile(true);
+    try {
+      // Convertir internalUserId a string y mantener noteId como número
+      const result = await uploadDocument(
+        selectedFile,
+        caseId,
+        internalUserId.toString(), // Convertir a string para que coincida con el tipo esperado
+        noteId // Mantener como número según la definición del servicio
+      );
+      
+      if (result.success && result.data) {
+        logger.info(`[NotesSection] Archivo subido con éxito: ${result.data.id_documento}`);
+        return result.data;
+      } else {
+        throw new Error(result.error || "Error al subir el archivo");
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Error desconocido al subir el archivo";
+      logger.error(`[NotesSection] Error al subir archivo: ${errorMsg}`);
+      throw new Error(errorMsg);
+    } finally {
+      setIsUploadingFile(false);
+    }
+  };
+
   const handleAddNote = async () => {
     // Validar que haya texto en la nota
     if (!noteText.trim()) return;
@@ -145,50 +206,79 @@ export default function NotesSection({
 
     try {
       logger.info(
-        `[NotesSection] Enviando nota: caso=${caseId}, usuario=${internalUserId}, mensaje=${noteText.substring(
-          0,
-          20
-        )}...`
+        `[NotesSection] Agregando nota al caso ${caseId} por usuario ${internalUserId}`
       );
 
-      // Llamar al servicio para crear la nota
-      const newNote = await createNote(caseId, noteText.trim(), internalUserId);
+      // Llamar al servicio para crear la nota con los parámetros correctos
+      const newNote = await createNote(
+        caseId,
+        noteText.trim(),
+        internalUserId
+      );
 
       if (newNote) {
-        logger.info(`[NotesSection] Nota creada exitosamente`);
-
-        // Actualizar la lista de notas en la interfaz (la nueva nota al principio)
+        logger.info(`[NotesSection] Nota agregada con éxito: ${newNote.id_nota_caso}`);
+        
+        // Si hay un archivo seleccionado, subirlo y asociarlo a la nota
+        let documentData = null;
+        if (selectedFile) {
+          try {
+            documentData = await uploadFileForNote(newNote.id_nota_caso);
+            // Si el documento se subió correctamente, agregarlo a la nota
+            if (documentData) {
+              newNote.documentos = [documentData];
+            }
+          } catch (uploadError) {
+            // Mostrar error de carga pero no impedir que se muestre la nota
+            addToast({
+              title: "Error al subir archivo",
+              description: uploadError instanceof Error ? uploadError.message : "Error al subir el archivo adjunto",
+              color: "warning",
+            });
+          }
+        }
+        
+        // Agregar la nueva nota al inicio del array
         setNotes([newNote, ...notes]);
+        
+        // Limpiar el campo de texto y archivo
         setNoteText("");
-
-        // Mostrar mensaje de éxito
-        addToast({
-          title: "Nota agregada",
-          description: "La nota ha sido agregada correctamente",
-          color: "success",
-        });
-
-        // Notificar al componente padre que se ha añadido una nota
+        setSelectedFile(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        
+        // Notificar al componente padre si es necesario
         if (onNoteAdded) {
-          logger.debug(`[NotesSection] Ejecutando callback onNoteAdded`);
           onNoteAdded();
         }
+        
+        // Actualizar el cache de usuarios si es necesario
+        const userId = typeof newNote.id_usuario === 'string' 
+          ? parseInt(newNote.id_usuario) 
+          : newNote.id_usuario;
+          
+        if (!userCache[userId]) {
+          fetchUsersForNotes([newNote]);
+        }
+        
+        addToast({
+          title: "Nota agregada",
+          description: documentData 
+            ? "La nota y el archivo adjunto han sido agregados correctamente." 
+            : "La nota ha sido agregada correctamente.",
+          color: "success",
+        });
       } else {
         throw new Error("No se recibió respuesta del servidor");
       }
-    } catch (error: any) {
-      logger.error(`[NotesSection] Error al agregar nota: ${error.message}`);
-
-      // Preparar mensaje de error para mostrar al usuario
-      let errorMessage = "No se pudo agregar la nota";
-      if (error.message) {
-        errorMessage = error.message;
-      }
-
-      setError(errorMessage);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Error desconocido";
+      logger.error(`[NotesSection] Error: ${errorMsg}`);
+      setError(errorMsg);
       addToast({
         title: "Error",
-        description: errorMessage,
+        description: "Ocurrió un error al agregar la nota.",
         color: "danger",
       });
     } finally {
@@ -243,6 +333,26 @@ export default function NotesSection({
                     <ExclamationCircleIcon className="w-4 h-4 mr-1" />
                     {error}
                   </span>
+                ) : selectedFile ? (
+                  <div className="flex items-center bg-blue-50 px-2 py-1 rounded-md">
+                    <DocumentIcon className="w-4 h-4 text-blue-500 mr-1" />
+                    <span className="text-xs text-blue-700 max-w-[150px] truncate">
+                      {selectedFile.name}
+                    </span>
+                    <button 
+                      onClick={handleRemoveFile}
+                      className="ml-1 text-gray-500 hover:text-gray-700"
+                    >
+                      <XMarkIcon className="w-4 h-4" />
+                    </button>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      className="hidden"
+                      accept="*/*"
+                    />
+                  </div>
                 ) : (
                   <Button
                     variant="light"
@@ -251,15 +361,23 @@ export default function NotesSection({
                     }
                     size="sm"
                     className="text-gray-500"
+                    onPress={handleFileSelect}
                   >
                     Adjuntar archivo
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      className="hidden"
+                      accept="*/*"
+                    />
                   </Button>
                 )}
               </span>
               <Button
                 color="primary"
                 isDisabled={!noteText.trim() || isLoading || !internalUserId}
-                isLoading={isLoading || !internalUserId}
+                isLoading={isLoading || isUploadingFile || !internalUserId}
                 spinner={<Spinner size="sm" color="white" />}
                 onPress={handleAddNote}
                 startContent={<PaperAirplaneIcon className="w-4 h-4" />}
@@ -319,6 +437,29 @@ export default function NotesSection({
                         <p className="text-sm text-gray-700 whitespace-pre-wrap break-words">
                           {note.mensaje}
                         </p>
+                        {note.documentos && note.documentos.length > 0 && (
+                          <div className="mt-2">
+                            {note.documentos.map((doc) => (
+                              <div 
+                                key={doc.id_documento} 
+                                className="flex items-center bg-gray-100 rounded-md p-2 mt-1"
+                              >
+                                <DocumentIcon className="w-4 h-4 text-blue-500 mr-2" />
+                                <span className="text-xs text-gray-700 truncate">
+                                  {doc.nombre_documento}{doc.ext_documento || ''}
+                                </span>
+                                <a 
+                                  href={doc.url_firmada || doc.enlace} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="ml-auto text-xs text-blue-600 hover:underline"
+                                >
+                                  Ver
+                                </a>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}

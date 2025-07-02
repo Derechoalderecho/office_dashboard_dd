@@ -23,36 +23,6 @@ export type DocumentResponse = {
   contenido?: string;
 };
 
-export async function uploadDocument(
-  formData: FormData,
-  caseId: number
-): Promise<{ success: boolean; data?: DocumentResponse; error?: string }> {
-  try {
-    const response = await axios.post(
-      `${API_BASE_URL}/upload/${caseId}/?folder=documentos_casos`,
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
-
-    if (response.status === 200 || response.status === 201) {
-      return { success: true, data: response.data };
-    } else {
-      return {
-        success: false,
-        error: `Error al subir archivo: ${response.statusText}`,
-      };
-    }
-  } catch (error: any) {
-    console.error("Error uploading document:", error);
-    const errorMessage = error.response?.data?.message || error.message || "Error desconocido";
-    return { success: false, error: errorMessage };
-  }
-}
-
 /**
  * Sube un documento de tutela al folder específico de radicados
  * @param formData Formulario con el archivo a subir
