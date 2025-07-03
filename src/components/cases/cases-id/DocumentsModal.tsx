@@ -309,31 +309,25 @@ export default function DocumentsModal({
     try {
       console.log(`Iniciando descarga del documento: ${doc.nombre_documento}`);
       
-      // Usar el nuevo servicio para descargar el documento
-      const result = await downloadDocument(doc);
+      if (!doc.id_documento_caso) {
+        throw new Error("No se encontró el ID del documento para descargar");
+      }
       
-      if (result.success && result.data && result.fileName) {
-        // Crear un objeto URL para el blob
-        const url = window.URL.createObjectURL(result.data);
-        
-        // Crear un elemento <a> temporal para la descarga
-        const a = window.document.createElement('a');
-        a.href = url;
-        a.download = result.fileName;
-        window.document.body.appendChild(a);
-        a.click();
-        
-        // Limpiar
-        window.URL.revokeObjectURL(url);
-        window.document.body.removeChild(a);
+      // Usar directamente el id_documento_caso para obtener la URL firmada
+      const { downloadRadicado } = await import("@/services/radicadoService");
+      const result = await downloadRadicado(doc.id_documento_caso);
+      
+      if (result.success && result.signedUrl) {
+        // Abrir la URL firmada en una nueva pestaña
+        window.open(result.signedUrl, "_blank");
         
         addToast({
-          title: "Descarga iniciada",
-          description: `${doc.nombre_documento}${doc.ext_documento || ''} se está descargando`,
+          title: "Documento abierto",
+          description: "El documento se está abriendo en una nueva pestaña",
           color: "success"
         });
       } else {
-        throw new Error(result.error || "Error desconocido al descargar el documento");
+        throw new Error(result.error || "No se pudo obtener la URL de descarga");
       }
       
       setDownloadingId(null);
