@@ -153,13 +153,15 @@ export default function NotesSection({
   const handleRemoveFile = () => {
     setSelectedFile(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
-  const uploadFileForNote = async (noteId: number): Promise<DocumentResponse | null> => {
+  const uploadFileForNote = async (
+    noteId: number
+  ): Promise<DocumentResponse | null> => {
     if (!selectedFile || !internalUserId) return null;
-    
+
     setIsUploadingFile(true);
     try {
       // Convertir internalUserId a string y mantener noteId como número
@@ -169,15 +171,20 @@ export default function NotesSection({
         internalUserId.toString(), // Convertir a string para que coincida con el tipo esperado
         noteId // Mantener como número según la definición del servicio
       );
-      
+
       if (result.success && result.data) {
-        logger.info(`[NotesSection] Archivo subido con éxito: ${result.data.id_documento}`);
+        logger.info(
+          `[NotesSection] Archivo subido con éxito: ${result.data.id_documento}`
+        );
         return result.data;
       } else {
         throw new Error(result.error || "Error al subir el archivo");
       }
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "Error desconocido al subir el archivo";
+      const errorMsg =
+        err instanceof Error
+          ? err.message
+          : "Error desconocido al subir el archivo";
       logger.error(`[NotesSection] Error al subir archivo: ${errorMsg}`);
       throw new Error(errorMsg);
     } finally {
@@ -212,15 +219,13 @@ export default function NotesSection({
       );
 
       // Llamar al servicio para crear la nota con los parámetros correctos
-      const newNote = await createNote(
-        caseId,
-        noteText.trim(),
-        internalUserId
-      );
+      const newNote = await createNote(caseId, noteText.trim(), internalUserId);
 
       if (newNote) {
-        logger.info(`[NotesSection] Nota agregada con éxito: ${newNote.id_nota_caso}`);
-        
+        logger.info(
+          `[NotesSection] Nota agregada con éxito: ${newNote.id_nota_caso}`
+        );
+
         // Si hay un archivo seleccionado, subirlo y asociarlo a la nota
         let documentData = null;
         if (selectedFile) {
@@ -234,40 +239,44 @@ export default function NotesSection({
             // Mostrar error de carga pero no impedir que se muestre la nota
             addToast({
               title: "Error al subir archivo",
-              description: uploadError instanceof Error ? uploadError.message : "Error al subir el archivo adjunto",
+              description:
+                uploadError instanceof Error
+                  ? uploadError.message
+                  : "Error al subir el archivo adjunto",
               color: "warning",
             });
           }
         }
-        
+
         // Agregar la nueva nota al inicio del array
         setNotes([newNote, ...notes]);
-        
+
         // Limpiar el campo de texto y archivo
         setNoteText("");
         setSelectedFile(null);
         if (fileInputRef.current) {
-          fileInputRef.current.value = '';
+          fileInputRef.current.value = "";
         }
-        
+
         // Notificar al componente padre si es necesario
         if (onNoteAdded) {
           onNoteAdded();
         }
-        
+
         // Actualizar el cache de usuarios si es necesario
-        const userId = typeof newNote.id_usuario === 'string' 
-          ? parseInt(newNote.id_usuario) 
-          : newNote.id_usuario;
-          
+        const userId =
+          typeof newNote.id_usuario === "string"
+            ? parseInt(newNote.id_usuario)
+            : newNote.id_usuario;
+
         if (!userCache[userId]) {
           fetchUsersForNotes([newNote]);
         }
-        
+
         addToast({
           title: "Nota agregada",
-          description: documentData 
-            ? "La nota y el archivo adjunto han sido agregados correctamente." 
+          description: documentData
+            ? "La nota y el archivo adjunto han sido agregados correctamente."
             : "La nota ha sido agregada correctamente.",
           color: "success",
         });
@@ -295,37 +304,42 @@ export default function NotesSection({
       handleAddNote();
     }
   };
-  
+
   // Maneja la descarga de un documento
   const handleDocumentDownload = async (doc: any) => {
     try {
       // Mostrar indicador de carga
       setIsLoading(true);
-      
+
       if (!doc.id_documento_caso) {
         throw new Error("No se encontró el ID del documento para descargar");
       }
-      
+
       // Usar directamente el id_documento_caso para obtener la URL firmada
       const { downloadRadicado } = await import("@/services/radicadoService");
       const result = await downloadRadicado(doc.id_documento_caso);
-      
+
       if (result.success && result.signedUrl) {
         // Abrir la URL firmada en una nueva pestaña
-        window.open(result.signedUrl, '_blank');
-        
+        window.open(result.signedUrl, "_blank");
+
         addToast({
           title: "Descarga iniciada",
           description: "El documento se está abriendo en una nueva pestaña",
           color: "success",
         });
       } else {
-        throw new Error(result.error || "No se pudo obtener la URL de descarga");
+        throw new Error(
+          result.error || "No se pudo obtener la URL de descarga"
+        );
       }
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "Error desconocido al descargar el documento";
+      const errorMsg =
+        err instanceof Error
+          ? err.message
+          : "Error desconocido al descargar el documento";
       logger.error(`[NotesSection] Error al descargar documento: ${errorMsg}`);
-      
+
       addToast({
         title: "Error",
         description: errorMsg,
@@ -381,7 +395,7 @@ export default function NotesSection({
                     <span className="text-xs text-blue-700 max-w-[150px] truncate">
                       {selectedFile.name}
                     </span>
-                    <button 
+                    <button
                       onClick={handleRemoveFile}
                       className="ml-1 text-gray-500 hover:text-gray-700"
                     >
@@ -482,21 +496,31 @@ export default function NotesSection({
                         {note.documentos && note.documentos.length > 0 && (
                           <div className="mt-2">
                             {note.documentos.map((doc) => (
-                              <div 
-                                key={doc.id_documento} 
-                                className="flex items-center bg-gray-100 rounded-md p-2 mt-1"
+                              <div
+                                key={doc.id_documento}
+                                className="border rounded-lg p-3 mt-1"
                               >
-                                <DocumentIcon className="w-4 h-4 text-blue-500 mr-2" />
-                                <span className="text-xs text-gray-700 truncate">
-                                  {doc.nombre_documento}
-                                </span>
-                                <button 
+                                <div
+                                  className="flex items-center cursor-pointer"
                                   onClick={() => handleDocumentDownload(doc)}
-                                  className="ml-auto text-xs text-blue-600 hover:underline flex items-center"
                                 >
-                                  <ArrowDownTrayIcon className="w-3 h-3 mr-1" />
-                                  Descargar
-                                </button>
+                                  <DocumentIcon className="w-5 h-5 text-blue-500 mr-2" />
+                                  <span className="text-sm underline text-blue-500 truncate">
+                                    {doc.nombre_documento}
+                                  </span>
+                                  <Button
+                                    size="sm"
+                                    variant="light"
+                                    className="ml-auto"                                    color="primary"
+
+                                    isLoading={isLoading}
+                                    isIconOnly
+                                    spinner={<Spinner size="sm" />}
+                                    onPress={() => handleDocumentDownload(doc)}
+                                  >
+                                    <ArrowDownTrayIcon className="w-4 h-4 text-blue-500" />
+                                  </Button>
+                                </div>
                               </div>
                             ))}
                           </div>
