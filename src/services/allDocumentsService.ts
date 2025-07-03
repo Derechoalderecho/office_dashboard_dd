@@ -2,9 +2,7 @@
 
 "use server";
 
-import axios from "axios";
-import { API_BASE_URL } from "@/config/api";
-
+import { get, downloadFile } from "@/utils/apiUtils";
 import { DocumentResponse } from '@/types/documents';
 
 /**
@@ -20,8 +18,7 @@ export async function getDocumentsByCaseIdAndType(
   try {
     console.log(`Obteniendo documentos para el caso ${caseId} de tipo ${documentType}`);
     // Usamos el endpoint correcto que estaba en el servicio original
-    const response = await axios.get(`${API_BASE_URL}/documentos/caso/${caseId}/documentos/?tipo=${documentType}`);
-    return response.data;
+    return await get<DocumentResponse[]>(`/documentos/caso/${caseId}/documentos/?tipo=${documentType}`);
   } catch (error: any) {
     console.error("Error al obtener documentos por tipo:", error);
     if (error.response?.status === 404) {
@@ -59,10 +56,10 @@ export async function downloadDocument(
       console.log(`Obteniendo URL firmada para el documento ${idDocumentoCaso}`);
       
       try {
-        const urlResponse = await axios.get(`${API_BASE_URL}/documentos/caso/${idDocumentoCaso}/download`);
+        const urlData = await get<{url_firmada?: string, enlace?: string}>(`/documentos/caso/${idDocumentoCaso}/download`);
         
-        if (urlResponse.status === 200 && urlResponse.data) {
-          urlFirmada = urlResponse.data.url_firmada || urlResponse.data.enlace || urlResponse.data;
+        if (urlData) {
+          urlFirmada = urlData.url_firmada || urlData.enlace || (typeof urlData === 'string' ? urlData : '');
           console.log('URL firmada obtenida:', urlFirmada);
         } else {
           return { 
@@ -90,68 +87,41 @@ export async function downloadDocument(
     console.log(`Descargando archivo desde URL: ${urlFirmada}`);
     
     try {
-      // Descargar el archivo real usando la URL firmada
-      const response = await axios.get(urlFirmada, {
-        responseType: 'blob'
-      });
+      // Obtener la URL final de descarga usando downloadFile de apiUtils
+      console.log(`Obteniendo URL final de descarga usando downloadFile desde: ${urlFirmada}`);
+      const downloadUrl = await downloadFile(urlFirmada);
       
-      if (response.status === 200) {
-        // Determinar el tipo MIME basado en la extensión del archivo
-        // Usar el Content-Type de la respuesta o inferirlo de la extensión
-        let mimeType = response.headers['content-type'];
+      if (downloadUrl) {
+        // Ahora descargamos el archivo usando fetch ya que necesitamos un Blob
+        console.log(`Descargando archivo desde URL final: ${downloadUrl}`);
+        const response = await fetch(downloadUrl);
         
-        // Si el mime type indica que es JSON, necesitamos inferirlo de la extensión
-        if (mimeType.includes('application/json') || mimeType.includes('text/plain')) {
-          // Si la extensión está en el documento, usarla para determinar el tipo MIME
-          const extension = document.ext_documento?.toLowerCase() || fileName.split('.').pop()?.toLowerCase();
-          
-          // Mapeo de extensiones comunes a tipos MIME
-          if (extension) {
-            const mimeTypes: Record<string, string> = {
-              'pdf': 'application/pdf',
-              'doc': 'application/msword',
-              'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-              'xls': 'application/vnd.ms-excel',
-              'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-              'ppt': 'application/vnd.ms-powerpoint',
-              'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-              'txt': 'text/plain',
-              'jpg': 'image/jpeg',
-              'jpeg': 'image/jpeg',
-              'png': 'image/png',
-              'gif': 'image/gif'
-            };
-            
-            // Limpiar la extensión de cualquier punto o espacio
-            const cleanExt = extension.replace(/^\.|\.$/g, '').trim();
-            
-            if (mimeTypes[cleanExt]) {
-              mimeType = mimeTypes[cleanExt];
-              console.log(`Usando tipo MIME ${mimeType} para archivo con extensión ${cleanExt}`);
-            }
-          }
+        if (response.ok) {
+          const blob = await response.blob();
+          return { 
+            success: true, 
+            data: blob,
+            fileName: fileName
+          };
+        } else {
+          return {
+            success: false,
+            error: `Error al descargar documento: ${response.statusText}`,
+          };
         }
-        
-        // Crear el blob con el tipo MIME adecuado
-        const blob = new Blob([response.data], { type: mimeType });
-        return { 
-          success: true, 
-          data: blob,
-          fileName: fileName
-        };
       } else {
         return {
           success: false,
-          error: `Error al descargar documento: ${response.statusText}`,
+          error: 'No se pudo obtener una URL válida para el documento',
         };
       }
     } catch (error: any) {
-      if (error.response?.status === 404) {
+      if (error.status === 404) {
         return { 
           success: false, 
           error: "El documento solicitado no existe o no está disponible" 
         };
-      } else if (error.response?.status === 401 || error.response?.status === 403) {
+      } else if (error.status === 401 || error.status === 403) {
         return { 
           success: false, 
           error: "No tienes permisos para descargar este documento" 
@@ -162,7 +132,7 @@ export async function downloadDocument(
     }
   } catch (error: any) {
     console.error("Error downloading document:", error);
-    const errorMessage = error.response?.data?.message || error.message || "Error desconocido al descargar el documento";
+    const errorMessage = error.message || "Error desconocido al descargar el documento";
     return { success: false, error: errorMessage };
   }
 }

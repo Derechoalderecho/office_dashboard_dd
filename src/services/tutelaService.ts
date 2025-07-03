@@ -2,8 +2,7 @@
 
 "use server";
 
-import axios from "axios";
-import { API_BASE_URL } from "@/config/api";
+import { get, post } from "@/utils/apiUtils";
 
 export interface TutelaResponse {
   nombre_documento: string;
@@ -30,7 +29,7 @@ export async function uploadTutelaDocument(
 ): Promise<{ success: boolean; data?: TutelaResponse; error?: string }> {
   try {
     // Endpoint para convertir y subir documentos
-    const endpoint = `${API_BASE_URL}/documentos/convert/docx-to-md`;
+    const endpoint = `/documentos/convert/docx-to-md`;
     console.log(`📤 Subiendo documento al endpoint: ${endpoint}`);
     
     // Crear un nuevo FormData para tener control total sobre los parámetros
@@ -42,31 +41,18 @@ export async function uploadTutelaDocument(
       newFormData.append('file', file);
     }
     
-    // Añadir los parámetros necesarios directamente como JSON en el query param
-    const response = await axios.post(
-      endpoint,
+    // Usar post de apiUtils con los parámetros necesarios
+    const data = await post<TutelaResponse>(
+      `${endpoint}?id_caso=${caseId}&id_estudiante=${studentId}&tipo=Tutela`,
       newFormData,
       {
         headers: {
           "Content-Type": "multipart/form-data",
-        },
-        params: {
-          // Enviar parámetros como valores numéricos en la URL
-          id_caso: caseId,
-          id_estudiante: studentId,
-          tipo: "Tutela" 
         }
       }
     );
 
-    if (response.status === 200 || response.status === 201) {
-      return { success: true, data: response.data };
-    } else {
-      return {
-        success: false,
-        error: `Error al subir la tutela: ${response.statusText}`,
-      };
-    }
+    return { success: true, data };
   } catch (error: any) {
     console.error("Error uploading tutela document:", error);
     const errorMessage =
@@ -85,17 +71,12 @@ export async function getLatestTutelaFromDocuments(
 ): Promise<{ success: boolean; data?: TutelaResponse; error?: string }> {
   try {
     // Endpoint para obtener el último documento de tutela generado
-    const endpoint = `${API_BASE_URL}/documentos/caso/${caseId}/generados`;
+    const endpoint = `/documentos/caso/${caseId}/generados`;
     console.log(`📥 Obteniendo último documento de tutela: ${endpoint}`);
     
-    const response = await axios.get(endpoint, {
-      params: {
-        // Parámetro last=true para obtener solo el último documento
-        last: true
-      }
-    });
+    const data = await get<any>(`${endpoint}?last=true`);
 
-    if (!response.data) {
+    if (!data) {
       return {
         success: false,
         error: "No hay documentos de tutela disponibles para este caso",
@@ -103,7 +84,7 @@ export async function getLatestTutelaFromDocuments(
     }
 
     // La respuesta puede ser un array o un objeto individual
-    const doc = Array.isArray(response.data) ? response.data[0] : response.data;
+    const doc = Array.isArray(data) ? data[0] : data;
     
     if (!doc) {
       return {
@@ -163,7 +144,7 @@ export async function radicateTutelaDocument(
 ): Promise<{ success: boolean; data?: TutelaResponse; error?: string }> {
   try {
     // Endpoint para radicar documentos
-    const endpoint = `${API_BASE_URL}/documentos/caso/${caseId}/upload`;
+    const endpoint = `/documentos/caso/${caseId}/upload`;
     console.log(`📤 Radicando documento en el endpoint: ${endpoint}`);
     
     // Crear un nuevo FormData para tener control total sobre los parámetros
@@ -176,30 +157,21 @@ export async function radicateTutelaDocument(
     }
     newFormData.append('file', file);
     
-    const response = await axios.post(
-      endpoint,
+    // Construir la URL con los parámetros de consulta
+    const url = `${endpoint}?id_caso=${caseId}&tipo_documento=Radicado&subido_por=${uploadedBy}`;
+    
+    // Usar post de apiUtils
+    const data = await post<TutelaResponse>(
+      url,
       newFormData,
       {
         headers: {
           "Content-Type": "multipart/form-data",
-        },
-        params: {
-          // Parámetros requeridos como query params
-          id_caso: caseId,
-          tipo_documento: "Radicado",  // Siempre será "Docx"
-          subido_por: uploadedBy
         }
       }
     );
 
-    if (response.status === 200 || response.status === 201) {
-      return { success: true, data: response.data };
-    } else {
-      return {
-        success: false,
-        error: `Error al radicar la tutela: ${response.statusText}`,
-      };
-    }
+    return { success: true, data };
   } catch (error: any) {
     console.error("Error radicando tutela document:", error);
     const errorMessage =
@@ -218,17 +190,12 @@ export async function getLatestRadicadoDocument(
 ): Promise<{ success: boolean; data?: TutelaResponse; error?: string }> {
   try {
     // Endpoint para obtener el último documento radicado
-    const endpoint = `${API_BASE_URL}/documentos/caso/${caseId}/radicados`;
+    const endpoint = `/documentos/caso/${caseId}/radicados`;
     console.log(`📥 Obteniendo último documento radicado: ${endpoint}`);
     
-    const response = await axios.get(endpoint, {
-      params: {
-        // Parámetro last=true para obtener solo el último documento
-        last: true
-      }
-    });
+    const data = await get<any>(`${endpoint}?last=true`);
 
-    if (!response.data) {
+    if (!data) {
       return {
         success: false,
         error: "No hay documentos radicados disponibles para este caso",
@@ -236,7 +203,7 @@ export async function getLatestRadicadoDocument(
     }
 
     // La respuesta puede ser un array o un objeto individual
-    const doc = Array.isArray(response.data) ? response.data[0] : response.data;
+    const doc = Array.isArray(data) ? data[0] : data;
     
     if (!doc) {
       return {

@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { DocumentResponse } from '@/actions/uploadDocsActions';
+import { DocumentResponse } from '@/types/documents';
 
 interface DocumentState {
   documents: DocumentResponse[];

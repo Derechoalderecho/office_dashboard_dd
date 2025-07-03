@@ -2,8 +2,7 @@
 
 //Servicio para descargar y obtener el ultimo radicado del caso
 
-import axios from "axios";
-import { API_BASE_URL } from "@/config/api";
+import { get } from "@/utils/apiUtils";
 
 /**
  * Función para descargar un documento radicado usando su ID
@@ -19,16 +18,15 @@ export async function downloadRadicado(
       return { success: false, error: "No se proporcionó un ID de documento válido" };
     }
 
-    const apiUrl = `${API_BASE_URL}/documentos/caso/${documentoCasoId}/download`;
-    console.log(`Solicitando URL firmada para descarga: ${apiUrl}`);
+    console.log(`Solicitando URL firmada para descarga del documento ${documentoCasoId}`);
 
-    const response = await axios.get(apiUrl);
+    const data = await get<{url_firmada: string}>(`/documentos/caso/${documentoCasoId}/download`);
     
-    if (response.status === 200 && response.data?.url_firmada) {
+    if (data?.url_firmada) {
       console.log("URL firmada obtenida con éxito");
       return { 
         success: true, 
-        signedUrl: response.data.url_firmada 
+        signedUrl: data.url_firmada 
       };
     } else {
       return {
@@ -41,13 +39,13 @@ export async function downloadRadicado(
     
     let errorMessage = "Error al intentar descargar el documento";
     
-    if (error.response) {
-      if (error.response.status === 404) {
+    if (error.status) {
+      if (error.status === 404) {
         errorMessage = "El documento solicitado no existe o no está disponible";
-      } else if (error.response.status === 401 || error.response.status === 403) {
+      } else if (error.status === 401 || error.status === 403) {
         errorMessage = "No tienes permisos para descargar este documento";
       } else {
-        errorMessage = error.response.data?.message || error.message || errorMessage;
+        errorMessage = error.message || errorMessage;
       }
     }
     

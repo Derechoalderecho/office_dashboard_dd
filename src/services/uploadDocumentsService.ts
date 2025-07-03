@@ -2,9 +2,7 @@
 
 "use server";
 
-import axios from "axios";
-import { API_BASE_URL } from "@/config/api";
-
+import { post } from "@/utils/apiUtils";
 import { DocumentResponse } from '@/types/documents';
 
 export type UploadDocumentResult = {
@@ -54,15 +52,15 @@ export async function uploadDocument(
     console.log(`Tipo de documento determinado: ${tipoDocumento}`);
     
     // Construir la URL con los parámetros requeridos y opcionales
-    let uploadUrl = `${API_BASE_URL}/documentos/caso/${caseId}/upload?tipo_documento=${tipoDocumento}&subido_por=${userId}`;
+    let uploadUrl = `/documentos/caso/${caseId}/upload?tipo_documento=${tipoDocumento}&subido_por=${userId}`;
     
     // Agregar el id_nota como parámetro opcional si está presente
     if (id_nota) {
       uploadUrl += `&id_nota=${id_nota}`;
     }
     
-    // Realizar la petición al endpoint
-    const response = await axios.post(
+    // Realizar la petición al endpoint usando post de apiUtils
+    const data = await post<DocumentResponse>(
       uploadUrl,
       formData,
       {
@@ -72,19 +70,11 @@ export async function uploadDocument(
       }
     );
 
-    if (response.status === 200 || response.status === 201) {
-      console.log('Documento subido exitosamente:', response.data);
-      return { success: true, data: response.data };
-    } else {
-      console.error('Error en respuesta de subida:', response.statusText);
-      return {
-        success: false,
-        error: `Error al subir archivo: ${response.statusText}`,
-      };
-    }
+    console.log('Documento subido exitosamente:', data);
+    return { success: true, data };
   } catch (error: any) {
     console.error('Error al subir documento:', error);
-    const errorMessage = error.response?.data?.message || error.message || 'Error desconocido al subir el documento';
+    const errorMessage = error.message || 'Error desconocido al subir el documento';
     return {
       success: false,
       error: errorMessage,

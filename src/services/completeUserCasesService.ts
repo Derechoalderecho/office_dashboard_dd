@@ -41,22 +41,10 @@ export const fetchCompleteCaseById = async (caseId: number): Promise<CompleteCas
     
     try {
       response = await get<CompleteCaseData | CompleteCaseData[]>(endpoint);
+      console.log('API Response successful:', response);
     } catch (apiError) {
-      // Si falla el método get, intentar con fetch nativo como alternativa
-      console.warn(`Primary API request failed. Trying with native fetch as fallback`, apiError);
-      
-      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-      const fullUrl = `${API_BASE_URL}${endpoint}`;
-      
-      console.log(`Fallback fetch request: ${fullUrl}`);
-      const fetchResponse = await fetch(fullUrl);
-      
-      if (!fetchResponse.ok) {
-        throw new Error(`Fallback fetch failed with status: ${fetchResponse.status}`);
-      }
-      
-      response = await fetchResponse.json();
-      console.log('Fallback API response successful:', response);
+      logger.error(`Error en la petición API para el caso ${caseId}:`, apiError);
+      throw apiError;
     }
     
     console.log('API Response structure:', response);
