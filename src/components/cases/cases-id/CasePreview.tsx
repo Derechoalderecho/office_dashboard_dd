@@ -20,7 +20,6 @@ import {
   ArrowDownTrayIcon,
   PhotoIcon,
 } from "@heroicons/react/24/outline";
-import { AlertDialog } from "@/components/ui/alert-dialog";
 import { 
   uploadTutelaDocument, 
   TutelaResponse, 

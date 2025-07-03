@@ -19,8 +19,7 @@ import { logger } from "@/utils/logUtils";
 import { fetchUserDetails } from "@/services/userService";
 import { Users } from "@/types/users";
 import { uploadDocument } from "@/services/uploadDocumentsService";
-import { downloadDocument } from "@/services/allDocumentsService";
-import { DocumentResponse } from "@/actions/uploadDocsActions";
+import { DocumentResponse } from "@/types/documents";
 
 interface NotesSectionProps {
   caseId: number;

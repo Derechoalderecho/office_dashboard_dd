@@ -1,5 +1,5 @@
 import { Users } from "./users";
-import { DocumentResponse } from "@/actions/uploadDocsActions";
+import { DocumentResponse } from "./documents";
 
 export interface Nota {
   id_caso: number;

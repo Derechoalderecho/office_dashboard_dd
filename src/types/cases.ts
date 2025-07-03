@@ -1,6 +1,6 @@
 import { Citizen } from "./citizens";
 import { Users } from "./users";
-import { DocumentResponse } from "@/actions/uploadDocsActions";
+import { DocumentResponse } from "@/types/documents";
 
 export interface ApiDocumento {
   id_caso: number;

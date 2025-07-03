@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import DocumentUploader from "./DocumentUploader";
 import DocumentDownloader from "./DocumentDownloader";
-import { DocumentResponse } from "@/actions/uploadDocsActions";
+import { DocumentResponse } from "@/types/documents";
 import { useAppDispatch } from "@/store/hooks";
 import { fetchCompleteCaseById } from "@/services/completeUserCasesService";
 import { setDocuments } from "@/store/slices/documentSlice";

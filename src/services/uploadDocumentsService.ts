@@ -5,23 +5,7 @@
 import axios from "axios";
 import { API_BASE_URL } from "@/config/api";
 
-export type DocumentResponse = {
-  nombre_documento: string;
-  ext_documento: string;
-  enlace: string;
-  url_firmada?: string;
-  id_documento: number; // Agregado como obligatorio para compatibilidad
-  id_caso?: number;
-  id_documento_caso?: number;
-  fecha_asigna: string;
-  tipo_documento?: 'Docx' | 'MD' | 'Tutela' | 'Radicado' | 'Otro';
-  subido_por?: string;
-  status?: string;
-  created_date?: string;
-  modified_date?: string;
-  deleted_at?: string | null;
-  fecha_subida?: string;
-};
+import { DocumentResponse } from '@/types/documents';
 
 export type UploadDocumentResult = {
   success: boolean;

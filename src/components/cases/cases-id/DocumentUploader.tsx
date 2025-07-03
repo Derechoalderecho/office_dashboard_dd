@@ -8,7 +8,7 @@ import {
   ExclamationTriangleIcon 
 } from "@heroicons/react/24/outline";
 import { AlertDialog } from "@/components/ui/alert-dialog";
-import { DocumentResponse } from "@/actions/uploadDocsActions";
+import { DocumentResponse } from "@/types/documents";
 import { uploadDocument } from "@/services/uploadDocumentsService";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppDispatch } from "@/store/hooks";

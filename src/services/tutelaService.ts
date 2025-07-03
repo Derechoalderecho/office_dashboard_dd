@@ -76,41 +76,6 @@ export async function uploadTutelaDocument(
 }
 
 /**
- * Gets the latest tutela associated with a case
- * @param caseId
- * @returns
- */
-export async function getLatestTutelaDocument(
-  caseId: number
-): Promise<{ success: boolean; data?: TutelaResponse; error?: string }> {
-  try {
-    const response = await axios.get(
-      `${API_BASE_URL}/tutelas/${caseId}`
-    );
-
-    if (response.status === 200) {
-      return { success: true, data: response.data };
-    } else {
-      return {
-        success: false,
-        error: `Error al obtener la tutela: ${response.statusText}`,
-      };
-    }
-  } catch (error: any) {
-    console.error("Error fetching latest tutela document:", error);
-    if (error.response?.status === 404) {
-      return {
-        success: false,
-        error: "No hay documentos de tutela disponibles para este caso",
-      };
-    }
-    const errorMessage =
-      error.response?.data?.message || error.message || "Error desconocido";
-    return { success: false, error: errorMessage };
-  }
-}
-
-/**
  * Gets the latest tutela associated with a case using the documents service
  * @param caseId - The case ID
  * @returns A promise with the latest tutela document
@@ -308,55 +273,6 @@ export async function getLatestRadicadoDocument(
       };
     }
     const errorMessage = error.message || "Error desconocido al obtener el documento radicado";
-    return { success: false, error: errorMessage };
-  }
-}
-
-export async function getTutelaDocumentById(
-  documentId: number
-): Promise<{ success: boolean; data?: TutelaResponse; error?: string }> {
-  try {
-    const { getDocumentById } = await import("./documentService");
-
-    const document = await getDocumentById(documentId);
-
-    if (!document) {
-      return {
-        success: false,
-        error: `No se encontró el documento con ID ${documentId}`,
-      };
-    }
-
-    if (!document.enlace) {
-      return {
-        success: false,
-        error: `El documento con ID ${documentId} no tiene contenido de tutela`,
-      };
-    }
-
-    // Format the document as TutelaResponse
-    const tutelaResponse: TutelaResponse = {
-      nombre_documento: document.nombre_documento || "documento",
-      enlace: document.enlace || "",
-      contenido: document.contenido || "", // Intentar recuperar el contenido
-      ext_documento: document.ext_documento || "",
-      id_caso: document.id_caso || 0,
-      id_documento: document.id_documento,
-      fecha_asigna:
-        document.fecha_asigna ||
-        document.created_date ||
-        new Date().toISOString(),
-      id_documento_caso: document.id_documento_caso || document.id_documento || 0,
-    };
-
-    return { success: true, data: tutelaResponse };
-  } catch (error: any) {
-    console.error(
-      `Error fetching tutela document with ID ${documentId}:`,
-      error
-    );
-    const errorMessage =
-      error.message || "Error desconocido al obtener la tutela";
     return { success: false, error: errorMessage };
   }
 }

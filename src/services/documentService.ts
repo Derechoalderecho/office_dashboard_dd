@@ -1,6 +1,6 @@
 "use server";
 
-import { DocumentResponse } from "@/actions/uploadDocsActions";
+import { DocumentResponse } from "@/types/documents";
 import { get, post, del, downloadFile } from "@/utils/apiUtils";
 import {
   getWithCache,
