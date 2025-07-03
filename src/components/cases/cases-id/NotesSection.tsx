@@ -8,6 +8,7 @@ import {
   PaperClipIcon,
   DocumentIcon,
   XMarkIcon,
+  ArrowDownTrayIcon,
 } from "@heroicons/react/24/outline";
 import { useState, useEffect, useRef } from "react";
 import { createNote } from "@/services/noteService";
@@ -18,6 +19,7 @@ import { logger } from "@/utils/logUtils";
 import { fetchUserDetails } from "@/services/userService";
 import { Users } from "@/types/users";
 import { uploadDocument } from "@/services/uploadDocumentsService";
+import { downloadDocument } from "@/services/allDocumentsService";
 import { DocumentResponse } from "@/actions/uploadDocsActions";
 
 interface NotesSectionProps {
@@ -293,6 +295,46 @@ export default function NotesSection({
       handleAddNote();
     }
   };
+  
+  // Maneja la descarga de un documento
+  const handleDocumentDownload = async (doc: any) => {
+    try {
+      // Mostrar indicador de carga
+      setIsLoading(true);
+      
+      if (!doc.id_documento_caso) {
+        throw new Error("No se encontró el ID del documento para descargar");
+      }
+      
+      // Usar directamente el id_documento_caso para obtener la URL firmada
+      const { downloadRadicado } = await import("@/services/radicadoService");
+      const result = await downloadRadicado(doc.id_documento_caso);
+      
+      if (result.success && result.signedUrl) {
+        // Abrir la URL firmada en una nueva pestaña
+        window.open(result.signedUrl, '_blank');
+        
+        addToast({
+          title: "Descarga iniciada",
+          description: "El documento se está abriendo en una nueva pestaña",
+          color: "success",
+        });
+      } else {
+        throw new Error(result.error || "No se pudo obtener la URL de descarga");
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Error desconocido al descargar el documento";
+      logger.error(`[NotesSection] Error al descargar documento: ${errorMsg}`);
+      
+      addToast({
+        title: "Error",
+        description: errorMsg,
+        color: "danger",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div>
@@ -446,16 +488,15 @@ export default function NotesSection({
                               >
                                 <DocumentIcon className="w-4 h-4 text-blue-500 mr-2" />
                                 <span className="text-xs text-gray-700 truncate">
-                                  {doc.nombre_documento}{doc.ext_documento || ''}
+                                  {doc.nombre_documento}
                                 </span>
-                                <a 
-                                  href={doc.url_firmada || doc.enlace} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  className="ml-auto text-xs text-blue-600 hover:underline"
+                                <button 
+                                  onClick={() => handleDocumentDownload(doc)}
+                                  className="ml-auto text-xs text-blue-600 hover:underline flex items-center"
                                 >
-                                  Ver
-                                </a>
+                                  <ArrowDownTrayIcon className="w-3 h-3 mr-1" />
+                                  Descargar
+                                </button>
                               </div>
                             ))}
                           </div>
