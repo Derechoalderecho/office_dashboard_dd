@@ -826,7 +826,7 @@ export default function BasicInformationStep({
                 Secundaria (6.º a 9.º grado)
               </SelectItem>
               <SelectItem key="Media">Media (10.º a 11.º grado)</SelectItem>
-              <SelectItem key="Técnica">Técnica o tecnológica</SelectItem>
+              <SelectItem key="Técnica/Tecnológica">Técnica o tecnológica</SelectItem>
               <SelectItem key="Pregrado">Pregrado</SelectItem>
               <SelectItem key="Maestría">Maestría</SelectItem>
               <SelectItem key="Doctorado">Doctorado</SelectItem>
@@ -843,11 +843,11 @@ export default function BasicInformationStep({
               onChange={(e) => updateFormData({ etnia: e.target.value })}
               isRequired
             >
-              <SelectItem key="IN">Indígena</SelectItem>
-              <SelectItem key="AF">Afrocolombiano</SelectItem>
-              <SelectItem key="ME">Mestizo</SelectItem>
-              <SelectItem key="RA">Raizal</SelectItem>
-              <SelectItem key="RO">Rom/Gitano</SelectItem>
+              <SelectItem key="Indígena">Indígena</SelectItem>
+              <SelectItem key="Afrocolombiano">Afrocolombiano</SelectItem>
+              <SelectItem key="Mestizo">Mestizo</SelectItem>
+              <SelectItem key="Raizal">Raizal</SelectItem>
+              <SelectItem key="Rom/Gitano">Rom/Gitano</SelectItem>
               <SelectItem key="Ninguna">Ninguna</SelectItem>
               <SelectItem key="Otro">Otro</SelectItem>
               <SelectItem key="Prefiero no decirlo">
@@ -888,8 +888,8 @@ export default function BasicInformationStep({
               }}
               errorMessage={validationErrors?.zona}
             >
-              <SelectItem key="urbana">Urbana</SelectItem>
-              <SelectItem key="rural">Rural</SelectItem>
+              <SelectItem key="Urbana">Urbana</SelectItem>
+              <SelectItem key="Rural">Rural</SelectItem>
             </Select>
 
             <Select

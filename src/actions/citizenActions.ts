@@ -1,7 +1,6 @@
 "use server";
 
 import { API_BASE_URL } from "@/config/api";
-import { assignUserToCase } from "@/services/caseService";
 import { invalidateCache } from "@/utils/cacheUtils";
 import { convertZonaToCode } from "@/utils/citizenUtils";
 
@@ -62,7 +61,7 @@ export async function submitFormData(
         segundo_apellido: formData.get("segundo_apellido") || "",
         tipo_documento: formData.get("tipo_documento") || "",
         num_documento: formData.get("num_documento") || "",
-        email: formData.get("email") || "",
+        email: formData.get("email") || null,
         telefono_fijo: formData.get("telefono_fijo") || "",
         num_movil: formData.get("num_movil") || "",
         dane_municipio: formData.get("dane_municipio") || "05001",
@@ -80,7 +79,7 @@ export async function submitFormData(
         discapacidad: formData.get("discapacidad") === "true",
         sabe_leer_escribir: formData.get("sabe_leer_escribir") === "true",
         direccion_residencia: formData.get("direccion_residencia") || "",
-        zona_residencia: convertZonaToCode(formData.get("zona_residencia")?.toString() || ""),
+        zona_residencia: formData.get("zona_residencia") || "",
         estrato: Number(formData.get("estrato")) || 0,
       };
       

@@ -71,7 +71,7 @@ export const BulkActionsBar = ({
   const [isStatusLoading, setIsStatusLoading] = useState(false);
   const [isUserAssignmentModalOpen, setIsUserAssignmentModalOpen] = useState(false);
   const { handleDelete, isLoading: isDeleteLoading } = useDeleteRows(onDeleteCases);
-  const { internalUserId, role } = useAuth(); // Obtener el ID del usuario autenticado
+  const { internalUserId, role, loading: authLoading } = useAuth(); // Obtener el ID del usuario autenticado
 
   const convertSelection = (selection: Selection): Set<number> | "all" => {
     if (selection === "all") return "all";
@@ -88,13 +88,34 @@ export const BulkActionsBar = ({
     const status = STATUS_MAP[statusKey as keyof typeof STATUS_MAP];
     if (!status) return;
     
-    setSelectedStatus(status);
-    setIsStatusAlertOpen(true);
+    // Mostrar loading mientras se obtiene el internalUserId
+    if (!internalUserId) {
+      setIsStatusLoading(true);
+      // Esperar un momento para asegurar que el estado de autenticación se actualice
+      const checkAuth = () => {
+        if (internalUserId || authLoading === false) {
+          setSelectedStatus(status);
+          setIsStatusAlertOpen(true);
+          setIsStatusLoading(false);
+        } else {
+          setTimeout(checkAuth, 100);
+        }
+      };
+      checkAuth();
+    } else {
+      setSelectedStatus(status);
+      setIsStatusAlertOpen(true);
+    }
   };
 
   // Función para confirmar y aplicar cambio de estado
   const confirmStatusChange = async () => {
     if (!selectedStatus) return;
+    
+    const selection = convertSelection(selectedKeys);
+    console.log("=== INICIO DE ACTUALIZACIÓN DE ESTADO MÁSIVO ===");
+    console.log("Estado seleccionado:", selectedStatus);
+    console.log("IDs de casos seleccionados:", selection === "all" ? "all" : Array.from(selection));
     
     setIsStatusLoading(true);
     
@@ -147,17 +168,26 @@ export const BulkActionsBar = ({
 
         // Obtener el estado actual del caso para usarlo como estado_anterior
         const currentStatus = selectedCase.estado || selectedCase.estado_actual;
+        const caseId = selectedCase.id_caso || selectedCase.id;
         
         if (!currentStatus) {
           console.error(`No se pudo determinar el estado actual del caso ${id}`);
           return Promise.resolve(false);
         }
         
-        console.log(`Actualizando caso ${id} de estado ${currentStatus} a ${selectedStatus}`);
+        console.log(`=== Detalles de actualización de caso ===`);
+        console.log(`ID del caso: ${caseId}`);
+        console.log(`Estado actual: ${currentStatus}`);
+        console.log(`Nuevo estado: ${selectedStatus}`);
+        console.log(`ID de usuario que realiza el cambio: ${internalUserId}`);
+        console.log(`Datos completos del caso:`, selectedCase);
         
         // Llamar a updateCaseStatus con el ID del caso, el nuevo estado y el ID del usuario
         return updateCaseStatus(id, selectedStatus, internalUserId);
       });
+      
+      console.log("\n=== Iniciando actualización de estados ===");
+      console.log(`Total de casos a actualizar: ${updatePromises.length}`);
       
       // Ejecutar todas las actualizaciones
       const results = await Promise.allSettled(updatePromises);
@@ -165,6 +195,21 @@ export const BulkActionsBar = ({
       // Contar éxitos y fallos
       const successCount = results.filter(r => r.status === 'fulfilled' && r.value === true).length;
       const failCount = results.length - successCount;
+      
+      console.log("\n=== Resultados de la actualización ===");
+      console.log(`Actualizaciones exitosas: ${successCount}`);
+      console.log(`Actualizaciones fallidas: ${failCount}`);
+      
+      if (failCount > 0) {
+        console.error("Errores durante la actualización:", 
+          results.filter((r, i) => r.status === 'rejected' || r.value === false)
+                .map((r, i) => ({
+                  index: i,
+                  status: r.status,
+                  reason: r.status === 'rejected' ? r.reason : 'Devuelto false'
+                }))
+        );
+      }
       
       if (successCount > 0) {
         addToast({
@@ -270,10 +315,16 @@ export const BulkActionsBar = ({
         onClose={() => !isStatusLoading && setIsStatusAlertOpen(false)}
         onConfirm={confirmStatusChange}
         title="Confirmar cambio de estado"
-        description={`¿Está seguro que desea cambiar el estado de ${selectedKeys === "all" ? "todos los casos" : `${selectedKeys.size} caso${selectedKeys.size !== 1 ? 's' : ''}`} a "${selectedStatus}"?`}
-        confirmText="Cambiar estado"
+        description={
+          !internalUserId 
+            ? "Cargando información del usuario..." 
+            : `¿Está seguro que desea cambiar el estado de ${selectedKeys === "all" ? "todos los casos" : `${selectedKeys.size} caso${selectedKeys.size !== 1 ? 's' : ''}`} a "${selectedStatus}"?`
+        }
+        confirmText={isStatusLoading ? "Actualizando..." : "Cambiar estado"}
         type="info"
         isLoading={isStatusLoading}
+        disabled={!internalUserId}  
+        error={!internalUserId}
       />
       
       {/* Modal de asignación de usuarios */}

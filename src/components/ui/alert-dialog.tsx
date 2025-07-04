@@ -19,6 +19,7 @@ interface AlertDialogProps {
   type?: "danger" | "warning" | "info";
   isLoading?: boolean;
   error?: boolean;
+  disabled?: boolean;
 }
 
 export const AlertDialog = ({
@@ -31,6 +32,7 @@ export const AlertDialog = ({
   cancelText = "Cancelar",
   type = "danger",
   isLoading = false,
+  disabled = false,
 }: AlertDialogProps) => {
   const getColorByType = () => {
     switch (type) {
@@ -57,14 +59,14 @@ export const AlertDialog = ({
             color="default" 
             variant="light" 
             onPress={onClose}
-            isDisabled={isLoading}
+            isDisabled={isLoading || disabled}
           >
             {cancelText}
           </Button>
           <Button 
             color={getColorByType()} 
             onPress={onConfirm}
-            isLoading={isLoading}
+            isLoading={isLoading || disabled}
             spinner={<Spinner size="sm" color="white" />}
           >
             {confirmText}
