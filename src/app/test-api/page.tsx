@@ -1,10 +1,9 @@
 "use client";
 
 import { fetchCompleteUserCases } from "@/services/completeUserCasesService";
-import { fetchUserByFirebaseUid } from "@/services/userByFirebaseService";
-import { getUserIdFromFirebaseUid } from "@/services/userByFirebaseService";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
+import { fetchUserByFirebaseUid } from "@/services/userAuthService";
 
 export default function page() {
 
@@ -15,6 +14,12 @@ export default function page() {
        console.log(token);
        console.log('======================================');
      }, [token]);
+
+     useEffect(() => {
+        console.log('=== USER DE AUTENTICACIÓN FIREBASE ===');
+        console.log(user);
+        console.log('======================================');
+      }, [user]);
 
   return (
     <div>page</div>
