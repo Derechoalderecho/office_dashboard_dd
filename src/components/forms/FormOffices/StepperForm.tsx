@@ -23,7 +23,7 @@ import { submitFormData } from "@/actions/citizenActions";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 
-export default function StepperForm() {
+export default function StepperFormOffices() {
   const router = useRouter();
   const { role } = useAuth();
   const isStudent = role === "Estudiante";

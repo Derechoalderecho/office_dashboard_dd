@@ -1,9 +1,9 @@
-import StepperForm from "@/components/forms/stepperForm/StepperForm";
+import StepperFormOffices from "@/components/forms/FormOffices/StepperForm";
 
 export default async function CreateCasePage() {
   return (
     <div>
-      <StepperForm />
+      <StepperFormOffices />
     </div>
   );
 } 
