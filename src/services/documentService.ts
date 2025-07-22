@@ -62,29 +62,6 @@ export const getDocumentsByCaseIdAndType = async (
   }
 };
 
-/**
- * Gets a specific document by its ID
- * @param documentId
- * @returns
- */
-export const getDocumentById = async (
-  documentId: number
-): Promise<DocumentResponse | null> => {
-  try {
-    return await getWithCache<DocumentResponse>(
-      DOCUMENT_CACHE,
-      documentId.toString(),
-      async () => {
-        logger.debug(`Obteniendo documento con ID ${documentId}`);
-        return await get<DocumentResponse>(`documentos/${documentId}`);
-      },
-      DOCUMENT_TTL
-    );
-  } catch (error) {
-    logger.error(`Error al obtener documento ${documentId}:`, error);
-    return null;
-  }
-};
 
 /**
  * Downloads a specific document
@@ -135,32 +112,6 @@ export const uploadDocument = async (
   } catch (error) {
     logger.error(`Error al subir documento para el caso ${caseId}:`, error);
     return null;
-  }
-};
-
-/**
- * Deletes a document from the system
- * @param documentId
- * @param caseId
- * @returns
- */
-export const deleteDocument = async (
-  documentId: number,
-  caseId: number
-): Promise<boolean> => {
-  try {
-    logger.info(`Eliminando documento ${documentId} del caso ${caseId}`);
-
-    await del<void>(`documentos/${documentId}`);
-
-    invalidateCacheItem(DOCUMENT_CACHE, documentId.toString());
-    invalidateCache(`${CASE_DOCUMENTS_CACHE}_${caseId}`);
-
-    logger.info(`Documento ${documentId} eliminado exitosamente`);
-    return true;
-  } catch (error) {
-    logger.error(`Error al eliminar documento ${documentId}:`, error);
-    return false;
   }
 };
 

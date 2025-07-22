@@ -115,57 +115,6 @@ export async function getUserIdFromFirebase(firebaseUid: string): Promise<number
 }
 
 /**
- * Creates a new user with Firebase UID
- */
-export async function createUserWithFirebaseUid(userData: {
-  id_usuario_firebase: string;
-  primer_nombre: string;
-  segundo_nombre?: string;
-  primer_apellido: string;
-  segundo_apellido?: string;
-  email: string;
-  rol: string;
-  tipo_documento: string;
-  num_documento: string;
-}): Promise<Users | null> {
-  try {
-    logger.info(`Creando nuevo usuario: ${userData.primer_nombre} ${userData.primer_apellido}`);
-    
-    const user = await post<Users>('usuarios', userData);
-    
-    invalidateCache(CACHE_NAME);
-    
-    logger.info(`Usuario creado con éxito: ID=${user.id_usuario}`);
-    return user;
-  } catch (error) {
-    logger.error('Error al crear usuario:', error);
-    return null;
-  }
-}
-
-/**
- * Updates the data of an existing user
- */
-export async function updateUser(
-  userId: number, 
-  userData: Partial<Users>
-): Promise<Users | null> {
-  try {
-    logger.info(`Actualizando usuario ${userId}`);
-    
-    const updatedUser = await put<Users>(`usuarios/${userId}/actualizar`, userData);
-    
-    invalidateCacheItem(CACHE_NAME, userId);
-    
-    logger.info(`Usuario ${userId} actualizado con éxito`);
-    return updatedUser;
-  } catch (error) {
-    logger.error(`Error al actualizar usuario ${userId}:`, error);
-    return null;
-  }
-}
-
-/**
  * Gets the role of a user from their Firebase UID
  */
 export async function getUserRoleFromFirebase(firebaseUid: string): Promise<string | null> {

@@ -86,37 +86,6 @@ export const fetchCitizenDetails = async (
 };
 
 /**
- * Creates a new citizen in the system
- * @param citizenData
- * @returns
- */
-export const createCitizen = async (
-  citizenData: Omit<Citizen, "id_ciudadano">
-): Promise<Citizen | null> => {
-  try {
-    logger.info("Creando nuevo ciudadano");
-
-    // Ensure zona is in the correct format for the database
-    const processedData = {
-      ...citizenData,
-      zona: convertZonaToCode(citizenData.zona_residencia)
-    };
-
-    const createdCitizen = await post<Citizen>("ciudadanos", processedData);
-
-    invalidateCache(CITIZEN_CACHE);
-
-    logger.info(
-      `Ciudadano creado exitosamente: ID=${createdCitizen.id_ciudadano}`
-    );
-    return createdCitizen;
-  } catch (error) {
-    logger.error("Error al crear ciudadano:", error);
-    return null;
-  }
-};
-
-/**
  * Updates an existing citizen with proper data type conversion
  * @param id The ID of the citizen to update
  * @param citizenData Partial citizen data to update
@@ -165,27 +134,6 @@ export const updateCitizen = async (
   } catch (error) {
     logger.error(`Error al actualizar ciudadano ${id}:`, error);
     return null;
-  }
-};
-
-/**
- * Deletes a citizen from the system
- * @param id
- * @returns
- */
-export const deleteCitizen = async (id: number): Promise<boolean> => {
-  try {
-    logger.info(`Eliminando ciudadano ${id}`);
-
-    await del<any>(`ciudadanos/${id}`);
-
-    invalidateCacheItem(CITIZEN_CACHE, id);
-
-    logger.info(`Ciudadano ${id} eliminado exitosamente`);
-    return true;
-  } catch (error) {
-    logger.error(`Error al eliminar ciudadano ${id}:`, error);
-    return false;
   }
 };
 

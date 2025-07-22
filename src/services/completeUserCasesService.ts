@@ -14,7 +14,7 @@ import { logger } from '@/utils/logUtils';
 export const fetchCompleteUserCases = async (userId: number): Promise<CompleteCaseData[]> => {
   try {
     const endpoint = `/usuarios/${userId}/casos/full/`;
-    logger.info(`Fetching complete cases for user ${userId}`);
+    logger.info(`Mostrando usuarios completos para el usuario ${userId}`);
     
     const response = await get<CompleteCaseData[]>(endpoint);
     logger.info(`Retrieved ${response.length} complete cases for user ${userId}`);
