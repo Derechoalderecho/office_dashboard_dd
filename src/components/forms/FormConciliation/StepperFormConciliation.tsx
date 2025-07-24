@@ -22,10 +22,37 @@ export default function StepperFormConciliation() {
   // Configuración de React Hook Form
   const methods = useForm({
     defaultValues: {
+      // Información de documento
+      tipo_documento: "",
+      num_documento: "",
+      
+      // Información personal básica
       primer_nombre: "",
       segundo_nombre: "",
-      email: "",
+      primer_apellido: "",
+      segundo_apellido: "",
+      fecha_nacimiento: "",
+      sexo: "",
+      genero: "",
+      orientacion_sexual: "",
+      
+      // Información de contacto
       num_movil: "",
+      telefono_fijo: "",
+      email: "",
+      
+      // Información adicional
+      nacionalidad: "",
+      estado_civil: "",
+      escolaridad: "",
+      etnia: "",
+      estrato: "",
+      zona_residencia: "",
+      departamento: "",
+      municipio: "",
+      discapacidad: "",
+      sabe_leer_escribir: "",
+      direccion_residencia: "",
     },
     mode: "onSubmit"
   });
@@ -195,4 +222,3 @@ export default function StepperFormConciliation() {
     </div>
   )
 }
-
