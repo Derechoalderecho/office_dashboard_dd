@@ -102,7 +102,7 @@ type BasicInformationProps = {
   validationErrors?: { [key: string]: string };
 };
 
-export default function BasicInformationStep({
+export default function Step1BasicInformationStep({
   formData,
   updateFormData,
   validationErrors = {},

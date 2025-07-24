@@ -24,7 +24,7 @@ type AdministrationProps = {
   validationErrors?: { [key: string]: string };
 };
 
-export default function AdministrationStep({
+export default function Step3AdministrationStep({
   formData, 
   updateFormData,
   validationErrors = {},

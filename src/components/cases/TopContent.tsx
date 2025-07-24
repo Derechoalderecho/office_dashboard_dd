@@ -10,9 +10,8 @@ import {
   DropdownTrigger,
   Button,
   Input,
-  Tabs,
-  Tab,
 } from "@heroui/react";
+import { Icon } from "@iconify/react";
 import { I18nProvider } from "@react-aria/i18n";
 import { statusOptions } from "@/constants/casesConstants";
 import { DateRange, RangeValue } from "@/types/sharedTypes";
@@ -22,7 +21,7 @@ import Link from "next/link";
 import { UserPlusIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { transformStateByRole } from "@/utils/stateTransformer";
-import { UserRole } from "@/store/slices/authSlice";
+import { useRouter } from "next/navigation";
 
 interface TopContentProps {
   usersLength: number;
@@ -53,6 +52,7 @@ export default function TopContent({
   setStatusFilter,
   onResetFilters,
 }: TopContentProps) {
+  const router = useRouter();
   // Obtenemos el rol del usuario
   const { role } = useAuth();
   // Convert dateRange to RangeValue<CalendarDate>
@@ -117,10 +117,10 @@ export default function TopContent({
               >
                 {statusOptions.map((status) => {
                   // Si tenemos un rol, transformamos el estado para mostrarlo según el rol
-                  const displayName = role 
+                  const displayName = role
                     ? transformStateByRole(status.name, role)
                     : status.name;
-                    
+
                   return (
                     <DropdownItem key={status.uid} className="capitalize">
                       {capitalize(displayName)}
@@ -152,16 +152,46 @@ export default function TopContent({
             </Button>
           </div>
         </div>
-        <Link href="/dashboard/cases/create">
-          <Button
-            color="primary"
-            startContent={<UserPlusIcon className="w-5" />}
-          >
-            Añadir caso
-          </Button>
-        </Link>
+        <Dropdown>
+          <DropdownTrigger>
+            <Button
+              color="primary"
+              startContent={<UserPlusIcon className="w-5" />}
+            >
+              Añadir caso
+            </Button>
+          </DropdownTrigger>
+          <DropdownMenu variant="faded" disabledKeys={["create-clinic-case"]}>
+            <DropdownItem
+              onPress={() => router.push("/dashboard/cases/create-office-case")}
+              key="create-office-case"
+              startContent={
+                <Icon icon="ph:handshake" className="w-6 h-6" />
+              }
+            >
+              Consultorio jurídico
+            </DropdownItem>
+            <DropdownItem
+              onPress={() => router.push("/dashboard/cases/create-conciliation-case")}
+              key="create-conciliation-case"
+              startContent={
+                <Icon icon="ph:bank" className="w-6 h-6" />
+              }
+            >
+              Centro de conciliación
+            </DropdownItem>
+            <DropdownItem
+              onPress={() => router.push("/dashboard/cases/create-clinic-case")}
+              key="create-clinic-case"
+              startContent={
+                <Icon icon="ph:scroll" className="w-6 h-6" />
+              }
+            >
+              Clínicas jurídicos
+            </DropdownItem>
+          </DropdownMenu>
+        </Dropdown>
       </div>
-
 
       <div className="flex justify-between items-center mt-6">
         <span className="text-default-400 text-small">

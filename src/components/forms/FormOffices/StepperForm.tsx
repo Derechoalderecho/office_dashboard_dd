@@ -15,10 +15,10 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 
-import BasicInformationStep from "./steps/BasicInformationStep";
-import GeneralInformationStep from "./steps/GeneralInformationStep";
-import AdministrationStep from "./steps/AdministrationStep";
-import ReviewStep from "./steps/ReviewStep";
+import Step1BasicInformationStep from "./steps/Step1BasicInformationStep";
+import Step2GeneralInformationStep from "./steps/Step2GeneralInformationStep";
+import Step3AdministrationStep from "./steps/Step3AdministrationStep";
+import Step4ReviewStep from "./steps/Step4ReviewStep";
 import { submitFormData } from "@/actions/citizenActions";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
@@ -89,10 +89,10 @@ export default function StepperFormOffices() {
   const [alertMessage, setAlertMessage] = useState("");
 
   const steps = [
-    { title: "Información básica", component: BasicInformationStep },
-    { title: "Información general", component: GeneralInformationStep },
-    { title: "Información administrativa", component: AdministrationStep },
-    { title: "Revisión", component: ReviewStep },
+    { title: "Información básica", component: Step1BasicInformationStep },
+    { title: "Información general", component: Step2GeneralInformationStep },
+    { title: "Información administrativa", component: Step3AdministrationStep },
+    { title: "Revisión", component: Step4ReviewStep },
   ];
 
   const updateFormData = (data: Partial<typeof formData>) => {

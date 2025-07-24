@@ -19,7 +19,7 @@ type GeneralInformationProps = {
   ) => void;
 };
 
-export default function GeneralInformationStep({
+export default function Step2GeneralInformationStep({
   formData,
   updateFormData,
 }: GeneralInformationProps) {

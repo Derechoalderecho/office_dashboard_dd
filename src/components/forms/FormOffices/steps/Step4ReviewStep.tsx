@@ -49,7 +49,7 @@ type ReviewStepProps = {
   updateFormData?: (data: Partial<ReviewStepProps["formData"]>) => void;
 };
 
-export default function ReviewStep({ formData }: ReviewStepProps) {
+export default function Step4ReviewStep({ formData }: ReviewStepProps) {
   const isExistingCitizen = formData.is_existing_citizen === "true";
   const [userNames, setUserNames] = useState<{
     profesor: string;

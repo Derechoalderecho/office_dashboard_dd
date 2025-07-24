@@ -18,15 +18,11 @@ const pathTranslations: { [key: string]: string } = {
   dashboard: "Dashboard",
   cases: "Casos",
   citizens: "Ciudadanos",
-  create: "Crear Caso",
+  "create-office-case": "Crear Caso Consultorio Jurídico",
+  "create-conciliation-case": "Crear Caso Conciliación",
   users: "Usuarios",
-  new: "Nuevo",
   grades: "Calificaciones",
   edit: "Editar",
-  view: "Ver",
-  reports: "Reportes",
-  notifications: "Notificaciones",
-  help: "Ayuda",
 };
 
 function getRoleColor(
