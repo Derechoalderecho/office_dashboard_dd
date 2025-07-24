@@ -29,11 +29,10 @@ export default function StepperFormConciliation() {
   // Configuración de React Hook Form
   const methods = useForm({
     defaultValues: {
+      //Informacion Step 1
       ciudadano_solicitante: {
-        // Información de documento
         num_documento: "",
-
-        // Información personal básica
+        tipo_documento: "",
         primer_nombre: "",
         segundo_nombre: "",
         primer_apellido: "",
@@ -42,13 +41,9 @@ export default function StepperFormConciliation() {
         sexo: "",
         genero: "",
         orientacion_sexual: "",
-
-        // Información de contacto
         num_movil: "",
         telefono_fijo: "",
         email: "",
-
-        // Información adicional
         nacionalidad: "",
         estado_civil: "",
         escolaridad: "",
@@ -62,6 +57,7 @@ export default function StepperFormConciliation() {
         sabe_leer_escribir: "",
         direccion_residencia: "",
       },
+      //Informacion Step 2
       prueba1: "",
       prueba2: "",
     },

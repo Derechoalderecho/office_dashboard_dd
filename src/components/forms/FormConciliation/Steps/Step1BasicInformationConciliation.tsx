@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useFormContext } from "react-hook-form"
+import { useState, useEffect } from "react";
+import { useFormContext } from "react-hook-form";
 import {
   Input,
   Select,
@@ -14,193 +14,203 @@ import {
   PopoverTrigger,
   PopoverContent,
   Checkbox,
-} from "@heroui/react"
-import { I18nProvider } from "@react-aria/i18n"
-import { parseDate } from "@internationalized/date"
+} from "@heroui/react";
+import { I18nProvider } from "@react-aria/i18n";
+import { parseDate } from "@internationalized/date";
 import {
   fetchLocations,
   getUniqueDepartments,
   getMunicipalitiesByDepartment,
   getDaneMunicipioByName,
   Location,
-} from "@/services/locationService"
+} from "@/services/locationService";
 
 export default function Step1BasicInformationConciliation() {
-  const { register, watch, setValue } = useFormContext()
-  const [fechaNacimiento, setFechaNacimiento] = useState<DateValue | null>(null)
-  const [showNacionalidadInput, setShowNacionalidadInput] = useState(false)
-  const [nacionalidadPersonalizada, setNacionalidadPersonalizada] = useState("")
-  const [isAddressPopoverOpen, setIsAddressPopoverOpen] = useState(false)
+  const { register, watch, setValue } = useFormContext();
+  const [fechaNacimiento, setFechaNacimiento] = useState<DateValue | null>(
+    null
+  );
+  const [showNacionalidadInput, setShowNacionalidadInput] = useState(false);
+  const [nacionalidadPersonalizada, setNacionalidadPersonalizada] =
+    useState("");
+  const [isAddressPopoverOpen, setIsAddressPopoverOpen] = useState(false);
 
   // Estados para locaciones
-  const [locations, setLocations] = useState<Location[]>([])
-  const [departments, setDepartments] = useState<string[]>([])
-  const [municipalities, setMunicipalities] = useState<string[]>([])
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [departments, setDepartments] = useState<string[]>([]);
+  const [municipalities, setMunicipalities] = useState<string[]>([]);
 
   // Estado para la dirección de residencia
-  const [tipoVia, setTipoVia] = useState<string>("")
-  const [numeroVia, setNumeroVia] = useState<string>("")
-  const [letraVia, setLetraVia] = useState<string>("")
-  const [isBis, setIsBis] = useState<boolean>(false)
-  const [letraBis, setLetraBis] = useState<string>("")
-  const [orientacion, setOrientacion] = useState<string>("")
-  const [numeroCruce, setNumeroCruce] = useState<string>("")
-  const [letraCruce, setLetraCruce] = useState<string>("")
-  const [numeroPlaca, setNumeroPlaca] = useState<string>("")
-  const [complemento, setComplemento] = useState<string>("")
+  const [tipoVia, setTipoVia] = useState<string>("");
+  const [numeroVia, setNumeroVia] = useState<string>("");
+  const [letraVia, setLetraVia] = useState<string>("");
+  const [isBis, setIsBis] = useState<boolean>(false);
+  const [letraBis, setLetraBis] = useState<string>("");
+  const [orientacion, setOrientacion] = useState<string>("");
+  const [numeroCruce, setNumeroCruce] = useState<string>("");
+  const [letraCruce, setLetraCruce] = useState<string>("");
+  const [numeroPlaca, setNumeroPlaca] = useState<string>("");
+  const [complemento, setComplemento] = useState<string>("");
 
-  const formData = watch()
+  const formData = watch();
+  const ciudadanoData = formData.ciudadano_solicitante || {};
 
   // Fetch datos de ubicación
   useEffect(() => {
     const loadLocations = async () => {
       try {
-        console.log("Fetching locations data...")
-        const data = await fetchLocations()
-        console.log(`Locations data fetched: ${data.length} items`)
-        setLocations(data)
+        console.log("Fetching locations data...");
+        const data = await fetchLocations();
+        console.log(`Locations data fetched: ${data.length} items`);
+        setLocations(data);
 
         if (data.length > 0) {
-          const depts = getUniqueDepartments(data)
-          console.log(`Unique departments: ${depts.length}`, depts)
-          setDepartments(depts)
+          const depts = getUniqueDepartments(data);
+          console.log(`Unique departments: ${depts.length}`, depts);
+          setDepartments(depts);
         } else {
-          console.error("No location data available")
+          console.error("No location data available");
         }
       } catch (error) {
-        console.error("Error loading locations:", error)
+        console.error("Error loading locations:", error);
       }
-    }
-    loadLocations()
-  }, [])
+    };
+    loadLocations();
+  }, []);
 
   // actualiza los municipios cuando el departamento cambia
   useEffect(() => {
-    if (formData.departamento) {
-      console.log(`Selected department: "${formData.departamento}"`)
-      console.log(`Available locations:`, locations.length)
+    if (ciudadanoData.departamento) {
+      console.log(`Selected department: "${ciudadanoData.departamento}"`);
+      console.log(`Available locations:`, locations.length);
 
       const filteredMunicipalities = getMunicipalitiesByDepartment(
         locations,
-        formData.departamento
-      )
+        ciudadanoData.departamento
+      );
 
       console.log(
         `Filtered municipalities: ${filteredMunicipalities.length}`,
         filteredMunicipalities
-      )
+      );
 
-      setMunicipalities(filteredMunicipalities)
+      setMunicipalities(filteredMunicipalities);
       // Reinicia el municipio si no está en la lista filtrada
-      if (!filteredMunicipalities.includes(formData.municipio)) {
+      if (!filteredMunicipalities.includes(ciudadanoData.municipio)) {
         console.log(
-          `Current municipio "${formData.municipio}" not found in filtered list, resetting`
-        )
-        setValue("municipio", "")
+          `Current municipio "${ciudadanoData.municipio}" not found in filtered list, resetting`
+        );
+        setValue("ciudadano_solicitante.municipio", "");
       }
     } else {
-      setMunicipalities([])
-      setValue("municipio", "")
+      setMunicipalities([]);
+      setValue("ciudadano_solicitante.municipio", "");
     }
-  }, [formData.departamento, locations, setValue])
+  }, [ciudadanoData.departamento, locations, setValue]);
 
-  const handleNacionalidadChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value
+  const handleNacionalidadChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const value = e.target.value;
     if (value === "Otro") {
-      setShowNacionalidadInput(true)
-      setValue("nacionalidad", nacionalidadPersonalizada || "")
+      setShowNacionalidadInput(true);
+      setValue("ciudadano_solicitante.nacionalidad", nacionalidadPersonalizada || "");
     } else {
-      setShowNacionalidadInput(false)
-      setNacionalidadPersonalizada("")
-      setValue("nacionalidad", value)
+      setShowNacionalidadInput(false);
+      setNacionalidadPersonalizada("");
+      setValue("ciudadano_solicitante.nacionalidad", value);
     }
-  }
+  };
 
-  const handleNacionalidadPersonalizadaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    setNacionalidadPersonalizada(value)
-    setValue("nacionalidad", value)
-  }
+  const handleNacionalidadPersonalizadaChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.value;
+    setNacionalidadPersonalizada(value);
+    setValue("ciudadano_solicitante.nacionalidad", value);
+  };
 
-  const handleTipoDocumentoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value
-    setValue("tipo_documento", value)
+  const handleTipoDocumentoChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const value = e.target.value;
+    setValue("ciudadano_solicitante.tipo_documento", value);
     if (value === "SD") {
-      setValue("num_documento", "")
+      setValue("ciudadano_solicitante.num_documento", "");
     }
-  }
+  };
 
   const construirDireccion = () => {
-    const partes = []
+    const partes = [];
 
     if (tipoVia) {
-      let parte = tipoVia
+      let parte = tipoVia;
 
       if (numeroVia) {
-        parte += " " + numeroVia
+        parte += " " + numeroVia;
       }
 
       if (letraVia) {
-        parte += letraVia
+        parte += letraVia;
       }
 
       if (isBis) {
-        parte += " BIS"
+        parte += " BIS";
 
         if (letraBis) {
-          parte += " " + letraBis
+          parte += " " + letraBis;
         }
       }
 
       if (orientacion) {
-        parte += " " + orientacion
+        parte += " " + orientacion;
       }
 
-      partes.push(parte)
+      partes.push(parte);
     }
 
     // Añadir el cruce si existe
     if (numeroCruce) {
-      let cruce = "# " + numeroCruce
+      let cruce = "# " + numeroCruce;
 
       if (letraCruce) {
-        cruce += letraCruce
+        cruce += letraCruce;
       }
 
-      partes.push(cruce)
+      partes.push(cruce);
     }
 
     // Añadir el número de placa si existe
     if (numeroPlaca) {
-      partes.push("- " + numeroPlaca)
+      partes.push("- " + numeroPlaca);
     }
 
     // Añadir el complemento si existe
     if (complemento) {
-      partes.push(complemento)
+      partes.push(complemento);
     }
 
     // Unir todas las partes con espacios, excepto el complemento que va con coma
-    let direccionCompleta = ""
+    let direccionCompleta = "";
     if (partes.length > 0) {
       // Si hay complemento (último elemento), separarlo con coma
       if (complemento && partes.length > 1) {
-        const partesBasicas = partes.slice(0, -1).join(" ")
-        direccionCompleta = partesBasicas + ", " + partes[partes.length - 1]
+        const partesBasicas = partes.slice(0, -1).join(" ");
+        direccionCompleta = partesBasicas + ", " + partes[partes.length - 1];
       } else {
-        direccionCompleta = partes.join(" ")
+        direccionCompleta = partes.join(" ");
       }
     }
 
-    return direccionCompleta.trim()
-  }
+    return direccionCompleta.trim();
+  };
 
   // Save address
   const guardarDireccion = () => {
-    const direccionCompleta = construirDireccion()
-    setValue("direccion_residencia", direccionCompleta)
-    setIsAddressPopoverOpen(false)
-  }
+    const direccionCompleta = construirDireccion();
+    setValue("ciudadano_solicitante.direccion_residencia", direccionCompleta);
+    setIsAddressPopoverOpen(false);
+  };
 
   return (
     <div className="space-y-8">
@@ -211,7 +221,9 @@ export default function Step1BasicInformationConciliation() {
           label="Tipo de documento"
           labelPlacement="outside"
           placeholder="Seleccione tipo de documento"
-          selectedKeys={formData.tipo_documento ? [formData.tipo_documento] : []}
+          selectedKeys={
+            ciudadanoData.tipo_documento ? [ciudadanoData.tipo_documento] : []
+          }
           onChange={handleTipoDocumentoChange}
           isRequired
         >
@@ -223,7 +235,7 @@ export default function Step1BasicInformationConciliation() {
           <SelectItem key="SD">Sin documento</SelectItem>
         </Select>
 
-        {formData.tipo_documento !== "SD" && (
+        {ciudadanoData.tipo_documento !== "SD" && (
           <Input
             variant="bordered"
             label="Número de documento"
@@ -235,17 +247,16 @@ export default function Step1BasicInformationConciliation() {
         )}
       </div>
 
-      {/* Información personal básica */}
       <div className="mt-8">
-        <h3 className="text-lg font-medium mb-6">Información Personal</h3>
-        
+        <h3 className="text-lg font-medium mb-6">Crear nuevo ciudadano</h3>
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Input
             variant="bordered"
             label="Primer nombre"
             labelPlacement="outside"
             placeholder="Ingrese su primer nombre"
-            {...register("primer_nombre")}
+            {...register("ciudadano_solicitante.primer_nombre")}
             isRequired
           />
 
@@ -254,7 +265,7 @@ export default function Step1BasicInformationConciliation() {
             label="Segundo nombre"
             labelPlacement="outside"
             placeholder="Ingrese su segundo nombre"
-            {...register("segundo_nombre")}
+            {...register("ciudadano_solicitante.segundo_nombre")}
           />
 
           <Input
@@ -262,7 +273,7 @@ export default function Step1BasicInformationConciliation() {
             label="Primer apellido"
             labelPlacement="outside"
             placeholder="Ingrese su primer apellido"
-            {...register("primer_apellido")}
+            {...register("ciudadano_solicitante.primer_apellido")}
             isRequired
           />
 
@@ -271,7 +282,7 @@ export default function Step1BasicInformationConciliation() {
             label="Segundo apellido"
             labelPlacement="outside"
             placeholder="Ingrese su segundo apellido"
-            {...register("segundo_apellido")}
+            {...register("ciudadano_solicitante.segundo_apellido")}
           />
 
           <I18nProvider locale="es">
@@ -281,10 +292,13 @@ export default function Step1BasicInformationConciliation() {
               labelPlacement="outside"
               value={fechaNacimiento}
               onChange={(date) => {
-                setFechaNacimiento(date)
+                setFechaNacimiento(date);
                 if (date) {
-                  const formattedDate = date.toString().split("T")[0]
-                  setValue("fecha_nacimiento", formattedDate)
+                  const formattedDate = date.toString().split("T")[0];
+                  setValue(
+                    "ciudadano_solicitante.fecha_nacimiento",
+                    formattedDate
+                  );
                 }
               }}
               isRequired
@@ -296,14 +310,20 @@ export default function Step1BasicInformationConciliation() {
             label="Sexo"
             labelPlacement="outside"
             placeholder="Seleccione su sexo"
-            selectedKeys={formData.sexo ? [formData.sexo] : []}
-            onChange={(e) => setValue("sexo", e.target.value)}
+            selectedKeys={
+              ciudadanoData.sexo ? [ciudadanoData.sexo] : []
+            }
+            onChange={(e) =>
+              setValue("ciudadano_solicitante.sexo", e.target.value)
+            }
             isRequired
           >
             <SelectItem key="Hombre">Hombre</SelectItem>
             <SelectItem key="Mujer">Mujer</SelectItem>
             <SelectItem key="Intersexual">Intersexual</SelectItem>
-            <SelectItem key="Prefiere no decirlo">Prefiere no decirlo</SelectItem>
+            <SelectItem key="Prefiere no decirlo">
+              Prefiere no decirlo
+            </SelectItem>
             <SelectItem key="Otro">Otro</SelectItem>
           </Select>
 
@@ -312,8 +332,12 @@ export default function Step1BasicInformationConciliation() {
             label="Género"
             labelPlacement="outside"
             placeholder="Seleccione su género"
-            selectedKeys={formData.genero ? [formData.genero] : []}
-            onChange={(e) => setValue("genero", e.target.value)}
+            selectedKeys={
+              ciudadanoData.genero ? [ciudadanoData.genero] : []
+            }
+            onChange={(e) =>
+              setValue("ciudadano_solicitante.genero", e.target.value)
+            }
             isRequired
           >
             <SelectItem key="Masculino">Masculino</SelectItem>
@@ -327,8 +351,17 @@ export default function Step1BasicInformationConciliation() {
             label="Orientación sexual"
             labelPlacement="outside"
             placeholder="Seleccione su orientación sexual"
-            selectedKeys={formData.orientacion_sexual ? [formData.orientacion_sexual] : []}
-            onChange={(e) => setValue("orientacion_sexual", e.target.value)}
+            selectedKeys={
+              ciudadanoData.orientacion_sexual
+                ? [ciudadanoData.orientacion_sexual]
+                : []
+            }
+            onChange={(e) =>
+              setValue(
+                "ciudadano_solicitante.orientacion_sexual",
+                e.target.value
+              )
+            }
             isRequired
           >
             <SelectItem key="Heterosexual">Heterosexual</SelectItem>
@@ -337,14 +370,7 @@ export default function Step1BasicInformationConciliation() {
             <SelectItem key="Asexual">Asexual</SelectItem>
             <SelectItem key="Pansexual">Pansexual</SelectItem>
           </Select>
-        </div>
-      </div>
 
-      {/* Información de contacto */}
-      <div className="mt-8">
-        <h3 className="text-lg font-medium mb-6">Información de Contacto</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <NumberInput
             hideStepper
             variant="bordered"
@@ -352,8 +378,14 @@ export default function Step1BasicInformationConciliation() {
             labelPlacement="outside"
             placeholder="Ingrese su número móvil"
             formatOptions={{ useGrouping: false }}
-            value={formData.num_movil ? Number(formData.num_movil) : undefined}
-            onValueChange={(value) => setValue("num_movil", value.toString())}
+            value={
+              ciudadanoData.num_movil
+                ? Number(ciudadanoData.num_movil)
+                : undefined
+            }
+            onValueChange={(value) =>
+              setValue("ciudadano_solicitante.num_movil", value.toString())
+            }
             isRequired
           />
 
@@ -364,8 +396,14 @@ export default function Step1BasicInformationConciliation() {
             labelPlacement="outside"
             placeholder="Ingrese su número fijo"
             formatOptions={{ useGrouping: false }}
-            value={formData.telefono_fijo ? Number(formData.telefono_fijo) : undefined}
-            onValueChange={(value) => setValue("telefono_fijo", value.toString())}
+            value={
+              ciudadanoData.telefono_fijo
+                ? Number(ciudadanoData.telefono_fijo)
+                : undefined
+            }
+            onValueChange={(value) =>
+              setValue("ciudadano_solicitante.telefono_fijo", value.toString())
+            }
           />
 
           <Input
@@ -373,16 +411,9 @@ export default function Step1BasicInformationConciliation() {
             label="Correo electrónico"
             labelPlacement="outside"
             placeholder="Ingrese su correo electrónico"
-            {...register("email")}
+            {...register("ciudadano_solicitante.email")}
           />
-        </div>
-      </div>
 
-      {/* Información adicional */}
-      <div className="mt-8">
-        <h3 className="text-lg font-medium mb-6">Información Adicional</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Select
             variant="bordered"
             label="Nacionalidad"
@@ -391,8 +422,8 @@ export default function Step1BasicInformationConciliation() {
             selectedKeys={
               showNacionalidadInput
                 ? ["Otro"]
-                : formData.nacionalidad
-                ? [formData.nacionalidad]
+                : ciudadanoData.nacionalidad
+                ? [ciudadanoData.nacionalidad]
                 : []
             }
             onChange={handleNacionalidadChange}
@@ -414,7 +445,9 @@ export default function Step1BasicInformationConciliation() {
             <SelectItem key="Panamá">Panamá</SelectItem>
             <SelectItem key="Paraguay">Paraguay</SelectItem>
             <SelectItem key="Perú">Perú</SelectItem>
-            <SelectItem key="República Dominicana">República Dominicana</SelectItem>
+            <SelectItem key="República Dominicana">
+              República Dominicana
+            </SelectItem>
             <SelectItem key="Uruguay">Uruguay</SelectItem>
             <SelectItem key="Venezuela">Venezuela</SelectItem>
             <SelectItem key="Otro">Otro</SelectItem>
@@ -437,8 +470,14 @@ export default function Step1BasicInformationConciliation() {
             label="Estado civil"
             labelPlacement="outside"
             placeholder="Seleccione su estado civil"
-            selectedKeys={formData.estado_civil ? [formData.estado_civil] : []}
-            onChange={(e) => setValue("estado_civil", e.target.value)}
+            selectedKeys={
+              ciudadanoData.estado_civil
+                ? [ciudadanoData.estado_civil]
+                : []
+            }
+            onChange={(e) =>
+              setValue("ciudadano_solicitante.estado_civil", e.target.value)
+            }
             isRequired
           >
             <SelectItem key="Soltero/a">Soltero/a</SelectItem>
@@ -454,16 +493,26 @@ export default function Step1BasicInformationConciliation() {
             label="Escolaridad"
             labelPlacement="outside"
             placeholder="Seleccione su nivel de escolaridad"
-            selectedKeys={formData.escolaridad ? [formData.escolaridad] : []}
-            onChange={(e) => setValue("escolaridad", e.target.value)}
+            selectedKeys={
+              ciudadanoData.escolaridad
+                ? [ciudadanoData.escolaridad]
+                : []
+            }
+            onChange={(e) =>
+              setValue("ciudadano_solicitante.escolaridad", e.target.value)
+            }
             isRequired
           >
             <SelectItem key="Ninguna">Ninguna</SelectItem>
             <SelectItem key="Preescolar">Preescolar</SelectItem>
             <SelectItem key="Primaria">Primaria (1.º a 5.º grado)</SelectItem>
-            <SelectItem key="Secundaria">Secundaria (6.º a 9.º grado)</SelectItem>
+            <SelectItem key="Secundaria">
+              Secundaria (6.º a 9.º grado)
+            </SelectItem>
             <SelectItem key="Media">Media (10.º a 11.º grado)</SelectItem>
-            <SelectItem key="Técnica/Tecnológica">Técnica o tecnológica</SelectItem>
+            <SelectItem key="Técnica/Tecnológica">
+              Técnica o tecnológica
+            </SelectItem>
             <SelectItem key="Pregrado">Pregrado</SelectItem>
             <SelectItem key="Maestría">Maestría</SelectItem>
             <SelectItem key="Doctorado">Doctorado</SelectItem>
@@ -474,8 +523,8 @@ export default function Step1BasicInformationConciliation() {
             label="Etnia"
             labelPlacement="outside"
             placeholder="Seleccione su etnia"
-            selectedKeys={formData.etnia ? [formData.etnia] : []}
-            onChange={(e) => setValue("etnia", e.target.value)}
+            selectedKeys={ciudadanoData.etnia ? [ciudadanoData.etnia] : []}
+            onChange={(e) => setValue("ciudadano_solicitante.etnia", e.target.value)}
             isRequired
           >
             <SelectItem key="Indígena">Indígena</SelectItem>
@@ -485,7 +534,9 @@ export default function Step1BasicInformationConciliation() {
             <SelectItem key="Rom/Gitano">Rom/Gitano</SelectItem>
             <SelectItem key="Ninguna">Ninguna</SelectItem>
             <SelectItem key="Otro">Otro</SelectItem>
-            <SelectItem key="Prefiero no decirlo">Prefiero no decirlo</SelectItem>
+            <SelectItem key="Prefiero no decirlo">
+              Prefiero no decirlo
+            </SelectItem>
           </Select>
 
           <NumberInput
@@ -495,8 +546,8 @@ export default function Step1BasicInformationConciliation() {
             labelPlacement="outside"
             placeholder="Ingrese su estrato"
             formatOptions={{ useGrouping: false }}
-            value={formData.estrato ? Number(formData.estrato) : undefined}
-            onValueChange={(value) => setValue("estrato", value.toString())}
+            value={ciudadanoData.estrato ? Number(ciudadanoData.estrato) : undefined}
+            onValueChange={(value) => setValue("ciudadano_solicitante.estrato", value.toString())}
             minValue={1}
             maxValue={6}
           />
@@ -506,8 +557,10 @@ export default function Step1BasicInformationConciliation() {
             label="Zona"
             labelPlacement="outside"
             placeholder="Seleccione su zona"
-            selectedKeys={formData.zona_residencia ? [formData.zona_residencia] : []}
-            onChange={(e) => setValue("zona_residencia", e.target.value)}
+            selectedKeys={
+              ciudadanoData.zona_residencia ? [ciudadanoData.zona_residencia] : []
+            }
+            onChange={(e) => setValue("ciudadano_solicitante.zona_residencia", e.target.value)}
           >
             <SelectItem key="Urbana">Urbana</SelectItem>
             <SelectItem key="Rural">Rural</SelectItem>
@@ -518,8 +571,10 @@ export default function Step1BasicInformationConciliation() {
             label="Departamento"
             labelPlacement="outside"
             placeholder="Seleccione su departamento"
-            selectedKeys={formData.departamento ? [formData.departamento] : []}
-            onChange={(e) => setValue("departamento", e.target.value)}
+            selectedKeys={
+              ciudadanoData.departamento ? [ciudadanoData.departamento] : []
+            }
+            onChange={(e) => setValue("ciudadano_solicitante.departamento", e.target.value)}
             isRequired
           >
             {departments.map((dept) => (
@@ -533,23 +588,28 @@ export default function Step1BasicInformationConciliation() {
             labelPlacement="outside"
             placeholder="Seleccione su municipio"
             isRequired
-            selectedKeys={formData.municipio ? [formData.municipio] : []}
+            selectedKeys={ciudadanoData.municipio ? [ciudadanoData.municipio] : []}
             onSelectionChange={(keys) => {
-              const selectedKey = Array.from(keys)[0]?.toString() || ""
-              
+              const selectedKey = Array.from(keys)[0]?.toString() || "";
+
               // Guardar el nombre del municipio
-              setValue("municipio", selectedKey)
-              
+              setValue("ciudadano_solicitante.municipio", selectedKey);
+
               // Obtener y guardar el código DANE del municipio
               if (selectedKey) {
-                const daneMunicipio = getDaneMunicipioByName(locations, selectedKey)
+                const daneMunicipio = getDaneMunicipioByName(
+                  locations,
+                  selectedKey
+                );
                 if (daneMunicipio) {
-                  console.log(`Guardando código DANE del municipio: ${daneMunicipio}`)
-                  setValue("dane_municipio", daneMunicipio)
+                  console.log(
+                    `Guardando código DANE del municipio: ${daneMunicipio}`
+                  );
+                  setValue("ciudadano_solicitante.dane_municipio", daneMunicipio);
                 }
               }
             }}
-            isDisabled={!formData.departamento}
+            isDisabled={!ciudadanoData.departamento}
           >
             {municipalities.map((mun) => (
               <SelectItem key={mun}>{mun}</SelectItem>
@@ -561,8 +621,8 @@ export default function Step1BasicInformationConciliation() {
             label="¿Tiene alguna discapacidad?"
             labelPlacement="outside"
             placeholder="Seleccione una opción"
-            selectedKeys={formData.discapacidad ? [formData.discapacidad] : []}
-            onChange={(e) => setValue("discapacidad", e.target.value)}
+            selectedKeys={ciudadanoData.discapacidad ? [ciudadanoData.discapacidad] : []}
+            onChange={(e) => setValue("ciudadano_solicitante.discapacidad", e.target.value)}
             isRequired
           >
             <SelectItem key="true">Sí</SelectItem>
@@ -574,8 +634,10 @@ export default function Step1BasicInformationConciliation() {
             label="¿Sabe leer y escribir?"
             labelPlacement="outside"
             placeholder="Seleccione una opción"
-            selectedKeys={formData.sabe_leer_escribir ? [formData.sabe_leer_escribir] : []}
-            onChange={(e) => setValue("sabe_leer_escribir", e.target.value)}
+            selectedKeys={
+              ciudadanoData.sabe_leer_escribir ? [ciudadanoData.sabe_leer_escribir] : []
+            }
+            onChange={(e) => setValue("ciudadano_solicitante.sabe_leer_escribir", e.target.value)}
             isRequired
           >
             <SelectItem key="true">Sí</SelectItem>
@@ -585,7 +647,9 @@ export default function Step1BasicInformationConciliation() {
           {/* Dirección de residencia con popover */}
           <div className="flex flex-col gap-1 justify-end">
             <p className="text-sm text-gray-500">
-              {formData.direccion_residencia ? formData.direccion_residencia : "No especificada"}
+              {ciudadanoData.direccion_residencia
+                ? ciudadanoData.direccion_residencia
+                : "No especificada"}
             </p>
             <Popover
               isOpen={isAddressPopoverOpen}
@@ -610,9 +674,7 @@ export default function Step1BasicInformationConciliation() {
                       <SelectItem key="Anillo Vial">Anillo Vial</SelectItem>
                       <SelectItem key="Autopista">Autopista</SelectItem>
                       <SelectItem key="Avenida">Avenida</SelectItem>
-                      <SelectItem key="Avenida calle">
-                        Avenida calle
-                      </SelectItem>
+                      <SelectItem key="Avenida calle">Avenida calle</SelectItem>
                       <SelectItem key="Avenida carrera">
                         Avenida carrera
                       </SelectItem>
@@ -632,9 +694,7 @@ export default function Step1BasicInformationConciliation() {
                         useGrouping: false,
                       }}
                       value={numeroVia ? Number(numeroVia) : undefined}
-                      onValueChange={(value) =>
-                        setNumeroVia(value.toString())
-                      }
+                      onValueChange={(value) => setNumeroVia(value.toString())}
                     />
 
                     <Select
@@ -731,5 +791,5 @@ export default function Step1BasicInformationConciliation() {
         </div>
       </div>
     </div>
-  )
+  );
 }
