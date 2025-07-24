@@ -38,6 +38,7 @@ export default function StepperFormConciliation() {
         primer_apellido: "",
         segundo_apellido: "",
         fecha_nacimiento: "",
+        fecha_expedicion_documento: "",
         sexo: "",
         genero: "",
         orientacion_sexual: "",

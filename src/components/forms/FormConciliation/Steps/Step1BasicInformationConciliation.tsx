@@ -30,6 +30,9 @@ export default function Step1BasicInformationConciliation() {
   const [fechaNacimiento, setFechaNacimiento] = useState<DateValue | null>(
     null
   );
+  const [fechaExpedicion, setFechaExpedicion] = useState<DateValue | null>(
+    null
+  );
   const [showNacionalidadInput, setShowNacionalidadInput] = useState(false);
   const [nacionalidadPersonalizada, setNacionalidadPersonalizada] =
     useState("");
@@ -301,6 +304,25 @@ export default function Step1BasicInformationConciliation() {
                 }
               }}
               isRequired
+            />
+          </I18nProvider>
+
+          <I18nProvider locale="es">
+            <DateInput
+              variant="bordered"
+              label="Fecha de expedición documento"
+              labelPlacement="outside"
+              value={fechaExpedicion}
+              onChange={(date) => {
+                setFechaExpedicion(date);
+                if (date) {
+                  const formattedDate = date.toString().split("T")[0];
+                  setValue(
+                    "ciudadano_solicitante.fecha_expedicion_documento",
+                    formattedDate
+                  );
+                }
+              }}
             />
           </I18nProvider>
 
