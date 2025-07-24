@@ -12,30 +12,34 @@ import Step2DataProcessing from "./Steps/Step2DataProcessing"
 import Step6ReviewStepConciliation from "./Steps/Step6ReviewStepConciliation"
 import { submitFormData } from "./SubmitFormConciliation"
 import { useRouter } from "next/navigation";
+import { useForm, FormProvider } from "react-hook-form";
 
 export default function StepperFormConciliation() {
   const [currentStep, setCurrentStep] = useState(0)
-  const [formData, setFormData] = useState({
-    primer_nombre: "",
-    segundo_nombre: "",
-    email: "",
-    num_movil: "",
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
   const router = useRouter();
-
-  console.log(formData)
+  
+  // Configuración de React Hook Form
+  const methods = useForm({
+    defaultValues: {
+      primer_nombre: "",
+      segundo_nombre: "",
+      email: "",
+      num_movil: "",
+    },
+    mode: "onSubmit"
+  });
+  
+  const { handleSubmit, watch } = methods;
+  const formValues = watch(); // Observa todos los valores del formulario que van saliendo
+  
+  console.log(formValues);
 
   const steps = [
     { title: "Información básica", component: Step1BasicInformationConciliation },
     { title: "Información general", component: Step2DataProcessing },
     { title: "Revisión", component: Step6ReviewStepConciliation },
   ]
-
-  const updateFormData = (data: Partial<typeof formData>) => {
-    setFormData((prev) => ({ ...prev, ...data }))
-  }
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
@@ -49,26 +53,22 @@ export default function StepperFormConciliation() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
+  const onSubmit = async (data: any) => {
     if (currentStep === steps.length - 1) {
-      setIsSubmitting(true)
-
-      // Create FormData object
       const formDataObj = new FormData()
-      Object.entries(formData).forEach(([key, value]) => {
-        formDataObj.append(key, value.toString())
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          formDataObj.append(key, String(value))
+        } else {
+          formDataObj.append(key, '')
+        }
       })
 
       try {
-        // Submit the form data
         await submitFormData(formDataObj)
         setIsComplete(true)
       } catch (error) {
         console.error("Error submitting form:", error)
-      } finally {
-        setIsSubmitting(false)
       }
     } else {
       handleNext()
@@ -76,11 +76,6 @@ export default function StepperFormConciliation() {
   }
 
   const CurrentStepComponent = steps[currentStep].component;
-
-  const currentStepProps = {
-    formData,
-    updateFormData,
-  };
 
   return (
     <div className="py-6">
@@ -160,9 +155,11 @@ export default function StepperFormConciliation() {
               </Button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit}>
-              <CurrentStepComponent {...currentStepProps} />
-            </form>
+            <FormProvider {...methods}>
+              <form onSubmit={handleSubmit(onSubmit)}>
+                <CurrentStepComponent />
+              </form>
+            </FormProvider>
           )}
         </CardContent>
         {!isComplete && (
@@ -179,16 +176,16 @@ export default function StepperFormConciliation() {
             <Button
               color="primary"
               type="submit"
-              onClick={handleSubmit}
-              disabled={isSubmitting}
+              onClick={methods.handleSubmit(onSubmit)}
+              disabled={methods.formState.isSubmitting}
               className="flex items-center"
             >
-              {isSubmitting
+              {methods.formState.isSubmitting
                 ? "Enviando..."
                 : currentStep === steps.length - 1
                 ? "Enviar"
                 : "Siguiente"}
-              {!isSubmitting && currentStep < steps.length - 1 && (
+              {!methods.formState.isSubmitting && currentStep < steps.length - 1 && (
                 <ChevronRightIcon className="ml-2 h-4 w-4 stroke-2" />
               )}
             </Button>

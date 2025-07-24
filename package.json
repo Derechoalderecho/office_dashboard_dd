@@ -29,6 +29,7 @@
     "office_dashboard_dd": "file:",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-hook-form": "^7.61.0",
     "react-markdown": "^10.1.0",
     "react-redux": "^9.2.0",
     "react-toastify": "^11.0.3",

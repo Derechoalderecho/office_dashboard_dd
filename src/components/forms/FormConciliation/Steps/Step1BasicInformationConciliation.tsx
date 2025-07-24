@@ -1,33 +1,19 @@
 import { Input } from "@heroui/react"
+import { useFormContext } from "react-hook-form"
 
-type BasicInformationProps = {
-  formData: {
-    primer_nombre: string;
-    segundo_nombre: string;
-  }
-  updateFormData: (
-    data: Partial<{
-      primer_nombre: string;
-      segundo_nombre: string;
-    }>
-  ) => void;
-}
-
-export default function Step1BasicInformationConciliation({
-  formData,
-  updateFormData,
-}: BasicInformationProps) {
+export default function Step1BasicInformationConciliation() {
+  // Usamos useFormContext para acceder al contexto del formulario
+  const { register, formState } = useFormContext();
+  
   return (
     <div>
       <Input
         label="Primer nombre"
-        value={formData.primer_nombre}
-        onChange={(e) => updateFormData({ primer_nombre: e.target.value })}
+        {...register("primer_nombre")}
       />
       <Input
         label="Segundo nombre"
-        value={formData.segundo_nombre}
-        onChange={(e) => updateFormData({ segundo_nombre: e.target.value })}
+        {...register("segundo_nombre")}
       />
     </div>
   )

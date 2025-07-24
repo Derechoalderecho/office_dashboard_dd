@@ -1,14 +1,12 @@
-type ReviewStepProps = {
-  formData: {
-    primer_nombre: string;
-    segundo_nombre: string;
-    email: string;
-    num_movil: string;
-  };
-  updateFormData?: (data: Partial<ReviewStepProps["formData"]>) => void;
-};
+import { useFormContext } from "react-hook-form";
 
-export default function Step6ReviewStepConciliation({ formData }: ReviewStepProps) {
+export default function Step6ReviewStepConciliation() {
+  // Usamos useFormContext para acceder a los valores del formulario
+  const { watch } = useFormContext();
+  
+  // Obtenemos los valores actuales del formulario
+  const formValues = watch();
+  
   return (
     <div className="space-y-8">
     <div className="border rounded-lg p-4">
@@ -18,19 +16,19 @@ export default function Step6ReviewStepConciliation({ formData }: ReviewStepProp
       <div className="grid grid-cols-2 gap-4">
         <div>
           <p className="text-sm text-gray-500">Tipo de documento</p>
-          <p>{formData.primer_nombre}</p>
+          <p>{formValues.primer_nombre}</p>
         </div>
         <div>
           <p className="text-sm text-gray-500">Número de documento</p>
-          <p>{formData.segundo_nombre}</p>
+          <p>{formValues.segundo_nombre}</p>
         </div>
         <div>
           <p className="text-sm text-gray-500">Correo electrónico</p>
-          <p>{formData.email}</p>
+          <p>{formValues.email}</p>
         </div>
         <div>
           <p className="text-sm text-gray-500">Número de móvil</p>
-          <p>{formData.num_movil}</p>
+          <p>{formValues.num_movil}</p>
         </div>
       </div>
     </div>

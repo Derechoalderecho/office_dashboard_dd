@@ -1,33 +1,18 @@
 import { Input } from "@heroui/react"
+import { useFormContext } from "react-hook-form"
 
-type DataProcessingProps = {
-  formData: {
-    email: string;
-    num_movil: string;
-  }
-  updateFormData: (
-    data: Partial<{
-      email: string;
-      num_movil: string;
-    }>
-  ) => void;
-}
-
-export default function Step2DataProcessing({
-  formData,
-  updateFormData,
-}: DataProcessingProps) {
+export default function Step2DataProcessing() {
+  const { register } = useFormContext();
+  
   return (
     <div>
       <Input
         label="Email"
-        value={formData.email}
-        onChange={(e) => updateFormData({ email: e.target.value })}
+        {...register("email")}
       />
       <Input
         label="Número de móvil"
-        value={formData.num_movil}
-        onChange={(e) => updateFormData({ num_movil: e.target.value })}
+        {...register("num_movil")}
       />
     </div>
   )
