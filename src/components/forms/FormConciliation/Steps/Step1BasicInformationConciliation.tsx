@@ -214,7 +214,6 @@ export default function Step1BasicInformationConciliation() {
 
   return (
     <div className="space-y-8">
-      {/* Sección de documento */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Select
           variant="bordered"
@@ -250,7 +249,7 @@ export default function Step1BasicInformationConciliation() {
       <div className="mt-8">
         <h3 className="text-lg font-medium mb-6">Crear nuevo ciudadano</h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-y-8 gap-x-6">
           <Input
             variant="bordered"
             label="Primer nombre"
@@ -517,6 +516,14 @@ export default function Step1BasicInformationConciliation() {
             <SelectItem key="Maestría">Maestría</SelectItem>
             <SelectItem key="Doctorado">Doctorado</SelectItem>
           </Select>
+
+          <Input
+            variant="bordered"
+            label="Ocupación"
+            labelPlacement="outside"
+            placeholder="Ingrese su ocupación"
+            {...register("ciudadano_solicitante.ocupacion")}
+          />
 
           <Select
             variant="bordered"

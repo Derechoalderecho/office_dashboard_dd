@@ -47,6 +47,7 @@ export default function StepperFormConciliation() {
         nacionalidad: "",
         estado_civil: "",
         escolaridad: "",
+        ocupacion: "",
         etnia: "",
         estrato: "",
         zona_residencia: "",
