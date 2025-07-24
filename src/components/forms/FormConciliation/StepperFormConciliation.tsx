@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/card";
 import Step1BasicInformationConciliation from "./Steps/Step1BasicInformationConciliation";
 import Step2DataProcessing from "./Steps/Step2DataProcessing";
+import Step3CaseCounterparts from "./Steps/Step3CaseCounterparts";
+import Step4CaseInformation from "./Steps/Step4CaseInformation";
 import Step6ReviewStepConciliation from "./Steps/Step6ReviewStepConciliation";
 import { submitFormData } from "./SubmitFormConciliation";
 import { useRouter } from "next/navigation";
@@ -62,6 +64,12 @@ export default function StepperFormConciliation() {
       //Informacion Step 2
       prueba1: "",
       prueba2: "",
+      //Informacion Step 3
+      prueba3: "",
+      prueba4: "",
+      //Informacion Step 4
+      prueba5: "",
+      prueba6: "",
     },
     mode: "onSubmit",
   });
@@ -72,11 +80,10 @@ export default function StepperFormConciliation() {
   console.log(formValues);
 
   const steps = [
-    {
-      title: "Información básica",
-      component: Step1BasicInformationConciliation,
-    },
-    { title: "Información general", component: Step2DataProcessing },
+    { title: "Información del solicitante", component: Step1BasicInformationConciliation },
+    { title: "Tratamiento de datos", component: Step2DataProcessing },
+    { title: "Contrapartes del caso", component: Step3CaseCounterparts },
+    { title: "Información del caso", component: Step4CaseInformation },
     { title: "Revisión", component: Step6ReviewStepConciliation },
   ];
 
