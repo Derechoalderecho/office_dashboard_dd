@@ -24,11 +24,11 @@ export default function Step6ReviewStepConciliation() {
         </div>
         <div>
           <p className="text-sm text-gray-500">Correo electrónico</p>
-          <p>{formValues.email}</p>
+          <p>{formValues.prueba1}</p>
         </div>
         <div>
           <p className="text-sm text-gray-500">Número de móvil</p>
-          <p>{formValues.num_movil}</p>
+          <p>{formValues.prueba2}</p>
         </div>
       </div>
     </div>

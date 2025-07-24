@@ -1,106 +1,120 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Check } from "lucide-react"
+import { useState } from "react";
+import { Check } from "lucide-react";
 import { CheckIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { Button, Divider } from "@heroui/react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import Step1BasicInformationConciliation from "./Steps/Step1BasicInformationConciliation"
-import Step2DataProcessing from "./Steps/Step2DataProcessing"
-import Step6ReviewStepConciliation from "./Steps/Step6ReviewStepConciliation"
-import { submitFormData } from "./SubmitFormConciliation"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
+import Step1BasicInformationConciliation from "./Steps/Step1BasicInformationConciliation";
+import Step2DataProcessing from "./Steps/Step2DataProcessing";
+import Step6ReviewStepConciliation from "./Steps/Step6ReviewStepConciliation";
+import { submitFormData } from "./SubmitFormConciliation";
 import { useRouter } from "next/navigation";
 import { useForm, FormProvider } from "react-hook-form";
 
 export default function StepperFormConciliation() {
-  const [currentStep, setCurrentStep] = useState(0)
-  const [isComplete, setIsComplete] = useState(false)
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
   const router = useRouter();
-  
+
   // Configuración de React Hook Form
   const methods = useForm({
     defaultValues: {
-      // Información de documento
-      tipo_documento: "",
-      num_documento: "",
-      
-      // Información personal básica
-      primer_nombre: "",
-      segundo_nombre: "",
-      primer_apellido: "",
-      segundo_apellido: "",
-      fecha_nacimiento: "",
-      sexo: "",
-      genero: "",
-      orientacion_sexual: "",
-      
-      // Información de contacto
-      num_movil: "",
-      telefono_fijo: "",
-      email: "",
-      
-      // Información adicional
-      nacionalidad: "",
-      estado_civil: "",
-      escolaridad: "",
-      etnia: "",
-      estrato: "",
-      zona_residencia: "",
-      departamento: "",
-      municipio: "",
-      discapacidad: "",
-      sabe_leer_escribir: "",
-      direccion_residencia: "",
+      ciudadano_solicitante: {
+        // Información de documento
+        num_documento: "",
+
+        // Información personal básica
+        primer_nombre: "",
+        segundo_nombre: "",
+        primer_apellido: "",
+        segundo_apellido: "",
+        fecha_nacimiento: "",
+        sexo: "",
+        genero: "",
+        orientacion_sexual: "",
+
+        // Información de contacto
+        num_movil: "",
+        telefono_fijo: "",
+        email: "",
+
+        // Información adicional
+        nacionalidad: "",
+        estado_civil: "",
+        escolaridad: "",
+        etnia: "",
+        estrato: "",
+        zona_residencia: "",
+        departamento: "",
+        municipio: "",
+        dane_municipio: "",
+        discapacidad: "",
+        sabe_leer_escribir: "",
+        direccion_residencia: "",
+      },
+      prueba1: "",
+      prueba2: "",
     },
-    mode: "onSubmit"
+    mode: "onSubmit",
   });
-  
+
   const { handleSubmit, watch } = methods;
   const formValues = watch(); // Observa todos los valores del formulario que van saliendo
-  
+
   console.log(formValues);
 
   const steps = [
-    { title: "Información básica", component: Step1BasicInformationConciliation },
+    {
+      title: "Información básica",
+      component: Step1BasicInformationConciliation,
+    },
     { title: "Información general", component: Step2DataProcessing },
     { title: "Revisión", component: Step6ReviewStepConciliation },
-  ]
+  ];
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
-      setCurrentStep((prev) => prev + 1)
+      setCurrentStep((prev) => prev + 1);
     }
-  }
+  };
 
   const handlePrevious = () => {
     if (currentStep > 0) {
-      setCurrentStep((prev) => prev - 1)
+      setCurrentStep((prev) => prev - 1);
     }
-  }
+  };
 
   const onSubmit = async (data: any) => {
     if (currentStep === steps.length - 1) {
-      const formDataObj = new FormData()
+      const formDataObj = new FormData();
       Object.entries(data).forEach(([key, value]) => {
         if (value !== null && value !== undefined) {
-          formDataObj.append(key, String(value))
+          formDataObj.append(key, String(value));
         } else {
-          formDataObj.append(key, '')
+          formDataObj.append(key, "");
         }
-      })
+      });
 
       try {
-        await submitFormData(formDataObj)
-        setIsComplete(true)
+        await submitFormData(formDataObj);
+        setIsComplete(true);
       } catch (error) {
-        console.error("Error submitting form:", error)
+        console.error("Error submitting form:", error);
       }
     } else {
-      handleNext()
+      handleNext();
     }
-  }
+  };
 
   const CurrentStepComponent = steps[currentStep].component;
 
@@ -175,7 +189,7 @@ export default function StepperFormConciliation() {
                 className="mt-10"
                 type="button"
                 onPress={() => {
-                  router.push("/dashboard/cases");   
+                  router.push("/dashboard/cases");
                 }}
               >
                 Volver a casos
@@ -212,13 +226,14 @@ export default function StepperFormConciliation() {
                 : currentStep === steps.length - 1
                 ? "Enviar"
                 : "Siguiente"}
-              {!methods.formState.isSubmitting && currentStep < steps.length - 1 && (
-                <ChevronRightIcon className="ml-2 h-4 w-4 stroke-2" />
-              )}
+              {!methods.formState.isSubmitting &&
+                currentStep < steps.length - 1 && (
+                  <ChevronRightIcon className="ml-2 h-4 w-4 stroke-2" />
+                )}
             </Button>
           </CardFooter>
         )}
       </Card>
     </div>
-  )
+  );
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useFormContext } from "react-hook-form"
 import {
   Input,
@@ -17,13 +17,25 @@ import {
 } from "@heroui/react"
 import { I18nProvider } from "@react-aria/i18n"
 import { parseDate } from "@internationalized/date"
+import {
+  fetchLocations,
+  getUniqueDepartments,
+  getMunicipalitiesByDepartment,
+  getDaneMunicipioByName,
+  Location,
+} from "@/services/locationService"
 
 export default function Step1BasicInformationConciliation() {
-  const { register, watch, setValue, formState } = useFormContext()
+  const { register, watch, setValue } = useFormContext()
   const [fechaNacimiento, setFechaNacimiento] = useState<DateValue | null>(null)
   const [showNacionalidadInput, setShowNacionalidadInput] = useState(false)
   const [nacionalidadPersonalizada, setNacionalidadPersonalizada] = useState("")
   const [isAddressPopoverOpen, setIsAddressPopoverOpen] = useState(false)
+
+  // Estados para locaciones
+  const [locations, setLocations] = useState<Location[]>([])
+  const [departments, setDepartments] = useState<string[]>([])
+  const [municipalities, setMunicipalities] = useState<string[]>([])
 
   // Estado para la dirección de residencia
   const [tipoVia, setTipoVia] = useState<string>("")
@@ -38,6 +50,59 @@ export default function Step1BasicInformationConciliation() {
   const [complemento, setComplemento] = useState<string>("")
 
   const formData = watch()
+
+  // Fetch datos de ubicación
+  useEffect(() => {
+    const loadLocations = async () => {
+      try {
+        console.log("Fetching locations data...")
+        const data = await fetchLocations()
+        console.log(`Locations data fetched: ${data.length} items`)
+        setLocations(data)
+
+        if (data.length > 0) {
+          const depts = getUniqueDepartments(data)
+          console.log(`Unique departments: ${depts.length}`, depts)
+          setDepartments(depts)
+        } else {
+          console.error("No location data available")
+        }
+      } catch (error) {
+        console.error("Error loading locations:", error)
+      }
+    }
+    loadLocations()
+  }, [])
+
+  // actualiza los municipios cuando el departamento cambia
+  useEffect(() => {
+    if (formData.departamento) {
+      console.log(`Selected department: "${formData.departamento}"`)
+      console.log(`Available locations:`, locations.length)
+
+      const filteredMunicipalities = getMunicipalitiesByDepartment(
+        locations,
+        formData.departamento
+      )
+
+      console.log(
+        `Filtered municipalities: ${filteredMunicipalities.length}`,
+        filteredMunicipalities
+      )
+
+      setMunicipalities(filteredMunicipalities)
+      // Reinicia el municipio si no está en la lista filtrada
+      if (!filteredMunicipalities.includes(formData.municipio)) {
+        console.log(
+          `Current municipio "${formData.municipio}" not found in filtered list, resetting`
+        )
+        setValue("municipio", "")
+      }
+    } else {
+      setMunicipalities([])
+      setValue("municipio", "")
+    }
+  }, [formData.departamento, locations, setValue])
 
   const handleNacionalidadChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value
@@ -164,7 +229,7 @@ export default function Step1BasicInformationConciliation() {
             label="Número de documento"
             labelPlacement="outside"
             placeholder="Ingrese número de documento"
-            {...register("num_documento")}
+            {...register("ciudadano_solicitante.num_documento")}
             isRequired
           />
         )}
@@ -448,23 +513,48 @@ export default function Step1BasicInformationConciliation() {
             <SelectItem key="Rural">Rural</SelectItem>
           </Select>
 
-          <Input
+          <Select
             variant="bordered"
             label="Departamento"
             labelPlacement="outside"
-            placeholder="Ingrese su departamento"
-            {...register("departamento")}
+            placeholder="Seleccione su departamento"
+            selectedKeys={formData.departamento ? [formData.departamento] : []}
+            onChange={(e) => setValue("departamento", e.target.value)}
             isRequired
-          />
+          >
+            {departments.map((dept) => (
+              <SelectItem key={dept}>{dept}</SelectItem>
+            ))}
+          </Select>
 
-          <Input
+          <Select
             variant="bordered"
             label="Municipio"
             labelPlacement="outside"
-            placeholder="Ingrese su municipio"
-            {...register("municipio")}
+            placeholder="Seleccione su municipio"
             isRequired
-          />
+            selectedKeys={formData.municipio ? [formData.municipio] : []}
+            onSelectionChange={(keys) => {
+              const selectedKey = Array.from(keys)[0]?.toString() || ""
+              
+              // Guardar el nombre del municipio
+              setValue("municipio", selectedKey)
+              
+              // Obtener y guardar el código DANE del municipio
+              if (selectedKey) {
+                const daneMunicipio = getDaneMunicipioByName(locations, selectedKey)
+                if (daneMunicipio) {
+                  console.log(`Guardando código DANE del municipio: ${daneMunicipio}`)
+                  setValue("dane_municipio", daneMunicipio)
+                }
+              }
+            }}
+            isDisabled={!formData.departamento}
+          >
+            {municipalities.map((mun) => (
+              <SelectItem key={mun}>{mun}</SelectItem>
+            ))}
+          </Select>
 
           <Select
             variant="bordered"

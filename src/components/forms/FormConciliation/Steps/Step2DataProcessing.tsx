@@ -7,12 +7,12 @@ export default function Step2DataProcessing() {
   return (
     <div>
       <Input
-        label="Email"
-        {...register("email")}
+        label="prueba1"
+        {...register("prueba1")}
       />
       <Input
-        label="Número de móvil"
-        {...register("num_movil")}
+        label="prueba2"
+        {...register("prueba2")}
       />
     </div>
   )
