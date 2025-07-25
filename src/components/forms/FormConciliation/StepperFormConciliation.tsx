@@ -78,7 +78,7 @@ export default function StepperFormConciliation() {
 		{ title: 'Tratamiento de datos', component: Step2DataProcessing },
 		{ title: 'Contrapartes del caso', component: Step3CaseCounterparts },
 		{ title: 'Información del caso', component: Step4CaseInformation },
-		{ title: 'Información de nuevo ciudadano', component: Step5NewCitizenInformation },
+		{ title: 'Agendar audiencia de conciliación', component: Step5NewCitizenInformation },
 
 		{ title: 'Revisión', component: Step6ReviewStepConciliation },
 	];
