@@ -1,7 +1,5 @@
 //Servicio para subir documentos de solo anexos al caso y a notas
 
-"use server";
-
 import { post } from "@/utils/apiUtils";
 import { DocumentResponse } from '@/types/documents';
 

@@ -1,5 +1,3 @@
-"use server";
-
 import { get, post, put } from '../utils/apiUtils';
 import { Grade, GradesByCaseParams, GradesByStudentParams, GradesByTeacherParams, CreateGradeParams, UpdateGradeParams } from '../types/grades';
 

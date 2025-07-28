@@ -1,7 +1,5 @@
 //Servicio para obtener los datos del dashboard
 
-"use server";
-
 import { get } from "@/utils/apiUtils";
 import { logger } from "@/utils/logUtils";
 

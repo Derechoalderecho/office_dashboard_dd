@@ -1,7 +1,5 @@
 //Servicio para subir todos los documentos del casePreview desde pendiente hasta radicar
 
-"use server";
-
 import { get, post } from "@/utils/apiUtils";
 
 export interface TutelaResponse {

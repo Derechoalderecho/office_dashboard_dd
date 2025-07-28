@@ -1,5 +1,3 @@
-"use server";
-
 import { Users } from "@/types/users";
 import { get, post, put } from "@/utils/apiUtils";
 import { 
@@ -39,15 +37,9 @@ export const fetchUserDetails = async (id: string): Promise<Users | null> => {
  */
 export const fetchAllUsers = async (): Promise<Users[]> => {
   try {
-    return await getCollectionWithCache<Users>(
-      CACHE_NAME,
-      async () => {
-        logger.debug('Obteniendo todos los usuarios de la API');
-        return await get<Users[]>('usuarios');
-      },
-      user => user.id_usuario,
-      USERS_CACHE_TTL
-    );
+    const users = await get<Users[]>('usuarios');
+    logger.debug(`Obtenidos ${users.length} usuarios correctamente`);
+    return users;
   } catch (error) {
     logger.error('Error al obtener todos los usuarios:', error);
     return [];
