@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import Step2SubStep0 from "./subSteps/Step2SubStep0";
 import Step2SubStep1 from "./subSteps/Step2SubStep1";
+import Step2SubStep2 from "./subSteps/Step2SubStep2";
 
 interface Step2DataProcessingProps {
   goToStep?: (stepIndex: number) => void;
@@ -45,6 +46,8 @@ export default function Step2DataProcessing({
   // Renderizar el sub-paso correspondiente
   if (subStep === 1) {
     return <Step2SubStep1 goToStep={goToStep} handleBackToInfo={handleBackToInfo} />;
+  } else if (subStep === 2) {
+    return <Step2SubStep2 handleBackToInfo={handleBackToInfo} />;
   }
 
   // Por defecto, mostrar el sub-paso 0

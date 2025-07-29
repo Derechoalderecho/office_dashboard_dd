@@ -64,6 +64,7 @@ export default function StepperFormConciliation() {
       //Informacion Step 2
       confirma_datos: false,
       step2SubStep: 0, //No se envía al backend
+      firma_digital: "",
       //Informacion Step 3
       prueba3: "",
       prueba4: "",
@@ -130,7 +131,16 @@ export default function StepperFormConciliation() {
           // Si los datos no están confirmados, no avanzamos
           return;
         }
-        // Si los datos están confirmados, avanzamos al siguiente paso
+        // Si los datos están confirmados, avanzamos al sub-paso de firma
+        methods.setValue("step2SubStep", 2);
+        return;
+      } else if (currentSubStep === 2) {
+        // Si estamos en el sub-paso de firma
+        if (!data.firma_digital) {
+          // Si no hay firma, no avanzamos
+          return;
+        }
+        // Si hay firma, avanzamos al siguiente paso
         methods.setValue("step2SubStep", 0); // Reiniciamos el sub-paso para la próxima vez
         handleNext();
       }
