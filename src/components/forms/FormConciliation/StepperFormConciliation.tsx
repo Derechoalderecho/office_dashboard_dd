@@ -63,7 +63,7 @@ export default function StepperFormConciliation() {
       },
       //Informacion Step 2
       confirma_datos: false,
-      step2SubStep: 0,
+      step2SubStep: 0, //No se envía al backend
       //Informacion Step 3
       prueba3: "",
       prueba4: "",
