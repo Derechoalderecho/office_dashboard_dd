@@ -1,7 +1,7 @@
 import { Button, Tabs, Tab } from "@heroui/react";
 import { useFormContext } from "react-hook-form";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeftIcon, CheckIcon } from "@heroicons/react/24/outline";
+import { ArrowLeftIcon, CheckIcon, CloudArrowUpIcon } from "@heroicons/react/24/outline";
 
 // Función auxiliar para convertir un canvas a un archivo
 const canvasToFile = async (
@@ -33,59 +33,62 @@ interface Step2SubStep2Props {
 export default function Step2SubStep2({
   handleBackToInfo,
 }: Step2SubStep2Props) {
-  const { setValue } = useFormContext();
+  const { setValue, watch } = useFormContext();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasSignature, setHasSignature] = useState(false);
   const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>(null);
+  const [activeTab, setActiveTab] = useState(0);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
-  // Inicializar el canvas cuando el componente se monta
-  useEffect(() => {
+  // Función para redimensionar y configurar el canvas
+  const setupCanvas = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Ajustar el tamaño del canvas al tamaño del contenedor
-    const resizeCanvas = () => {
-      const container = canvas.parentElement;
-      if (container) {
-        // Establecer dimensiones fijas para evitar problemas de escalado
-        const width = 750;
-        const height = 325;
+    const container = canvas.parentElement;
+    if (!container) return;
+    
+    // Establecer dimensiones fijas para evitar problemas de escalado
+    const width = 750;
+    const height = 325;
 
-        canvas.width = width;
-        canvas.height = height;
+    canvas.width = width;
+    canvas.height = height;
 
-        // Configurar el contexto después de redimensionar
-        const context = canvas.getContext("2d");
-        if (!context) return;
+    // Configurar el contexto después de redimensionar
+    const context = canvas.getContext("2d");
+    if (!context) return;
 
-        // Configurar el contexto
-        context.lineWidth = 2;
-        context.lineCap = "round";
-        context.strokeStyle = "#000";
-        setCtx(context);
+    // Configurar el contexto
+    context.lineWidth = 2;
+    context.lineCap = "round";
+    context.strokeStyle = "#000";
+    setCtx(context);
 
-        // Limpiar el canvas
-        context.fillStyle = "#fff";
-        context.fillRect(0, 0, canvas.width, canvas.height);
+    // Limpiar el canvas
+    context.fillStyle = "#fff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Dibujar la línea base para la firma
-        context.beginPath();
-        context.moveTo(0, canvas.height - 10);
-        context.lineTo(canvas.width, canvas.height - 10);
-        context.strokeStyle = "#e5e7eb";
-        context.stroke();
+    // Dibujar la línea base para la firma
+    context.beginPath();
+    context.moveTo(0, canvas.height - 10);
+    context.lineTo(canvas.width, canvas.height - 10);
+    context.strokeStyle = "#e5e7eb";
+    context.stroke();
 
-        // Restaurar el color de trazo para la firma
-        context.strokeStyle = "#000";
-      }
-    };
-
-    resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
+    // Restaurar el color de trazo para la firma
+    context.strokeStyle = "#000";
+  };
+  
+  // Inicializar el canvas cuando el componente se monta
+  useEffect(() => {
+    setupCanvas();
+    window.addEventListener("resize", setupCanvas);
 
     return () => {
-      window.removeEventListener("resize", resizeCanvas);
+      window.removeEventListener("resize", setupCanvas);
     };
   }, []);
 
@@ -177,74 +180,178 @@ export default function Step2SubStep2({
     setHasSignature(false);
     setValue("firma_digital", null);
   };
+  
+  // Manejar la carga de archivos
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    const file = files[0];
+    
+    // Verificar que sea un archivo de imagen
+    if (!file.type.startsWith('image/')) {
+      alert('Por favor, seleccione un archivo de imagen válido');
+      return;
+    }
+    
+    // Guardar el archivo en el estado local y en el formulario
+    setUploadedFile(file);
+    setValue("firma_digital", file);
+    
+    // Limpiar el canvas si hay una firma dibujada
+    if (hasSignature && ctx && canvasRef.current) {
+      clearCanvas();
+    }
+  };
+  
+  // Manejar cambio de pestaña
+  const handleTabChange = (index: number) => {
+    setActiveTab(index);
+    
+    // Si cambiamos a la pestaña de dibujo
+    if (index === 0) {
+      // Si hay un archivo cargado, lo eliminamos si no hay firma dibujada
+      if (uploadedFile && !hasSignature) {
+        setUploadedFile(null);
+        setValue("firma_digital", null);
+      }
+      
+      // Programamos la reconfiguración del canvas para el siguiente ciclo de renderizado
+      setTimeout(() => {
+        setupCanvas();
+      }, 0);
+    }
+  };
 
   return (
     <section className="flex flex-col space-y-8">
       <h2 className="text-lg font-medium">
         Firma Autorización de tratamiento de datos
       </h2>
-      <Tabs aria-label="Firma digital" variant="underlined" color="primary">
-        <Tab title="Firma digital" />
-        <Tab title="Subir firma" />
-        <Tab title="Firma foto de usuario" />
+      <Tabs 
+        aria-label="Firma digital" 
+        variant="underlined" 
+        color="primary"
+        selectedKey={activeTab.toString()}
+        onSelectionChange={(key) => handleTabChange(Number(key))}
+      >
+        <Tab key="0" title="Firma digital" />
+        <Tab key="1" title="Subir firma" />
+        <Tab key="2" title="Firma foto de usuario" disabled />
       </Tabs>
 
-      <div className="border border-gray-300 rounded-lg p-3 bg-gray-50 max-w-[800px]">
-        <div className="bg-white rounded border border-gray-200 flex justify-center">
-          <canvas
-            ref={canvasRef}
-            width={400}
-            height={150}
-            className="touch-none cursor-crosshair bg-white"
-            onMouseDown={startDrawing}
-            onMouseMove={draw}
-            onMouseUp={endDrawing}
-            onMouseLeave={endDrawing}
-            onTouchStart={startDrawing}
-            onTouchMove={draw}
-            onTouchEnd={endDrawing}
-          />
-        </div>
+      {activeTab === 0 && (
+        <div className="border border-gray-300 rounded-lg p-3 bg-gray-50 max-w-[800px]">
+          <div className="bg-white rounded border border-gray-200 flex justify-center">
+            <canvas
+              ref={canvasRef}
+              width={400}
+              height={150}
+              className="touch-none cursor-crosshair bg-white"
+              onMouseDown={startDrawing}
+              onMouseMove={draw}
+              onMouseUp={endDrawing}
+              onMouseLeave={endDrawing}
+              onTouchStart={startDrawing}
+              onTouchMove={draw}
+              onTouchEnd={endDrawing}
+            />
+          </div>
 
-        {!hasSignature && (
-          <p className="text-amber-600 text-sm mt-2">
-            Debe dibujar su firma para continuar al siguiente paso.
-          </p>
-        )}
-
-        <div className="flex items-center justify-between mt-3">
-          <Button size="sm" variant="flat" color="danger" onPress={clearCanvas}>
-            Borrar
-          </Button>
-
-          {hasSignature && (
-            <Button
-              color="success"
-              size="sm"
-              className="text-white"
-              onPress={async () => {
-                // Guardar la firma como archivo JPEG
-                const canvas = canvasRef.current;
-                if (canvas) {
-                  try {
-                    const timestamp = new Date().getTime();
-                    const fileName = `firma_${timestamp}.jpg`;
-
-                    const file = await canvasToFile(canvas, fileName);
-
-                    setValue("firma_digital", file);
-                  } catch (error) {
-                    console.error("Error al guardar la firma:", error);
-                  }
-                }
-              }}
-              startContent={<CheckIcon className="h-4 w-4" />}
-            >
-              Confirmar firma
-            </Button>
+          {!hasSignature && (
+            <p className="text-amber-600 text-sm mt-2">
+              Debe dibujar su firma para continuar al siguiente paso.
+            </p>
           )}
+
+          <div className="flex items-center justify-between mt-3">
+            <Button size="sm" variant="flat" color="danger" onPress={clearCanvas}>
+              Borrar
+            </Button>
+
+            {hasSignature && (
+              <Button
+                color="success"
+                size="sm"
+                className="text-white"
+                onPress={async () => {
+                  // Guardar la firma como archivo JPEG
+                  const canvas = canvasRef.current;
+                  if (canvas) {
+                    try {
+                      const timestamp = new Date().getTime();
+                      const fileName = `firma_${timestamp}.jpg`;
+
+                      const file = await canvasToFile(canvas, fileName);
+
+                      setValue("firma_digital", file);
+                    } catch (error) {
+                      console.error("Error al guardar la firma:", error);
+                    }
+                  }
+                }}
+                startContent={<CheckIcon className="h-4 w-4" />}
+              >
+                Confirmar firma
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {activeTab === 1 && (
+        <div className="border border-gray-300 rounded-lg p-4 bg-gray-50 max-w-[800px] h-[400px]">
+          <div className="flex flex-col items-center justify-center py-6 px-4 bg-white rounded border border-gray-200 h-full">
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileUpload}
+            />
+            
+            {!uploadedFile ? (
+              <div className="text-center">
+                <CloudArrowUpIcon className="mx-auto h-12 w-12 text-gray-400" />
+                <p className="mt-2 text-sm text-gray-600">
+                  Haga clic para subir una imagen de su firma
+                </p>
+                <Button
+                  color="primary"
+                  variant="flat"
+                  className="mt-4"
+                  onPress={() => fileInputRef.current?.click()}
+                >
+                  Seleccionar archivo
+                </Button>
+              </div>
+            ) : (
+              <div className="text-center">
+                <div className="flex items-center justify-center mb-4">
+                  <CheckIcon className="h-6 w-6 text-green-500 mr-2" />
+                  <span className="text-sm font-medium">
+                    Archivo cargado: {uploadedFile.name}
+                  </span>
+                </div>
+                <Button
+                  color="danger"
+                  variant="flat"
+                  size="sm"
+                  onPress={() => {
+                    setUploadedFile(null);
+                    setValue("firma_digital", null);
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = "";
+                    }
+                  }}
+                >
+                  Eliminar archivo
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="flex justify-between mt-6">
         <Button
