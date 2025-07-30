@@ -107,9 +107,11 @@ export default function FieldsCitizen({ arrayPath, index = 0 }: FieldsCitizenPro
     loadLocations();
   }, []);
 
-  // actualiza los municipios cuando el departamento cambia
+  // Observar el campo de departamento para actualizar municipios
+  const departamento = arrayPath ? watch(`${arrayPath}.${index}.departamento`) : watch('departamento');
+
+  // Actualiza los municipios cuando el departamento cambia
   useEffect(() => {
-    const departamento = getFieldValue("departamento");
     if (departamento) {
       console.log(`Selected department: "${departamento}"`);
       console.log(`Available locations:`, locations.length);
@@ -137,7 +139,7 @@ export default function FieldsCitizen({ arrayPath, index = 0 }: FieldsCitizenPro
       setMunicipalities([]);
       setFieldValue("municipio", "");
     }
-  }, [watch, locations, setValue]);
+  }, [departamento, locations, arrayPath, index]);
 
   const handleTipoDocumentoChange = (
     e: React.ChangeEvent<HTMLSelectElement>
