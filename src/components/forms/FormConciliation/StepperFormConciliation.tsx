@@ -22,51 +22,112 @@ export default function StepperFormConciliation() {
 	const [isComplete, setIsComplete] = useState(false);
 	const router = useRouter();
 
-	// Configuración de React Hook Form
-	const methods = useForm({
-		defaultValues: {
-			//Informacion Step 1
-			ciudadano_solicitante: {
-				num_documento: '',
-				tipo_documento: '',
-				primer_nombre: '',
-				segundo_nombre: '',
-				primer_apellido: '',
-				segundo_apellido: '',
-				fecha_nacimiento: '',
-				fecha_expedicion_documento: '',
-				sexo: '',
-				genero: '',
-				orientacion_sexual: '',
-				num_movil: '',
-				telefono_fijo: '',
-				email: '',
-				nacionalidad: '',
-				estado_civil: '',
-				escolaridad: '',
-				ocupacion: '',
-				etnia: '',
-				estrato: '',
-				zona_residencia: '',
-				departamento: '',
-				municipio: '',
-				dane_municipio: '',
-				discapacidad: '',
-				sabe_leer_escribir: '',
-				direccion_residencia: '',
-			},
-			//Informacion Step 2
-			prueba1: '',
-			prueba2: '',
-			//Informacion Step 3
-			prueba3: '',
-			prueba4: '',
-			//Informacion Step 4
-			prueba5: '',
-			prueba6: '',
-		},
-		mode: 'onSubmit',
-	});
+  // Configuración de React Hook Form
+  const methods = useForm({
+    defaultValues: {
+      //Informacion Step 1
+      ciudadano_solicitante: {
+        num_documento: "",
+        tipo_documento: "",
+        primer_nombre: "",
+        segundo_nombre: "",
+        primer_apellido: "",
+        segundo_apellido: "",
+        fecha_nacimiento: "",
+        fecha_expedicion_documento: "",
+        sexo: "",
+        genero: "",
+        orientacion_sexual: "",
+        num_movil: "",
+        telefono_fijo: "",
+        email: "",
+        nacionalidad: "",
+        estado_civil: "",
+        escolaridad: "",
+        ocupacion: "",
+        etnia: "",
+        estrato: "",
+        zona_residencia: "",
+        departamento: "",
+        municipio: "",
+        dane_municipio: "",
+        discapacidad: "",
+        sabe_leer_escribir: "",
+        direccion_residencia: "",
+      },
+      //Informacion Step 2
+      confirma_datos: false,
+      confirma_tratamiento_datos: false,
+      step2SubStep: 0, //No se envía al backend
+      firma_digital: "",
+      foto_usuario: "",
+      //Informacion Step 3
+      tipo_proceso: "",
+      materia_del_caso: "",
+      ciudadano_citado: [{
+        tipo_documento: "",
+        num_documento: "",
+        primer_nombre: "",
+        segundo_nombre: "",
+        primer_apellido: "",
+        segundo_apellido: "",
+        fecha_nacimiento: "",
+        fecha_expedicion_documento: "",
+        sexo: "",
+        genero: "",
+        orientacion_sexual: "",
+        num_movil: "",
+        telefono_fijo: "",
+        email: "",
+        nacionalidad: "",
+        estado_civil: "",
+        escolaridad: "",
+        ocupacion: "",
+        etnia: "",
+        estrato: "",
+        zona_residencia: "",
+        departamento: "",
+        municipio: "",
+        dane_municipio: "",
+        discapacidad: "",
+        sabe_leer_escribir: "",
+        direccion_residencia: "",
+      }],
+      existen_persona_beneficiaria: false,
+      ciudadano_beneficiado: [{
+        tipo_documento: "",
+        num_documento: "",
+        primer_nombre: "",
+        segundo_nombre: "",
+        primer_apellido: "",
+        segundo_apellido: "",
+        fecha_nacimiento: "",
+        sexo: "",
+        genero: "",
+        orientacion_sexual: "",
+        telefono_movil: "",
+        telefono_fijo: "",
+        email: "",
+        nacionalidad: "Colombiana",
+        estado_civil: "",
+        escolaridad: "",
+        ocupacion: "",
+        etnia: "",
+        estrato: "",
+        zona_residencia: "",
+        departamento: "",
+        municipio: "",
+        dane_municipio: "",
+        discapacidad: "",
+        sabe_leer_escribir: "",
+        direccion_residencia: "",
+      }],
+      //Informacion Step 4
+      prueba5: "",
+      prueba6: "",
+    },
+    mode: "onSubmit",
+  });
 
 	const { handleSubmit, watch } = methods;
 	const formValues = watch(); // Observa todos los valores del formulario que van saliendo
@@ -95,16 +156,54 @@ export default function StepperFormConciliation() {
 		}
 	};
 
-	const onSubmit = async (data: any) => {
-		if (currentStep === steps.length - 1) {
-			const formDataObj = new FormData();
-			Object.entries(data).forEach(([key, value]) => {
-				if (value !== null && value !== undefined) {
-					formDataObj.append(key, String(value));
-				} else {
-					formDataObj.append(key, '');
-				}
-			});
+const onSubmit = async (data: any) => {
+    if (currentStep === steps.length - 1) {
+      const formDataObj = new FormData();
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          formDataObj.append(key, String(value));
+        } else {
+          formDataObj.append(key, "");
+        }
+      });
+
+      try {
+        await submitFormData(formDataObj);
+        setIsComplete(true);
+      } catch (error) {
+        console.error("Error submitting form:", error);
+      }
+    } else if (currentStep === 1) {
+      // Estamos en el Step 2 (Tratamiento de datos)
+      const currentSubStep = data.step2SubStep || 0;
+      
+      if (currentSubStep === 0) {
+        // Si estamos en el sub-paso inicial, avanzamos al sub-paso de confirmación
+        methods.setValue("step2SubStep", 1);
+        return;
+      } else if (currentSubStep === 1) {
+        // Si estamos en el sub-paso de confirmación
+        if (!data.confirma_datos) {
+          // Si los datos no están confirmados, no avanzamos
+          return;
+        }
+        // Si los datos están confirmados, avanzamos al sub-paso de firma
+        methods.setValue("step2SubStep", 2);
+        return;
+      } else if (currentSubStep === 2) {
+        // Si estamos en el sub-paso de firma
+        if (!data.firma_digital) {
+          // Si no hay firma, no avanzamos
+          return;
+        }
+        // Si hay firma, avanzamos al siguiente paso
+        methods.setValue("step2SubStep", 0); // Reiniciamos el sub-paso para la próxima vez
+        handleNext();
+      }
+    } else {
+      handleNext();
+    }
+  };
 
 			try {
 				await submitFormData(formDataObj);
@@ -117,117 +216,135 @@ export default function StepperFormConciliation() {
 		}
 	};
 
-	const CurrentStepComponent = steps[currentStep].component;
+const CurrentStepComponent = steps[currentStep].component;
 
-	return (
-		<div className='py-6'>
-			<div className='mb-16'>
-				<div className='flex justify-between'>
-					{steps.map((step, index) => (
-						<div key={index} className='flex flex-col items-center'>
-							<div
-								className={`w-14 h-14 rounded-lg flex items-center justify-center border-2 ${
-									index < currentStep
-										? 'bg-primary border-primary text-primary-foreground'
-										: index === currentStep
-										? 'border-primary text-primary'
-										: 'border-muted-foreground text-muted-foreground'
-								}`}
-							>
-								{index < currentStep ? (
-									<CheckIcon className='h-8 w-8 stroke-2' />
-								) : (
-									<span className='text-lg font-bold'>{index + 1}</span>
-								)}
-							</div>
-							<span
-								className={`text-sm mt-2 ${
-									index <= currentStep ? 'text-primary font-medium' : 'text-muted-foreground'
-								}`}
-							>
-								{step.title}
-							</span>
-						</div>
-					))}
-				</div>
-				<div className='relative mt-2'>
-					<div className='absolute top-0 left-0 right-0 h-2 rounded-full bg-muted'>
-						<div
-							className='h-2 bg-primary transition-all rounded-full duration-300'
-							style={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }}
-						/>
-					</div>
-				</div>
-			</div>
-			<Card>
-				<CardHeader>
-					<CardTitle>Información de nuevo ciudadano</CardTitle>
-					<CardDescription>Complete todos los pasos para presentar la solicitud</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<Divider className='mb-7' />
-					{/* Stepper Header */}
+  // Función para navegar a un paso específico
+  const goToStep = (stepIndex: number) => {
+    if (stepIndex >= 0 && stepIndex < steps.length) {
+      setCurrentStep(stepIndex);
+      // Reiniciar el sub-paso si volvemos al paso 2
+      if (stepIndex === 1) {
+        methods.setValue("step2SubStep", 0);
+      }
+    }
+  };
 
-					{/* Form Content */}
-					{isComplete ? (
-						<div className='text-center py-28'>
-							<div className='inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-100 mb-6'>
-								<Check className='h-8 w-8 text-green-600' />
-							</div>
-							<h3 className='text-2xl font-semibold mb-2'>Ciudadano creado exitosamente</h3>
-							<p className='text-muted-foreground'>
-								Ahora puedes revisar la información del ciudadano en la sección de ciudadanos o los casos que se han
-								creado.
-							</p>
-							<Button
-								color='primary'
-								className='mt-10'
-								type='button'
-								onPress={() => {
-									router.push('/dashboard/cases');
-								}}
-							>
-								Volver a casos
-							</Button>
-						</div>
-					) : (
-						<FormProvider {...methods}>
-							<form onSubmit={handleSubmit(onSubmit)}>
-								<CurrentStepComponent />
-							</form>
-						</FormProvider>
-					)}
-				</CardContent>
-				{!isComplete && (
-					<CardFooter className='flex justify-between'>
-						<Button
-							color='primary'
-							type='button'
-							variant='bordered'
-							onPress={handlePrevious}
-							isDisabled={currentStep === 0}
-						>
-							Anterior
-						</Button>
-						<Button
-							color='primary'
-							type='submit'
-							onClick={methods.handleSubmit(onSubmit)}
-							disabled={methods.formState.isSubmitting}
-							className='flex items-center'
-						>
-							{methods.formState.isSubmitting
-								? 'Enviando...'
-								: currentStep === steps.length - 1
-								? 'Enviar'
-								: 'Siguiente'}
-							{!methods.formState.isSubmitting && currentStep < steps.length - 1 && (
-								<ChevronRightIcon className='ml-2 h-4 w-4 stroke-2' />
-							)}
-						</Button>
-					</CardFooter>
-				)}
-			</Card>
-		</div>
-	);
+  return (
+    <div className="py-6">
+      <div className="mb-16">
+        <div className="flex justify-between">
+          {steps.map((step, index) => (
+            <div key={index} className="flex flex-col items-center">
+              <div
+                className={`w-14 h-14 rounded-lg flex items-center justify-center border-2 ${
+                  index < currentStep
+                    ? "bg-primary border-primary text-primary-foreground"
+                    : index === currentStep
+                    ? "border-primary text-primary"
+                    : "border-muted-foreground text-muted-foreground"
+                }`}
+              >
+                {index < currentStep ? (
+                  <CheckIcon className="h-8 w-8 stroke-2" />
+                ) : (
+                  <span className="text-lg font-bold">{index + 1}</span>
+                )}
+              </div>
+              <span
+                className={`text-sm mt-2 ${
+                  index <= currentStep
+                    ? "text-primary font-medium"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {step.title}
+              </span>
+            </div>
+          ))}
+        </div>
+        <div className="relative mt-2">
+          <div className="absolute top-0 left-0 right-0 h-2 rounded-full bg-muted">
+            <div
+              className="h-2 bg-primary transition-all rounded-full duration-300"
+              style={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }}
+            />
+          </div>
+        </div>
+      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Información de nuevo ciudadano</CardTitle>
+          <CardDescription>
+            Complete todos los pasos para presentar la solicitud
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Divider className="mb-7" />
+          {/* Stepper Header */}
+
+          {/* Form Content */}
+          {isComplete ? (
+            <div className="text-center py-28">
+              <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-100 mb-6">
+                <Check className="h-8 w-8 text-green-600" />
+              </div>
+              <h3 className="text-2xl font-semibold mb-2">
+                Ciudadano creado exitosamente
+              </h3>
+              <p className="text-muted-foreground">
+                Ahora puedes revisar la información del ciudadano en la sección
+                de ciudadanos o los casos que se han creado.
+              </p>
+              <Button
+                color="primary"
+                className="mt-10"
+                type="button"
+                onPress={() => {
+                  router.push("/dashboard/cases");
+                }}
+              >
+                Volver a casos
+              </Button>
+            </div>
+          ) : (
+            <FormProvider {...methods}>
+              <form onSubmit={handleSubmit(onSubmit)}>
+                <CurrentStepComponent goToStep={goToStep} />
+              </form>
+            </FormProvider>
+          )}
+        </CardContent>
+        {!isComplete && (
+          <CardFooter className="flex justify-between">
+            <Button
+              color="primary"
+              type="button"
+              variant="bordered"
+              onPress={handlePrevious}
+              isDisabled={currentStep === 0}
+            >
+              Anterior
+            </Button>
+            <Button
+              color="primary"
+              type="submit"
+              onClick={methods.handleSubmit(onSubmit)}
+              disabled={methods.formState.isSubmitting}
+              className="flex items-center"
+            >
+              {methods.formState.isSubmitting
+                ? "Enviando..."
+                : currentStep === steps.length - 1
+                ? "Enviar"
+                : "Siguiente"}
+              {!methods.formState.isSubmitting &&
+                currentStep < steps.length - 1 && (
+                  <ChevronRightIcon className="ml-2 h-4 w-4 stroke-2" />
+                )}
+            </Button>
+          </CardFooter>
+        )}
+      </Card>
+    </div>
+  );
 }

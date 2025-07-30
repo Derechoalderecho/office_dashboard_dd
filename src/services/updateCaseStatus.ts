@@ -1,7 +1,5 @@
 //Servicio para actualizar el estado del caso
 
-"use server";
-
 import { Cases, CompleteCaseData } from "@/types/cases";
 import { put, post, get } from "@/utils/apiUtils";
 import {

@@ -1,5 +1,3 @@
-"use server";
-
 import { del, batchRequests } from "@/utils/apiUtils";
 import {
   invalidateCacheItem,

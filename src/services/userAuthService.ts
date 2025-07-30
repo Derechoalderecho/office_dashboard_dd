@@ -1,7 +1,5 @@
 //Service para obtener los datos del usuario que está logeado
 
-"use server";
-
 import { get } from "@/utils/apiUtils";
 import { logger } from "@/utils/logUtils";
 import { ApiUsuario } from "@/types/cases";
@@ -21,7 +19,7 @@ export async function fetchUserByFirebaseUid(
     );
 
     // Endpoint para obtener todos los usuarios
-    const endpoint = "/usuarios/";
+    const endpoint = "/usuarios";
     console.log(`userAuthService: Llamando al endpoint: ${endpoint}`);
 
     // Obtenemos todos los usuarios
