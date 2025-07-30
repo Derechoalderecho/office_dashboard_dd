@@ -1,32 +1,26 @@
-"use client";
+'use client';
 
-import type React from "react";
+import type React from 'react';
 
-import { useState } from "react";
-import { Check } from "lucide-react";
-import { CheckIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
-import { Button, Divider } from "@heroui/react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from "@/components/ui/card";
-import Step1BasicInformationConciliation from "./Steps/Step1BasicInformationConciliation";
-import Step2DataProcessing from "./Steps/Step2DataProcessing";
-import Step3CaseCounterparts from "./Steps/Step3CaseCounterparts";
-import Step4CaseInformation from "./Steps/Step4CaseInformation";
-import Step6ReviewStepConciliation from "./Steps/Step6ReviewStepConciliation";
-import { submitFormData } from "./SubmitFormConciliation";
-import { useRouter } from "next/navigation";
-import { useForm, FormProvider } from "react-hook-form";
+import { useState } from 'react';
+import { Check } from 'lucide-react';
+import { CheckIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { Button, Divider } from '@heroui/react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import Step1BasicInformationConciliation from './Steps/Step1BasicInformationConciliation';
+import Step2DataProcessing from './Steps/Step2DataProcessing';
+import Step3CaseCounterparts from './Steps/Step3CaseCounterparts';
+import Step4CaseInformation from './Steps/Step4CaseInformation';
+import Step5NewCitizenInformation from './Steps/Step5ScheduleConciliationHearing';
+import Step6ReviewStepConciliation from './Steps/Step6ReviewStepConciliation';
+import { submitFormData } from './SubmitFormConciliation';
+import { useRouter } from 'next/navigation';
+import { useForm, FormProvider } from 'react-hook-form';
 
 export default function StepperFormConciliation() {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [isComplete, setIsComplete] = useState(false);
-  const router = useRouter();
+	const [currentStep, setCurrentStep] = useState(0);
+	const [isComplete, setIsComplete] = useState(false);
+	const router = useRouter();
 
   // Configuración de React Hook Form
   const methods = useForm({
@@ -135,32 +129,34 @@ export default function StepperFormConciliation() {
     mode: "onSubmit",
   });
 
-  const { handleSubmit, watch } = methods;
-  const formValues = watch(); // Observa todos los valores del formulario que van saliendo
+	const { handleSubmit, watch } = methods;
+	const formValues = watch(); // Observa todos los valores del formulario que van saliendo
 
-  console.log(formValues);
+	console.log(formValues);
 
-  const steps = [
-    { title: "Información del solicitante", component: Step1BasicInformationConciliation },
-    { title: "Tratamiento de datos", component: Step2DataProcessing },
-    { title: "Contrapartes del caso", component: Step3CaseCounterparts },
-    { title: "Información del caso", component: Step4CaseInformation },
-    { title: "Revisión", component: Step6ReviewStepConciliation },
-  ];
+	const steps = [
+		{ title: 'Información del solicitante', component: Step1BasicInformationConciliation },
+		{ title: 'Tratamiento de datos', component: Step2DataProcessing },
+		{ title: 'Contrapartes del caso', component: Step3CaseCounterparts },
+		{ title: 'Información del caso', component: Step4CaseInformation },
+		{ title: 'Agendar audiencia de conciliación', component: Step5NewCitizenInformation },
 
-  const handleNext = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep((prev) => prev + 1);
-    }
-  };
+		{ title: 'Revisión', component: Step6ReviewStepConciliation },
+	];
 
-  const handlePrevious = () => {
-    if (currentStep > 0) {
-      setCurrentStep((prev) => prev - 1);
-    }
-  };
+	const handleNext = () => {
+		if (currentStep < steps.length - 1) {
+			setCurrentStep((prev) => prev + 1);
+		}
+	};
 
-  const onSubmit = async (data: any) => {
+	const handlePrevious = () => {
+		if (currentStep > 0) {
+			setCurrentStep((prev) => prev - 1);
+		}
+	};
+
+const onSubmit = async (data: any) => {
     if (currentStep === steps.length - 1) {
       const formDataObj = new FormData();
       Object.entries(data).forEach(([key, value]) => {
@@ -209,7 +205,18 @@ export default function StepperFormConciliation() {
     }
   };
 
-  const CurrentStepComponent = steps[currentStep].component;
+			try {
+				await submitFormData(formDataObj);
+				setIsComplete(true);
+			} catch (error) {
+				console.error('Error submitting form:', error);
+			}
+		} else {
+			handleNext();
+		}
+	};
+
+const CurrentStepComponent = steps[currentStep].component;
 
   // Función para navegar a un paso específico
   const goToStep = (stepIndex: number) => {
