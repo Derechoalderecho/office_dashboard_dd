@@ -24,7 +24,7 @@ export default function Step2SubStep1({ goToStep, handleBackToInfo }: Step2SubSt
           Autorización tratamiento de datos
         </h2>
         <Button
-          onClick={() => goToStep && goToStep(0)}
+          onPress={() => goToStep && goToStep(0)}
           size="sm"
           variant="bordered"
           radius="full"

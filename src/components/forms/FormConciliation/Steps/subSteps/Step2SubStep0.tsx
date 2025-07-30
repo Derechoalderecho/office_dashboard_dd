@@ -16,7 +16,7 @@ export default function Step2SubStep0({ isLoading, dataProcessing }: Step2SubSte
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Tratamiento de datos personales</h2>
+      <h2 className="text-lg font-semibold">Tratamiento de datos personales</h2>
 
       {/* Información de tratamiento de datos */}
       {dataProcessing.map((item, index) => (

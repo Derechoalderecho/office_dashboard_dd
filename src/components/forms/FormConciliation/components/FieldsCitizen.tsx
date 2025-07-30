@@ -16,7 +16,6 @@ import {
   Checkbox,
 } from "@heroui/react";
 import { I18nProvider } from "@react-aria/i18n";
-import { parseDate } from "@internationalized/date";
 import {
   fetchLocations,
   getUniqueDepartments,
@@ -26,10 +25,11 @@ import {
 } from "@/services/locationService";
 
 interface FieldsCitizenProps {
-  prefix?: string;
+  arrayPath?: string;
+  index?: number;
 }
 
-export default function FieldsCitizen({ prefix = "ciudadano_solicitante" }: FieldsCitizenProps) {
+export default function FieldsCitizen({ arrayPath, index = 0 }: FieldsCitizenProps) {
   const { register, watch, setValue } = useFormContext();
   const [fechaNacimiento, setFechaNacimiento] = useState<DateValue | null>(null);
   const [fechaExpedicion, setFechaExpedicion] = useState<DateValue | null>(null);
@@ -54,83 +54,115 @@ export default function FieldsCitizen({ prefix = "ciudadano_solicitante" }: Fiel
   const [numeroPlaca, setNumeroPlaca] = useState<string>("");
   const [complemento, setComplemento] = useState<string>("");
 
-  // Datos del ciudadano
-  const ciudadanoData = watch(prefix) || {};
+  // Función para obtener el path correcto para cada campo
+  const getFieldPath = (fieldName: string) => {
+    if (arrayPath) {
+      return `${arrayPath}.${index}.${fieldName}`;
+    }
+    return fieldName;
+  };
 
-  // Cargar locaciones al montar el componente
+  // Función para registrar un campo con el path correcto
+  const registerField = (fieldName: string) => {
+    return register(getFieldPath(fieldName));
+  };
+
+  // Función para establecer el valor de un campo con el path correcto
+  const setFieldValue = (fieldName: string, value: any) => {
+    setValue(getFieldPath(fieldName), value);
+  };
+
+  // Función para obtener el valor de un campo
+  const getFieldValue = (fieldName: string) => {
+    const formData = watch();
+    if (arrayPath) {
+      return formData[arrayPath]?.[index]?.[fieldName];
+    }
+    return formData[fieldName];
+  };
+
+  // Datos del formulario
+  const formData = watch();
+
+  // Fetch datos de ubicación
   useEffect(() => {
+    const loadLocations = async () => {
+      try {
+        console.log("Fetching locations data...");
+        const data = await fetchLocations();
+        console.log(`Locations data fetched: ${data.length} items`);
+        setLocations(data);
+
+        if (data.length > 0) {
+          const depts = getUniqueDepartments(data);
+          console.log(`Unique departments: ${depts.length}`, depts);
+          setDepartments(depts);
+        } else {
+          console.error("No location data available");
+        }
+      } catch (error) {
+        console.error("Error loading locations:", error);
+      }
+    };
     loadLocations();
   }, []);
 
-  // Actualizar municipios cuando cambia el departamento
+  // actualiza los municipios cuando el departamento cambia
   useEffect(() => {
-    if (ciudadanoData.departamento) {
-      const muns = getMunicipalitiesByDepartment(
+    const departamento = getFieldValue("departamento");
+    if (departamento) {
+      console.log(`Selected department: "${departamento}"`);
+      console.log(`Available locations:`, locations.length);
+
+      const filteredMunicipalities = getMunicipalitiesByDepartment(
         locations,
-        ciudadanoData.departamento
+        departamento
       );
-      setMunicipalities(muns);
+
+      console.log(
+        `Filtered municipalities: ${filteredMunicipalities.length}`,
+        filteredMunicipalities
+      );
+
+      setMunicipalities(filteredMunicipalities);
+      // Reinicia el municipio si no está en la lista filtrada
+      const municipio = getFieldValue("municipio");
+      if (!filteredMunicipalities.includes(municipio)) {
+        console.log(
+          `Current municipio "${municipio}" not found in filtered list, resetting`
+        );
+        setFieldValue("municipio", "");
+      }
     } else {
       setMunicipalities([]);
+      setFieldValue("municipio", "");
     }
-  }, [ciudadanoData.departamento, locations]);
+  }, [watch, locations, setValue]);
 
-  // Cargar datos de locaciones
-  const loadLocations = async () => {
-    try {
-      console.log("Fetching locations data...");
-      const data = await fetchLocations();
-      console.log(`Locations data fetched: ${data.length} items`);
-      setLocations(data);
-
-      if (data.length > 0) {
-        const depts = getUniqueDepartments(data);
-        console.log(`Unique departments: ${depts.length}`, depts);
-        setDepartments(depts);
-      } else {
-        console.error("No location data available");
-      }
-    } catch (error) {
-      console.error("Error loading locations:", error);
-    }
-  };
-
-  // Manejar cambio de tipo de documento
   const handleTipoDocumentoChange = (
     e: React.ChangeEvent<HTMLSelectElement>
   ) => {
     const value = e.target.value;
-    setValue(`${prefix}.tipo_documento`, value);
+    setFieldValue("tipo_documento", value);
     if (value === "SD") {
-      setValue(`${prefix}.num_documento`, "");
+      setFieldValue("num_documento", "");
     }
   };
 
-  // Manejar cambio de nacionalidad
   const handleNacionalidadChange = (
     e: React.ChangeEvent<HTMLSelectElement>
   ) => {
     const value = e.target.value;
     if (value === "Otro") {
       setShowNacionalidadInput(true);
-      setValue(`${prefix}.nacionalidad`, nacionalidadPersonalizada || "");
+      setFieldValue("nacionalidad", nacionalidadPersonalizada || "");
     } else {
       setShowNacionalidadInput(false);
       setNacionalidadPersonalizada("");
-      setValue(`${prefix}.nacionalidad`, value);
+      setFieldValue("nacionalidad", value);
     }
   };
 
-  // Manejar cambio de nacionalidad personalizada
-  const handleNacionalidadPersonalizadaChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const value = e.target.value;
-    setNacionalidadPersonalizada(value);
-    setValue(`${prefix}.nacionalidad`, value);
-  };
-
-  // Construir dirección completa
   const construirDireccion = () => {
     const partes = [];
 
@@ -196,15 +228,15 @@ export default function FieldsCitizen({ prefix = "ciudadano_solicitante" }: Fiel
     return direccionCompleta.trim();
   };
 
-  // Guardar dirección
+  // Save address
   const guardarDireccion = () => {
     const direccionCompleta = construirDireccion();
-    setValue(`${prefix}.direccion_residencia`, direccionCompleta);
+    setFieldValue("direccion_residencia", direccionCompleta);
     setIsAddressPopoverOpen(false);
   };
 
   return (
-    <div className="space-y-8">
+    <div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Select
           variant="bordered"
@@ -212,7 +244,7 @@ export default function FieldsCitizen({ prefix = "ciudadano_solicitante" }: Fiel
           labelPlacement="outside"
           placeholder="Seleccione tipo de documento"
           selectedKeys={
-            ciudadanoData.tipo_documento ? [ciudadanoData.tipo_documento] : []
+            getFieldValue("tipo_documento") ? [getFieldValue("tipo_documento")] : []
           }
           onChange={handleTipoDocumentoChange}
           isRequired
@@ -225,25 +257,25 @@ export default function FieldsCitizen({ prefix = "ciudadano_solicitante" }: Fiel
           <SelectItem key="SD">Sin documento</SelectItem>
         </Select>
 
-        {ciudadanoData.tipo_documento !== "SD" && (
+        {getFieldValue("tipo_documento") !== "SD" && (
           <Input
             variant="bordered"
             label="Número de documento"
             labelPlacement="outside"
             placeholder="Ingrese número de documento"
-            {...register(`${prefix}.num_documento`)}
+            {...registerField("num_documento")}
             isRequired
           />
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-y-8 gap-x-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-y-8 gap-x-6 mt-6">
         <Input
           variant="bordered"
           label="Primer nombre"
           labelPlacement="outside"
           placeholder="Ingrese su primer nombre"
-          {...register(`${prefix}.primer_nombre`)}
+          {...registerField("primer_nombre")}
           isRequired
         />
 
@@ -252,7 +284,7 @@ export default function FieldsCitizen({ prefix = "ciudadano_solicitante" }: Fiel
           label="Segundo nombre"
           labelPlacement="outside"
           placeholder="Ingrese su segundo nombre"
-          {...register(`${prefix}.segundo_nombre`)}
+          {...registerField("segundo_nombre")}
         />
 
         <Input
@@ -260,7 +292,7 @@ export default function FieldsCitizen({ prefix = "ciudadano_solicitante" }: Fiel
           label="Primer apellido"
           labelPlacement="outside"
           placeholder="Ingrese su primer apellido"
-          {...register(`${prefix}.primer_apellido`)}
+          {...registerField("primer_apellido")}
           isRequired
         />
 
@@ -269,7 +301,7 @@ export default function FieldsCitizen({ prefix = "ciudadano_solicitante" }: Fiel
           label="Segundo apellido"
           labelPlacement="outside"
           placeholder="Ingrese su segundo apellido"
-          {...register(`${prefix}.segundo_apellido`)}
+          {...registerField("segundo_apellido")}
         />
 
         <I18nProvider locale="es">
@@ -282,10 +314,7 @@ export default function FieldsCitizen({ prefix = "ciudadano_solicitante" }: Fiel
               setFechaNacimiento(date);
               if (date) {
                 const formattedDate = date.toString().split("T")[0];
-                setValue(
-                  `${prefix}.fecha_nacimiento`,
-                  formattedDate
-                );
+                setFieldValue("fecha_nacimiento", formattedDate);
               }
             }}
             isRequired
@@ -302,10 +331,7 @@ export default function FieldsCitizen({ prefix = "ciudadano_solicitante" }: Fiel
               setFechaExpedicion(date);
               if (date) {
                 const formattedDate = date.toString().split("T")[0];
-                setValue(
-                  `${prefix}.fecha_expedicion_documento`,
-                  formattedDate
-                );
+                setFieldValue("fecha_expedicion_documento", formattedDate);
               }
             }}
           />
@@ -316,65 +342,15 @@ export default function FieldsCitizen({ prefix = "ciudadano_solicitante" }: Fiel
           label="Sexo"
           labelPlacement="outside"
           placeholder="Seleccione su sexo"
-          selectedKeys={
-            ciudadanoData.sexo ? [ciudadanoData.sexo] : []
-          }
-          onChange={(e) =>
-            setValue(`${prefix}.sexo`, e.target.value)
-          }
+          selectedKeys={getFieldValue("genero") ? [getFieldValue("genero")] : []}
+          onChange={(e) => setFieldValue("genero", e.target.value)}
           isRequired
         >
           <SelectItem key="Hombre">Hombre</SelectItem>
           <SelectItem key="Mujer">Mujer</SelectItem>
           <SelectItem key="Intersexual">Intersexual</SelectItem>
-          <SelectItem key="Prefiere no decirlo">
-            Prefiere no decirlo
-          </SelectItem>
+          <SelectItem key="Prefiere no decirlo">Prefiere no decirlo</SelectItem>
           <SelectItem key="Otro">Otro</SelectItem>
-        </Select>
-
-        <Select
-          variant="bordered"
-          label="Género"
-          labelPlacement="outside"
-          placeholder="Seleccione su género"
-          selectedKeys={
-            ciudadanoData.genero ? [ciudadanoData.genero] : []
-          }
-          onChange={(e) =>
-            setValue(`${prefix}.genero`, e.target.value)
-          }
-          isRequired
-        >
-          <SelectItem key="Masculino">Masculino</SelectItem>
-          <SelectItem key="Femenino">Femenino</SelectItem>
-          <SelectItem key="Transgénero">Transgénero</SelectItem>
-          <SelectItem key="No binario">No binario</SelectItem>
-        </Select>
-
-        <Select
-          variant="bordered"
-          label="Orientación sexual"
-          labelPlacement="outside"
-          placeholder="Seleccione su orientación sexual"
-          selectedKeys={
-            ciudadanoData.orientacion_sexual
-              ? [ciudadanoData.orientacion_sexual]
-              : []
-          }
-          onChange={(e) =>
-            setValue(
-              `${prefix}.orientacion_sexual`,
-              e.target.value
-            )
-          }
-          isRequired
-        >
-          <SelectItem key="Heterosexual">Heterosexual</SelectItem>
-          <SelectItem key="Homosexual">Homosexual</SelectItem>
-          <SelectItem key="Bisexual">Bisexual</SelectItem>
-          <SelectItem key="Asexual">Asexual</SelectItem>
-          <SelectItem key="Pansexual">Pansexual</SelectItem>
         </Select>
 
         <NumberInput
@@ -384,32 +360,9 @@ export default function FieldsCitizen({ prefix = "ciudadano_solicitante" }: Fiel
           labelPlacement="outside"
           placeholder="Ingrese su número móvil"
           formatOptions={{ useGrouping: false }}
-          value={
-            ciudadanoData.num_movil
-              ? Number(ciudadanoData.num_movil)
-              : undefined
-          }
-          onValueChange={(value) =>
-            setValue(`${prefix}.num_movil`, value.toString())
-          }
+          value={getFieldValue("telefono_movil") ? Number(getFieldValue("telefono_movil")) : undefined}
+          onValueChange={(value) => setFieldValue("telefono_movil", value.toString())}
           isRequired
-        />
-
-        <NumberInput
-          hideStepper
-          variant="bordered"
-          label="Número fijo"
-          labelPlacement="outside"
-          placeholder="Ingrese su número fijo"
-          formatOptions={{ useGrouping: false }}
-          value={
-            ciudadanoData.telefono_fijo
-              ? Number(ciudadanoData.telefono_fijo)
-              : undefined
-          }
-          onValueChange={(value) =>
-            setValue(`${prefix}.telefono_fijo`, value.toString())
-          }
         />
 
         <Input
@@ -417,73 +370,16 @@ export default function FieldsCitizen({ prefix = "ciudadano_solicitante" }: Fiel
           label="Correo electrónico"
           labelPlacement="outside"
           placeholder="Ingrese su correo electrónico"
-          {...register(`${prefix}.email`)}
+          {...registerField("email")}
         />
-
-        <Select
-          variant="bordered"
-          label="Nacionalidad"
-          labelPlacement="outside"
-          placeholder="Seleccione su nacionalidad"
-          selectedKeys={
-            showNacionalidadInput
-              ? ["Otro"]
-              : ciudadanoData.nacionalidad
-              ? [ciudadanoData.nacionalidad]
-              : []
-          }
-          onChange={handleNacionalidadChange}
-          isRequired
-        >
-          <SelectItem key="Argentina">Argentina</SelectItem>
-          <SelectItem key="Bolivia">Bolivia</SelectItem>
-          <SelectItem key="Chile">Chile</SelectItem>
-          <SelectItem key="Colombia">Colombia</SelectItem>
-          <SelectItem key="Costa Rica">Costa Rica</SelectItem>
-          <SelectItem key="Cuba">Cuba</SelectItem>
-          <SelectItem key="Ecuador">Ecuador</SelectItem>
-          <SelectItem key="El Salvador">El Salvador</SelectItem>
-          <SelectItem key="España">España</SelectItem>
-          <SelectItem key="Guatemala">Guatemala</SelectItem>
-          <SelectItem key="Honduras">Honduras</SelectItem>
-          <SelectItem key="México">México</SelectItem>
-          <SelectItem key="Nicaragua">Nicaragua</SelectItem>
-          <SelectItem key="Panamá">Panamá</SelectItem>
-          <SelectItem key="Paraguay">Paraguay</SelectItem>
-          <SelectItem key="Perú">Perú</SelectItem>
-          <SelectItem key="República Dominicana">
-            República Dominicana
-          </SelectItem>
-          <SelectItem key="Uruguay">Uruguay</SelectItem>
-          <SelectItem key="Venezuela">Venezuela</SelectItem>
-          <SelectItem key="Otro">Otro</SelectItem>
-        </Select>
-
-        {showNacionalidadInput && (
-          <Input
-            variant="bordered"
-            label="Especifique su nacionalidad"
-            labelPlacement="outside"
-            placeholder="Ingrese su nacionalidad"
-            value={nacionalidadPersonalizada}
-            onChange={handleNacionalidadPersonalizadaChange}
-            isRequired
-          />
-        )}
 
         <Select
           variant="bordered"
           label="Estado civil"
           labelPlacement="outside"
           placeholder="Seleccione su estado civil"
-          selectedKeys={
-            ciudadanoData.estado_civil
-              ? [ciudadanoData.estado_civil]
-              : []
-          }
-          onChange={(e) =>
-            setValue(`${prefix}.estado_civil`, e.target.value)
-          }
+          selectedKeys={getFieldValue("estado_civil") ? [getFieldValue("estado_civil")] : []}
+          onChange={(e) => setFieldValue("estado_civil", e.target.value)}
           isRequired
         >
           <SelectItem key="Soltero/a">Soltero/a</SelectItem>
@@ -499,26 +395,16 @@ export default function FieldsCitizen({ prefix = "ciudadano_solicitante" }: Fiel
           label="Escolaridad"
           labelPlacement="outside"
           placeholder="Seleccione su nivel de escolaridad"
-          selectedKeys={
-            ciudadanoData.escolaridad
-              ? [ciudadanoData.escolaridad]
-              : []
-          }
-          onChange={(e) =>
-            setValue(`${prefix}.escolaridad`, e.target.value)
-          }
+          selectedKeys={getFieldValue("escolaridad") ? [getFieldValue("escolaridad")] : []}
+          onChange={(e) => setFieldValue("escolaridad", e.target.value)}
           isRequired
         >
           <SelectItem key="Ninguna">Ninguna</SelectItem>
           <SelectItem key="Preescolar">Preescolar</SelectItem>
           <SelectItem key="Primaria">Primaria (1.º a 5.º grado)</SelectItem>
-          <SelectItem key="Secundaria">
-            Secundaria (6.º a 9.º grado)
-          </SelectItem>
+          <SelectItem key="Secundaria">Secundaria (6.º a 9.º grado)</SelectItem>
           <SelectItem key="Media">Media (10.º a 11.º grado)</SelectItem>
-          <SelectItem key="Técnica/Tecnológica">
-            Técnica o tecnológica
-          </SelectItem>
+          <SelectItem key="Técnica/Tecnológica">Técnica o tecnológica</SelectItem>
           <SelectItem key="Pregrado">Pregrado</SelectItem>
           <SelectItem key="Maestría">Maestría</SelectItem>
           <SelectItem key="Doctorado">Doctorado</SelectItem>
@@ -529,29 +415,8 @@ export default function FieldsCitizen({ prefix = "ciudadano_solicitante" }: Fiel
           label="Ocupación"
           labelPlacement="outside"
           placeholder="Ingrese su ocupación"
-          {...register(`${prefix}.ocupacion`)}
+          {...registerField("ocupacion")}
         />
-
-        <Select
-          variant="bordered"
-          label="Etnia"
-          labelPlacement="outside"
-          placeholder="Seleccione su etnia"
-          selectedKeys={ciudadanoData.etnia ? [ciudadanoData.etnia] : []}
-          onChange={(e) => setValue(`${prefix}.etnia`, e.target.value)}
-          isRequired
-        >
-          <SelectItem key="Indígena">Indígena</SelectItem>
-          <SelectItem key="Afrocolombiano">Afrocolombiano</SelectItem>
-          <SelectItem key="Mestizo">Mestizo</SelectItem>
-          <SelectItem key="Raizal">Raizal</SelectItem>
-          <SelectItem key="Rom/Gitano">Rom/Gitano</SelectItem>
-          <SelectItem key="Ninguna">Ninguna</SelectItem>
-          <SelectItem key="Otro">Otro</SelectItem>
-          <SelectItem key="Prefiero no decirlo">
-            Prefiero no decirlo
-          </SelectItem>
-        </Select>
 
         <NumberInput
           hideStepper
@@ -560,35 +425,19 @@ export default function FieldsCitizen({ prefix = "ciudadano_solicitante" }: Fiel
           labelPlacement="outside"
           placeholder="Ingrese su estrato"
           formatOptions={{ useGrouping: false }}
-          value={ciudadanoData.estrato ? Number(ciudadanoData.estrato) : undefined}
-          onValueChange={(value) => setValue(`${prefix}.estrato`, value.toString())}
+          value={getFieldValue("estrato") ? Number(getFieldValue("estrato")) : undefined}
+          onValueChange={(value) => setFieldValue("estrato", value.toString())}
           minValue={1}
           maxValue={6}
         />
 
         <Select
           variant="bordered"
-          label="Zona"
-          labelPlacement="outside"
-          placeholder="Seleccione su zona"
-          selectedKeys={
-            ciudadanoData.zona_residencia ? [ciudadanoData.zona_residencia] : []
-          }
-          onChange={(e) => setValue(`${prefix}.zona_residencia`, e.target.value)}
-        >
-          <SelectItem key="Urbana">Urbana</SelectItem>
-          <SelectItem key="Rural">Rural</SelectItem>
-        </Select>
-
-        <Select
-          variant="bordered"
           label="Departamento"
           labelPlacement="outside"
           placeholder="Seleccione su departamento"
-          selectedKeys={
-            ciudadanoData.departamento ? [ciudadanoData.departamento] : []
-          }
-          onChange={(e) => setValue(`${prefix}.departamento`, e.target.value)}
+          selectedKeys={getFieldValue("departamento") ? [getFieldValue("departamento")] : []}
+          onChange={(e) => setFieldValue("departamento", e.target.value)}
           isRequired
         >
           {departments.map((dept) => (
@@ -602,12 +451,12 @@ export default function FieldsCitizen({ prefix = "ciudadano_solicitante" }: Fiel
           labelPlacement="outside"
           placeholder="Seleccione su municipio"
           isRequired
-          selectedKeys={ciudadanoData.municipio ? [ciudadanoData.municipio] : []}
+          selectedKeys={getFieldValue("municipio") ? [getFieldValue("municipio")] : []}
           onSelectionChange={(keys) => {
             const selectedKey = Array.from(keys)[0]?.toString() || "";
 
             // Guardar el nombre del municipio
-            setValue(`${prefix}.municipio`, selectedKey);
+            setFieldValue("municipio", selectedKey);
 
             // Obtener y guardar el código DANE del municipio
             if (selectedKey) {
@@ -619,11 +468,11 @@ export default function FieldsCitizen({ prefix = "ciudadano_solicitante" }: Fiel
                 console.log(
                   `Guardando código DANE del municipio: ${daneMunicipio}`
                 );
-                setValue(`${prefix}.dane_municipio`, daneMunicipio);
+                setFieldValue("dane_municipio", daneMunicipio);
               }
             }
           }}
-          isDisabled={!ciudadanoData.departamento}
+          isDisabled={!getFieldValue("departamento")}
         >
           {municipalities.map((mun) => (
             <SelectItem key={mun}>{mun}</SelectItem>
@@ -635,8 +484,8 @@ export default function FieldsCitizen({ prefix = "ciudadano_solicitante" }: Fiel
           label="¿Tiene alguna discapacidad?"
           labelPlacement="outside"
           placeholder="Seleccione una opción"
-          selectedKeys={ciudadanoData.discapacidad ? [ciudadanoData.discapacidad] : []}
-          onChange={(e) => setValue(`${prefix}.discapacidad`, e.target.value)}
+          selectedKeys={getFieldValue("discapacidad") ? [getFieldValue("discapacidad")] : []}
+          onChange={(e) => setFieldValue("discapacidad", e.target.value)}
           isRequired
         >
           <SelectItem key="true">Sí</SelectItem>
@@ -648,10 +497,8 @@ export default function FieldsCitizen({ prefix = "ciudadano_solicitante" }: Fiel
           label="¿Sabe leer y escribir?"
           labelPlacement="outside"
           placeholder="Seleccione una opción"
-          selectedKeys={
-            ciudadanoData.sabe_leer_escribir ? [ciudadanoData.sabe_leer_escribir] : []
-          }
-          onChange={(e) => setValue(`${prefix}.sabe_leer_escribir`, e.target.value)}
+          selectedKeys={getFieldValue("sabe_leer_escribir") ? [getFieldValue("sabe_leer_escribir")] : []}
+          onChange={(e) => setFieldValue("sabe_leer_escribir", e.target.value)}
           isRequired
         >
           <SelectItem key="true">Sí</SelectItem>
@@ -661,8 +508,8 @@ export default function FieldsCitizen({ prefix = "ciudadano_solicitante" }: Fiel
         {/* Dirección de residencia con popover */}
         <div className="flex flex-col gap-1 justify-end">
           <p className="text-sm text-gray-500">
-            {ciudadanoData.direccion_residencia
-              ? ciudadanoData.direccion_residencia
+            {getFieldValue("direccion_residencia")
+              ? getFieldValue("direccion_residencia")
               : "No especificada"}
           </p>
           <Popover
@@ -689,9 +536,7 @@ export default function FieldsCitizen({ prefix = "ciudadano_solicitante" }: Fiel
                     <SelectItem key="Autopista">Autopista</SelectItem>
                     <SelectItem key="Avenida">Avenida</SelectItem>
                     <SelectItem key="Avenida calle">Avenida calle</SelectItem>
-                    <SelectItem key="Avenida carrera">
-                      Avenida carrera
-                    </SelectItem>
+                    <SelectItem key="Avenida carrera">Avenida carrera</SelectItem>
                     <SelectItem key="Calle">Calle</SelectItem>
                     <SelectItem key="Callejón">Callejón</SelectItem>
                     <SelectItem key="Carrera">Carrera</SelectItem>
@@ -755,9 +600,7 @@ export default function FieldsCitizen({ prefix = "ciudadano_solicitante" }: Fiel
                     }}
                     hideStepper
                     value={numeroCruce ? Number(numeroCruce) : undefined}
-                    onValueChange={(value) =>
-                      setNumeroCruce(value.toString())
-                    }
+                    onValueChange={(value) => setNumeroCruce(value.toString())}
                   />
 
                   <Select
@@ -777,9 +620,7 @@ export default function FieldsCitizen({ prefix = "ciudadano_solicitante" }: Fiel
                       useGrouping: false,
                     }}
                     value={numeroPlaca ? Number(numeroPlaca) : undefined}
-                    onValueChange={(value) =>
-                      setNumeroPlaca(value.toString())
-                    }
+                    onValueChange={(value) => setNumeroPlaca(value.toString())}
                   />
 
                   <Input
@@ -790,11 +631,7 @@ export default function FieldsCitizen({ prefix = "ciudadano_solicitante" }: Fiel
                   />
                 </div>
                 <div className="mt-8">
-                  <Button
-                    color="primary"
-                    fullWidth
-                    onPress={guardarDireccion}
-                  >
+                  <Button color="primary" fullWidth onPress={guardarDireccion}>
                     Guardar
                   </Button>
                 </div>
