@@ -1,5 +1,3 @@
-"use server";
-
 //Servicio para descargar y obtener el ultimo radicado del caso
 
 import { get } from "@/utils/apiUtils";

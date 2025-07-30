@@ -97,7 +97,7 @@ export default function TableCases() {
       }
       
       // Obtener todos los casos del usuario
-      const userCases = await fetchCompleteUserCases(userId);
+      const userCases = await fetchCompleteUserCases();
       const casesList = userCases.map(caseItem => ({
         ...caseItem,
         key: caseItem.id_caso.toString(),

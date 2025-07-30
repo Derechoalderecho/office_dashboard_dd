@@ -1,27 +1,24 @@
 //Servicio para obtener todos los casos completos asignados a un usuario y de paso para obtener un caso especifico
 
-"use server";
-
 import { get, post, del } from '@/utils/apiUtils';
 import { CompleteCaseData } from '@/types/cases';
 import { logger } from '@/utils/logUtils';
 
 /**
  * Obtiene todos los casos completos asignados a un usuario específico
- * @param userId ID del usuario para el que se quieren obtener los casos
  * @returns Lista de casos completos con todos los datos relacionados
  */
-export const fetchCompleteUserCases = async (userId: number): Promise<CompleteCaseData[]> => {
+export const fetchCompleteUserCases = async (): Promise<CompleteCaseData[]> => {
   try {
-    const endpoint = `/usuarios/${userId}/casos/full/`;
-    logger.info(`Mostrando usuarios completos para el usuario ${userId}`);
+    const endpoint = `/usuarios/casos/full/`;
+    logger.info(`Mostrando usuarios completos`);
     
     const response = await get<CompleteCaseData[]>(endpoint);
-    logger.info(`Retrieved ${response.length} complete cases for user ${userId}`);
+    logger.info(`Retrieved ${response.length} complete cases`);
     
     return response;
   } catch (error) {
-    logger.error(`Error fetching complete cases for user ${userId}:`, error);
+    logger.error(`Error fetching complete cases:`, error);
     throw error;
   }
 };

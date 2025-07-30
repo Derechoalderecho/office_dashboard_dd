@@ -62,11 +62,72 @@ export default function StepperFormConciliation() {
         direccion_residencia: "",
       },
       //Informacion Step 2
-      prueba1: "",
-      prueba2: "",
+      confirma_datos: false,
+      confirma_tratamiento_datos: false,
+      step2SubStep: 0, //No se envía al backend
+      firma_digital: "",
+      foto_usuario: "",
       //Informacion Step 3
-      prueba3: "",
-      prueba4: "",
+      tipo_proceso: "",
+      materia_del_caso: "",
+      ciudadano_citado: [{
+        tipo_documento: "",
+        num_documento: "",
+        primer_nombre: "",
+        segundo_nombre: "",
+        primer_apellido: "",
+        segundo_apellido: "",
+        fecha_nacimiento: "",
+        fecha_expedicion_documento: "",
+        sexo: "",
+        genero: "",
+        orientacion_sexual: "",
+        num_movil: "",
+        telefono_fijo: "",
+        email: "",
+        nacionalidad: "",
+        estado_civil: "",
+        escolaridad: "",
+        ocupacion: "",
+        etnia: "",
+        estrato: "",
+        zona_residencia: "",
+        departamento: "",
+        municipio: "",
+        dane_municipio: "",
+        discapacidad: "",
+        sabe_leer_escribir: "",
+        direccion_residencia: "",
+      }],
+      existen_persona_beneficiaria: false,
+      ciudadano_beneficiado: [{
+        tipo_documento: "",
+        num_documento: "",
+        primer_nombre: "",
+        segundo_nombre: "",
+        primer_apellido: "",
+        segundo_apellido: "",
+        fecha_nacimiento: "",
+        sexo: "",
+        genero: "",
+        orientacion_sexual: "",
+        telefono_movil: "",
+        telefono_fijo: "",
+        email: "",
+        nacionalidad: "Colombiana",
+        estado_civil: "",
+        escolaridad: "",
+        ocupacion: "",
+        etnia: "",
+        estrato: "",
+        zona_residencia: "",
+        departamento: "",
+        municipio: "",
+        dane_municipio: "",
+        discapacidad: "",
+        sabe_leer_escribir: "",
+        direccion_residencia: "",
+      }],
       //Informacion Step 4
       prueba5: "",
       prueba6: "",
@@ -116,12 +177,50 @@ export default function StepperFormConciliation() {
       } catch (error) {
         console.error("Error submitting form:", error);
       }
+    } else if (currentStep === 1) {
+      // Estamos en el Step 2 (Tratamiento de datos)
+      const currentSubStep = data.step2SubStep || 0;
+      
+      if (currentSubStep === 0) {
+        // Si estamos en el sub-paso inicial, avanzamos al sub-paso de confirmación
+        methods.setValue("step2SubStep", 1);
+        return;
+      } else if (currentSubStep === 1) {
+        // Si estamos en el sub-paso de confirmación
+        if (!data.confirma_datos) {
+          // Si los datos no están confirmados, no avanzamos
+          return;
+        }
+        // Si los datos están confirmados, avanzamos al sub-paso de firma
+        methods.setValue("step2SubStep", 2);
+        return;
+      } else if (currentSubStep === 2) {
+        // Si estamos en el sub-paso de firma
+        if (!data.firma_digital) {
+          // Si no hay firma, no avanzamos
+          return;
+        }
+        // Si hay firma, avanzamos al siguiente paso
+        methods.setValue("step2SubStep", 0); // Reiniciamos el sub-paso para la próxima vez
+        handleNext();
+      }
     } else {
       handleNext();
     }
   };
 
   const CurrentStepComponent = steps[currentStep].component;
+
+  // Función para navegar a un paso específico
+  const goToStep = (stepIndex: number) => {
+    if (stepIndex >= 0 && stepIndex < steps.length) {
+      setCurrentStep(stepIndex);
+      // Reiniciar el sub-paso si volvemos al paso 2
+      if (stepIndex === 1) {
+        methods.setValue("step2SubStep", 0);
+      }
+    }
+  };
 
   return (
     <div className="py-6">
@@ -203,7 +302,7 @@ export default function StepperFormConciliation() {
           ) : (
             <FormProvider {...methods}>
               <form onSubmit={handleSubmit(onSubmit)}>
-                <CurrentStepComponent />
+                <CurrentStepComponent goToStep={goToStep} />
               </form>
             </FormProvider>
           )}

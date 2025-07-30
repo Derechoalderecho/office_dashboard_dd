@@ -1,7 +1,5 @@
 //Servicio para obtener todos los documentos de un caso en solo los anexos
 
-"use server";
-
 import { get, downloadFile } from "@/utils/apiUtils";
 import { DocumentResponse } from '@/types/documents';
 
