@@ -1,10 +1,14 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { 
-  CloudArrowUpIcon, 
-  ArrowUpTrayIcon
+import {
+  CloudArrowUpIcon,
+  ArrowUpTrayIcon,
+  DocumentTextIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
+import { Button, Chip } from "@heroui/react";
+import { CheckCircleIcon } from "@heroicons/react/24/solid";
 
 interface InputFileProps {
   onFileSelected?: (file: File) => void;
@@ -17,6 +21,7 @@ interface InputFileProps {
   error?: string | null;
 }
 
+// Componente principal de carga de archivos
 export default function InputFile({
   onFileSelected,
   maxSize = 10 * 1024 * 1024, // 10MB por defecto
@@ -25,7 +30,7 @@ export default function InputFile({
   label = "Click para subir o arrastra y suelta",
   sublabel = "Todos los formatos de archivo (Máx. 10 MB)",
   description = "Una vez cargado, el documento estará disponible",
-  error = null
+  error = null,
 }: InputFileProps) {
   const [isDragging, setIsDragging] = useState(false);
   const dragCounter = useRef(0);
@@ -39,7 +44,7 @@ export default function InputFile({
       }
       return false;
     }
-    
+
     return true;
   };
 
@@ -84,9 +89,9 @@ export default function InputFile({
     e.stopPropagation();
     setIsDragging(false);
     dragCounter.current = 0;
-    
+
     const files = e.dataTransfer.files;
-    
+
     if (files && files.length > 0) {
       const file = files[0];
       processSelectedFile(file);
@@ -95,42 +100,52 @@ export default function InputFile({
 
   return (
     <div className="w-full">
-      <div 
+      <div
         className="flex flex-col items-center"
         onDragOver={handleDragOver}
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        <div 
+        <div
           className={`relative w-full h-64 border-2 border-dashed rounded-lg cursor-pointer transition-all duration-300 ease-in-out overflow-hidden
-            ${isDragging 
-              ? 'border-primary bg-blue-50 scale-[1.02] shadow-lg' 
-              : 'border-gray-300 bg-gray-50 hover:bg-gray-100'}`}
+            ${
+              isDragging
+                ? "border-primary bg-blue-50 scale-[1.02] shadow-lg"
+                : "border-gray-300 bg-gray-50 hover:bg-gray-100"
+            }`}
         >
           {/* Overlay mientras se arrastra el archivo */}
-          <div 
+          <div
             className={`absolute inset-0 bg-primary/10 backdrop-blur-[2px] flex flex-col items-center justify-center z-10 transition-opacity duration-300 ease-in-out ${
-              isDragging ? 'opacity-100' : 'opacity-0 pointer-events-none'
+              isDragging ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
           >
-            <div className={`transform flex flex-col items-center justify-center transition-transform duration-500 ease-in-out ${isDragging ? 'translate-y-0 scale-100' : 'translate-y-10 scale-90'}`}>
+            <div
+              className={`transform flex flex-col items-center justify-center transition-transform duration-500 ease-in-out ${
+                isDragging
+                  ? "translate-y-0 scale-100"
+                  : "translate-y-10 scale-90"
+              }`}
+            >
               <ArrowUpTrayIcon className="w-16 h-16 text-primary mb-4 animate-bounce" />
-              <p className="text-lg font-medium text-primary text-center">Suelta para subir</p>
+              <p className="text-lg font-medium text-primary text-center">
+                Suelta para subir
+              </p>
               <p className="text-sm text-primary/80 text-center mt-2">
                 {sublabel}
               </p>
             </div>
           </div>
-          
+
           {/* Contenido normal */}
-          <div 
+          <div
             className={`absolute inset-0 flex flex-col items-center justify-center p-5 transition-opacity duration-300 ease-in-out ${
-              isDragging ? 'opacity-0' : 'opacity-100'
+              isDragging ? "opacity-0" : "opacity-100"
             }`}
           >
-            <label 
-              htmlFor={id} 
+            <label
+              htmlFor={id}
               className="h-full w-full flex flex-col items-center justify-center cursor-pointer"
             >
               <CloudArrowUpIcon className="w-12 h-12 mb-3 text-gray-400 transition-colors group-hover:text-primary" />
@@ -138,10 +153,8 @@ export default function InputFile({
                 <span className="font-bold">{label}</span>
               </p>
               <p className="text-xs text-gray-500 mb-2">{sublabel}</p>
-              <p className="text-xs text-gray-400 text-center">
-                {description}
-              </p>
-              
+              <p className="text-xs text-gray-400 text-center">{description}</p>
+
               {error && (
                 <div className="mt-4 p-2 bg-danger-50 rounded-md">
                   <p className="text-sm text-danger flex items-center">
@@ -149,7 +162,7 @@ export default function InputFile({
                   </p>
                 </div>
               )}
-              
+
               <input
                 id={id}
                 name={id}
@@ -162,6 +175,130 @@ export default function InputFile({
             </label>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+interface FileAttachmentProps {
+  onFileSelected?: (file: File) => void;
+  onFileRemove?: () => void;
+  maxSize?: number; // en bytes
+  accept?: string;
+  id?: string;
+  name?: string; // Nombre del campo en el formulario
+  file?: File | null; // El archivo actual
+  label: string;
+  isRequired?: boolean;
+  isPrimordial?: boolean;
+  error?: string | null;
+}
+
+// Componente para anexos obligatorios con diseño horizontal
+export function FileAttachment({
+  onFileSelected,
+  onFileRemove,
+  maxSize = 10 * 1024 * 1024, // 10MB por defecto
+  accept = "*/*",
+  id = "file-attachment",
+  name,
+  file,
+  label,
+  isRequired = false,
+  isPrimordial = false,
+  error = null,
+}: FileAttachmentProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const formatFileSize = (bytes: number | undefined): string => {
+    if (!bytes) return "";
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+
+      // Validar tamaño del archivo
+      if (maxSize && file.size > maxSize) {
+        alert(
+          `El archivo excede el tamaño máximo permitido de ${formatFileSize(
+            maxSize
+          )}`
+        );
+        return;
+      }
+
+      if (onFileSelected) {
+        onFileSelected(file);
+      }
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between w-full p-3 rounded-md bg-white border border-gray-200">
+      <div className="flex items-center gap-3">
+        <div className="flex-shrink-0">
+          <DocumentTextIcon className="h-6 w-6 text-blue-500" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-blue-500">{label}</span>
+            {isRequired && <span className="text-danger text-xs">*</span>}
+            {file && <CheckCircleIcon className="h-6 w-6 text-success" />}
+            {isPrimordial && (
+              <Chip
+                variant="bordered"
+                size="sm"
+                className="border-indigo-500 text-indigo-400"
+              >
+                Primordial
+              </Chip>
+            )}
+          </div>
+          {file && (
+            <span className="text-xs text-gray-500">
+              {file.name} ({formatFileSize(file.size)})
+            </span>
+          )}
+          {error && <span className="text-xs text-danger">{error}</span>}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        {file ? (
+          <>
+            <Button
+              onPress={onFileRemove}
+              size="sm"
+              color="danger"
+              variant="light"
+              isIconOnly
+              aria-label="Eliminar archivo"
+            >
+              <TrashIcon className="h-6 w-6 text-danger" />
+            </Button>
+          </>
+        ) : (
+          <Button
+            onPress={() => fileInputRef.current?.click()}
+            size="sm"
+            color="primary"
+          >
+            Subir
+          </Button>
+        )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          id={id}
+          name={name || id}
+          accept={accept}
+          className="hidden"
+          onChange={handleFileChange}
+        />
       </div>
     </div>
   );

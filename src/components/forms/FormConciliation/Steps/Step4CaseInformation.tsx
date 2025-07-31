@@ -3,6 +3,7 @@ import { useFormContext } from "react-hook-form";
 import { I18nProvider } from "@react-aria/i18n";
 import { useState, useEffect } from "react";
 import { CalendarDate } from "@internationalized/date";
+import { FileAttachment } from "@/components/shared/InputFile";
 
 export default function Step4CaseInformation() {
   const { register, watch, setValue } = useFormContext();
@@ -146,6 +147,26 @@ export default function Step4CaseInformation() {
         placeholder="Ingresar la información solicitada"
         {...register("fundamentos_derecho")}
       />
+
+      <h3 className="text-md font-medium text-blue-500">Anexos obligatorios</h3>
+      
+      <div className="space-y-2 p-4 rounded-md bg-gray-50">
+        <FileAttachment
+          id="registro-civil-menor"
+          name="anexo_registro_civil"
+          label="Registro civil del menor"
+          isRequired={true}
+          isPrimordial={true}
+          accept="application/pdf,image/*"
+          file={watch("anexo_registro_civil")}
+          onFileSelected={(file) => {
+            setValue("anexo_registro_civil", file);
+          }}
+          onFileRemove={() => {
+            setValue("anexo_registro_civil", null);
+          }}
+        />
+      </div>
     </section>
   );
 }
