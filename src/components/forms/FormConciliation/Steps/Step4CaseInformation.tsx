@@ -3,7 +3,7 @@ import { useFormContext } from "react-hook-form";
 import { I18nProvider } from "@react-aria/i18n";
 import { useState, useEffect } from "react";
 import { CalendarDate } from "@internationalized/date";
-import { FileAttachment } from "@/components/shared/InputFile";
+import InputFile, { FileAttachment } from "@/components/shared/InputFile";
 
 export default function Step4CaseInformation() {
   const { register, watch, setValue } = useFormContext();
@@ -12,6 +12,9 @@ export default function Step4CaseInformation() {
   const fechaIntervencionValue = watch("fecha_intervencion");
   const [fechaSeleccionada, setFechaSeleccionada] =
     useState<CalendarDate | null>(null);
+
+  // Estado para anexos adicionales
+  const anexosAdicionales = watch("anexos_adicionales") || [];
 
   // Sincronizar el estado cuando cambie el valor en el formulario
   useEffect(() => {
@@ -149,7 +152,7 @@ export default function Step4CaseInformation() {
       />
 
       <h3 className="text-md font-medium text-blue-500">Anexos obligatorios</h3>
-      
+
       <div className="space-y-2 p-4 rounded-md bg-gray-50">
         <FileAttachment
           id="registro-civil-menor"
@@ -158,8 +161,8 @@ export default function Step4CaseInformation() {
           isRequired={true}
           isPrimordial={true}
           accept="application/pdf,image/*"
-          maxSizeMB={5}
-          maxSizeErrorMessage="El registro civil no puede superar los 5MB de tamaño"
+          maxSizeMB={2}
+          maxSizeErrorMessage="El registro civil no puede superar los 2MB de tamaño"
           file={watch("anexo_registro_civil")}
           onFileSelected={(file) => {
             setValue("anexo_registro_civil", file);
@@ -167,6 +170,75 @@ export default function Step4CaseInformation() {
           onFileRemove={() => {
             setValue("anexo_registro_civil", null);
           }}
+        />
+        <FileAttachment
+          id="cedula-solicitante"
+          name="anexo_cedula_solicitante"
+          label="Cédula del solicitante"
+          isRequired={true}
+          isPrimordial={true}
+          accept="application/pdf,image/*"
+          maxSizeMB={2}
+          maxSizeErrorMessage="La cédula del solicitante no puede superar los 2MB de tamaño"
+          file={watch("anexo_cedula_solicitante")}
+          onFileSelected={(file) => {
+            setValue("anexo_cedula_solicitante", file);
+          }}
+          onFileRemove={() => {
+            setValue("anexo_cedula_solicitante", null);
+          }}
+        />
+      </div>
+
+      <h3 className="text-md font-medium text-blue-500 mt-6">
+        Anexos adicionales
+      </h3>
+      <div className="mt-2">
+        <InputFile
+          id="anexos-adicionales"
+          label="Agregar anexos adicionales"
+          sublabel="Documentos, imágenes, PDFs (Máx. 5 MB por archivo)"
+          description="Puede agregar múltiples archivos de soporte para la conciliación"
+          accept="application/pdf,image/*,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+          multiple={true}
+          maxSizeMB={5}
+          maxSizeErrorMessage="Los anexos adicionales no pueden superar los 5MB por archivo"
+          files={anexosAdicionales}
+          showSelectedFiles={true}
+          onFilesSelected={(files) => {
+            // Agregar los nuevos archivos a los existentes
+            const currentFiles = watch("anexos_adicionales") || [];
+            setValue("anexos_adicionales", [...currentFiles, ...files]);
+          }}
+          onFileRemove={(fileIndex) => {
+            // Eliminar archivo por índice
+            const currentFiles = [...anexosAdicionales];
+            currentFiles.splice(fileIndex, 1);
+            setValue("anexos_adicionales", currentFiles);
+          }}
+        />
+      </div>
+
+      <div>
+        <span className="text-blue-500 text-sm font-medium">Pruebas solicitante</span>
+        <Textarea
+          label="De igual manera se discriminan las pruebas que soporten los hechos relacionados:"
+          variant="bordered"
+          labelPlacement="outside"
+          placeholder="Ingresar la información solicitada"
+          isRequired
+          {...register("pruebas_solicitante")}
+        />
+      </div>
+      <div>
+        <span className="text-blue-500 text-sm font-medium">Pruebas citado</span>
+        <Textarea
+          label="De igual manera se discriminan las pruebas que soporten los hechos relacionados:"
+          variant="bordered"
+          labelPlacement="outside"
+          placeholder="Ingresar la información solicitada"
+          isRequired
+          {...register("pruebas_citado")}
         />
       </div>
     </section>

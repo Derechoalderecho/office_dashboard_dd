@@ -140,6 +140,8 @@ export default function StepperFormConciliation() {
       cuantia: "",
       fundamentos_derecho: "",
       anexo_registro_civil: null,
+      anexo_cedula_solicitante: null,
+      anexos_adicionales: [],
       prueas_solicitante: "",
       pruebas_citado: "",
       //Informacion Step 5

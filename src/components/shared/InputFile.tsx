@@ -12,36 +12,62 @@ import { CheckCircleIcon } from "@heroicons/react/24/solid";
 
 interface InputFileProps {
   onFileSelected?: (file: File) => void;
+  onFilesSelected?: (files: File[]) => void;
+  onFileRemove?: (fileIndex: number) => void; // Eliminar archivo individual por índice
   maxSize?: number; // en bytes
+  maxSizeMB?: number; // tamaño máximo en MB (más fácil de especificar)
+  maxSizeErrorMessage?: string;
   accept?: string;
   id?: string;
   label?: string;
   sublabel?: string;
   description?: string;
   error?: string | null;
+  multiple?: boolean; // Permitir selección múltiple
+  files?: File[]; // Archivos actuales (para modo múltiple)
+  showSelectedFiles?: boolean; // Mostrar lista de archivos seleccionados
 }
 
 // Componente principal de carga de archivos
 export default function InputFile({
   onFileSelected,
-  maxSize = 10 * 1024 * 1024, // 10MB por defecto
+  onFilesSelected,
+  onFileRemove,
+  maxSize,
+  maxSizeMB = 10, // 10MB por defecto
+  maxSizeErrorMessage,
   accept = "*/*",
   id = "file-upload",
   label = "Click para subir o arrastra y suelta",
   sublabel = "Todos los formatos de archivo (Máx. 10 MB)",
   description = "Una vez cargado, el documento estará disponible",
   error = null,
+  multiple = false,
+  files = [],
+  showSelectedFiles = true,
 }: InputFileProps) {
+  // Calcular el tamaño máximo en bytes (priorizar maxSize si está definido)
+  const maxSizeBytes = maxSize || maxSizeMB * 1024 * 1024;
   const [isDragging, setIsDragging] = useState(false);
   const dragCounter = useRef(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const formatFileSize = (bytes: number | undefined): string => {
+    if (!bytes) return "";
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+  };
+
   const validateFile = (file: File): boolean => {
     // Validar tamaño del archivo
-    if (maxSize && file.size > maxSize) {
-      if (onFileSelected) {
-        onFileSelected(file);
-      }
+    if (file.size > maxSizeBytes) {
+      const errorMessage =
+        maxSizeErrorMessage ||
+        `El archivo excede el tamaño máximo permitido de ${formatFileSize(
+          maxSizeBytes
+        )}`;
+      alert(errorMessage);
       return false;
     }
 
@@ -50,8 +76,24 @@ export default function InputFile({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      processSelectedFile(file);
+      if (multiple) {
+        // Modo múltiple: procesar todos los archivos
+        const newFiles: File[] = [];
+        for (let i = 0; i < e.target.files.length; i++) {
+          const file = e.target.files[i];
+          if (validateFile(file)) {
+            newFiles.push(file);
+          }
+        }
+
+        if (newFiles.length > 0 && onFilesSelected) {
+          onFilesSelected(newFiles);
+        }
+      } else {
+        // Modo único: procesar solo el primer archivo
+        const file = e.target.files[0];
+        processSelectedFile(file);
+      }
     }
   };
 
@@ -84,19 +126,38 @@ export default function InputFile({
     }
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    dragCounter.current = 0;
+  const handleDrop = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+      dragCounter.current = 0;
 
-    const files = e.dataTransfer.files;
+      const droppedFiles = e.dataTransfer.files;
 
-    if (files && files.length > 0) {
-      const file = files[0];
-      processSelectedFile(file);
-    }
-  }, []);
+      if (droppedFiles && droppedFiles.length > 0) {
+        if (multiple) {
+          // Modo múltiple: procesar todos los archivos
+          const newFiles: File[] = [];
+          for (let i = 0; i < droppedFiles.length; i++) {
+            const file = droppedFiles[i];
+            if (validateFile(file)) {
+              newFiles.push(file);
+            }
+          }
+
+          if (newFiles.length > 0 && onFilesSelected) {
+            onFilesSelected(newFiles);
+          }
+        } else {
+          // Modo único: procesar solo el primer archivo
+          const file = droppedFiles[0];
+          processSelectedFile(file);
+        }
+      }
+    },
+    [multiple, onFilesSelected]
+  );
 
   return (
     <div className="w-full">
@@ -171,11 +232,46 @@ export default function InputFile({
                 className="hidden"
                 onChange={handleFileChange}
                 ref={fileInputRef}
+                multiple={multiple}
               />
             </label>
           </div>
         </div>
       </div>
+      {showSelectedFiles && files.length > 0 && (
+        <div className="mt-4 w-full">
+          <div className="space-y-2">
+            {files.map((file, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-2 bg-white rounded-md border border-gray-200"
+              >
+                <div className="flex items-center gap-2">
+                  <DocumentTextIcon className="h-4 w-4 text-blue-500" />
+                  <span className="text-xs truncate max-w-[150px]">
+                    {file.name}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    ({formatFileSize(file.size)})
+                  </span>
+                </div>
+                {onFileRemove && (
+                  <Button
+                    onPress={() => onFileRemove(index)}
+                    size="sm"
+                    color="danger"
+                    variant="light"
+                    isIconOnly
+                    aria-label="Eliminar archivo"
+                  >
+                    <TrashIcon className="h-4 w-4 text-danger" />
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -184,7 +280,7 @@ interface FileAttachmentProps {
   onFileSelected?: (file: File) => void;
   onFileRemove?: () => void;
   maxSize?: number; // en bytes
-  maxSizeMB?: number; // tamaño máximo en MB (más fácil de especificar)
+  maxSizeMB?: number; // tamaño máximo en MB
   maxSizeErrorMessage?: string; // mensaje de error personalizado
   accept?: string;
   id?: string;
@@ -229,8 +325,11 @@ export function FileAttachment({
 
       // Validar tamaño del archivo
       if (file.size > maxSizeBytes) {
-        const errorMessage = maxSizeErrorMessage || 
-          `El archivo excede el tamaño máximo permitido de ${formatFileSize(maxSizeBytes)}`;
+        const errorMessage =
+          maxSizeErrorMessage ||
+          `El archivo excede el tamaño máximo permitido de ${formatFileSize(
+            maxSizeBytes
+          )}`;
         alert(errorMessage);
         return;
       }
