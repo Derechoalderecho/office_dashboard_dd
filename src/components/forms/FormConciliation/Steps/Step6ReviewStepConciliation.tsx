@@ -84,19 +84,25 @@ export default function Step6ReviewStepConciliation() {
             </div>
           )}
 
-          {formValues.existen_persona_beneficiaria && formValues.ciudadano_beneficiado && formValues.ciudadano_beneficiado.length > 0 && (
+          {Boolean(formValues.existen_persona_beneficiaria) === true && (
             <div className="space-y-4">
               <h4 className="font-medium text-gray-700">Personas Beneficiarias:</h4>
-              {formValues.ciudadano_beneficiado.map((beneficiario: any, index: number) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-4 bg-green-50">
-                  <div className="grid grid-cols-2 gap-8">
-                    <InfoField label="Tipo de Documento" value={beneficiario.tipo_documento} />
-                    <InfoField label="Número de Documento" value={beneficiario.num_documento} />
-                    <InfoField label="Nombres" value={`${beneficiario.primer_nombre} ${beneficiario.segundo_nombre || ''}`.trim()} />
-                    <InfoField label="Apellidos" value={`${beneficiario.primer_apellido} ${beneficiario.segundo_apellido || ''}`.trim()} />
+              {formValues.ciudadano_beneficiado && formValues.ciudadano_beneficiado.length > 0 ? (
+                formValues.ciudadano_beneficiado.map((beneficiario: any, index: number) => (
+                  <div key={index} className="border border-gray-200 rounded-lg p-4 bg-green-50">
+                    <div className="grid grid-cols-2 gap-8">
+                      <InfoField label="Tipo de Documento" value={beneficiario.tipo_documento} />
+                      <InfoField label="Número de Documento" value={beneficiario.num_documento} />
+                      <InfoField label="Nombres" value={`${beneficiario.primer_nombre} ${beneficiario.segundo_nombre || ''}`.trim()} />
+                      <InfoField label="Apellidos" value={`${beneficiario.primer_apellido} ${beneficiario.segundo_apellido || ''}`.trim()} />
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <p className="text-gray-500">No se han registrado personas beneficiarias</p>
                 </div>
-              ))}
+              )}
             </div>
           )}
         </div>
@@ -190,7 +196,7 @@ export default function Step6ReviewStepConciliation() {
                   {formValues.firma_digital && <Chip size="sm" className="text-white" color="success">Subido</Chip>}
                 </div>
                 {formValues.firma_digital && (
-                  <span className="text-sm text-gray-500">
+                  <span className="text-xs text-gray-500">
                     Firma registrada correctamente
                   </span>
                 )}
