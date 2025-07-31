@@ -184,6 +184,8 @@ interface FileAttachmentProps {
   onFileSelected?: (file: File) => void;
   onFileRemove?: () => void;
   maxSize?: number; // en bytes
+  maxSizeMB?: number; // tamaño máximo en MB (más fácil de especificar)
+  maxSizeErrorMessage?: string; // mensaje de error personalizado
   accept?: string;
   id?: string;
   name?: string; // Nombre del campo en el formulario
@@ -198,7 +200,9 @@ interface FileAttachmentProps {
 export function FileAttachment({
   onFileSelected,
   onFileRemove,
-  maxSize = 10 * 1024 * 1024, // 10MB por defecto
+  maxSize, // en bytes
+  maxSizeMB = 10, // 10MB por defecto
+  maxSizeErrorMessage,
   accept = "*/*",
   id = "file-attachment",
   name,
@@ -208,6 +212,8 @@ export function FileAttachment({
   isPrimordial = false,
   error = null,
 }: FileAttachmentProps) {
+  // Calcular el tamaño máximo en bytes (priorizar maxSize si está definido)
+  const maxSizeBytes = maxSize || maxSizeMB * 1024 * 1024;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const formatFileSize = (bytes: number | undefined): string => {
@@ -222,12 +228,10 @@ export function FileAttachment({
       const file = e.target.files[0];
 
       // Validar tamaño del archivo
-      if (maxSize && file.size > maxSize) {
-        alert(
-          `El archivo excede el tamaño máximo permitido de ${formatFileSize(
-            maxSize
-          )}`
-        );
+      if (file.size > maxSizeBytes) {
+        const errorMessage = maxSizeErrorMessage || 
+          `El archivo excede el tamaño máximo permitido de ${formatFileSize(maxSizeBytes)}`;
+        alert(errorMessage);
         return;
       }
 

@@ -158,6 +158,8 @@ export default function Step4CaseInformation() {
           isRequired={true}
           isPrimordial={true}
           accept="application/pdf,image/*"
+          maxSizeMB={5}
+          maxSizeErrorMessage="El registro civil no puede superar los 5MB de tamaño"
           file={watch("anexo_registro_civil")}
           onFileSelected={(file) => {
             setValue("anexo_registro_civil", file);
