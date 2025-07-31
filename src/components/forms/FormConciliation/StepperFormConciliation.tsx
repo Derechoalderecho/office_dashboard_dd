@@ -32,6 +32,7 @@ export default function StepperFormConciliation() {
   // Configuración de React Hook Form
   const methods = useForm({
     defaultValues: {
+      completado: false,
       //Informacion Step 1
       ciudadano_solicitante: {
         num_documento: "",
@@ -41,7 +42,7 @@ export default function StepperFormConciliation() {
         primer_apellido: "",
         segundo_apellido: "",
         fecha_nacimiento: "",
-        fecha_expedicion_documento: "",
+        fecha_expedicion: "",
         sexo: "",
         genero: "",
         orientacion_sexual: "",
@@ -49,6 +50,7 @@ export default function StepperFormConciliation() {
         telefono_fijo: "",
         email: "",
         nacionalidad: "",
+        otra_nacionalidad: "",
         estado_civil: "",
         escolaridad: "",
         ocupacion: "",
@@ -79,7 +81,7 @@ export default function StepperFormConciliation() {
         primer_apellido: "",
         segundo_apellido: "",
         fecha_nacimiento: "",
-        fecha_expedicion_documento: "",
+        fecha_expedicion: "",
         sexo: "",
         genero: "",
         orientacion_sexual: "",
@@ -179,13 +181,34 @@ export default function StepperFormConciliation() {
   const onSubmit = async (data: any) => {
     if (currentStep === steps.length - 1) {
       const formDataObj = new FormData();
-      Object.entries(data).forEach(([key, value]) => {
-        if (value !== null && value !== undefined) {
-          formDataObj.append(key, String(value));
-        } else {
-          formDataObj.append(key, "");
-        }
-      });
+      
+      // Función auxiliar para serializar objetos anidados
+      const serializeData = (obj: any, prefix = '') => {
+        Object.entries(obj).forEach(([key, value]) => {
+          const fieldName = prefix ? `${prefix}.${key}` : key;
+          
+          if (value === null || value === undefined) {
+            formDataObj.append(fieldName, "");
+          } else if (Array.isArray(value)) {
+            // Manejar arrays
+            value.forEach((item, index) => {
+              if (typeof item === 'object' && item !== null) {
+                serializeData(item, `${fieldName}[${index}]`);
+              } else {
+                formDataObj.append(`${fieldName}[${index}]`, String(item));
+              }
+            });
+          } else if (typeof value === 'object' && value !== null) {
+            // Manejar objetos anidados
+            serializeData(value, fieldName);
+          } else {
+            // Valores primitivos
+            formDataObj.append(fieldName, String(value));
+          }
+        });
+      };
+
+      serializeData(data);
 
       try {
         await submitFormData(formDataObj);

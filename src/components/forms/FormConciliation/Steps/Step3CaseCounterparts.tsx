@@ -34,7 +34,7 @@ export default function Step3CaseCounterparts() {
       primer_apellido: "",
       segundo_apellido: "",
       fecha_nacimiento: "",
-      fecha_expedicion_documento: "",
+      fecha_expedicion: "",
       sexo: "",
       genero: "",
       orientacion_sexual: "",

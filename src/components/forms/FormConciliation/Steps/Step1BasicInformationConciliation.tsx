@@ -318,7 +318,7 @@ export default function Step1BasicInformationConciliation() {
                 if (date) {
                   const formattedDate = date.toString().split("T")[0];
                   setValue(
-                    "ciudadano_solicitante.fecha_expedicion_documento",
+                    "ciudadano_solicitante.fecha_expedicion",
                     formattedDate
                   );
                 }
