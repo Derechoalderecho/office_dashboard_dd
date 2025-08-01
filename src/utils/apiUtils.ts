@@ -161,6 +161,25 @@ export async function apiRequest<T>(
 
       const startTime = Date.now();
 
+      // Si estamos enviando FormData, verificar que no se esté modificando el Content-Type
+      if (data instanceof FormData) {
+        console.log("Enviando FormData al backend - Verificando headers");
+        
+        // Asegurarnos de que no se establezca Content-Type para FormData
+        if (axiosConfig.headers) {
+          if (axiosConfig.headers["Content-Type"]) {
+            console.log("Eliminando Content-Type para FormData");
+            delete axiosConfig.headers["Content-Type"];
+          }
+        }
+        
+        // Mostrar las claves del FormData que se enviarán
+        console.log("Claves en FormData que se enviarán:");
+        for (const [key] of data.entries()) {
+          console.log(`- ${key}`);
+        }
+      }
+      
       switch (method) {
         case "get":
           response = await axiosInstance.get(secureUrl, axiosConfig);
@@ -385,6 +404,18 @@ export function post<T>(
   data?: any,
   config?: AxiosRequestConfig & RetryConfig
 ): Promise<T> {
+  // Si estamos enviando FormData, asegurarnos de que no se establezca Content-Type
+  // para que el navegador pueda establecer el boundary correcto
+  if (data instanceof FormData) {
+    return apiRequest<T>("post", url, data, {
+      ...config,
+      headers: {
+        ...config?.headers,
+        'Content-Type': undefined // Permitir que el navegador establezca el Content-Type correcto
+      }
+    });
+  }
+  
   return apiRequest<T>("post", url, data, config);
 }
 

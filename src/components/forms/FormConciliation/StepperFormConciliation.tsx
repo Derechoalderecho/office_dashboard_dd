@@ -55,20 +55,22 @@ export default function StepperFormConciliation() {
         escolaridad: "",
         ocupacion: "",
         etnia: "",
-        estrato: "",
+        estrato: null,
         zona_residencia: "",
         departamento: "",
         municipio: "",
         dane_municipio: "",
-        discapacidad: "",
-        sabe_leer_escribir: "",
+        discapacidad: false,
+        sabe_leer_escribir: false,
         direccion_residencia: "",
       },
       //Informacion Step 2
       confirma_datos: false,
       confirma_tratamiento_datos: false,
       step2SubStep: 0, //No se envía al backend
-      firma_digital: "",
+      firma_solicitante: {
+        origen_firma: "canvas"
+      },
       foto_usuario: "",
       //Informacion Step 3
       tipo_proceso: "",
@@ -89,17 +91,18 @@ export default function StepperFormConciliation() {
         telefono_fijo: "",
         email: "",
         nacionalidad: "",
+        otra_nacionalidad: "",
         estado_civil: "",
         escolaridad: "",
         ocupacion: "",
         etnia: "",
-        estrato: "",
+        estrato: null,
         zona_residencia: "",
         departamento: "",
         municipio: "",
         dane_municipio: "",
-        discapacidad: "",
-        sabe_leer_escribir: "",
+        discapacidad: false,
+        sabe_leer_escribir: false,
         direccion_residencia: "",
       }],
       existen_persona_beneficiaria: false,
@@ -111,24 +114,26 @@ export default function StepperFormConciliation() {
         primer_apellido: "",
         segundo_apellido: "",
         fecha_nacimiento: "",
+        fecha_expedicion: "",
         sexo: "",
         genero: "",
         orientacion_sexual: "",
-        telefono_movil: "",
+        num_movil: "",
         telefono_fijo: "",
         email: "",
         nacionalidad: "Colombiana",
+        otra_nacionalidad: "",
         estado_civil: "",
         escolaridad: "",
         ocupacion: "",
         etnia: "",
-        estrato: "",
+        estrato: null,
         zona_residencia: "",
         departamento: "",
         municipio: "",
         dane_municipio: "",
-        discapacidad: "",
-        sabe_leer_escribir: "",
+        discapacidad: false,
+        sabe_leer_escribir: false,
         direccion_residencia: "",
       }],
       //Informacion Step 4
@@ -180,37 +185,61 @@ export default function StepperFormConciliation() {
 
   const onSubmit = async (data: any) => {
     if (currentStep === steps.length - 1) {
+      console.log("=== INICIO DEBUG STEPPER FORM ===");
+      console.log("Datos originales del formulario:", data);
+      
+      // Eliminar campos que no deben enviarse al backend
+      const dataToSend = { ...data };
+      delete dataToSend.step2SubStep; // Campo interno que no se envía al backend
+      
+      console.log("Datos después de eliminar step2SubStep:", dataToSend);
+      
+      // Asegurarse de que firma_solicitante tiene origen_firma
+      if (!dataToSend.firma_solicitante || typeof dataToSend.firma_solicitante !== 'object') {
+        dataToSend.firma_solicitante = { origen_firma: "canvas" };
+      } else if (!dataToSend.firma_solicitante.origen_firma) {
+        dataToSend.firma_solicitante.origen_firma = "canvas";
+      }
+      
+      // Asegurarse de que todos los ciudadanos beneficiados tengan fecha_expedicion
+      if (dataToSend.ciudadano_beneficiado && Array.isArray(dataToSend.ciudadano_beneficiado)) {
+        dataToSend.ciudadano_beneficiado = dataToSend.ciudadano_beneficiado.map((ciudadano: any) => {
+          if (!ciudadano.fecha_expedicion) {
+            return { ...ciudadano, fecha_expedicion: null };
+          }
+          return ciudadano;
+        });
+      }
+      
+      // Extraer la firma digital si existe
+      const firmaDigital = dataToSend.firma_digital || dataToSend.firma_solicitante;
+      console.log("Firma digital encontrada:", firmaDigital);
+      
+      // Crear un nuevo FormData para enviar directamente
       const formDataObj = new FormData();
       
-      // Función auxiliar para serializar objetos anidados
-      const serializeData = (obj: any, prefix = '') => {
-        Object.entries(obj).forEach(([key, value]) => {
-          const fieldName = prefix ? `${prefix}.${key}` : key;
-          
-          if (value === null || value === undefined) {
-            formDataObj.append(fieldName, "");
-          } else if (Array.isArray(value)) {
-            // Manejar arrays
-            value.forEach((item, index) => {
-              if (typeof item === 'object' && item !== null) {
-                serializeData(item, `${fieldName}[${index}]`);
-              } else {
-                formDataObj.append(`${fieldName}[${index}]`, String(item));
-              }
-            });
-          } else if (typeof value === 'object' && value !== null) {
-            // Manejar objetos anidados
-            serializeData(value, fieldName);
-          } else {
-            // Valores primitivos
-            formDataObj.append(fieldName, String(value));
-          }
-        });
-      };
-
-      serializeData(data);
+      // Añadir el objeto de datos completo como JSON en la clave 'datos'
+      const jsonData = JSON.stringify(dataToSend);
+      console.log("JSON a enviar en 'datos':", jsonData.substring(0, 200) + '...');
+      formDataObj.append('datos', jsonData);
+      
+      // Añadir la firma digital si existe
+      if (firmaDigital instanceof File) {
+        formDataObj.append('firma_digital', firmaDigital);
+        console.log("✓ Firma digital añadida al FormData:", firmaDigital);
+      } else {
+        console.warn("⚠️ No se encontró firma digital en el formulario o no es un archivo");
+      }
+      
+      // Verificar el FormData antes de enviarlo
+      console.log("=== FormData creado ===");
+      for (const [key, value] of formDataObj.entries()) {
+        console.log(`${key}:`, typeof value, value instanceof File ? `File(${value.name})` : value);
+      }
+      console.log("=== FIN DEBUG STEPPER FORM ===");
 
       try {
+        console.log("Enviando FormData al submitFormData...");
         await submitFormData(formDataObj);
         setIsComplete(true);
       } catch (error) {
@@ -239,6 +268,8 @@ export default function StepperFormConciliation() {
           // Si no hay firma, no avanzamos
           return;
         }
+        // Renombramos firma_digital a firma_solicitante para el backend
+        methods.setValue("firma_solicitante", data.firma_digital);
         // Si hay firma, avanzamos al siguiente paso
         methods.setValue("step2SubStep", 0); // Reiniciamos el sub-paso para la próxima vez
         handleNext();

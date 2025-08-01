@@ -1,51 +1,92 @@
-"use server"
-
 import { post } from "@/utils/apiUtils";
 
 export async function submitFormData(formData: FormData) {
   try {
-    // Convertir FormData a objeto JSON
-    const formObject: any = {};
+    // El FormData ya viene preparado desde StepperFormConciliation.tsx
+    // con la estructura correcta: 'datos' (JSON string) y 'firma_digital' (File)
     
+    console.log("=== INICIO DEBUG FORM DATA ===");
+    console.log("FormData recibido:", formData);
+    
+    // Crear un nuevo FormData para asegurarnos de que se envía correctamente
+    let newFormData = new FormData();
+    
+    // Listar todas las claves del FormData
+    console.log("Claves en FormData original:");
     for (const [key, value] of formData.entries()) {
-      // Manejar arrays y objetos anidados
-      if (key.includes('[') && key.includes(']')) {
-        // Manejar arrays como ciudadano_citado[0].nombre
-        const arrayMatch = key.match(/^([^[]+)\[(\d+)\]\.(.+)$/);
-        if (arrayMatch) {
-          const [, arrayName, index, fieldName] = arrayMatch;
-          if (!formObject[arrayName]) {
-            formObject[arrayName] = [];
-          }
-          if (!formObject[arrayName][parseInt(index)]) {
-            formObject[arrayName][parseInt(index)] = {};
-          }
-          formObject[arrayName][parseInt(index)][fieldName] = value;
-        }
-      } else if (key.includes('.')) {
-        // Manejar objetos anidados como ciudadano_solicitante.nombre
-        const parts = key.split('.');
-        let current = formObject;
-        for (let i = 0; i < parts.length - 1; i++) {
-          if (!current[parts[i]]) {
-            current[parts[i]] = {};
-          }
-          current = current[parts[i]];
-        }
-        current[parts[parts.length - 1]] = value;
-      } else {
-        // Campos simples
-        formObject[key] = value;
+      console.log(`- ${key}:`, typeof value, value instanceof File ? 'File' : value);
+      
+      // Copiar al nuevo FormData
+      newFormData.append(key, value);
+    }
+    
+    // Verificar que el FormData contenga las claves necesarias
+    let hasData = false;
+    let hasSignature = false;
+    let datosString = "";
+    
+    for (const [key, value] of newFormData.entries()) {
+      if (key === 'datos') {
+        hasData = true;
+        datosString = value as string;
+        console.log("✓ FormData contiene la clave 'datos':", datosString.substring(0, 100) + '...');
+      }
+      if (key === 'firma_digital') {
+        hasSignature = true;
+        console.log("✓ FormData contiene la clave 'firma_digital':", value);
       }
     }
+    
+    if (!hasData) {
+      console.error("❌ ERROR: FormData no contiene la clave 'datos'");
+      console.log("Todas las claves disponibles:");
+      for (const [key] of newFormData.entries()) {
+        console.log(`- ${key}`);
+      }
+    } else {
+      // Procesar los datos para asegurar que tienen el formato correcto
+      try {
+        const datosObj = JSON.parse(datosString);
+        const processedData = processFormData(datosObj);
+        
+        // Reemplazar los datos originales con los procesados
+        const processedFormData = new FormData();
+        processedFormData.append('datos', JSON.stringify(processedData));
+        
+        // Mantener la firma digital si existe
+        if (hasSignature) {
+          for (const [key, value] of newFormData.entries()) {
+            if (key === 'firma_digital') {
+              processedFormData.append('firma_digital', value);
+            }
+          }
+        }
+        
+        newFormData = processedFormData;
+        console.log("Datos procesados correctamente");
+      } catch (e) {
+        console.error("Error al procesar los datos JSON:", e);
+      }
+    }
+    
+    if (!hasSignature) {
+      console.warn("⚠️ ADVERTENCIA: FormData no contiene la clave 'firma_digital'");
+    }
+    
+    console.log("=== FormData final a enviar ===");
+    for (const [key, value] of newFormData.entries()) {
+      console.log(`${key}:`, typeof value, value instanceof File ? `File(${value.name})` : value);
+    }
+    console.log("=== FIN DEBUG FORM DATA ===");
 
-    // Convertir strings a tipos apropiados
-    const processedData = processFormData(formObject);
-
-    console.log("Enviando datos al endpoint:", processedData);
-
-    // Enviar al endpoint usando apiUtils
-    const response = await post("v2/casos/crear-caso-conciliacion/", processedData);
+    // Enviar al endpoint usando apiUtils con FormData
+    // Asegurarnos de que se envía con el Content-Type correcto
+    const response = await post("v2/casos/crear-caso-conciliacion/", newFormData, {
+      headers: {
+        // No establecer Content-Type para que el navegador lo haga automáticamente con el boundary correcto
+        'Content-Type': undefined
+      }
+    });
 
     console.log("Respuesta del servidor:", response);
 
@@ -65,20 +106,36 @@ function processFormData(data: any): any {
     'confirma_datos',
     'confirma_tratamiento_datos',
     'existen_persona_beneficiaria',
-    'sabe_leer_escribir'
+    'completado'
   ];
 
   booleanFields.forEach(field => {
     if (processed[field] !== undefined) {
-      processed[field] = processed[field] === 'true' || processed[field] === true;
+      if (processed[field] === '' || processed[field] === 'false') {
+        processed[field] = false;
+      } else {
+        processed[field] = processed[field] === 'true' || processed[field] === true;
+      }
     }
   });
 
-  // Convertir strings numéricos a números
-  const numericFields = ['estrato', 'cuantia'];
+  // Convertir strings numéricos a números o null
+  const numericFields = ['cuantia'];
   numericFields.forEach(field => {
-    if (processed[field] && !isNaN(Number(processed[field]))) {
-      processed[field] = Number(processed[field]);
+    if (processed[field] !== undefined) {
+      if (processed[field] === '' || processed[field] === null) {
+        processed[field] = null;
+      } else if (!isNaN(Number(processed[field]))) {
+        processed[field] = Number(processed[field]);
+      }
+    }
+  });
+
+  // Convertir fechas vacías a null
+  const dateFields = ['fecha_intervencion'];
+  dateFields.forEach(field => {
+    if (processed[field] !== undefined && processed[field] === '') {
+      processed[field] = null;
     }
   });
 
@@ -92,7 +149,25 @@ function processFormData(data: any): any {
   }
 
   if (processed.ciudadano_beneficiado && Array.isArray(processed.ciudadano_beneficiado)) {
-    processed.ciudadano_beneficiado = processed.ciudadano_beneficiado.map(processNestedObject);
+    processed.ciudadano_beneficiado = processed.ciudadano_beneficiado.map((ciudadano: Record<string, any>) => {
+      const processedCiudadano = processNestedObject(ciudadano);
+      // Asegurarse de que fecha_expedicion existe
+      if (!processedCiudadano.fecha_expedicion) {
+        processedCiudadano.fecha_expedicion = null;
+      }
+      return processedCiudadano;
+    });
+  }
+  
+  // Asegurarse de que firma_solicitante tiene origen_firma
+  if (processed.firma_solicitante) {
+    if (typeof processed.firma_solicitante !== 'object' || processed.firma_solicitante === null) {
+      processed.firma_solicitante = { origen_firma: "canvas" };
+    } else if (!processed.firma_solicitante.origen_firma) {
+      processed.firma_solicitante.origen_firma = "canvas";
+    }
+  } else {
+    processed.firma_solicitante = { origen_firma: "canvas" };
   }
 
   // Procesar fechas de audiencia
@@ -120,14 +195,48 @@ function processFormData(data: any): any {
 function processNestedObject(obj: any): any {
   const processed = { ...obj };
 
-  // Convertir estrato a número si existe
-  if (processed.estrato && !isNaN(Number(processed.estrato))) {
-    processed.estrato = Number(processed.estrato);
+  // Convertir estrato a número o null
+  if (processed.estrato !== undefined) {
+    if (processed.estrato === '' || processed.estrato === null) {
+      processed.estrato = null;
+    } else if (!isNaN(Number(processed.estrato))) {
+      processed.estrato = Number(processed.estrato);
+    }
   }
 
   // Convertir campos booleanos
-  if (processed.sabe_leer_escribir !== undefined) {
-    processed.sabe_leer_escribir = processed.sabe_leer_escribir === 'true' || processed.sabe_leer_escribir === true;
+  const booleanFields = ['sabe_leer_escribir', 'discapacidad'];
+  booleanFields.forEach(field => {
+    if (processed[field] !== undefined) {
+      if (processed[field] === '' || processed[field] === 'false') {
+        processed[field] = false;
+      } else {
+        processed[field] = processed[field] === 'true' || processed[field] === true;
+      }
+    }
+  });
+
+  // Convertir fechas vacías a null
+  const dateFields = ['fecha_nacimiento', 'fecha_expedicion'];
+  dateFields.forEach(field => {
+    if (processed[field] !== undefined && processed[field] === '') {
+      processed[field] = null;
+    }
+  });
+
+  // Asegurar que campos requeridos existan
+  if (!processed.hasOwnProperty('otra_nacionalidad')) {
+    processed.otra_nacionalidad = "";
+  }
+  
+  // Para ciudadano_beneficiado, asegurar que num_movil existe
+  if (!processed.hasOwnProperty('num_movil') && processed.hasOwnProperty('telefono_movil')) {
+    processed.num_movil = processed.telefono_movil;
+    delete processed.telefono_movil;
+  }
+  
+  if (!processed.hasOwnProperty('num_movil')) {
+    processed.num_movil = "";
   }
 
   return processed;

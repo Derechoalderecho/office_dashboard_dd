@@ -187,6 +187,8 @@ export default function Step2SubStep2({
     setHasSignature(false);
     setSignatureConfirmed(false);
     setValue("firma_digital", null);
+    // También limpiamos firma_solicitante
+    setValue("firma_solicitante", null);
   };
 
   // Manejar la carga de archivos para firma
@@ -205,6 +207,8 @@ export default function Step2SubStep2({
     // Guardar el archivo en el estado local y en el formulario
     setUploadedFile(file);
     setValue("firma_digital", file);
+    // También guardamos como firma_solicitante para el backend
+    setValue("firma_solicitante", file);
 
     // Limpiar el canvas si hay una firma dibujada
     if (hasSignature && ctx && canvasRef.current) {
@@ -243,6 +247,8 @@ export default function Step2SubStep2({
     if (uploadedFile) {
       setUploadedFile(null);
       setValue("firma_digital", null);
+    // También limpiamos firma_solicitante
+    setValue("firma_solicitante", null);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -259,6 +265,8 @@ export default function Step2SubStep2({
       if (uploadedFile && !hasSignature) {
         setUploadedFile(null);
         setValue("firma_digital", null);
+    // También limpiamos firma_solicitante
+    setValue("firma_solicitante", null);
       }
 
       // Programamos la reconfiguración del canvas para el siguiente ciclo de renderizado
@@ -285,6 +293,8 @@ export default function Step2SubStep2({
       if (uploadedFile) {
         setUploadedFile(null);
         setValue("firma_digital", null);
+    // También limpiamos firma_solicitante
+    setValue("firma_solicitante", null);
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
@@ -301,6 +311,8 @@ export default function Step2SubStep2({
         const fileName = `firma_${timestamp}.jpg`;
         const file = await canvasToFile(canvas, fileName);
         setValue("firma_digital", file);
+    // También guardamos como firma_solicitante para el backend
+    setValue("firma_solicitante", file);
         setSignatureConfirmed(true);
       } catch (error) {
         console.error("Error al guardar la firma:", error);
@@ -425,6 +437,8 @@ export default function Step2SubStep2({
                   onPress={() => {
                     setUploadedFile(null);
                     setValue("firma_digital", null);
+    // También limpiamos firma_solicitante
+    setValue("firma_solicitante", null);
                     if (fileInputRef.current) {
                       fileInputRef.current.value = "";
                     }

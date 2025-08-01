@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
-import { DateInput, TimeInput, DateValue, Button } from "@heroui/react";
+import { DatePicker, TimeInput, DateValue, Button } from "@heroui/react";
 import { Time } from "@internationalized/date";
 import { I18nProvider } from "@react-aria/i18n";
 import { Icon } from "@iconify/react";
@@ -32,8 +32,12 @@ export default function Step5ScheduleConciliationHearing() {
       const hora = horaSeleccionada.hour.toString().padStart(2, "0");
       const minuto = horaSeleccionada.minute.toString().padStart(2, "0");
 
-      // Crear el formato ISO 8601: YYYY-MM-DDTHH:MM:00Z
-      const fechaHoraISO = `${fechaStr}T${hora}:${minuto}:00Z`;
+      // Crear el formato ISO 8601 sin Z para evitar problemas de zona horaria
+      // El formato será YYYY-MM-DDTHH:MM:00 (hora local)
+      const fechaHoraISO = `${fechaStr}T${hora}:${minuto}:00`;
+
+      console.log("Fecha y hora seleccionada:", fechaStr, `${hora}:${minuto}`);
+      console.log("Fecha y hora ISO:", fechaHoraISO);
 
       // Agregar la nueva fecha al array existente
       const nuevasFechas = [...fechasAudiencia, { fecha_hora: fechaHoraISO }];
@@ -65,14 +69,15 @@ export default function Step5ScheduleConciliationHearing() {
 
       <div className="grid grid-cols-3 items-end gap-4">
         <I18nProvider locale="es">
-          <DateInput
+          <DatePicker
             variant="bordered"
             label="Fecha"
             labelPlacement="outside"
             value={fechaSeleccionada}
             onChange={setFechaSeleccionada}
             isRequired
-            endContent={<Icon icon="solar:calendar-bold" className="h-5 w-5" />}
+            showMonthAndYearPickers
+            selectorIcon={<Icon icon="solar:calendar-bold" className="h-5 w-5" />}
           />
         </I18nProvider>
 
@@ -104,18 +109,15 @@ export default function Step5ScheduleConciliationHearing() {
       {/* Listado de opciones de fecha */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mt-6">
         {fechasAudiencia.map((opcion: any, index: number) => {
-          // Convertir la fecha ISO a objetos de fecha y hora para mostrar
-          const fechaHora = new Date(opcion.fecha_hora);
-          const fecha = fechaHora.toLocaleDateString("es-CO", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-          });
-          const hora = fechaHora.toLocaleTimeString("es-CO", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false,
-          });
+          // Extraer la fecha y hora directamente del string ISO
+          const [fechaParte, horaParte] = opcion.fecha_hora.split('T');
+          
+          // Formatear la fecha (YYYY-MM-DD a DD/MM/YYYY)
+          const [año, mes, dia] = fechaParte.split('-');
+          const fecha = `${dia}/${mes}/${año}`;
+          
+          // Formatear la hora (extraer HH:MM de HH:MM:00)
+          const hora = horaParte.substring(0, 5);
 
           return (
             <figure
