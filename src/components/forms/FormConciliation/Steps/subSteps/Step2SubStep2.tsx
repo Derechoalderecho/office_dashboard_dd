@@ -344,7 +344,7 @@ export default function Step2SubStep2({
       >
         <Tab key="0" title="Firma digital" />
         <Tab key="1" title="Subir firma" />
-        <Tab key="2" title="Firma foto de usuario" />
+        <Tab key="2" title="Subir foto de usuario" />
       </Tabs>
 
       {activeTab === 0 && (

@@ -126,7 +126,7 @@ export default function Step3CaseCounterparts() {
         <SelectItem key="Solicitud de conciliación">
           Solicitud de conciliación
         </SelectItem>
-        <SelectItem key="Otros">Otro</SelectItem>
+        <SelectItem key="Audiencia de conciliación">Audiencia de conciliación</SelectItem>
       </Select>
 
       <h6 className="text-lg font-medium py-4">

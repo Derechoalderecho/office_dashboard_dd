@@ -61,7 +61,7 @@ export default function TableCases() {
   const [isLoading, setIsLoading] = useState(true);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [selectedCase, setSelectedCase] = useState<CaseWithKey | null>(null);
-  const { user, role, internalUserId } = useAuth();
+  const { user, role } = useAuth();
 
   // Función para reiniciar todos los filtros
   const handleResetAllFilters = useCallback(() => {
@@ -90,11 +90,6 @@ export default function TableCases() {
       
       // Limpiar las selecciones actuales
       setSelectedKeys(new Set([]));
- 
-      if (!userId) {
-        setIsLoading(false);
-        return;
-      }
       
       // Obtener todos los casos del usuario
       const userCases = await fetchCompleteUserCases();
@@ -128,13 +123,10 @@ export default function TableCases() {
     }
   };
 
-  // Fetch casos del usuario como useEffect para obtener los casos del usuario
+  // Fetch casos del usuario al montar el componente
   useEffect(() => {
-    if (internalUserId) {
-      setSelectedUser(internalUserId);
-      fetchCases(false, internalUserId);
-    }
-  }, [internalUserId]);
+    fetchCases(false);
+  }, []);
 
   // Botón de eliminar casos
   const handleDeleteCases = async (ids: number[]): Promise<boolean> => {

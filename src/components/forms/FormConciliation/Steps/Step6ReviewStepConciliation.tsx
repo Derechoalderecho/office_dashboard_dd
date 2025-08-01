@@ -228,12 +228,24 @@ export default function Step6ReviewStepConciliation() {
         <section className="space-y-8 border border-gray-300 p-3 rounded-xl">
           <h6 className="text-lg font-semibold">Programación de Audiencia</h6>
           <div className="space-y-2">
-            {formValues.fechas_audiencia.map((fecha: string, index: number) => (
-              <div key={index} className="p-3 border border-gray-200 rounded-lg bg-blue-50">
-                <span className="text-sm font-medium">Fecha {index + 1}: </span>
-                <span className="text-sm">{formatDate(fecha)}</span>
-              </div>
-            ))}
+            {formValues.fechas_audiencia.map((opcion: any, index: number) => {
+              // Extraer la fecha y hora directamente del string ISO
+              const [fechaParte, horaParte] = opcion.fecha_hora.split('T');
+              
+              // Formatear la fecha (YYYY-MM-DD a DD/MM/YYYY)
+              const [año, mes, dia] = fechaParte.split('-');
+              const fechaFormateada = `${dia}/${mes}/${año}`;
+              
+              // Formatear la hora (extraer HH:MM de HH:MM:00)
+              const horaFormateada = horaParte.substring(0, 5);
+              
+              return (
+                <div key={index} className="p-3 border border-gray-200 rounded-lg bg-blue-50">
+                  <span className="text-sm font-medium">Opción {index + 1}: </span>
+                  <span className="text-sm">{fechaFormateada} a las {horaFormateada}</span>
+                </div>
+              );
+            })}
           </div>
         </section>
       )}
@@ -249,7 +261,7 @@ export default function Step6ReviewStepConciliation() {
             <span className="text-sm">Confirmación de datos personales</span>
           </div>
           <div className="flex items-center gap-2">
-            <Chip size="sm" color={formValues.confirma_tratamiento_datos ? "success" : "danger"}>
+            <Chip size="sm" className="text-white" color={formValues.confirma_tratamiento_datos ? "success" : "danger"}>
               {formValues.confirma_tratamiento_datos ? "Confirmado" : "Pendiente"}
             </Chip>
             <span className="text-sm">Autorización de tratamiento de datos</span>

@@ -65,25 +65,7 @@ export async function fetchUserByFirebaseUid(
   }
 }
 
-/**
- * Función optimizada que solo devuelve el ID interno del usuario
- * @param firebaseUid - ID de Firebase del usuario
- * @returns El ID interno del usuario o null si no se encuentra
- */
-export async function getUserIdFromFirebaseUid(
-  firebaseUid: string
-): Promise<number | null> {
-  try {
-    const usuario = await fetchUserByFirebaseUid(firebaseUid);
-    return usuario ? usuario.id_usuario : null;
-  } catch (error) {
-    logger.error(
-      `Error al obtener ID interno del usuario con Firebase UID ${firebaseUid}:`,
-      error
-    );
-    return null;
-  }
-}
+// Función getUserIdFromFirebaseUid eliminada - Ya no se usa el ID interno del usuario
 
 /**
  * Obtiene el rol de un usuario a partir de su ID de Firebase

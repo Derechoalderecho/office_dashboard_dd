@@ -1,6 +1,8 @@
 import axios, { AxiosRequestConfig, AxiosError, AxiosResponse } from "axios";
 import { API_BASE_URL } from "@/config/api";
 import { store } from "@/store/store";
+import { auth } from "@/lib/firebase";
+import { getIdToken } from "firebase/auth";
 
 const DEFAULT_TIMEOUT = 10000;
 const MAX_RETRIES = 2;
@@ -21,16 +23,33 @@ const axiosInstance = axios.create({
   },
 });
 
+// Función para obtener un token actualizado directamente de Firebase
+async function getValidToken() {
+  const user = auth.currentUser;
+  if (user) {
+    try {
+      // forceRefresh = false: Firebase verificará si el token está expirado y lo renovará si es necesario
+      return await getIdToken(user, false);
+    } catch (error) {
+      console.error("API: Error al obtener token fresco de Firebase:", error);
+      // Si falla, intentamos usar el token del store como respaldo
+      const state = store.getState();
+      return state.auth.token;
+    }
+  }
+  return null;
+}
+
 // Interceptor para añadir el token de autenticación a todas las solicitudes
 axiosInstance.interceptors.request.use(
-  (config) => {
-    const state = store.getState();
-    const token = state.auth.token;
+  async (config) => {
+    // Obtenemos un token fresco directamente de Firebase
+    const token = await getValidToken();
 
     if (token) {
       config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
-      console.log("API: Añadiendo token de autenticación a la solicitud");
+      console.log("API: Añadiendo token actualizado a la solicitud");
     }
 
     return config;
@@ -78,15 +97,15 @@ axiosInstance.interceptors.response.use(
       isRefreshingToken = true;
 
       try {
-        // Intentamos obtener un nuevo token del estado de Redux
-        const state = store.getState();
-        const newToken = state.auth.token;
+        // Intentamos obtener un nuevo token fresco directamente de Firebase
+        const newToken = await getValidToken();
 
         if (newToken) {
-          console.log("API: Usando token existente del estado");
+          console.log("API: Usando token fresco de Firebase");
 
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
 
+          // Actualizamos todas las solicitudes pendientes con el token fresco
           pendingRequests.forEach((request) => {
             if (!request.config.headers) {
               request.config.headers = {};
