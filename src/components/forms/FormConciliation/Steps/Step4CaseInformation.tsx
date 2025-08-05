@@ -4,8 +4,13 @@ import { I18nProvider } from "@react-aria/i18n";
 import { useState, useEffect } from "react";
 import { CalendarDate } from "@internationalized/date";
 import InputFile, { FileAttachment } from "@/components/shared/InputFile";
+import { validateStep4 } from "@/validators/step4ConciliationValidators";
 
-export default function Step4CaseInformation() {
+interface Step4CaseInformationProps {
+  onValidationChange?: (isValid: boolean) => void;
+}
+
+export default function Step4CaseInformation({ onValidationChange }: Step4CaseInformationProps) {
   const { register, watch, setValue } = useFormContext();
 
   // Obtener la fecha de intervención del formulario
@@ -15,6 +20,31 @@ export default function Step4CaseInformation() {
 
   // Estado para anexos adicionales
   const anexosAdicionales = watch("anexos_adicionales") || [];
+  
+  // Observar campos relevantes para validación
+  const formData = watch();
+  
+  // Comunicar estado de validación al StepperForm
+  useEffect(() => {
+    if (onValidationChange) {
+      const validation = validateStep4(formData);
+      onValidationChange(validation.success);
+    }
+  }, [
+    formData.inicio_de_conflicto,
+    formData.escala_del_conflicto,
+    formData.ultima_intervencion,
+    formData.fecha_intervencion,
+    formData.modalidad_audiencia,
+    formData.hechos,
+    formData.pretensiones,
+    formData.cuantia,
+    formData.pruebas_solicitante,
+    formData.pruebas_citado,
+    formData.anexo_registro_civil,
+    formData.anexo_cedula_solicitante,
+    onValidationChange
+  ]);
 
   // Sincronizar el estado cuando cambie el valor en el formulario
   useEffect(() => {

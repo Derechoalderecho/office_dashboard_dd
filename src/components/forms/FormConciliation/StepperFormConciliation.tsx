@@ -18,7 +18,7 @@ import Step1BasicInformationConciliation from "./Steps/Step1BasicInformationConc
 import Step2DataProcessing from "./Steps/Step2DataProcessing";
 import Step3CaseCounterparts from "./Steps/Step3CaseCounterparts";
 import Step4CaseInformation from "./Steps/Step4CaseInformation";
-import Step5ScheduleConciliationHearing from "./Steps/Step5ScheduleConciliationHearing";
+//import Step5ScheduleConciliationHearing from "./Steps/Step5ScheduleConciliationHearing";
 import Step6ReviewStepConciliation from "./Steps/Step6ReviewStepConciliation";
 import { submitFormData } from "./SubmitFormConciliation";
 import { useRouter } from "next/navigation";
@@ -26,6 +26,7 @@ import { useForm, FormProvider } from "react-hook-form";
 import { validateStep1 } from "@/validators/formConciliationValidators";
 import { canAdvanceFromSubStep, getSubStepErrorMessage } from "@/validators/step2ConciliationValidators";
 import { validateStep3 } from "@/validators/step3ConciliationValidators";
+import { validateStep4 } from "@/validators/step4ConciliationValidators";
 import { useEffect } from "react";
 
 export default function StepperFormConciliation() {
@@ -34,6 +35,7 @@ export default function StepperFormConciliation() {
   const [isStep1Valid, setIsStep1Valid] = useState(false);
   const [isStep2Valid, setIsStep2Valid] = useState(false);
   const [isStep3Valid, setIsStep3Valid] = useState(false);
+  const [isStep4Valid, setIsStep4Valid] = useState(false);
   const router = useRouter();
 
   // Función para recibir el estado de validación desde Step1
@@ -49,6 +51,11 @@ export default function StepperFormConciliation() {
   // Función para recibir el estado de validación desde Step3
   const handleStep3ValidationChange = (isValid: boolean) => {
     setIsStep3Valid(isValid);
+  };
+
+  // Función para recibir el estado de validación desde Step4
+  const handleStep4ValidationChange = (isValid: boolean) => {
+    setIsStep4Valid(isValid);
   };
 
   // Configuración de React Hook Form
@@ -203,8 +210,12 @@ export default function StepperFormConciliation() {
       component: Step3CaseCounterparts,
       props: { onValidationChange: handleStep3ValidationChange }
     },
-    { title: "Información del caso", component: Step4CaseInformation },
-    { title: 'Agendar audiencia de conciliación', component: Step5ScheduleConciliationHearing },
+    { 
+      title: "Información del caso", 
+      component: Step4CaseInformation,
+      props: { onValidationChange: handleStep4ValidationChange }
+    },
+    //{ title: 'Agendar audiencia de conciliación', component: Step5ScheduleConciliationHearing },
     { title: "Revisión", component: Step6ReviewStepConciliation },
   ];
 
@@ -433,7 +444,8 @@ export default function StepperFormConciliation() {
                 methods.formState.isSubmitting ||
                 (currentStep === 0 && !isStep1Valid) ||
                 (currentStep === 1 && !isStep2Valid) ||
-                (currentStep === 2 && !isStep3Valid)
+                (currentStep === 2 && !isStep3Valid) ||
+                (currentStep === 3 && !isStep4Valid)
               }
               className="flex items-center"
 
