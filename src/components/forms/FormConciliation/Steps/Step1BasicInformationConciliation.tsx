@@ -149,6 +149,24 @@ export default function Step1BasicInformationConciliation({ onValidationChange }
     }
   }, [ciudadanoData.departamento, locations, setValue]);
 
+  // Función helper para buscar ubicación por código DANE
+  const findLocationByDaneCode = (daneCode: string) => {
+    if (!daneCode || !locations || locations.length === 0) {
+      return null;
+    }
+    
+    const location = locations.find(loc => loc.dane_municipio === daneCode.trim());
+    
+    if (location) {
+      return {
+        departamento: location.nombre_departamento,
+        municipio: location.nombre_municipio
+      };
+    }
+    
+    return null;
+  };
+
   // Efecto para establecer fechas si ya existen en formData
   useEffect(() => {
     if (ciudadanoData.fecha_nacimiento && !fechaNacimiento) {
@@ -297,9 +315,30 @@ export default function Step1BasicInformationConciliation({ onValidationChange }
         setValue("ciudadano_solicitante.direccion_residencia", citizen.direccion_residencia || "");
         setValue("ciudadano_solicitante.estrato", citizen.estrato || null);
         setValue("ciudadano_solicitante.zona_residencia", citizen.zona_residencia || "");
-        setValue("ciudadano_solicitante.departamento", citizen.departamento || "");
-        setValue("ciudadano_solicitante.municipio", citizen.municipio || "");
+        
+        // Manejar departamento y municipio usando código DANE si es necesario
+        let departamento = citizen.departamento || "";
+        let municipio = citizen.municipio || "";
+        
+        // Si no hay departamento/municipio pero sí hay código DANE, buscarlos
+        if ((!departamento || !municipio) && citizen.dane_municipio) {
+          const locationInfo = findLocationByDaneCode(citizen.dane_municipio);
+          if (locationInfo) {
+            departamento = locationInfo.departamento;
+            municipio = locationInfo.municipio;
+            console.log(`Ubicación encontrada por DANE ${citizen.dane_municipio}: ${departamento} - ${municipio}`);
+          }
+        }
+        
+        setValue("ciudadano_solicitante.departamento", departamento);
+        setValue("ciudadano_solicitante.municipio", municipio);
         setValue("ciudadano_solicitante.dane_municipio", citizen.dane_municipio || "");
+        
+        // Actualizar municipios disponibles si se encontró departamento
+        if (departamento) {
+          const municipiosDisponibles = getMunicipalitiesByDepartment(locations, departamento);
+          setMunicipalities(municipiosDisponibles);
+        }
 
         setIsExistingCitizen(true);
         setNotification({
@@ -995,8 +1034,15 @@ export default function Step1BasicInformationConciliation({ onValidationChange }
             label="¿Tiene alguna discapacidad?"
             labelPlacement="outside"
             placeholder="Seleccione una opción"
-            selectedKeys={ciudadanoData.discapacidad ? [ciudadanoData.discapacidad] : []}
-            onChange={(e) => setValue("ciudadano_solicitante.discapacidad", e.target.value)}
+            selectedKeys={
+              ciudadanoData.discapacidad !== undefined 
+                ? [ciudadanoData.discapacidad.toString()] 
+                : []
+            }
+            onChange={(e) => {
+              const value = e.target.value === "true";
+              setValue("ciudadano_solicitante.discapacidad", value);
+            }}
             isRequired
           >
             <SelectItem key="true">Sí</SelectItem>
@@ -1009,9 +1055,14 @@ export default function Step1BasicInformationConciliation({ onValidationChange }
             labelPlacement="outside"
             placeholder="Seleccione una opción"
             selectedKeys={
-              ciudadanoData.sabe_leer_escribir ? [ciudadanoData.sabe_leer_escribir] : []
+              ciudadanoData.sabe_leer_escribir !== undefined 
+                ? [ciudadanoData.sabe_leer_escribir.toString()] 
+                : []
             }
-            onChange={(e) => setValue("ciudadano_solicitante.sabe_leer_escribir", e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value === "true";
+              setValue("ciudadano_solicitante.sabe_leer_escribir", value);
+            }}
             isRequired
           >
             <SelectItem key="true">Sí</SelectItem>
