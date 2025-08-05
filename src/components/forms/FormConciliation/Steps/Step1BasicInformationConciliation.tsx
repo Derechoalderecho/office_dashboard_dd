@@ -35,7 +35,12 @@ import {
 } from "lucide-react";
 import { validateStep1 } from "@/validators/formConciliationValidators";
 
-export default function Step1BasicInformationConciliation() {
+interface Step1Props {
+  onValidationChange?: (isValid: boolean) => void;
+  goToStep?: (stepIndex: number) => void;
+}
+
+export default function Step1BasicInformationConciliation({ onValidationChange }: Step1Props) {
   const { register, watch, setValue } = useFormContext();
   
   // Obtener datos del formulario
@@ -193,6 +198,12 @@ export default function Step1BasicInformationConciliation() {
   useEffect(() => {
     if (showFullForm) {
       const validation = validateStep1({ ciudadano_solicitante: ciudadanoData });
+      
+      // Comunicar el estado de validación al StepperForm
+      if (onValidationChange) {
+        onValidationChange(validation.success);
+      }
+      
       if (!validation.success) {
         // Solo mostrar errores para campos que han sido tocados
         const filteredErrors: Record<string, string> = {};
@@ -205,8 +216,13 @@ export default function Step1BasicInformationConciliation() {
       } else {
         setValidationErrors({});
       }
+    } else {
+      // Si no se muestra el formulario completo, el step no es válido
+      if (onValidationChange) {
+        onValidationChange(false);
+      }
     }
-  }, [ciudadanoData, showFullForm, touchedFields]);
+  }, [ciudadanoData, showFullForm, touchedFields, onValidationChange]);
 
   // Helper para manejar cuando un campo es tocado (onBlur)
   const handleFieldBlur = (fieldPath: string) => {
@@ -291,6 +307,40 @@ export default function Step1BasicInformationConciliation() {
           message:
             "Ciudadano existente encontrado. Los campos han sido rellenados automáticamente.",
         });
+
+        // Marcar todos los campos como tocados para habilitar el botón Siguiente
+        const fieldsToTouch = [
+          "ciudadano_solicitante.tipo_documento",
+          "ciudadano_solicitante.num_documento",
+          "ciudadano_solicitante.primer_nombre",
+          "ciudadano_solicitante.segundo_nombre",
+          "ciudadano_solicitante.primer_apellido",
+          "ciudadano_solicitante.segundo_apellido",
+          "ciudadano_solicitante.fecha_nacimiento",
+          "ciudadano_solicitante.sexo",
+          "ciudadano_solicitante.genero",
+          "ciudadano_solicitante.orientacion_sexual",
+          "ciudadano_solicitante.num_movil",
+          "ciudadano_solicitante.telefono_fijo",
+          "ciudadano_solicitante.email",
+          "ciudadano_solicitante.nacionalidad",
+          "ciudadano_solicitante.estado_civil",
+          "ciudadano_solicitante.escolaridad",
+          "ciudadano_solicitante.etnia",
+          "ciudadano_solicitante.estrato",
+          "ciudadano_solicitante.zona_residencia",
+          "ciudadano_solicitante.departamento",
+          "ciudadano_solicitante.municipio",
+          "ciudadano_solicitante.discapacidad",
+          "ciudadano_solicitante.sabe_leer_escribir",
+          "ciudadano_solicitante.direccion_residencia"
+        ];
+        
+        const touchedFieldsUpdate: Record<string, boolean> = {};
+        fieldsToTouch.forEach(field => {
+          touchedFieldsUpdate[field] = true;
+        });
+        setTouchedFields(touchedFieldsUpdate);
 
         // Establecer fecha de nacimiento si está disponible
         if (citizen.fecha_nacimiento) {

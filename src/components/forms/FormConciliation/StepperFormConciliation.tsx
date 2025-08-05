@@ -1,6 +1,6 @@
 "use client";
 
-import type React from "react";
+import React from "react";
 
 import { useState } from "react";
 import { Check } from "lucide-react";
@@ -31,6 +31,11 @@ export default function StepperFormConciliation() {
   const [isComplete, setIsComplete] = useState(false);
   const [isStep1Valid, setIsStep1Valid] = useState(false);
   const router = useRouter();
+
+  // Función para recibir el estado de validación desde Step1
+  const handleStep1ValidationChange = (isValid: boolean) => {
+    setIsStep1Valid(isValid);
+  };
 
   // Configuración de React Hook Form
   const methods = useForm({
@@ -165,16 +170,15 @@ export default function StepperFormConciliation() {
 
   console.log(formValues);
 
-  // Validar Step 1 en tiempo real
-  useEffect(() => {
-    if (currentStep === 0) {
-      const validation = validateStep1(formValues);
-      setIsStep1Valid(validation.success);
-    }
-  }, [formValues, currentStep]);
+  // La validación de Step 1 ahora se maneja desde el componente Step1 mismo
+  // para considerar correctamente los campos tocados
 
   const steps = [
-    { title: "Información del solicitante", component: Step1BasicInformationConciliation },
+    { 
+      title: "Información del solicitante", 
+      component: Step1BasicInformationConciliation,
+      props: { onValidationChange: handleStep1ValidationChange }
+    },
     { title: "Tratamiento de datos", component: Step2DataProcessing },
     { title: "Contrapartes del caso", component: Step3CaseCounterparts },
     { title: "Información del caso", component: Step4CaseInformation },
@@ -383,7 +387,10 @@ export default function StepperFormConciliation() {
           ) : (
             <FormProvider {...methods}>
               <form onSubmit={handleSubmit(onSubmit)}>
-                <CurrentStepComponent goToStep={goToStep} />
+                {React.createElement(steps[currentStep].component, {
+                  ...steps[currentStep].props,
+                  goToStep
+                })}
               </form>
             </FormProvider>
           )}
@@ -408,6 +415,7 @@ export default function StepperFormConciliation() {
                 (currentStep === 0 && !isStep1Valid)
               }
               className="flex items-center"
+
             >
               {methods.formState.isSubmitting
                 ? "Enviando..."
