@@ -24,9 +24,23 @@ import {
   getDaneMunicipioByName,
   Location,
 } from "@/services/locationService";
+import {
+  findCitizenByDocument,
+} from "@/services/citizenService";
+import {
+  XIcon,
+  SearchIcon,
+  AlertCircleIcon,
+  CheckCircleIcon,
+} from "lucide-react";
 
 export default function Step1BasicInformationConciliation() {
   const { register, watch, setValue } = useFormContext();
+  
+  // Obtener datos del formulario
+  const formData = watch();
+  const ciudadanoData = formData.ciudadano_solicitante || {};
+  
   const [fechaNacimiento, setFechaNacimiento] = useState<DateValue | null>(
     null
   );
@@ -37,6 +51,20 @@ export default function Step1BasicInformationConciliation() {
   const [nacionalidadPersonalizada, setNacionalidadPersonalizada] =
     useState("");
   const [isAddressPopoverOpen, setIsAddressPopoverOpen] = useState(false);
+  
+  // Estados para búsqueda de ciudadanos
+  const [isLoading, setIsLoading] = useState(false);
+  const [showFullForm, setShowFullForm] = useState<boolean>(
+    Boolean(
+      ciudadanoData.primer_nombre || 
+      ciudadanoData.primer_apellido
+    )
+  );
+  const [isExistingCitizen, setIsExistingCitizen] = useState<boolean>(false);
+  const [notification, setNotification] = useState<{
+    type: "success" | "info" | "warning" | "error";
+    message: string;
+  } | null>(null);
 
   // Estados para locaciones
   const [locations, setLocations] = useState<Location[]>([]);
@@ -55,8 +83,8 @@ export default function Step1BasicInformationConciliation() {
   const [numeroPlaca, setNumeroPlaca] = useState<string>("");
   const [complemento, setComplemento] = useState<string>("");
 
-  const formData = watch();
-  const ciudadanoData = formData.ciudadano_solicitante || {};
+  // Nota: No necesitamos cargar todos los ciudadanos al inicio
+  // Solo usamos la búsqueda individual por documento
 
   // Fetch datos de ubicación
   useEffect(() => {
@@ -111,6 +139,29 @@ export default function Step1BasicInformationConciliation() {
     }
   }, [ciudadanoData.departamento, locations, setValue]);
 
+  // Efecto para establecer fechas si ya existen en formData
+  useEffect(() => {
+    if (ciudadanoData.fecha_nacimiento && !fechaNacimiento) {
+      try {
+        const datePart = ciudadanoData.fecha_nacimiento.split("T")[0];
+        const parsedDate = parseDate(datePart);
+        setFechaNacimiento(parsedDate);
+      } catch (error) {
+        console.error("Error parsing birth date from formData:", error);
+      }
+    }
+    
+    if (ciudadanoData.fecha_expedicion && !fechaExpedicion) {
+      try {
+        const datePart = ciudadanoData.fecha_expedicion.split("T")[0];
+        const parsedDate = parseDate(datePart);
+        setFechaExpedicion(parsedDate);
+      } catch (error) {
+        console.error("Error parsing expedition date from formData:", error);
+      }
+    }
+  }, [ciudadanoData.fecha_nacimiento, ciudadanoData.fecha_expedicion, fechaNacimiento, fechaExpedicion]);
+
   const handleNacionalidadChange = (
     e: React.ChangeEvent<HTMLSelectElement>
   ) => {
@@ -140,6 +191,127 @@ export default function Step1BasicInformationConciliation() {
     setValue("ciudadano_solicitante.tipo_documento", value);
     if (value === "SD") {
       setValue("ciudadano_solicitante.num_documento", "");
+    }
+  };
+
+  // Función para buscar ciudadano existente
+  const searchCitizen = async () => {
+    if (!ciudadanoData.tipo_documento || !ciudadanoData.num_documento) {
+      setNotification({
+        type: "warning",
+        message: "Por favor ingrese el tipo y número de documento",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const citizen = await findCitizenByDocument(
+        ciudadanoData.tipo_documento,
+        ciudadanoData.num_documento
+      );
+
+      if (citizen) {
+        // Ciudadano encontrado - llenar formulario con sus datos
+        setValue("ciudadano_solicitante.primer_nombre", citizen.primer_nombre || "");
+        setValue("ciudadano_solicitante.segundo_nombre", citizen.segundo_nombre || "");
+        setValue("ciudadano_solicitante.primer_apellido", citizen.primer_apellido || "");
+        setValue("ciudadano_solicitante.segundo_apellido", citizen.segundo_apellido || "");
+        setValue("ciudadano_solicitante.email", citizen.email || "");
+        setValue("ciudadano_solicitante.num_movil", citizen.num_movil || "");
+        setValue("ciudadano_solicitante.telefono_fijo", citizen.telefono_fijo || "");
+        setValue("ciudadano_solicitante.fecha_nacimiento", citizen.fecha_nacimiento || "");
+        setValue("ciudadano_solicitante.sexo", citizen.sexo || "");
+        setValue("ciudadano_solicitante.genero", citizen.genero || "");
+        setValue("ciudadano_solicitante.orientacion_sexual", citizen.orientacion_sexual || "");
+        setValue("ciudadano_solicitante.nacionalidad", citizen.nacionalidad || "");
+        setValue("ciudadano_solicitante.estado_civil", citizen.estado_civil || "");
+        setValue("ciudadano_solicitante.escolaridad", citizen.escolaridad || "");
+        setValue("ciudadano_solicitante.etnia", citizen.etnia || "");
+        setValue("ciudadano_solicitante.discapacidad", typeof citizen.discapacidad === "boolean" ? citizen.discapacidad : false);
+        setValue("ciudadano_solicitante.sabe_leer_escribir", typeof citizen.sabe_leer_escribir === "boolean" ? citizen.sabe_leer_escribir : false);
+        setValue("ciudadano_solicitante.direccion_residencia", citizen.direccion_residencia || "");
+        setValue("ciudadano_solicitante.estrato", citizen.estrato || null);
+        setValue("ciudadano_solicitante.zona_residencia", citizen.zona_residencia || "");
+        setValue("ciudadano_solicitante.departamento", citizen.departamento || "");
+        setValue("ciudadano_solicitante.municipio", citizen.municipio || "");
+        setValue("ciudadano_solicitante.dane_municipio", citizen.dane_municipio || "");
+
+        setIsExistingCitizen(true);
+        setNotification({
+          type: "success",
+          message:
+            "Ciudadano existente encontrado. Los campos han sido rellenados automáticamente.",
+        });
+
+        // Establecer fecha de nacimiento si está disponible
+        if (citizen.fecha_nacimiento) {
+          try {
+            const datePart = citizen.fecha_nacimiento.split("T")[0];
+            const parsedDate = parseDate(datePart);
+            setFechaNacimiento(parsedDate);
+          } catch (error) {
+            console.error(
+              "Error parsing date:",
+              error,
+              citizen.fecha_nacimiento
+            );
+            setFechaNacimiento(null);
+          }
+        }
+
+        // Nota: fecha_expedicion no está disponible en el tipo Citizen
+        // Se mantendrá como campo vacío para nuevos registros
+      } else {
+        // Ciudadano no encontrado - mostrar formulario vacío
+        // Solo mantener los campos de documento, resetear todo lo demás
+        setValue("ciudadano_solicitante.primer_nombre", "");
+        setValue("ciudadano_solicitante.segundo_nombre", "");
+        setValue("ciudadano_solicitante.primer_apellido", "");
+        setValue("ciudadano_solicitante.segundo_apellido", "");
+        setValue("ciudadano_solicitante.email", "");
+        setValue("ciudadano_solicitante.num_movil", "");
+        setValue("ciudadano_solicitante.telefono_fijo", "");
+        setValue("ciudadano_solicitante.fecha_nacimiento", "");
+        setValue("ciudadano_solicitante.sexo", "");
+        setValue("ciudadano_solicitante.genero", "");
+        setValue("ciudadano_solicitante.orientacion_sexual", "");
+        setValue("ciudadano_solicitante.nacionalidad", "");
+        setValue("ciudadano_solicitante.estado_civil", "");
+        setValue("ciudadano_solicitante.escolaridad", "");
+        setValue("ciudadano_solicitante.ocupacion", "");
+        setValue("ciudadano_solicitante.etnia", "");
+        setValue("ciudadano_solicitante.discapacidad", false);
+        setValue("ciudadano_solicitante.sabe_leer_escribir", false);
+        setValue("ciudadano_solicitante.direccion_residencia", "");
+        setValue("ciudadano_solicitante.estrato", null);
+        setValue("ciudadano_solicitante.zona_residencia", "");
+        setValue("ciudadano_solicitante.departamento", "");
+        setValue("ciudadano_solicitante.municipio", "");
+        setValue("ciudadano_solicitante.dane_municipio", "");
+
+        setIsExistingCitizen(false);
+        setNotification({
+          type: "info",
+          message:
+            "No se encontró ciudadano con este documento. Por favor ingrese la información para crear uno nuevo.",
+        });
+
+        // Resetear fechas
+        setFechaNacimiento(null);
+        setFechaExpedicion(null);
+      }
+
+      // Mostrar el formulario completo después de la búsqueda
+      setShowFullForm(true);
+    } catch (error) {
+      console.error("Error searching for citizen:", error);
+      setNotification({
+        type: "error",
+        message: "Error al buscar ciudadano. Por favor intente nuevamente.",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -249,8 +421,53 @@ export default function Step1BasicInformationConciliation() {
         )}
       </div>
 
-      <div className="mt-8">
-        <h3 className="text-lg font-medium mb-6">Crear nuevo ciudadano</h3>
+      {/* Botón de búsqueda */}
+      <div className="flex justify-center">
+        <Button
+          color="primary"
+          variant="bordered"
+          startContent={<SearchIcon className="h-4 w-4" />}
+          onPress={searchCitizen}
+          isLoading={isLoading}
+          isDisabled={!ciudadanoData.tipo_documento || (!ciudadanoData.num_documento && ciudadanoData.tipo_documento !== "SD")}
+        >
+          {isLoading ? "Buscando..." : "Buscar ciudadano"}
+        </Button>
+      </div>
+
+      {/* Notificación */}
+      {notification && (
+        <div className={`p-4 rounded-lg border ${
+          notification.type === "success" ? "bg-green-50 border-green-200 text-green-800" :
+          notification.type === "warning" ? "bg-yellow-50 border-yellow-200 text-yellow-800" :
+          notification.type === "error" ? "bg-red-50 border-red-200 text-red-800" :
+          "bg-blue-50 border-blue-200 text-blue-800"
+        }`}>
+          <div className="flex items-center gap-2">
+            {notification.type === "success" && <CheckCircleIcon className="h-5 w-5" />}
+            {notification.type === "warning" && <AlertCircleIcon className="h-5 w-5" />}
+            {notification.type === "error" && <XIcon className="h-5 w-5" />}
+            {notification.type === "info" && <AlertCircleIcon className="h-5 w-5" />}
+            <span className="text-sm font-medium">{notification.message}</span>
+            <Button
+              variant="light"
+              size="sm"
+              isIconOnly
+              onPress={() => setNotification(null)}
+              className="ml-auto"
+            >
+              <XIcon className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Formulario completo - solo se muestra después de la búsqueda */}
+      {showFullForm && (
+        <div className="mt-8">
+          <h3 className="text-lg font-medium mb-6">
+            {isExistingCitizen ? "Información del ciudadano" : "Crear nuevo ciudadano"}
+          </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-y-8 gap-x-6">
           <Input
@@ -818,7 +1035,8 @@ export default function Step1BasicInformationConciliation() {
             </Popover>
           </div>
         </div>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

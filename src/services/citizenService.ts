@@ -11,6 +11,12 @@ import {
 import { logger } from "@/utils/logUtils";
 import { convertZonaToCode } from "@/utils/citizenUtils";
 
+// Tipo para la respuesta de la API de ciudadanos
+interface CitizensApiResponse {
+  total: number;
+  items: Citizen[];
+}
+
 const CITIZEN_CACHE = "citizens";
 
 const CITIZENS_TTL = 15 * 60 * 1000;
@@ -23,8 +29,8 @@ export const fetchAllCitizens = async (): Promise<Citizen[]> => {
     return await getCollectionWithCache<Citizen>(
       CITIZEN_CACHE,
       async () => {
-        logger.debug("Obteniendo todos los ciudadanos");
-        return await get<Citizen[]>("ciudadanos");
+        const response = await get<CitizensApiResponse>("ciudadanos");
+        return response.items || [];
       },
       (citizen) => citizen.id_ciudadano,
       CITIZENS_TTL
@@ -146,8 +152,6 @@ export const findCitizenByDocument = async (
   num_documento: string
 ): Promise<Citizen | null> => {
   try {
-    logger.debug(`Buscando ciudadano con documento ${tipo_documento} ${num_documento}`);
-    
     // Get all citizens first (this uses cache if available)
     const allCitizens = await fetchAllCitizens();
     
