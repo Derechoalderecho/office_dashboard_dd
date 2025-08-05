@@ -4,7 +4,11 @@ import React from "react";
 
 import { useState } from "react";
 import { Check } from "lucide-react";
-import { CheckIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import {
+  CheckIcon,
+  ChevronRightIcon,
+  BookmarkIcon,
+} from "@heroicons/react/24/outline";
 import { Button, Divider } from "@heroui/react";
 import {
   Card,
@@ -22,12 +26,12 @@ import Step4CaseInformation from "./Steps/Step4CaseInformation";
 import Step6ReviewStepConciliation from "./Steps/Step6ReviewStepConciliation";
 import { submitFormData } from "./SubmitFormConciliation";
 import { useRouter } from "next/navigation";
+import { AlertDialog } from "@/components/ui/alert-dialog";
 import { useForm, FormProvider } from "react-hook-form";
-import { validateStep1 } from "@/validators/formConciliationValidators";
-import { canAdvanceFromSubStep, getSubStepErrorMessage } from "@/validators/step2ConciliationValidators";
-import { validateStep3 } from "@/validators/step3ConciliationValidators";
-import { validateStep4 } from "@/validators/step4ConciliationValidators";
-import { useEffect } from "react";
+import {
+  canAdvanceFromSubStep,
+  getSubStepErrorMessage,
+} from "@/validators/step2ConciliationValidators";
 
 export default function StepperFormConciliation() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -36,6 +40,10 @@ export default function StepperFormConciliation() {
   const [isStep2Valid, setIsStep2Valid] = useState(false);
   const [isStep3Valid, setIsStep3Valid] = useState(false);
   const [isStep4Valid, setIsStep4Valid] = useState(false);
+
+  // Estado para guardar y salir
+  const [showSaveExitDialog, setShowSaveExitDialog] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
 
   // Función para recibir el estado de validación desde Step1
@@ -56,6 +64,32 @@ export default function StepperFormConciliation() {
   // Función para recibir el estado de validación desde Step4
   const handleStep4ValidationChange = (isValid: boolean) => {
     setIsStep4Valid(isValid);
+  };
+
+  // Función para determinar si se puede mostrar el botón "Guardar y salir"
+  const canShowSaveExitButton = () => {
+    if (currentStep < 2) return false; // Solo desde Step 3 en adelante
+
+    const formData = methods.getValues();
+    const hasRequiredStep3Fields =
+      formData.tipo_proceso && formData.materia_del_caso;
+
+    return hasRequiredStep3Fields;
+  };
+
+  // Función para manejar guardar y salir
+  const handleSaveAndExit = async () => {
+    setIsSaving(true);
+    try {
+      const formData = methods.getValues();
+      console.log("Guardando borrador:", formData);
+      router.push("/dashboard/cases");
+    } catch (error) {
+      console.error("Error al guardar borrador:", error);
+    } finally {
+      setIsSaving(false);
+      setShowSaveExitDialog(false);
+    }
   };
 
   // Configuración de React Hook Form
@@ -98,73 +132,77 @@ export default function StepperFormConciliation() {
       confirma_tratamiento_datos: false,
       step2SubStep: 0, //No se envía al backend
       firma_solicitante: {
-        origen_firma: "canvas"
+        origen_firma: "canvas",
       },
       foto_usuario: "",
       //Informacion Step 3
       tipo_proceso: "",
       materia_del_caso: "",
-      ciudadano_citado: [{
-        tipo_documento: "",
-        num_documento: "",
-        primer_nombre: "",
-        segundo_nombre: "",
-        primer_apellido: "",
-        segundo_apellido: "",
-        fecha_nacimiento: "",
-        fecha_expedicion: "",
-        sexo: "",
-        genero: "",
-        orientacion_sexual: "",
-        num_movil: "",
-        telefono_fijo: "",
-        email: "",
-        nacionalidad: "",
-        otra_nacionalidad: "",
-        estado_civil: "",
-        escolaridad: "",
-        ocupacion: "",
-        etnia: "",
-        estrato: null,
-        zona_residencia: "",
-        departamento: "",
-        municipio: "",
-        dane_municipio: "",
-        discapacidad: false,
-        sabe_leer_escribir: false,
-        direccion_residencia: "",
-      }],
+      ciudadano_citado: [
+        {
+          tipo_documento: "",
+          num_documento: "",
+          primer_nombre: "",
+          segundo_nombre: "",
+          primer_apellido: "",
+          segundo_apellido: "",
+          fecha_nacimiento: "",
+          fecha_expedicion: "",
+          sexo: "",
+          genero: "",
+          orientacion_sexual: "",
+          num_movil: "",
+          telefono_fijo: "",
+          email: "",
+          nacionalidad: "",
+          otra_nacionalidad: "",
+          estado_civil: "",
+          escolaridad: "",
+          ocupacion: "",
+          etnia: "",
+          estrato: null,
+          zona_residencia: "",
+          departamento: "",
+          municipio: "",
+          dane_municipio: "",
+          discapacidad: false,
+          sabe_leer_escribir: false,
+          direccion_residencia: "",
+        },
+      ],
       existen_persona_beneficiaria: false,
-      ciudadano_beneficiado: [{
-        tipo_documento: "",
-        num_documento: "",
-        primer_nombre: "",
-        segundo_nombre: "",
-        primer_apellido: "",
-        segundo_apellido: "",
-        fecha_nacimiento: "",
-        fecha_expedicion: "",
-        sexo: "",
-        genero: "",
-        orientacion_sexual: "",
-        num_movil: "",
-        telefono_fijo: "",
-        email: "",
-        nacionalidad: "Colombiana",
-        otra_nacionalidad: "",
-        estado_civil: "",
-        escolaridad: "",
-        ocupacion: "",
-        etnia: "",
-        estrato: null,
-        zona_residencia: "",
-        departamento: "",
-        municipio: "",
-        dane_municipio: "",
-        discapacidad: false,
-        sabe_leer_escribir: false,
-        direccion_residencia: "",
-      }],
+      ciudadano_beneficiado: [
+        {
+          tipo_documento: "",
+          num_documento: "",
+          primer_nombre: "",
+          segundo_nombre: "",
+          primer_apellido: "",
+          segundo_apellido: "",
+          fecha_nacimiento: "",
+          fecha_expedicion: "",
+          sexo: "",
+          genero: "",
+          orientacion_sexual: "",
+          num_movil: "",
+          telefono_fijo: "",
+          email: "",
+          nacionalidad: "Colombiana",
+          otra_nacionalidad: "",
+          estado_civil: "",
+          escolaridad: "",
+          ocupacion: "",
+          etnia: "",
+          estrato: null,
+          zona_residencia: "",
+          departamento: "",
+          municipio: "",
+          dane_municipio: "",
+          discapacidad: false,
+          sabe_leer_escribir: false,
+          direccion_residencia: "",
+        },
+      ],
       //Informacion Step 4
       inicio_de_conflicto: "",
       escala_del_conflicto: "",
@@ -195,25 +233,25 @@ export default function StepperFormConciliation() {
   // para considerar correctamente los campos tocados
 
   const steps = [
-    { 
-      title: "Información del solicitante", 
+    {
+      title: "Información del solicitante",
       component: Step1BasicInformationConciliation,
-      props: { onValidationChange: handleStep1ValidationChange }
+      props: { onValidationChange: handleStep1ValidationChange },
     },
-    { 
-      title: "Tratamiento de datos", 
+    {
+      title: "Tratamiento de datos",
       component: Step2DataProcessing,
-      props: { onValidationChange: handleStep2ValidationChange }
+      props: { onValidationChange: handleStep2ValidationChange },
     },
-    { 
-      title: "Contrapartes del caso", 
+    {
+      title: "Contrapartes del caso",
       component: Step3CaseCounterparts,
-      props: { onValidationChange: handleStep3ValidationChange }
+      props: { onValidationChange: handleStep3ValidationChange },
     },
-    { 
-      title: "Información del caso", 
+    {
+      title: "Información del caso",
       component: Step4CaseInformation,
-      props: { onValidationChange: handleStep4ValidationChange }
+      props: { onValidationChange: handleStep4ValidationChange },
     },
     //{ title: 'Agendar audiencia de conciliación', component: Step5ScheduleConciliationHearing },
     { title: "Revisión", component: Step6ReviewStepConciliation },
@@ -235,54 +273,72 @@ export default function StepperFormConciliation() {
     if (currentStep === steps.length - 1) {
       console.log("=== INICIO DEBUG STEPPER FORM ===");
       console.log("Datos originales del formulario:", data);
-      
+
       // Eliminar campos que no deben enviarse al backend
       const dataToSend = { ...data };
       delete dataToSend.step2SubStep; // Campo interno que no se envía al backend
-      
+
       console.log("Datos después de eliminar step2SubStep:", dataToSend);
-      
+
       // Asegurarse de que firma_solicitante tiene origen_firma
-      if (!dataToSend.firma_solicitante || typeof dataToSend.firma_solicitante !== 'object') {
+      if (
+        !dataToSend.firma_solicitante ||
+        typeof dataToSend.firma_solicitante !== "object"
+      ) {
         dataToSend.firma_solicitante = { origen_firma: "canvas" };
       } else if (!dataToSend.firma_solicitante.origen_firma) {
         dataToSend.firma_solicitante.origen_firma = "canvas";
       }
-      
+
       // Asegurarse de que todos los ciudadanos beneficiados tengan fecha_expedicion
-      if (dataToSend.ciudadano_beneficiado && Array.isArray(dataToSend.ciudadano_beneficiado)) {
-        dataToSend.ciudadano_beneficiado = dataToSend.ciudadano_beneficiado.map((ciudadano: any) => {
-          if (!ciudadano.fecha_expedicion) {
-            return { ...ciudadano, fecha_expedicion: null };
+      if (
+        dataToSend.ciudadano_beneficiado &&
+        Array.isArray(dataToSend.ciudadano_beneficiado)
+      ) {
+        dataToSend.ciudadano_beneficiado = dataToSend.ciudadano_beneficiado.map(
+          (ciudadano: any) => {
+            if (!ciudadano.fecha_expedicion) {
+              return { ...ciudadano, fecha_expedicion: null };
+            }
+            return ciudadano;
           }
-          return ciudadano;
-        });
+        );
       }
-      
+
       // Extraer la firma digital si existe
-      const firmaDigital = dataToSend.firma_digital || dataToSend.firma_solicitante;
+      const firmaDigital =
+        dataToSend.firma_digital || dataToSend.firma_solicitante;
       console.log("Firma digital encontrada:", firmaDigital);
-      
+
       // Crear un nuevo FormData para enviar directamente
       const formDataObj = new FormData();
-      
+
       // Añadir el objeto de datos completo como JSON en la clave 'datos'
       const jsonData = JSON.stringify(dataToSend);
-      console.log("JSON a enviar en 'datos':", jsonData.substring(0, 200) + '...');
-      formDataObj.append('datos', jsonData);
-      
+      console.log(
+        "JSON a enviar en 'datos':",
+        jsonData.substring(0, 200) + "..."
+      );
+      formDataObj.append("datos", jsonData);
+
       // Añadir la firma digital si existe
       if (firmaDigital instanceof File) {
-        formDataObj.append('firma_digital', firmaDigital);
+        formDataObj.append("firma_digital", firmaDigital);
         console.log("✓ Firma digital añadida al FormData:", firmaDigital);
       } else {
-        console.warn("⚠️ No se encontró firma digital en el formulario o no es un archivo");
+        console.warn(
+          "⚠️ No se encontró firma digital en el formulario o no es un archivo"
+        );
       }
-      
+
       // Verificar el FormData antes de enviarlo
       console.log("=== FormData creado ===");
       for (const [key, value] of formDataObj.entries()) {
-        console.log(`${key}:`, typeof value, value instanceof File ? `File(${value.name})` : value);
+        console.log(
+          `${key}:`,
+          typeof value,
+          value instanceof File ? `File(${value.name})` : value
+        );
       }
       console.log("=== FIN DEBUG STEPPER FORM ===");
 
@@ -296,14 +352,14 @@ export default function StepperFormConciliation() {
     } else if (currentStep === 1) {
       // Estamos en el Step 2 (Tratamiento de datos)
       const currentSubStep = data.step2SubStep || 0;
-      
+
       // Usar validador para determinar si se puede avanzar
       if (!canAdvanceFromSubStep(data, currentSubStep)) {
         // Mostrar mensaje de error específico del SubStep
         alert(getSubStepErrorMessage(currentSubStep));
         return;
       }
-      
+
       if (currentSubStep === 0) {
         // Si estamos en el sub-paso inicial, avanzamos al sub-paso de confirmación
         methods.setValue("step2SubStep", 1);
@@ -419,7 +475,7 @@ export default function StepperFormConciliation() {
               <form onSubmit={handleSubmit(onSubmit)}>
                 {React.createElement(steps[currentStep].component, {
                   ...steps[currentStep].props,
-                  goToStep
+                  goToStep,
                 })}
               </form>
             </FormProvider>
@@ -436,30 +492,53 @@ export default function StepperFormConciliation() {
             >
               Anterior
             </Button>
-            <Button
-              color="primary"
-              type="submit"
-              onClick={methods.handleSubmit(onSubmit)}
-              isDisabled={
-                methods.formState.isSubmitting ||
-                (currentStep === 0 && !isStep1Valid) ||
-                (currentStep === 1 && !isStep2Valid) ||
-                (currentStep === 2 && !isStep3Valid) ||
-                (currentStep === 3 && !isStep4Valid)
-              }
-              className="flex items-center"
+            <div className="flex items-center gap-3">
+              <Button
+                color="default"
+                variant="bordered"
+                onPress={() => setShowSaveExitDialog(true)}
+                startContent={<BookmarkIcon className="h-4 w-4" />}
+                isDisabled={!canShowSaveExitButton()}
+              >
+                Guardar y salir
+              </Button>
 
-            >
-              {methods.formState.isSubmitting
-                ? "Enviando..."
-                : currentStep === steps.length - 1
-                ? "Enviar"
-                : "Siguiente"}
-              {!methods.formState.isSubmitting &&
-                currentStep < steps.length - 1 && (
-                  <ChevronRightIcon className="ml-2 h-4 w-4 stroke-2" />
-                )}
-            </Button>
+              <Button
+                color="primary"
+                type="submit"
+                onClick={methods.handleSubmit(onSubmit)}
+                isDisabled={
+                  methods.formState.isSubmitting ||
+                  (currentStep === 0 && !isStep1Valid) ||
+                  (currentStep === 1 && !isStep2Valid) ||
+                  (currentStep === 2 && !isStep3Valid) ||
+                  (currentStep === 3 && !isStep4Valid)
+                }
+                className="flex items-center"
+              >
+                {methods.formState.isSubmitting
+                  ? "Enviando..."
+                  : currentStep === steps.length - 1
+                  ? "Enviar"
+                  : "Siguiente"}
+                {!methods.formState.isSubmitting &&
+                  currentStep < steps.length - 1 && (
+                    <ChevronRightIcon className="ml-2 h-4 w-4 stroke-2" />
+                  )}
+              </Button>
+              {/* AlertDialog para confirmar guardar y salir */}
+              <AlertDialog
+                isOpen={showSaveExitDialog}
+                onClose={() => setShowSaveExitDialog(false)}
+                onConfirm={handleSaveAndExit}
+                title="Guardar y salir"
+                description="¿Estás seguro de que deseas guardar el progreso actual y salir del formulario? Podrás continuar editando este caso más tarde."
+                confirmText="Guardar y salir"
+                cancelText="Cancelar"
+                type="info"
+                isLoading={isSaving}
+              />
+            </div>
           </CardFooter>
         )}
       </Card>
