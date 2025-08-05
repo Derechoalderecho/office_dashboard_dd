@@ -24,17 +24,24 @@ import { submitFormData } from "./SubmitFormConciliation";
 import { useRouter } from "next/navigation";
 import { useForm, FormProvider } from "react-hook-form";
 import { validateStep1 } from "@/validators/formConciliationValidators";
+import { canAdvanceFromSubStep, getSubStepErrorMessage } from "@/validators/step2ConciliationValidators";
 import { useEffect } from "react";
 
 export default function StepperFormConciliation() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [isStep1Valid, setIsStep1Valid] = useState(false);
+  const [isStep2Valid, setIsStep2Valid] = useState(false);
   const router = useRouter();
 
   // Función para recibir el estado de validación desde Step1
   const handleStep1ValidationChange = (isValid: boolean) => {
     setIsStep1Valid(isValid);
+  };
+
+  // Función para recibir el estado de validación desde Step2
+  const handleStep2ValidationChange = (isValid: boolean) => {
+    setIsStep2Valid(isValid);
   };
 
   // Configuración de React Hook Form
@@ -179,7 +186,11 @@ export default function StepperFormConciliation() {
       component: Step1BasicInformationConciliation,
       props: { onValidationChange: handleStep1ValidationChange }
     },
-    { title: "Tratamiento de datos", component: Step2DataProcessing },
+    { 
+      title: "Tratamiento de datos", 
+      component: Step2DataProcessing,
+      props: { onValidationChange: handleStep2ValidationChange }
+    },
     { title: "Contrapartes del caso", component: Step3CaseCounterparts },
     { title: "Información del caso", component: Step4CaseInformation },
     { title: 'Agendar audiencia de conciliación', component: Step5ScheduleConciliationHearing },
@@ -264,28 +275,25 @@ export default function StepperFormConciliation() {
       // Estamos en el Step 2 (Tratamiento de datos)
       const currentSubStep = data.step2SubStep || 0;
       
+      // Usar validador para determinar si se puede avanzar
+      if (!canAdvanceFromSubStep(data, currentSubStep)) {
+        // Mostrar mensaje de error específico del SubStep
+        alert(getSubStepErrorMessage(currentSubStep));
+        return;
+      }
+      
       if (currentSubStep === 0) {
         // Si estamos en el sub-paso inicial, avanzamos al sub-paso de confirmación
         methods.setValue("step2SubStep", 1);
         return;
       } else if (currentSubStep === 1) {
-        // Si estamos en el sub-paso de confirmación
-        if (!data.confirma_datos) {
-          // Si los datos no están confirmados, no avanzamos
-          return;
-        }
         // Si los datos están confirmados, avanzamos al sub-paso de firma
         methods.setValue("step2SubStep", 2);
         return;
       } else if (currentSubStep === 2) {
-        // Si estamos en el sub-paso de firma
-        if (!data.firma_digital) {
-          // Si no hay firma, no avanzamos
-          return;
-        }
         // Renombramos firma_digital a firma_solicitante para el backend
         methods.setValue("firma_solicitante", data.firma_digital);
-        // Si hay firma, avanzamos al siguiente paso
+        // Si hay firma y confirmación, avanzamos al siguiente paso
         methods.setValue("step2SubStep", 0); // Reiniciamos el sub-paso para la próxima vez
         handleNext();
       }
@@ -412,7 +420,8 @@ export default function StepperFormConciliation() {
               onClick={methods.handleSubmit(onSubmit)}
               isDisabled={
                 methods.formState.isSubmitting ||
-                (currentStep === 0 && !isStep1Valid)
+                (currentStep === 0 && !isStep1Valid) ||
+                (currentStep === 1 && !isStep2Valid)
               }
               className="flex items-center"
 

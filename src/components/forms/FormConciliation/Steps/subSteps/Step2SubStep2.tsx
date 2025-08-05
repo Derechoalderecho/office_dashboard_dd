@@ -32,10 +32,12 @@ const canvasToFile = async (
 
 interface Step2SubStep2Props {
   handleBackToInfo: () => void;
+  onValidationChange?: (isValid: boolean) => void;
 }
 
 export default function Step2SubStep2({
   handleBackToInfo,
+  onValidationChange,
 }: Step2SubStep2Props) {
   const { setValue, watch } = useFormContext();
   const canvasRef = useRef<HTMLCanvasElement>(null);

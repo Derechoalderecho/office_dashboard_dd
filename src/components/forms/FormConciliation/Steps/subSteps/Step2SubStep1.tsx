@@ -5,9 +5,10 @@ import { PencilSquareIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
 interface Step2SubStep1Props {
   goToStep?: (stepIndex: number) => void;
   handleBackToInfo: () => void;
+  onValidationChange?: (isValid: boolean) => void;
 }
 
-export default function Step2SubStep1({ goToStep, handleBackToInfo }: Step2SubStep1Props) {
+export default function Step2SubStep1({ goToStep, handleBackToInfo, onValidationChange }: Step2SubStep1Props) {
   const { watch, setValue } = useFormContext();
   const formValues = watch();
   const datosConfirmados = watch("confirma_datos");
