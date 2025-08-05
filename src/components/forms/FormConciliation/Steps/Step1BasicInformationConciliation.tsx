@@ -33,6 +33,7 @@ import {
   AlertCircleIcon,
   CheckCircleIcon,
 } from "lucide-react";
+import { validateStep1 } from "@/validators/formConciliationValidators";
 
 export default function Step1BasicInformationConciliation() {
   const { register, watch, setValue } = useFormContext();
@@ -65,6 +66,10 @@ export default function Step1BasicInformationConciliation() {
     type: "success" | "info" | "warning" | "error";
     message: string;
   } | null>(null);
+  
+  // Estados para validación
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
 
   // Estados para locaciones
   const [locations, setLocations] = useState<Location[]>([]);
@@ -182,6 +187,49 @@ export default function Step1BasicInformationConciliation() {
     const value = e.target.value;
     setNacionalidadPersonalizada(value);
     setValue("ciudadano_solicitante.nacionalidad", value);
+  };
+
+  // Validación en tiempo real (solo para campos que han sido tocados)
+  useEffect(() => {
+    if (showFullForm) {
+      const validation = validateStep1({ ciudadano_solicitante: ciudadanoData });
+      if (!validation.success) {
+        // Solo mostrar errores para campos que han sido tocados
+        const filteredErrors: Record<string, string> = {};
+        Object.keys(validation.errors).forEach(fieldPath => {
+          if (touchedFields[fieldPath]) {
+            filteredErrors[fieldPath] = validation.errors[fieldPath];
+          }
+        });
+        setValidationErrors(filteredErrors);
+      } else {
+        setValidationErrors({});
+      }
+    }
+  }, [ciudadanoData, showFullForm, touchedFields]);
+
+  // Helper para manejar cuando un campo es tocado (onBlur)
+  const handleFieldBlur = (fieldPath: string) => {
+    setTouchedFields(prev => ({
+      ...prev,
+      [fieldPath]: true
+    }));
+  };
+
+  // Helper para mostrar errores de validación
+  const renderValidationError = (fieldPath: string) => {
+    const error = validationErrors[fieldPath];
+    if (error && touchedFields[fieldPath]) {
+      return (
+        <p className="text-red-500 text-sm mt-1">{error}</p>
+      );
+    }
+    return null;
+  };
+
+  // Helper para determinar si un campo debe mostrar error visual
+  const shouldShowFieldError = (fieldPath: string) => {
+    return touchedFields[fieldPath] && !!validationErrors[fieldPath];
   };
 
   const handleTipoDocumentoChange = (
@@ -470,14 +518,19 @@ export default function Step1BasicInformationConciliation() {
           </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-y-8 gap-x-6">
-          <Input
-            variant="bordered"
-            label="Primer nombre"
-            labelPlacement="outside"
-            placeholder="Ingrese su primer nombre"
-            {...register("ciudadano_solicitante.primer_nombre")}
-            isRequired
-          />
+          <div>
+            <Input
+              variant="bordered"
+              label="Primer nombre"
+              labelPlacement="outside"
+              placeholder="Ingrese su primer nombre"
+              {...register("ciudadano_solicitante.primer_nombre")}
+              onBlur={() => handleFieldBlur("ciudadano_solicitante.primer_nombre")}
+              isRequired
+              isInvalid={shouldShowFieldError("ciudadano_solicitante.primer_nombre")}
+            />
+            {renderValidationError("ciudadano_solicitante.primer_nombre")}
+          </div>
 
           <Input
             variant="bordered"
@@ -487,14 +540,19 @@ export default function Step1BasicInformationConciliation() {
             {...register("ciudadano_solicitante.segundo_nombre")}
           />
 
-          <Input
-            variant="bordered"
-            label="Primer apellido"
-            labelPlacement="outside"
-            placeholder="Ingrese su primer apellido"
-            {...register("ciudadano_solicitante.primer_apellido")}
-            isRequired
-          />
+          <div>
+            <Input
+              variant="bordered"
+              label="Primer apellido"
+              labelPlacement="outside"
+              placeholder="Ingrese su primer apellido"
+              {...register("ciudadano_solicitante.primer_apellido")}
+              onBlur={() => handleFieldBlur("ciudadano_solicitante.primer_apellido")}
+              isRequired
+              isInvalid={shouldShowFieldError("ciudadano_solicitante.primer_apellido")}
+            />
+            {renderValidationError("ciudadano_solicitante.primer_apellido")}
+          </div>
 
           <Input
             variant="bordered"
@@ -543,89 +601,109 @@ export default function Step1BasicInformationConciliation() {
             />
           </I18nProvider>
 
-          <Select
-            variant="bordered"
-            label="Sexo"
-            labelPlacement="outside"
-            placeholder="Seleccione su sexo"
-            selectedKeys={
-              ciudadanoData.sexo ? [ciudadanoData.sexo] : []
-            }
-            onChange={(e) =>
-              setValue("ciudadano_solicitante.sexo", e.target.value)
-            }
-            isRequired
-          >
-            <SelectItem key="Hombre">Hombre</SelectItem>
-            <SelectItem key="Mujer">Mujer</SelectItem>
-            <SelectItem key="Intersexual">Intersexual</SelectItem>
-            <SelectItem key="Prefiere no decirlo">
-              Prefiere no decirlo
-            </SelectItem>
-            <SelectItem key="Otro">Otro</SelectItem>
-          </Select>
+          <div>
+            <Select
+              variant="bordered"
+              label="Sexo"
+              labelPlacement="outside"
+              placeholder="Seleccione su sexo"
+              selectedKeys={
+                ciudadanoData.sexo ? [ciudadanoData.sexo] : []
+              }
+              onChange={(e) =>
+                setValue("ciudadano_solicitante.sexo", e.target.value)
+              }
+              onBlur={() => handleFieldBlur("ciudadano_solicitante.sexo")}
+              isRequired
+              isInvalid={shouldShowFieldError("ciudadano_solicitante.sexo")}
+            >
+              <SelectItem key="Hombre">Hombre</SelectItem>
+              <SelectItem key="Mujer">Mujer</SelectItem>
+              <SelectItem key="Intersexual">Intersexual</SelectItem>
+              <SelectItem key="Prefiere no decirlo">
+                Prefiere no decirlo
+              </SelectItem>
+              <SelectItem key="Otro">Otro</SelectItem>
+            </Select>
+            {renderValidationError("ciudadano_solicitante.sexo")}
+          </div>
 
-          <Select
-            variant="bordered"
-            label="Género"
-            labelPlacement="outside"
-            placeholder="Seleccione su género"
-            selectedKeys={
-              ciudadanoData.genero ? [ciudadanoData.genero] : []
-            }
-            onChange={(e) =>
-              setValue("ciudadano_solicitante.genero", e.target.value)
-            }
-            isRequired
-          >
-            <SelectItem key="Masculino">Masculino</SelectItem>
-            <SelectItem key="Femenino">Femenino</SelectItem>
-            <SelectItem key="Transgénero">Transgénero</SelectItem>
-            <SelectItem key="No binario">No binario</SelectItem>
-          </Select>
+          <div>
+            <Select
+              variant="bordered"
+              label="Género"
+              labelPlacement="outside"
+              placeholder="Seleccione su género"
+              selectedKeys={
+                ciudadanoData.genero ? [ciudadanoData.genero] : []
+              }
+              onChange={(e) =>
+                setValue("ciudadano_solicitante.genero", e.target.value)
+              }
+              onBlur={() => handleFieldBlur("ciudadano_solicitante.genero")}
+              isRequired
+              isInvalid={shouldShowFieldError("ciudadano_solicitante.genero")}
+            >
+              <SelectItem key="Masculino">Masculino</SelectItem>
+              <SelectItem key="Femenino">Femenino</SelectItem>
+              <SelectItem key="Transgénero">Transgénero</SelectItem>
+              <SelectItem key="No binario">No binario</SelectItem>
+            </Select>
+            {renderValidationError("ciudadano_solicitante.genero")}
+          </div>
 
-          <Select
-            variant="bordered"
-            label="Orientación sexual"
-            labelPlacement="outside"
-            placeholder="Seleccione su orientación sexual"
-            selectedKeys={
-              ciudadanoData.orientacion_sexual
-                ? [ciudadanoData.orientacion_sexual]
-                : []
-            }
-            onChange={(e) =>
-              setValue(
-                "ciudadano_solicitante.orientacion_sexual",
-                e.target.value
-              )
-            }
-            isRequired
-          >
-            <SelectItem key="Heterosexual">Heterosexual</SelectItem>
-            <SelectItem key="Homosexual">Homosexual</SelectItem>
-            <SelectItem key="Bisexual">Bisexual</SelectItem>
-            <SelectItem key="Asexual">Asexual</SelectItem>
-            <SelectItem key="Pansexual">Pansexual</SelectItem>
-          </Select>
+          <div>
+            <Select
+              variant="bordered"
+              label="Orientación sexual"
+              labelPlacement="outside"
+              placeholder="Seleccione su orientación sexual"
+              selectedKeys={
+                ciudadanoData.orientacion_sexual
+                  ? [ciudadanoData.orientacion_sexual]
+                  : []
+              }
+              onChange={(e) =>
+                setValue(
+                  "ciudadano_solicitante.orientacion_sexual",
+                  e.target.value
+                )
+              }
+              onBlur={() => handleFieldBlur("ciudadano_solicitante.orientacion_sexual")}
+              isRequired
+              isInvalid={shouldShowFieldError("ciudadano_solicitante.orientacion_sexual")}
+            >
+              <SelectItem key="Heterosexual">Heterosexual</SelectItem>
+              <SelectItem key="Homosexual">Homosexual</SelectItem>
+              <SelectItem key="Bisexual">Bisexual</SelectItem>
+              <SelectItem key="Asexual">Asexual</SelectItem>
+              <SelectItem key="Pansexual">Pansexual</SelectItem>
+            </Select>
+            {renderValidationError("ciudadano_solicitante.orientacion_sexual")}
+          </div>
 
-          <NumberInput
-            hideStepper
-            variant="bordered"
-            label="Número móvil"
-            labelPlacement="outside"
-            placeholder="Ingrese su número móvil"
-            formatOptions={{ useGrouping: false }}
-            value={
-              ciudadanoData.num_movil
-                ? Number(ciudadanoData.num_movil)
-                : undefined
-            }
-            onValueChange={(value) =>
-              setValue("ciudadano_solicitante.num_movil", value.toString())
-            }
-            isRequired
-          />
+          <div>
+            <NumberInput
+              hideStepper
+              variant="bordered"
+              label="Número móvil"
+              labelPlacement="outside"
+              placeholder="Ingrese su número móvil"
+              formatOptions={{ useGrouping: false }}
+              value={
+                ciudadanoData.num_movil
+                  ? Number(ciudadanoData.num_movil)
+                  : undefined
+              }
+              onValueChange={(value) =>
+                setValue("ciudadano_solicitante.num_movil", value.toString())
+              }
+              onBlur={() => handleFieldBlur("ciudadano_solicitante.num_movil")}
+              isRequired
+              isInvalid={shouldShowFieldError("ciudadano_solicitante.num_movil")}
+            />
+            {renderValidationError("ciudadano_solicitante.num_movil")}
+          </div>
 
           <NumberInput
             hideStepper

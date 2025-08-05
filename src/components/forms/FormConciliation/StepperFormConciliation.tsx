@@ -23,10 +23,13 @@ import Step6ReviewStepConciliation from "./Steps/Step6ReviewStepConciliation";
 import { submitFormData } from "./SubmitFormConciliation";
 import { useRouter } from "next/navigation";
 import { useForm, FormProvider } from "react-hook-form";
+import { validateStep1 } from "@/validators/formConciliationValidators";
+import { useEffect } from "react";
 
 export default function StepperFormConciliation() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
+  const [isStep1Valid, setIsStep1Valid] = useState(false);
   const router = useRouter();
 
   // Configuración de React Hook Form
@@ -161,6 +164,14 @@ export default function StepperFormConciliation() {
   const formValues = watch(); // Observa todos los valores del formulario que van saliendo
 
   console.log(formValues);
+
+  // Validar Step 1 en tiempo real
+  useEffect(() => {
+    if (currentStep === 0) {
+      const validation = validateStep1(formValues);
+      setIsStep1Valid(validation.success);
+    }
+  }, [formValues, currentStep]);
 
   const steps = [
     { title: "Información del solicitante", component: Step1BasicInformationConciliation },
@@ -392,7 +403,10 @@ export default function StepperFormConciliation() {
               color="primary"
               type="submit"
               onClick={methods.handleSubmit(onSubmit)}
-              disabled={methods.formState.isSubmitting}
+              isDisabled={
+                methods.formState.isSubmitting ||
+                (currentStep === 0 && !isStep1Valid)
+              }
               className="flex items-center"
             >
               {methods.formState.isSubmitting
