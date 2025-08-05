@@ -8,11 +8,16 @@ import {
   Divider,
   Switch,
 } from "@heroui/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import FieldsCitizen from "../components/FieldsCitizen";
 import { UserPlusIcon } from "@heroicons/react/24/outline";
+import { validateStep3 } from "@/validators/step3ConciliationValidators";
 
-export default function Step3CaseCounterparts() {
+interface Step3CaseCounterpartsProps {
+  onValidationChange?: (isValid: boolean) => void;
+}
+
+export default function Step3CaseCounterparts({ onValidationChange }: Step3CaseCounterpartsProps) {
   const { setValue, watch, register } = useFormContext();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [beneficiarioIndex, setBeneficiarioIndex] = useState(0);
@@ -22,6 +27,17 @@ export default function Step3CaseCounterparts() {
   
   // Observar el array de personas beneficiarias
   const personasBeneficiarias = watch("ciudadano_beneficiado") || [];
+  
+  // Observar campos relevantes para validación
+  const formData = watch();
+  
+  // Comunicar estado de validación al StepperForm
+  useEffect(() => {
+    if (onValidationChange) {
+      const validation = validateStep3(formData);
+      onValidationChange(validation.success);
+    }
+  }, [formData.tipo_proceso, formData.materia_del_caso, onValidationChange]);
 
   // Función para agregar un nuevo ciudadano citado
   const agregarCiudadano = () => {
