@@ -30,8 +30,8 @@ const INITIAL_VISIBLE_COLUMNS = [
   "primer_nombre",
   "rol",
   "email",
-  "rama_derecho",
-  "nivel_consultorio",
+  "areas_atencion",
+  "universidades",
   "actions",
 ];
 
@@ -238,7 +238,7 @@ export default function TableUsers() {
           loadingContent={<Spinner label="Cargando..." />}
         >
           {(item) => (
-            <TableRow key={item.id_usuario}>
+            <TableRow key={item.id}>
               {(columnKey) => (
                 <TableCell>
                   <TableCellRendererUsers

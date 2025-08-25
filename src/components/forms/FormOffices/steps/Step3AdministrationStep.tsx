@@ -32,7 +32,7 @@ export default function Step3AdministrationStep({
   const [users, setUsers] = useState<Users[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { role } = useAuth();
-  const { internalUserId } = useAuth();
+  const { user } = useAuth();
   const isStudent = role === "Estudiante";
 
   useEffect(() => {
@@ -53,9 +53,9 @@ export default function Step3AdministrationStep({
   // Automatically set the current user as the student if they are a student
   // and clear profesor_id if student is logged in
   useEffect(() => {
-    if (isStudent && internalUserId) {
-      const studentId = String(internalUserId);
-      
+    if (isStudent && user?.uid) {
+      const studentId = String(user.uid);
+
       // Only update if the student ID is different from the current one
       // or if profesor_id is set (we want to clear it for students)
       if (formData.alumno_id !== studentId || formData.profesor_id) {
@@ -64,13 +64,13 @@ export default function Step3AdministrationStep({
         updateFormData({
           alumno_id: studentId,
           // Clear profesor_id for students - will be handled by teachers later
-          profesor_id: undefined,
+          profesor_id: "test",
           // If the persona_modifica is not set, set it to the student ID
           persona_modifica: !formData.persona_modifica ? studentId : formData.persona_modifica
         });
       }
     }
-  }, [isStudent, internalUserId, formData.alumno_id, formData.profesor_id]);
+  }, [isStudent, user?.uid, formData.alumno_id, formData.profesor_id]);
 
   const handleUserSelect = (role: string, userId: string) => {
     updateFormData({
@@ -106,9 +106,9 @@ export default function Step3AdministrationStep({
             <SelectItem key="pendiente">Pendiente de asignación</SelectItem>
           ) : (
             users
-              .filter(user => user.rol === "Docente")
+              .filter(user => user.rol.nombre === "Docente")
               .map((profesor) => (
-                <SelectItem key={profesor.id_usuario.toString()}>
+                <SelectItem key={profesor.id.toString()}>
                   {`${profesor.primer_nombre} ${profesor.primer_apellido}`}
                 </SelectItem>
               ))
@@ -131,9 +131,9 @@ export default function Step3AdministrationStep({
           errorMessage={validationErrors?.monitor_id}
         >
           {users
-            .filter(user => user.rol === "Monitor")
+            .filter(user => user.rol.nombre === "Monitor")
             .map((monitor) => (
-              <SelectItem key={monitor.id_usuario.toString()}>
+              <SelectItem key={monitor.id.toString()}>
                 {`${monitor.primer_nombre} ${monitor.primer_apellido}`}
               </SelectItem>
             ))}
@@ -159,9 +159,9 @@ export default function Step3AdministrationStep({
           isDisabled={isStudent}
         >
           {users
-            .filter(user => user.rol === "Estudiante")
+            .filter(user => user.rol.nombre === "Estudiante")
             .map((alumno) => (
-              <SelectItem key={alumno.id_usuario.toString()}>
+              <SelectItem key={alumno.id.toString()}>
                 {`${alumno.primer_nombre} ${alumno.primer_apellido}`}
               </SelectItem>
             ))}

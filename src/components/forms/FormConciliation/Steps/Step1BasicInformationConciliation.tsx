@@ -301,7 +301,7 @@ export default function Step1BasicInformationConciliation({ onValidationChange }
         setValue("ciudadano_solicitante.segundo_apellido", citizen.segundo_apellido || "");
         setValue("ciudadano_solicitante.email", citizen.email || "");
         setValue("ciudadano_solicitante.num_movil", citizen.num_movil || "");
-        setValue("ciudadano_solicitante.telefono_fijo", citizen.telefono_fijo || "");
+        setValue("ciudadano_solicitante.telefono_fijo", citizen.num_fijo || "");
         setValue("ciudadano_solicitante.fecha_nacimiento", citizen.fecha_nacimiento || "");
         setValue("ciudadano_solicitante.sexo", citizen.sexo || "");
         setValue("ciudadano_solicitante.genero", citizen.genero || "");

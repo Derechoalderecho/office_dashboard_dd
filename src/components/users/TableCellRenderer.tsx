@@ -24,6 +24,24 @@ export const TableCellRendererUsers = ({
           <p className="text-base font-medium">{String(cellValue)}</p>
         </div>
       );
+  case "areas_atencion":
+      // 'cellValue' es un array: [{ id: 2, nombre: "..." }]
+      // Mapeamos el array para obtener los nombres y los unimos con una coma
+      const areas = (cellValue as any[])?.map(area => area.nombre).join(', ');
+      return (
+        <div className="flex flex-col">
+          <p className="text-base">{areas || "Sin área"}</p>
+        </div>
+      );
+
+    case "universidades":
+      // 'cellValue' es un array: [{ id: 19, nombre: "..." }]
+      const universidades = (cellValue as any[])?.map(uni => uni.nombre).join(', ');
+      return (
+        <div className="flex flex-col">
+          <p className="text-base">{universidades || "Sin universidad"}</p>
+        </div>
+      );
     case "primer_nombre":
       return (
         <p className="text-sm font-semibold">
@@ -31,23 +49,27 @@ export const TableCellRendererUsers = ({
         </p>
       );
     case "rol":
+      const rolNombre =
+        typeof cellValue === "object" && cellValue !== null && "nombre" in cellValue
+          ? (cellValue as { nombre: string }).nombre
+          : String(cellValue);
       return (
         <Chip
           className={`capitalize ${
-            cellValue === "Docente"
+            rolNombre === "Docente"
               ? "bg-success text-[#12A150]"
-              : cellValue === "Monitor"
+              : rolNombre === "Monitor"
               ? "bg-followed text-[#006FEE]"
-              : cellValue === "Director"
+              : rolNombre === "Director"
               ? "bg-warning text-[#C4841D]"
-              : cellValue === "Estudiante"
+              : rolNombre === "Estudiante"
               ? "bg-error text-[#F31260]"
               : ""
           }`}
           size="sm"
           variant="flat"
         >
-          {String(cellValue)}
+          {String(rolNombre)}
         </Chip>
       );
     case "email":
@@ -55,18 +77,6 @@ export const TableCellRendererUsers = ({
         <div className="flex flex-col">
           <p className="text-base font-medium text-primary">
             {String(cellValue)}
-          </p>
-        </div>
-      );
-    case "nivel_consultorio":
-      return (
-        <div className="flex flex-col">
-          <p className="text-base">
-            {String(cellValue)
-              ? cellValue === null
-                ? "-"
-                : cellValue
-              : "-"}
           </p>
         </div>
       );

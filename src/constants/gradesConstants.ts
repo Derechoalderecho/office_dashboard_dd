@@ -1,7 +1,7 @@
 import { Column, StatusOption } from "@/types/sharedTypes";
 
 export const columns: Column[] = [
-  { name: "ID", uid: "id_caso" },
+  { name: "ID", uid: "id" },
   { name: "Asignados", uid: "assignedUsers" },
   { name: "Fecha de creación", uid: "created_date" },
   { name: "Tipo de proceso", uid: "tipo_caso", sortable: true },

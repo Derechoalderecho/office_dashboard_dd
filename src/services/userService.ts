@@ -1,7 +1,7 @@
 import { Users } from "@/types/users";
 import { get, post, put } from "@/utils/apiUtils";
-import { 
-  getWithCache, 
+import {
+  getWithCache,
   getCollectionWithCache,
   invalidateCacheItem,
   invalidateCache
@@ -10,7 +10,7 @@ import { logger } from "@/utils/logUtils";
 
 // Cache name for users
 const CACHE_NAME = 'users';
-const USERS_CACHE_TTL = 30 * 60 * 1000; 
+const USERS_CACHE_TTL = 30 * 60 * 1000;
 
 /**
  * Gets the details of a user by ID
@@ -37,7 +37,7 @@ export const fetchUserDetails = async (id: string): Promise<Users | null> => {
  */
 export const fetchAllUsers = async (): Promise<Users[]> => {
   try {
-    const users = await get<Users[]>('usuarios');
+    const users = await get<Users[]>('usuarios/');
     logger.debug(`Obtenidos ${users.length} usuarios correctamente`);
     return users;
   } catch (error) {
@@ -55,23 +55,23 @@ export async function fetchUserByFirebaseUid(firebaseUid: string): Promise<Users
       logger.warn('fetchUserByFirebaseUid: Firebase UID no proporcionado');
       return null;
     }
-    
+
     logger.debug(`Buscando usuario con Firebase UID: ${firebaseUid}`);
-    
+
     const allUsers = await fetchAllUsers();
-    
+
     if (allUsers.length === 0) {
       logger.warn('No se encontraron usuarios en el sistema');
       return null;
     }
-    
+
     const user = allUsers.find(user => user.id_usuario_firebase === firebaseUid);
-    
+
     if (user) {
-      logger.debug(`Usuario encontrado: ID=${user.id_usuario}, Nombre=${user.primer_nombre}`);
+      logger.debug(`Usuario encontrado: ID=${user.id}, Nombre=${user.primer_nombre}`);
       return user;
-    } 
-    
+    }
+
     logger.warn(`No se encontró ningún usuario con Firebase UID: ${firebaseUid}`);
     return null;
   } catch (error) {
@@ -89,15 +89,15 @@ export async function getUserIdFromFirebase(firebaseUid: string): Promise<number
       logger.warn('getUserIdFromFirebase: Firebase UID no proporcionado');
       return null;
     }
-    
+
     logger.debug(`Obteniendo ID interno para Firebase UID: ${firebaseUid}`);
     const user = await fetchUserByFirebaseUid(firebaseUid);
-    
-    if (user && user.id_usuario) {
-      logger.debug(`ID interno de usuario encontrado: ${user.id_usuario}`);
-      return user.id_usuario;
+
+    if (user && user.id) {
+      logger.debug(`ID interno de usuario encontrado: ${user.id}`);
+      return user.id;
     }
-    
+
     logger.warn('No se pudo obtener el ID interno del usuario');
     return null;
   } catch (error) {
@@ -115,15 +115,15 @@ export async function getUserRoleFromFirebase(firebaseUid: string): Promise<stri
       logger.warn('getUserRoleFromFirebase: Firebase UID no proporcionado');
       return null;
     }
-    
+
     logger.debug(`Obteniendo rol para Firebase UID: ${firebaseUid}`);
     const user = await fetchUserByFirebaseUid(firebaseUid);
-    
+
     if (user && user.rol) {
       logger.debug(`Rol de usuario encontrado: ${user.rol}`);
-      return user.rol;
+      return user.rol.nombre;
     }
-    
+
     logger.warn('No se pudo obtener el rol del usuario');
     return null;
   } catch (error) {

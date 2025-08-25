@@ -26,7 +26,7 @@ import { useAuth } from "@/hooks/useAuth";
 export default function StepperFormOffices() {
   const router = useRouter();
   const { role } = useAuth();
-  const isStudent = role === "Estudiante";
+  const isStudent = role?.nombre === "Estudiante";
   const [currentStep, setCurrentStep] = useState(0);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [isExistingCitizen, setIsExistingCitizen] = useState(false);
@@ -388,9 +388,6 @@ export default function StepperFormOffices() {
           description: "Creando Caso...",
           color: "primary",
         });
-        
-        // Implementar un timeout para la solicitud
-        const SUBMISSION_TIMEOUT = 30000; // 30 segundos
         
         console.log("Calling submitFormData with useMockMode:", useMockMode);
         

@@ -291,7 +291,7 @@ export default function Step1BasicInformationStep({
           segundo_apellido: citizen.segundo_apellido || "",
           email: citizen.email || "",
           num_movil: citizen.num_movil || "",
-          telefono_fijo: citizen.telefono_fijo || "",
+          telefono_fijo: citizen.num_fijo || "",
           fecha_nacimiento: citizen.fecha_nacimiento || "",
           sexo: citizen.sexo || "",
           genero: citizen.genero || "",
@@ -307,7 +307,7 @@ export default function Step1BasicInformationStep({
           zona_residencia: citizen.zona_residencia || "",
           departamento: citizen.departamento || "",
           municipio: citizen.municipio || "",
-          citizen_id: citizen.id_ciudadano.toString(),
+          citizen_id: citizen.id.toString(),
           is_existing_citizen: "true",
         });
 

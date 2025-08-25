@@ -137,11 +137,11 @@ export default function Header() {
               <DropdownItem key="profile" className="h-14 gap-2">
                 <Chip
                   size="sm"
-                  color={getRoleColor(role)}
+                  color={getRoleColor(role?.nombre)}
                   variant="flat"
                   className="hidden sm:flex mr-2"
                 >
-                  {role}
+                  {role?.nombre}
                 </Chip>
                 <p className="font-bold">
                   {user && (user.displayName || user.email)}

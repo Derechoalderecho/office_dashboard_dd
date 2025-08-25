@@ -37,7 +37,7 @@ export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
         {(onClose) => (
           <>
             <ModalHeader className="flex flex-col gap-1">
-              Vista previa del caso #{caseData.id_caso}
+              Vista previa del caso #{caseData.id}
             </ModalHeader>
             <ModalBody>
               <div className="flex flex-col gap-4">
@@ -92,7 +92,7 @@ export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
                 </div>
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Fecha de Creación</strong>
-                  <p>{new Date(caseData.created_date).toLocaleDateString()}</p>
+                  <p>{new Date(caseData.created_at).toLocaleDateString()}</p>
                 </div>
 
                 {showMore && (
@@ -101,7 +101,7 @@ export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
                       <strong>Fecha de Actualización</strong>
                       <p>
                         {new Date(
-                          caseData.modified_date || caseData.created_date
+                          caseData.modified_at || caseData.created_at
                         ).toLocaleDateString()}
                       </p>
                     </div>
@@ -148,7 +148,7 @@ export function ModalCase({ isOpen, onClose, caseData }: ModalTableProps) {
                                 </div>
                                 <div>
                                   <span className="text-sm px-2 py-1 rounded-full bg-blue-100 text-blue-800">
-                                    {usuario.rol}
+                                    {usuario.rol.nombre}
                                   </span>
                                 </div>
                               </div>
@@ -208,7 +208,7 @@ export function ModalCitizen({
         {(onClose) => (
           <>
             <ModalHeader>
-              Vista previa del ciudadano #{citizenData.id_ciudadano}
+              Vista previa del ciudadano #{citizenData.id}
             </ModalHeader>
             <ModalBody className="overflow-y-auto max-h-[500px]">
               <div className="flex flex-col gap-4">
@@ -236,7 +236,7 @@ export function ModalCitizen({
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Municipio</strong>
                   <p className="text-right">
-                    {getMunicipalityName(citizenData.dane_municipio)}
+                    {getMunicipalityName(citizenData.municipio)}
                   </p>
                 </div>
                 <div className="flex items-center justify-between border-b pb-3">
@@ -247,7 +247,7 @@ export function ModalCitizen({
                 </div>
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Fecha de Creación</strong>
-                  <p>{new Date(citizenData.created_date).toLocaleDateString()}</p>
+                  <p>{new Date(citizenData.created_at).toLocaleDateString()}</p>
                 </div>
 
                 {showMore && (
@@ -258,7 +258,7 @@ export function ModalCitizen({
                     </div>
                     <div className="flex items-center justify-between border-b pb-3">
                       <strong>Teléfono Fijo</strong>
-                      <p>{citizenData.telefono_fijo || "No especificado"}</p>
+                      <p>{citizenData.num_fijo || "No especificado"}</p>
                     </div>
                     <div className="flex items-center justify-between border-b pb-3">
                       <strong>Fecha de Nacimiento</strong>
@@ -271,7 +271,7 @@ export function ModalCitizen({
                       <strong>Fecha de Actualización</strong>
                       <p>
                         {new Date(
-                          citizenData.modified_date || citizenData.created_date
+                          citizenData.modified_at || citizenData.created_at
                         ).toLocaleDateString()}
                       </p>
                     </div>
@@ -323,7 +323,7 @@ export function ModalUser({ isOpen, onClose, userData }: ModalUserProps) {
         {(onClose) => (
           <>
             <ModalHeader>
-              Vista previa del usuario #{userData.id_usuario}
+              Vista previa del usuario #{userData.id}
             </ModalHeader>
             <ModalBody>
               <div className="flex flex-col gap-4">
@@ -339,18 +339,18 @@ export function ModalUser({ isOpen, onClose, userData }: ModalUserProps) {
                 </div>
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Rol</strong>
-                  <p>{userData.rol}</p>
+                  <p>{userData.rol.nombre}</p>
                 </div>
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Documento</strong>
                   <p>
-                    {userData.tipo_documento} {userData.num_documento}
+                    {userData.tipo_documento} | {userData.num_documento}
                   </p>
                 </div>
                 <div className="flex items-center justify-between border-b pb-3">
                   <strong>Fecha de Creación</strong>
                   <p>
-                    {new Date(userData.created_date).toLocaleDateString()}
+                    {new Date(userData.created_at).toLocaleDateString()}
                   </p>
                 </div>
 
@@ -365,14 +365,10 @@ export function ModalUser({ isOpen, onClose, userData }: ModalUserProps) {
                       <p>{userData.segundo_apellido || "No especificado"}</p>
                     </div>
                     <div className="flex items-center justify-between border-b pb-3">
-                      <strong>Nivel de Consultorio</strong>
-                      <p>{userData.nivel_consultorio || "No especificado"}</p>
-                    </div>
-                    <div className="flex items-center justify-between border-b pb-3">
                       <strong>Fecha de Actualización</strong>
                       <p>
                         {new Date(
-                          userData.modified_date || userData.created_date
+                          userData.modified_at || userData.created_at
                         ).toLocaleDateString()}
                       </p>
                     </div>
@@ -457,7 +453,7 @@ export function ModalCalificationDetails({
 
   // Get the student assigned to the case
   const estudiante = caseData.usuarios?.find(
-    (user) => user.rol === "Estudiante"
+    (user) => user.rol.nombre === "Estudiante"
   );
   const nombreEstudiante = estudiante
     ? `${estudiante.primer_nombre} ${estudiante.primer_apellido}`
@@ -469,7 +465,7 @@ export function ModalCalificationDetails({
         {(onClose) => (
           <>
             <ModalHeader className="flex flex-col gap-1">
-              Calificación del caso #{caseData.id_caso}
+              Calificación del caso #{caseData.id}
             </ModalHeader>
             <ModalBody>
               <div className="flex flex-col gap-4">

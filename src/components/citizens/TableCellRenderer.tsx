@@ -22,11 +22,11 @@ export const TableCellRendererCitizens = ({
   const cellValue = user[columnKey];
 
   const handleEditCitizen = (citizen: CitizenWithKey) => {
-    router.push(`/dashboard/citizens/edit/${citizen.id_ciudadano}`);
+    router.push(`/dashboard/citizens/edit/${citizen.id}`);
   };
 
   switch (columnKey) {
-    case "created_date":
+    case "created_at":
       return (
         <div className="flex flex-col">
           <p className="font-medium text-sm">

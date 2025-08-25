@@ -1,7 +1,7 @@
 import { Column, siteOption } from "@/types/sharedTypes";
 
 export const columns: Column[] = [
-  { name: "Creado en", uid: "created_date" },
+  { name: "Creado en", uid: "created_at" },
   { name: "Nombre", uid: "primer_nombre" },
   { name: "Email", uid: "email" },
   { name: "Teléfono", uid: "num_movil" },

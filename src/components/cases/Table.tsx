@@ -32,7 +32,7 @@ import { fetchCompleteUserCases } from "@/services/completeUserCasesService";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "id_caso",
-  "created_date",
+  "created_at",
   "tipo_caso",
   "estado_actual",
   "ciudadano",
@@ -93,9 +93,12 @@ export default function TableCases() {
       
       // Obtener todos los casos del usuario
       const userCases = await fetchCompleteUserCases();
-      const casesList = userCases.map(caseItem => ({
+      const casesList = userCases.map((caseItem: any) => ({
         ...caseItem,
-        key: caseItem.id_caso.toString(),
+        id_caso: caseItem.id || caseItem.id_caso,
+        key: (caseItem.id || caseItem.id_caso).toString(),
+        created_at: caseItem.created_at || caseItem.created_at,
+        modified_date: caseItem.modified_at || caseItem.modified_date,
         assignedUsers: caseItem.usuarios,
         usuarios: caseItem.usuarios
       })) as CaseWithKey[];

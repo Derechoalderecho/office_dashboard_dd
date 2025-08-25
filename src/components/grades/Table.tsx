@@ -28,7 +28,7 @@ import { ModalCalificationDetails } from "@/components/ui/modal-table";
 import { ModalCalification } from "@/components/ui/modal-calification";
 
 const INITIAL_VISIBLE_COLUMNS = [
-  "id_caso",
+  "id",
   "tipo_proceso",
   "estado_actual",
   "ciudadano",
@@ -61,15 +61,15 @@ export default function TableGrades() {
   const gradeModal = useDisclosure();
 
   // Role y auth
-  const { internalUserId, role } = useAuth();
+  const { user, role } = useAuth();
 
   // Fetch cases from API
   const fetchCasesData = async () => {
     setIsLoading(true);
     try {
       // Obtener casos del usuario actual
-      if (internalUserId) {
-        const casesList = await fetchCompleteUserCases(internalUserId);
+      if (user) {
+        const casesList = await fetchCompleteUserCases();
         setCases(casesList as CaseWithKey[]);
       }
     } catch (error) {
@@ -86,10 +86,10 @@ export default function TableGrades() {
 
   useEffect(() => {
     // Solo cargar casos si ya tenemos el ID del usuario
-    if (internalUserId) {
+    if (user) {
       fetchCasesData();
     }
-  }, [internalUserId]);
+  }, [user]);
 
   // Handle Bulk Actions Bar selection change
   const onSelectionChangeMasiveMenu = (keys: Selection) => {
@@ -202,9 +202,9 @@ export default function TableGrades() {
 
   const handleGradeCase = (caseData: CaseWithKey) => {
     // Verificar si el caso tiene un estudiante y un docente asignados
-    const hasStudent = caseData.usuarios?.some(user => user.rol === "Estudiante");
-    const hasTeacher = caseData.usuarios?.some(user => user.rol === "Docente");
-    
+    const hasStudent = caseData.usuarios?.some(user => user.rol.nombre === "Estudiante");
+    const hasTeacher = caseData.usuarios?.some(user => user.rol.nombre === "Docente");
+
     if (!hasStudent || !hasTeacher) {
       addToast({
         title: "No se puede calificar",
@@ -287,7 +287,7 @@ export default function TableGrades() {
           }
         >
           {(item) => (
-            <TableRow key={item.id_caso}>
+            <TableRow key={item.id}>
               {(columnKey) => (
                 <TableCell>
                   <TableCellRendererGrades

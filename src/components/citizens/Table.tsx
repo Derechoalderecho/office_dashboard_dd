@@ -26,7 +26,7 @@ import { fetchAllCitizens } from "@/services/citizenService";
 import { ModalCitizen } from "../ui/modal-table";
 
 const INITIAL_VISIBLE_COLUMNS = [
-  "created_date",
+  "created_at",
   "primer_nombre",
   "email",
   "num_movil",
@@ -225,7 +225,7 @@ export default function TableCitizens() {
           loadingContent={<Spinner label="Cargando..." />}
         >
           {(item) => (
-            <TableRow key={item.id_ciudadano}>
+            <TableRow key={item.id}>
               {(columnKey) => (
                 <TableCell>
                   <TableCellRendererCitizens

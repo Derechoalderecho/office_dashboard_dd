@@ -13,54 +13,32 @@ export async function fetchUserByFirebaseUid(
   firebaseUid: string
 ): Promise<ApiUsuario | null> {
   try {
-    logger.info(`Buscando usuario con Firebase UID: ${firebaseUid}`);
-    console.log(
-      `userAuthService: Buscando usuario con Firebase UID: ${firebaseUid}`
-    );
+    // El UID ya no es necesario en la petición, pero lo logueamos para consistencia.
+    logger.info(`Buscando detalles para el usuario autenticado (UID: ${firebaseUid})`);
 
-    // Endpoint para obtener todos los usuarios
-    const endpoint = "/usuarios";
-    console.log(`userAuthService: Llamando al endpoint: ${endpoint}`);
+    // El endpoint ahora es /usuarios/me y devuelve directamente el objeto del usuario.
+    const endpoint = "/usuarios/me";
+    console.log(`userAuthService: Llamando al endpoint optimizado: ${endpoint}`);
 
-    // Obtenemos todos los usuarios
-    const usuarios = await get<ApiUsuario[]>(endpoint);
-    console.log(
-      `userAuthService: Usuarios obtenidos: ${usuarios ? usuarios.length : 0}`
-    );
-
-    if (usuarios && usuarios.length > 0) {
-      console.log(
-        "userAuthService: Primer usuario en la lista:",
-        usuarios[0].id_usuario_firebase
-      );
-      console.log("userAuthService: Buscando coincidencia con:", firebaseUid);
-    }
-
-    // Filtramos por el id de Firebase
-    const usuario = usuarios.find((u) => u.id_usuario_firebase === firebaseUid);
+    const usuario = await get<ApiUsuario>(endpoint);
 
     if (!usuario) {
-      logger.warn(
-        `No se encontró ningún usuario con Firebase UID: ${firebaseUid}`
-      );
-      console.log(
-        `userAuthService: No se encontró ningún usuario con Firebase UID: ${firebaseUid}`
-      );
+      logger.warn(`No se encontraron detalles para el usuario autenticado (UID: ${firebaseUid})`);
       return null;
     }
 
     logger.info(
-      `Usuario encontrado: ${usuario.primer_nombre} ${usuario.primer_apellido} (ID: ${usuario.id_usuario})`
-    );
-    console.log(
-      `userAuthService: Usuario encontrado: ${usuario.primer_nombre} ${usuario.primer_apellido}, Rol: ${usuario.rol}`
+      `Usuario encontrado: ${usuario.primer_nombre} ${usuario.primer_apellido} (ID: ${usuario.id})`
     );
     return usuario;
-  } catch (error) {
-    logger.error(
-      `Error al buscar usuario por Firebase UID ${firebaseUid}:`,
-      error
-    );
+    
+  } catch (error: any) {
+    // Si el error es un 404, significa que el usuario de Firebase no existe en la BD.
+    if (error.response?.status === 404) {
+        logger.warn(`El usuario con UID ${firebaseUid} no fue encontrado en la base de datos.`);
+        return null;
+    }
+    logger.error(`Error al buscar usuario por Firebase UID ${firebaseUid}:`, error);
     throw error;
   }
 }
@@ -96,7 +74,7 @@ export async function getUserRoleFromFirebaseUid(
     if (user && user.rol) {
       logger.debug(`Rol de usuario encontrado: ${user.rol}`);
       console.log(`userAuthService: Rol encontrado: ${user.rol}`);
-      return user.rol;
+      return user.rol.nombre;
     }
 
     logger.warn("No se pudo obtener el rol del usuario");

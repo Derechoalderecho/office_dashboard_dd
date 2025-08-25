@@ -1,6 +1,7 @@
 import { Citizen } from "./citizens";
 import { Users } from "./users";
 import { DocumentResponse } from "@/types/documents";
+import { Rol } from "@/types/users";
 
 export interface ApiDocumento {
   id_caso: number;
@@ -84,11 +85,11 @@ export interface ApiUsuario {
   segundo_apellido: string | null;
   email: string;
   nivel_consultorio: string;
-  rol: string;
+  rol: Rol;
   activo: boolean;
   source: string;
   status: boolean;
-  id_usuario: number;
+  id: number;
   created_date: string;
   modified_date: string | null;
   deleted_at: string | null;
@@ -150,9 +151,9 @@ export interface CompleteCaseData {
   id_ciudadano: number;
   id_tipo_caso: number;
   estado_actual: string;
-  id_caso: number;
-  created_date: string;
-  modified_date: string | null;
+  id: number;
+  created_at: string;
+  modified_at: string | null;
   deleted_at: string | null;
   status: boolean;
   ciudadano: ApiCiudadano;

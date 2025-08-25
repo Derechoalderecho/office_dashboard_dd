@@ -24,7 +24,7 @@ export const TableCellRendererGrades = ({
   const cellValue = columnKey in caseData ? caseData[columnKey as keyof CaseWithKey] : undefined;
 
   switch (columnKey) {
-    case "id_caso":
+    case "id":
       return (
         <div className="flex flex-col">
           <p className="font-medium text-sm text-blue-600">#{String(cellValue)}</p>
@@ -68,7 +68,7 @@ export const TableCellRendererGrades = ({
         );
     case "estudiante_asignado":
       const estudiante = caseData.usuarios?.find(
-        user => user.rol === "Estudiante"
+        user => user.rol.nombre === "Estudiante"
       );
       return (
         <div className="flex flex-col">
@@ -136,10 +136,10 @@ export const TableCellRendererGrades = ({
       
     case "assignedUsers":
       const assignedStudent = caseData.usuarios?.find(
-        user => user.rol === "Estudiante"
+        user => user.rol.nombre === "Estudiante"
       );
       const assignedTeacher = caseData.usuarios?.find(
-        user => user.rol === "Docente"
+        user => user.rol.nombre === "Docente"
       );
       
       return (

@@ -7,6 +7,7 @@ import {
   getCollectionWithCache,
   invalidateCacheItem,
   invalidateCache,
+  setCachedCollection
 } from "@/utils/cacheUtils";
 import { logger } from "@/utils/logUtils";
 import { convertZonaToCode } from "@/utils/citizenUtils";
@@ -26,18 +27,64 @@ const CITIZENS_TTL = 15 * 60 * 1000;
  */
 export const fetchAllCitizens = async (): Promise<Citizen[]> => {
   try {
-    return await getCollectionWithCache<Citizen>(
-      CITIZEN_CACHE,
-      async () => {
-        const response = await get<CitizensApiResponse>("ciudadanos");
-        return response.items || [];
-      },
-      (citizen) => citizen.id_ciudadano,
-      CITIZENS_TTL
-    );
+    // La caché se manejará dentro de la función para procesar la respuesta
+    logger.debug("Obteniendo todos los ciudadanos desde la API");
+
+    // 1. Hacemos la llamada a la API y esperamos un objeto con una propiedad "items"
+    const apiResponse = await get<{ total: number; items: any[] }>("ciudadanos/");
+
+    if (!apiResponse || !apiResponse.items) {
+      logger.warn("La respuesta de la API de ciudadanos no tiene el formato esperado.");
+      return [];
+    }
+    
+    // 2. Mapeamos la respuesta para ajustar los campos
+    const mappedCitizens = apiResponse.items.map(citizen => {
+      // Unimos las nacionalidades en un solo string para mostrarlo fácilmente
+      const nacionalidadStr = citizen.nacionalidades_principales
+        .map((n: any) => n.nombre)
+        .join(', ');
+
+      return {
+        ...citizen,
+        id_ciudadano: citizen.id, // Mantenemos id_ciudadano por si se usa en otro lado
+        telefono_fijo: citizen.num_fijo, // Mapeamos num_fijo a telefono_fijo
+        nacionalidad: nacionalidadStr, // Creamos el campo de string que la UI espera
+      };
+    });
+
+    // Invalidamos y actualizamos la caché con los datos ya transformados
+    invalidateCache(CITIZEN_CACHE);
+    setCachedCollection(CITIZEN_CACHE, mappedCitizens, (c) => c.id);
+
+    return mappedCitizens as Citizen[];
+
   } catch (error) {
     logger.error("Error al obtener todos los ciudadanos:", error);
     return [];
+  }
+};
+/**
+ * Fetch a citizen by their document number
+ * @param document The document number of the citizen
+ * @returns The citizen object or null if not found
+ */
+const fetchCitizenByDocument = async (document: string): Promise<Citizen | null> => {
+  try {
+    const citizen = await getWithCache<Citizen>(
+      CITIZEN_CACHE,
+      document,
+      async () => {
+        logger.debug(`Obteniendo ciudadano por documento ${document}`);
+        return await get<Citizen>(`ciudadanos/documento/${document}`);
+      },
+      CITIZENS_TTL
+    );
+
+    return citizen;
+  } catch (error) {
+    logger.error(`Error al obtener ciudadano por documento ${document}:`, error);
+    return null;
   }
 };
 
@@ -66,7 +113,7 @@ export const fetchCitizenDetails = async (
       return {
         ...citizen,
         // Mantener los tipos originales
-        id_ciudadano: citizen.id_ciudadano,
+        id: citizen.id,
         estrato: citizen.estrato || 0,
         // Convertir campos booleanos si vienen como string
         discapacidad: typeof citizen.discapacidad === 'string' 
@@ -153,12 +200,7 @@ export const findCitizenByDocument = async (
 ): Promise<Citizen | null> => {
   try {
     // Get all citizens first (this uses cache if available)
-    const allCitizens = await fetchAllCitizens();
-    
-    // Find the citizen with matching document type and number
-    const citizen = allCitizens.find(
-      (c) => c.tipo_documento === tipo_documento && c.num_documento === num_documento
-    );
+    const citizen = await fetchCitizenByDocument(num_documento);
     
     return citizen || null;
   } catch (error) {

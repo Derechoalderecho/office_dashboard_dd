@@ -33,7 +33,6 @@ import {
 } from "@/services/locationService";
 import { ArrowLeftIcon, CheckIcon, Loader2Icon } from "lucide-react";
 import { parseDate, CalendarDate } from "@internationalized/date";
-import { mapZonaForSelect } from "@/utils/citizenUtils";
 
 interface CitizenEditFormProps {
   citizenId: string;
@@ -56,10 +55,9 @@ export default function CitizenEditForm({ citizenId }: CitizenEditFormProps) {
     orientacion_sexual: "",
     fecha_nacimiento: "",
     num_movil: "",
-    telefono_fijo: "",
+    num_fijo: "",
     email: "",
     nacionalidad: "",
-    otra_nacionalidad: "",
     estado_civil: "",
     escolaridad: "",
     etnia: "",
@@ -127,10 +125,9 @@ export default function CitizenEditForm({ citizenId }: CitizenEditFormProps) {
             orientacion_sexual: citizenData.orientacion_sexual || "",
             fecha_nacimiento: citizenData.fecha_nacimiento || "",
             num_movil: citizenData.num_movil || "",
-            telefono_fijo: citizenData.telefono_fijo || "",
+            num_fijo: citizenData.num_fijo || "",
             email: citizenData.email || "",
-            nacionalidad: citizenData.nacionalidad || "",
-            otra_nacionalidad: citizenData.otra_nacionalidad || "",
+            nacionalidad: citizenData.nacionalidades_principales[0].nombre || "",
             estado_civil: citizenData.estado_civil || "",
             escolaridad: citizenData.escolaridad || "",
             etnia: citizenData.etnia || "",
@@ -636,9 +633,9 @@ export default function CitizenEditForm({ citizenId }: CitizenEditFormProps) {
               label="Número fijo"
               labelPlacement="outside"
               hideStepper
-              value={formData.telefono_fijo ? Number(formData.telefono_fijo) : undefined}
+              value={formData.num_fijo ? Number(formData.num_fijo) : undefined}
               onValueChange={(value) =>
-                updateFormData({ telefono_fijo: value.toString() })
+                updateFormData({ num_fijo: value.toString() })
               }
               placeholder="Ingrese su número fijo"
             />

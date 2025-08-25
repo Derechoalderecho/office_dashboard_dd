@@ -182,7 +182,7 @@ export default function CaseHeader({
           </div>
         </div>
         <p className="text-sm text-secondary">
-          {parseDateToLocal(caseData.created_date)}
+          {parseDateToLocal(caseData.created_at)}
         </p>
       </div>
       <div className="flex gap-2 items-center">

@@ -1,3 +1,9 @@
+
+export interface Nacionalidad {
+  id_nacionalidad: number;
+  nombre: string;
+}
+
 export interface Citizen {
   tipo_documento: string;
   num_documento: string;
@@ -8,11 +14,10 @@ export interface Citizen {
   sexo: string;
   genero: string | null;
   orientacion_sexual: string;
-  telefono_fijo: string;
+  num_fijo: string;
   email: string;
   num_movil: string;
-  nacionalidad: string;
-  otra_nacionalidad: string;
+  nacionalidades_principales: Nacionalidad[];
   estado_civil: string;
   escolaridad: string;
   etnia: string;
@@ -23,13 +28,14 @@ export interface Citizen {
   sabe_leer_escribir: boolean;
   direccion_residencia: string;
   fecha_nacimiento: string;
-  id_ciudadano: number;
-  created_date: string;
-  modified_date: string | null;
+  id: number;
+  created_at: string;
+  modified_at: string | null;
   deleted_at: string | null;
   status: boolean;
   departamento: string;
   municipio: string;
+  nacionalidad?: string;
   key?: string;
   actions?: string;
 }

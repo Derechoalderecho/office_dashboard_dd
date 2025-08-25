@@ -1,4 +1,20 @@
+export interface Rol {
+  id: number;
+  nombre: string;
+}
+
+export interface AreaAtencion {
+  id: number;
+  nombre: string;
+}
+
+export interface Universidad {
+  id: number;
+  nombre: string;
+}
+
 export interface Users {
+  id: number;
   id_usuario_firebase: string;
   tipo_documento: string;
   num_documento: string;
@@ -7,15 +23,16 @@ export interface Users {
   primer_apellido: string;
   segundo_apellido: string | null;
   email: string;
-  nivel_consultorio: string;
-  rol: string;
-  activo: boolean;
-  source: string;
+  rol: Rol;
   status: boolean;
-  id_usuario: number;
-  created_date: string;
-  modified_date: string | null;
+  created_at: string; 
+  modified_at: string | null;
   deleted_at: string | null;
+  
+  // Nuevos campos de la API
+  areas_atencion: AreaAtencion[];
+  universidades: Universidad[];
+
   actions?: string;
   key?: string;
 }

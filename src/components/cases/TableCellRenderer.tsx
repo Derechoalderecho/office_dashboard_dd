@@ -30,7 +30,7 @@ export const TableCellRendererCases = ({
           <p className="font-medium text-sm text-blue-600">#{String(cellValue)}</p>
         </div>
       );
-    case "created_date":
+    case "created_at":
       return (
         <div className="flex flex-col">
           <p className="font-medium text-sm">
