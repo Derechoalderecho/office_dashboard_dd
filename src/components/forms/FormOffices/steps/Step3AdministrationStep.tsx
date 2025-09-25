@@ -54,7 +54,7 @@ export default function Step3AdministrationStep({
   // and clear profesor_id if student is logged in
   useEffect(() => {
     if (isStudent && user?.uid) {
-      const studentId = String(user.uid);
+      const studentId = String(user.uid); // Aqui se pone la id de firebase
 
       // Only update if the student ID is different from the current one
       // or if profesor_id is set (we want to clear it for students)
@@ -64,7 +64,7 @@ export default function Step3AdministrationStep({
         updateFormData({
           alumno_id: studentId,
           // Clear profesor_id for students - will be handled by teachers later
-          profesor_id: "test",
+          profesor_id: undefined,
           // If the persona_modifica is not set, set it to the student ID
           persona_modifica: !formData.persona_modifica ? studentId : formData.persona_modifica
         });
@@ -131,7 +131,7 @@ export default function Step3AdministrationStep({
           errorMessage={validationErrors?.monitor_id}
         >
           {users
-            .filter(user => user.rol.nombre === "Monitor")
+            .filter(user => user.rol.nombre === "Estudiante")
             .map((monitor) => (
               <SelectItem key={monitor.id.toString()}>
                 {`${monitor.primer_nombre} ${monitor.primer_apellido}`}

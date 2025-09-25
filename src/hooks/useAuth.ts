@@ -3,12 +3,12 @@ import { signUp, signIn, logout, resetPassword, setUser, setUserRole, setToken, 
 import { useEffect } from 'react';
 import { onAuthStateChanged, User, getIdToken, onIdTokenChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { getUserRoleFromFirebaseUid } from '@/services/userAuthService';
+import { fetchCurrentUserAuthenticated, getUserRoleForApiUser } from '@/services/userAuthService';
 
 // Función para extraer solo las propiedades serializables del usuario
 const serializeUser = (user: User | null) => {
   if (!user) return null;
-  
+
   return {
     uid: user.uid,
     email: user.email,
@@ -34,12 +34,12 @@ export const useAuth = () => {
 
   useEffect(() => {
     console.log('useAuth: Estado inicial - Role:', role);
-    
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       console.log('useAuth: Firebase auth state changed:', firebaseUser ? `Usuario ID: ${firebaseUser.uid}` : 'No hay usuario');
       const serializedUser = serializeUser(firebaseUser);
       dispatch(setUser(serializedUser));
-      
+
       // Obtener y guardar el token de autenticación
       if (firebaseUser) {
         try {
@@ -52,20 +52,25 @@ export const useAuth = () => {
       } else {
         dispatch(setToken(null));
       }
-      
-      // Si hay un usuario autenticado, obtener su rol e ID interno
+
+      // Si hay un usuario autenticado, obtener su informacion
       if (firebaseUser) {
         try {
-          console.log('useAuth: Obteniendo rol para el usuario con UID:', firebaseUser.uid);
-          const userRole = await getUserRoleFromFirebaseUid(firebaseUser.uid);
-          console.log('useAuth: Rol obtenido del servicio:', userRole);
-          dispatch(setUserRole(userRole as UserRole));
+          console.log('useAuth: Obteniendo la informacion para el usuario autenticado');
+          const usuario = await fetchCurrentUserAuthenticated();
+
+          if (usuario) {
+            const userRole = await getUserRoleForApiUser(usuario);
+            dispatch(setUserRole(userRole as UserRole));
+          } else {
+            dispatch(setUserRole(null));
+          }
+
         } catch (error) {
-          console.error('Error al obtener el rol del usuario:', error);
+          console.error('Error al obtener la informacion del usuario:', error);
         }
       } else {
-        console.log('useAuth: No hay usuario, estableciendo rol como null');
-        dispatch(setUserRole(null));
+        console.log('useAuth: No hay usuario, estableciendo usuario');
       }
     });
 
@@ -83,7 +88,7 @@ export const useAuth = () => {
         dispatch(setToken(null));
       }
     });
-    
+
     return () => {
       unsubscribe();
       tokenUnsubscribe();

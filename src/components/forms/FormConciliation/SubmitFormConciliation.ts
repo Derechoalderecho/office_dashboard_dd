@@ -81,7 +81,7 @@ export async function submitFormData(formData: FormData) {
 
     // Enviar al endpoint usando apiUtils con FormData
     // Asegurarnos de que se envía con el Content-Type correcto
-    const response = await post("v2/casos/crear-caso-conciliacion/", newFormData, {
+    const response = await post("/casos/crear-caso-conciliacion/", newFormData, {
       headers: {
         // No establecer Content-Type para que el navegador lo haga automáticamente con el boundary correcto
         'Content-Type': undefined

@@ -3,7 +3,6 @@
 import { fetchCompleteUserCases } from "@/services/completeUserCasesService";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
-import { fetchUserByFirebaseUid } from "@/services/userAuthService";
 
 export default function page() {
 

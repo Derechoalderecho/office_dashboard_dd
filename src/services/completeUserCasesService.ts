@@ -30,7 +30,7 @@ export const fetchCompleteUserCases = async (): Promise<CompleteCaseData[]> => {
  */
 export const fetchCompleteCaseById = async (caseId: number): Promise<CompleteCaseData[]> => {
   try {
-    const endpoint = `/casos/full/${caseId}/`;
+    const endpoint = `/casos/${caseId}/full`;
     logger.info(`Fetching complete case for case ${caseId} from endpoint ${endpoint}`);
     
     console.log(`API Request: GET ${endpoint}`);

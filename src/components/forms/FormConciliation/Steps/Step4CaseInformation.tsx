@@ -87,13 +87,13 @@ export default function Step4CaseInformation({ onValidationChange }: Step4CaseIn
           onChange={(e) => setValue("ultima_intervencion", e.target.value)}
           isRequired
         >
-          <SelectItem key="Directamente sin intervención de terceros">
+          <SelectItem key="Sin intervención de terceros">
             Directamente sin intervención de terceros
           </SelectItem>
-          <SelectItem key="Con intervención de terceros institucionales">
+          <SelectItem key="Con intervención constitucional">
             Con intervención de terceros institucionales
           </SelectItem>
-          <SelectItem key="Con intervención de terceros no institucionales">
+          <SelectItem key="Con intervención no constitucional">
             Con intervención de terceros no institucionales
           </SelectItem>
         </Select>

@@ -9,12 +9,8 @@ import { ApiUsuario } from "@/types/cases";
  * @param firebaseUid - ID de Firebase del usuario
  * @returns El usuario correspondiente al ID de Firebase o null si no existe
  */
-export async function fetchUserByFirebaseUid(
-  firebaseUid: string
-): Promise<ApiUsuario | null> {
+export async function fetchCurrentUserAuthenticated(): Promise<ApiUsuario | null> {
   try {
-    // El UID ya no es necesario en la petición, pero lo logueamos para consistencia.
-    logger.info(`Buscando detalles para el usuario autenticado (UID: ${firebaseUid})`);
 
     // El endpoint ahora es /usuarios/me y devuelve directamente el objeto del usuario.
     const endpoint = "/usuarios/me";
@@ -23,7 +19,7 @@ export async function fetchUserByFirebaseUid(
     const usuario = await get<ApiUsuario>(endpoint);
 
     if (!usuario) {
-      logger.warn(`No se encontraron detalles para el usuario autenticado (UID: ${firebaseUid})`);
+      logger.warn(`No se encontraron detalles para el usuario autenticado`);
       return null;
     }
 
@@ -33,12 +29,11 @@ export async function fetchUserByFirebaseUid(
     return usuario;
     
   } catch (error: any) {
-    // Si el error es un 404, significa que el usuario de Firebase no existe en la BD.
     if (error.response?.status === 404) {
-        logger.warn(`El usuario con UID ${firebaseUid} no fue encontrado en la base de datos.`);
+        logger.warn(`El usuario autenticado actualmente no fue encontrado en la base de datos.`);
         return null;
     }
-    logger.error(`Error al buscar usuario por Firebase UID ${firebaseUid}:`, error);
+    logger.error(`Error al buscar el usuario autenticado:`, error);
     throw error;
   }
 }
@@ -50,22 +45,16 @@ export async function fetchUserByFirebaseUid(
  * @param firebaseUid - ID de Firebase del usuario
  * @returns El rol del usuario o null si no se encuentra
  */
-export async function getUserRoleFromFirebaseUid(
-  firebaseUid: string
+export async function getUserRoleForApiUser(
+  user: ApiUsuario
 ): Promise<string | null> {
   try {
-    if (!firebaseUid) {
-      logger.warn("getUserRoleFromFirebaseUid: Firebase UID no proporcionado");
-      console.log("userAuthService: Firebase UID no proporcionado");
-      return null;
-    }
 
-    logger.debug(`Obteniendo rol para Firebase UID: ${firebaseUid}`);
+    logger.debug(`Obteniendo rol para el usuario autenticado`);
     console.log(
-      `userAuthService: Buscando rol para Firebase UID: ${firebaseUid}`
+      `userAuthService: Buscando rol para el usuario autenticado`
     );
 
-    const user = await fetchUserByFirebaseUid(firebaseUid);
     console.log(
       "userAuthService: Usuario obtenido:",
       user ? "Encontrado" : "No encontrado"
