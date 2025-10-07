@@ -26,26 +26,26 @@ const pathTranslations: { [key: string]: string } = {
 };
 
 function getRoleColor(
-  role: string | null
-): "primary" | "success" | "default" | "danger" | "default" {
-  if (!role) return "default";
+  userRole: string | null
+): "primary" | "success" | "default" | "danger" | "warning" {
+  if (!userRole) return "default";
 
-  switch (role) {
+  switch (userRole) {
     case "Director":
       return "primary";
     case "Docente":
       return "success";
     case "Estudiante":
-      return "default";
+      return "primary";
     case "Monitor":
-      return "danger";
+      return "warning";
     default:
       return "default";
   }
 }
 
 export default function Header() {
-  const { user, role } = useAuth();
+  const { userName, userRole } = useAuth();
   const [loading, setLoading] = useState(false);
   const { logout } = useAuth();
   const router = useRouter();
@@ -55,19 +55,16 @@ export default function Header() {
     const paths = pathname?.split("/").filter(Boolean) || [];
     const items = [];
 
-    // Always add home
     items.push({
       label: "Inicio",
       href: "/",
       isCurrent: pathname === "/",
     });
 
-    // Build the breadcrumb path
     let currentPath = "";
     paths.forEach((path, index) => {
       currentPath += `/${path}`;
 
-      // Use the translation if it exists, otherwise format the path
       const translatedLabel =
         pathTranslations[path.toLowerCase()] ||
         path
@@ -126,25 +123,21 @@ export default function Header() {
                 radius="sm"
                 size="sm"
                 isBordered
-                src={
-                  user?.photoURL ||
-                  "https://i.pravatar.cc/150?u=a042581f4e29026024d"
-                }
                 className="transition-transform"
               />
             </DropdownTrigger>
-            <DropdownMenu aria-label="User Actions" variant="flat">
+            <DropdownMenu aria-label="User Actions" variant="flat" disabledKeys={["settings", "help_and_feedback"]}>
               <DropdownItem key="profile" className="h-14 gap-2">
                 <Chip
                   size="sm"
-                  color={getRoleColor(role?.nombre)}
+                  color={getRoleColor(userRole)}
                   variant="flat"
                   className="hidden sm:flex mr-2"
                 >
-                  {role?.nombre}
+                  {userRole}
                 </Chip>
                 <p className="font-bold">
-                  {user && (user.displayName || user.email)}
+                  {userName}
                 </p>
               </DropdownItem>
               <DropdownItem key="settings">Configuración</DropdownItem>
