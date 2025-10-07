@@ -1,95 +1,88 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut, 
-  sendPasswordResetEmail,
-  updateProfile
-} from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { get } from '@/utils/apiUtils';
 
-// Interface for the serialized user
-interface SerializableUser {
-  uid: string;
-  email: string | null;
-  displayName: string | null;
-  photoURL: string | null;
-  emailVerified: boolean;
-  phoneNumber: string | null;
-  isAnonymous: boolean;
-  providerData: {
-    providerId: string;
-    uid: string;
-    displayName: string | null;
-    email: string | null;
-    phoneNumber: string | null;
-    photoURL: string | null;
-  }[];
+// Tipos según respuesta de /usuarios/me
+interface BackendUserRole {
+  id: number;
+  nombre: string;
 }
 
-export type UserRole = 'Estudiante' | 'Monitor' | 'Docente' | 'Director' | null;
+interface BackendAreaAtencion {
+  id: number;
+  nombre: string;
+  created_at: string;
+  modified_at: string;
+  deleted_at: string | null;
+  status: boolean;
+}
+
+interface BackendUniversidad {
+  id: number;
+  nombre: string;
+  id_municipio: number;
+  created_at: string;
+  deleted_at: string | null;
+  status: boolean;
+}
+
+export interface ApiUserData {
+  id: number;
+  id_usuario_firebase: string;
+  num_documento: string;
+  tipo_documento: string;
+  email: string;
+  primer_nombre: string;
+  segundo_nombre: string | null;
+  primer_apellido: string;
+  segundo_apellido: string | null;
+  status: boolean;
+  created_at: string;
+  modified_at: string;
+  rol: BackendUserRole;
+  areas_atencion: BackendAreaAtencion[];
+  universidades: BackendUniversidad[];
+}
 
 interface AuthState {
-  user: SerializableUser | null;
-  role: UserRole;
+  user: ApiUserData | null;
   loading: boolean;
   error: string | null;
   token: string | null;
+  initialized: boolean;
 }
 
 const initialState: AuthState = {
   user: null,
-  role: null,
   loading: true,
   error: null,
   token: null,
+  initialized: false,
 };
 
-// Function to serialize the user after authentication
-const serializeAuthUser = (user: any) => {
-  if (!user) return null;
-  
-  return {
-    uid: user.uid,
-    email: user.email,
-    displayName: user.displayName,
-    photoURL: user.photoURL,
-    emailVerified: user.emailVerified,
-    phoneNumber: user.phoneNumber,
-    isAnonymous: user.isAnonymous,
-    providerData: user.providerData.map((provider: any) => ({
-      providerId: provider.providerId,
-      uid: provider.uid,
-      displayName: provider.displayName,
-      email: provider.email,
-      phoneNumber: provider.phoneNumber,
-      photoURL: provider.photoURL
-    }))
-  };
-};
-
-// Async thunks
-export const signUp = createAsyncThunk(
-  'auth/signUp',
-  async ({ email, password, displayName }: { email: string; password: string; displayName: string }, { rejectWithValue }) => {
+// Thunk para obtener datos del usuario autenticado desde /usuarios/me
+export const fetchUserData = createAsyncThunk(
+  'auth/fetchUserData',
+  async (_, { rejectWithValue }) => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      if (userCredential.user) {
-        await updateProfile(userCredential.user, { displayName });
-      }
-      return serializeAuthUser(userCredential.user);
-    } catch (error: any) {
-      return rejectWithValue(error.message);
+      const user = await get<ApiUserData>('/usuarios/me');
+      return user;
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Error al obtener datos del usuario');
     }
   }
 );
 
 export const signIn = createAsyncThunk(
   'auth/signIn',
-  async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
+  async (
+    { email, password }: { email: string; password: string },
+    { rejectWithValue }
+  ) => {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      return serializeAuthUser(userCredential.user);
+      await signInWithEmailAndPassword(auth, email, password);
+      return true;
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
@@ -107,28 +100,12 @@ export const logout = createAsyncThunk(
   }
 );
 
-export const resetPassword = createAsyncThunk(
-  'auth/resetPassword',
-  async (email: string, { rejectWithValue }) => {
-    try {
-      await sendPasswordResetEmail(auth, email);
-    } catch (error: any) {
-      return rejectWithValue(error.message);
-    }
-  }
-);
-
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
     setUser: (state, action) => {
       state.user = action.payload;
-      state.loading = false;
-      state.error = null;
-    },
-    setUserRole: (state, action) => {
-      state.role = action.payload;
     },
     setToken: (state, action) => {
       state.token = action.payload;
@@ -146,27 +123,29 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Sign Up
-      .addCase(signUp.pending, (state) => {
+      // Fetch User Data
+      .addCase(fetchUserData.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(signUp.fulfilled, (state, action) => {
-        state.user = action.payload;
+      .addCase(fetchUserData.fulfilled, (state, action) => {
+        state.user = action.payload as ApiUserData;
         state.loading = false;
         state.error = null;
+        state.initialized = true;
       })
-      .addCase(signUp.rejected, (state, action) => {
+      .addCase(fetchUserData.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+        // Marcamos initialized para evitar bucles hasta que cambie el estado de autenticación
+        state.initialized = true;
       })
-      // Sign In
+      // Sign In (solo estado de carga)
       .addCase(signIn.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(signIn.fulfilled, (state, action) => {
-        state.user = action.payload;
+      .addCase(signIn.fulfilled, (state) => {
         state.loading = false;
         state.error = null;
       })
@@ -182,26 +161,15 @@ const authSlice = createSlice({
         state.user = null;
         state.loading = false;
         state.error = null;
+        state.token = null;
+        state.initialized = false;
       })
       .addCase(logout.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      })
-      // Reset Password
-      .addCase(resetPassword.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(resetPassword.fulfilled, (state) => {
-        state.loading = false;
-        state.error = null;
-      })
-      .addCase(resetPassword.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });
   },
 });
 
-export const { setUser, setUserRole, setToken, setLoading, setError, clearError } = authSlice.actions;
-export default authSlice.reducer; 
+export const { setUser, setToken, setLoading, setError, clearError } = authSlice.actions;
+export default authSlice.reducer;

@@ -1,18 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from '@/hooks/useAuth';
-import { Button, Input } from "@heroui/react";
+import { Button, Input, Alert, Form } from "@heroui/react";
 import Image from "next/image";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
+
+  // Evitar hydration mismatch: renderizar sólo en cliente
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,14 +26,20 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await signIn(email, password);
-      router.push("/dashboard/cases"); // Redirect to cases page after login
+      // Autenticación con Firebase
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+      router.push("/dashboard/cases");
     } catch (error: any) {
-      setError(error.message || "Failed to sign in");
+      const code = error?.code || "";
+      const message: string = error?.message || "No se pudo iniciar sesión";
+      const isInvalidCred = code === "auth/invalid-credential" || message.includes("auth/invalid-credential");
+      setError(isInvalidCred ? "Email o contraseña inválidos" : message);
     } finally {
       setLoading(false);
     }
   };
+
+  if (!mounted) return null;
 
   return (
     <main className="flex w-full p-3">
@@ -57,11 +69,15 @@ export default function LoginPage() {
           </p>
         </div>
         {error && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
-          </div>
+          <Alert
+            color="danger"
+            variant="flat"
+            title="Error"
+            description={error}
+            className="mb-16"
+          />
         )}
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <Form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <Input
             onChange={(e) => setEmail(e.target.value)}
             isRequired
@@ -85,13 +101,7 @@ export default function LoginPage() {
           <Button type="submit" color="primary" fullWidth disabled={loading}>
             {loading ? "Iniciando sesión..." : "Iniciar sesión"}
           </Button>
-        </form>
-        {/*  <Button
-      onClick={handleProviderLogin}
-      className="font-poppins w-full bg-[#0081FE] text-white"
-    >
-      Google
-    </Button> */}
+        </Form>
       </section>
     </main>
   );

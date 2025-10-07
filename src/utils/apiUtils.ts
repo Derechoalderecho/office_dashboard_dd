@@ -1,10 +1,8 @@
 import axios, { AxiosRequestConfig, AxiosError, AxiosResponse } from "axios";
 import { API_BASE_URL } from "@/config/api";
-import { store } from "@/store/store";
-import { auth } from "@/lib/firebase";
-import { getIdToken } from "firebase/auth";
+import { setupAxiosInterceptors } from "@/utils/axiosInterceptors";
 
-const DEFAULT_TIMEOUT = 10000;
+const DEFAULT_TIMEOUT = 90000;
 const MAX_RETRIES = 2;
 const RETRY_DELAY = 1000;
 
@@ -23,121 +21,8 @@ const axiosInstance = axios.create({
   },
 });
 
-// Función para obtener un token actualizado directamente de Firebase
-async function getValidToken() {
-  const user = auth.currentUser;
-  if (user) {
-    try {
-      // forceRefresh = false: Firebase verificará si el token está expirado y lo renovará si es necesario
-      return await getIdToken(user, false);
-    } catch (error) {
-      console.error("API: Error al obtener token fresco de Firebase:", error);
-      // Si falla, intentamos usar el token del store como respaldo
-      const state = store.getState();
-      return state.auth.token;
-    }
-  }
-  return null;
-}
-
-// Interceptor para añadir el token de autenticación a todas las solicitudes
-axiosInstance.interceptors.request.use(
-  async (config) => {
-    // Obtenemos un token fresco directamente de Firebase
-    const token = await getValidToken();
-
-    if (token) {
-      config.headers = config.headers || {};
-      config.headers.Authorization = `Bearer ${token}`;
-      console.log("API: Añadiendo token actualizado a la solicitud");
-    }
-
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Variable para controlar si ya estamos en proceso de renovación del token
-let isRefreshingToken = false;
-let pendingRequests: Array<{
-  resolve: (value: any) => void;
-  reject: (reason?: any) => void;
-  config: AxiosRequestConfig;
-}> = [];
-
-// Interceptor para manejar errores de autenticación
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    if (
-      error.response &&
-      error.response.status === 401 &&
-      !originalRequest._retry
-    ) {
-      console.error(
-        "API: Error de autenticación (401) - Token inválido o expirado"
-      );
-
-      originalRequest._retry = true;
-
-      if (isRefreshingToken) {
-        return new Promise((resolve, reject) => {
-          pendingRequests.push({
-            resolve,
-            reject,
-            config: originalRequest,
-          });
-        });
-      }
-
-      isRefreshingToken = true;
-
-      try {
-        // Intentamos obtener un nuevo token fresco directamente de Firebase
-        const newToken = await getValidToken();
-
-        if (newToken) {
-          console.log("API: Usando token fresco de Firebase");
-
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-
-          // Actualizamos todas las solicitudes pendientes con el token fresco
-          pendingRequests.forEach((request) => {
-            if (!request.config.headers) {
-              request.config.headers = {};
-            }
-            request.config.headers.Authorization = `Bearer ${newToken}`;
-            request.resolve(axiosInstance(request.config));
-          });
-
-          pendingRequests = [];
-
-          return axiosInstance(originalRequest);
-        } else {
-          console.error("API: No hay token disponible en el estado");
-          pendingRequests.forEach((request) => {
-            request.reject(error);
-          });
-          pendingRequests = [];
-        }
-      } catch (refreshError) {
-        console.error("API: Error al renovar el token:", refreshError);
-        pendingRequests.forEach((request) => {
-          request.reject(error);
-        });
-        pendingRequests = [];
-      } finally {
-        isRefreshingToken = false;
-      }
-    }
-
-    return Promise.reject(error);
-  }
-);
+// Interceptores centralizados
+setupAxiosInterceptors(axiosInstance);
 
 interface RetryConfig {
   maxRetries?: number;
@@ -146,7 +31,7 @@ interface RetryConfig {
 }
 
 export async function apiRequest<T>(
-  method: "get" | "post" | "put" | "delete",
+  method: "get" | "post" | "put" | "delete" | "patch",
   url: string,
   data?: any,
   config?: AxiosRequestConfig & RetryConfig
@@ -208,6 +93,9 @@ export async function apiRequest<T>(
           break;
         case "put":
           response = await axiosInstance.put(secureUrl, data, axiosConfig);
+          break;
+        case "patch":
+          response = await axiosInstance.patch(secureUrl, data, axiosConfig);
           break;
         case "delete":
           response = await axiosInstance.delete(secureUrl, axiosConfig);
@@ -423,18 +311,6 @@ export function post<T>(
   data?: any,
   config?: AxiosRequestConfig & RetryConfig
 ): Promise<T> {
-  // Si estamos enviando FormData, asegurarnos de que no se establezca Content-Type
-  // para que el navegador pueda establecer el boundary correcto
-  if (data instanceof FormData) {
-    return apiRequest<T>("post", url, data, {
-      ...config,
-      headers: {
-        ...config?.headers,
-        'Content-Type': undefined // Permitir que el navegador establezca el Content-Type correcto
-      }
-    });
-  }
-  
   return apiRequest<T>("post", url, data, config);
 }
 
@@ -451,4 +327,12 @@ export function del<T>(
   config?: AxiosRequestConfig & RetryConfig
 ): Promise<T> {
   return apiRequest<T>("delete", url, undefined, config);
+}
+
+export function patch<T>(
+  url: string,
+  data?: any,
+  config?: AxiosRequestConfig & RetryConfig
+): Promise<T> {
+  return apiRequest<T>("patch", url, data, config);
 }
